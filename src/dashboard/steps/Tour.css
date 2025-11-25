@@ -1,0 +1,335 @@
+/* Tour Component Styles - общие стили для всех интерактивных туров */
+.tour-controls {
+    width: 200px ;
+    padding: 20px ;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) ;
+    border-radius: 12px ;
+    color: white ;
+    position: sticky ;
+    top: 20px ;
+    height: fit-content ;
+    box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3) ;
+    margin-left: 20px ;
+}
+
+.tour-controls .tour-controls-header {
+    text-align: center ;
+    margin-bottom: 20px ;
+}
+
+.tour-controls .tour-controls-icon {
+    font-size: 32px ;
+    margin-bottom: 12px ;
+    color: white ;
+}
+
+.tour-controls .tour-controls-title {
+    color: white ;
+    margin: 0 ;
+    font-size: 18px ;
+}
+
+.tour-controls .tour-controls-subtitle {
+    color: rgba(255, 255, 255, 0.8) ;
+    font-size: 14px ;
+    margin: 8px 0 0 0 ;
+}
+
+.tour-controls .tour-start-button {
+    margin-bottom: 20px ;
+}
+
+.tour-controls .tour-start-button .ant-btn {
+    background: rgba(255, 255, 255, 0.2) ;
+    border-color: rgba(255, 255, 255, 0.3) ;
+    color: white ;
+    height: 48px ;
+    font-weight: bold ;
+    width: 100% ;
+}
+
+.tour-controls .tour-start-button .ant-btn:hover {
+    background: rgba(255, 255, 255, 0.3) ;
+    border-color: rgba(255, 255, 255, 0.4) ;
+    color: white ;
+}
+
+.tour-controls .tour-progress {
+    background: rgba(255, 255, 255, 0.1) ;
+    border-radius: 8px ;
+    padding: 16px ;
+    margin-bottom: 20px ;
+    animation: tour-fade-in 0.3s ease-in-out;
+}
+
+.tour-controls .tour-progress-step {
+    margin-bottom: 12px ;
+}
+
+.tour-controls .tour-progress-step-text {
+    font-size: 14px ;
+    font-weight: bold ;
+    color: white ;
+}
+
+.tour-controls .tour-progress-bar {
+    background: rgba(255, 255, 255, 0.1) ;
+    height: 4px ;
+    border-radius: 2px ;
+    margin-bottom: 12px ;
+}
+
+.tour-controls .tour-progress-fill {
+    background: white ;
+    height: 100% ;
+    border-radius: 2px ;
+    transition: width 0.3s ease ;
+}
+
+.tour-controls .tour-progress-title {
+    font-size: 13px ;
+    opacity: 0.9 ;
+    color: rgba(255, 255, 255, 0.9) ;
+}
+
+.tour-controls .tour-info {
+    font-size: 12px ;
+    opacity: 0.7 ;
+    line-height: 1.4 ;
+    color: rgba(255, 255, 255, 0.7) ;
+}
+
+.tour-controls .tour-info-title {
+    margin-bottom: 8px ;
+    color: rgba(255, 255, 255, 0.8) ;
+}
+
+.tour-controls .tour-info-list {
+    margin: 0 ;
+    padding-left: 16px ;
+    color: rgba(255, 255, 255, 0.7) ;
+}
+
+.tour-float-button {
+    position: fixed ;
+    right: 24px ;
+    bottom: 24px ;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) ;
+    border-color: transparent ;
+    z-index: 1000 ;
+}
+
+.tour-float-button .ant-float-btn-body:hover {
+    background: linear-gradient(135deg, #5a6ce8 0%, #6b4497 100%) ;
+}
+
+/* Tour компонент стили */
+.tour-indicator {
+    color: rgba(0, 0, 0, 0.45) ;
+    font-size: 12px ;
+}
+
+/* Основной layout для страниц с Tour - ТОЛЬКО для tour-layout */
+.tour-layout {
+    display: flex ;
+    /*gap: 20px ;*/
+    /*min-height: 100vh ;*/
+}
+
+.tour-layout > .tour-content {
+    flex: 1 ;
+}
+
+/* Анимации для Tour элементов */
+@keyframes tour-fade-in {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive стили */
+@media (max-width: 768px) {
+    .tour-layout {
+        flex-direction: column ;
+    }
+
+    .tour-controls {
+        width: 100% ;
+        position: static ;
+        margin-top: 20px ;
+        margin-left: 0 ;
+    }
+}
+
+/* Цветовые варианты для разных типов туров - ТОЛЬКО для tour-controls */
+.tour-controls.tour-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) ;
+    box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3) ;
+}
+
+.tour-controls.tour-success {
+    background: linear-gradient(135deg, #52c41a 0%, #389e0d 100%) ;
+    box-shadow: 0 8px 32px rgba(82, 196, 26, 0.3) ;
+}
+
+.tour-controls.tour-warning {
+    background: linear-gradient(135deg, #faad14 0%, #d48806 100%) ;
+    box-shadow: 0 8px 32px rgba(250, 173, 20, 0.3) ;
+}
+
+.tour-controls.tour-danger {
+    background: linear-gradient(135deg, #ff4d4f 0%, #cf1322 100%) ;
+    box-shadow: 0 8px 32px rgba(255, 77, 79, 0.3) ;
+}
+
+/* Стили для target элементов */
+.tour-target-highlight {
+    position: relative;
+    z-index: 1000;
+}
+
+.tour-target-highlight::before {
+    content: '';
+    position: absolute;
+    top: -4px;
+    left: -4px;
+    right: -4px;
+    bottom: -4px;
+    background: rgba(24, 144, 255, 0.2);
+    border-radius: 4px;
+    pointer-events: none;
+    animation: tour-pulse 2s infinite;
+}
+
+@keyframes tour-pulse {
+    0% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.5;
+        transform: scale(1.05);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Специфичные стили для элементов интерфейса - Tour targets */
+/* Эти стили НЕ должны влиять на основной контент */
+.logs-header {
+    /* Пустые стили для target элементов */
+}
+
+.connect-button {
+    /* Пустые стили для target элементов */
+}
+
+.control-buttons {
+    /* Пустые стили для target элементов */
+}
+
+.status-indicator {
+    /* Пустые стили для target элементов */
+}
+
+.logs-container {
+    /* Пустые стили для target элементов */
+}
+
+/* Ant Design Tour Content Styles - кастомные стили для всплывающих подсказок тура */
+
+.ant-tour-inner {
+    background: linear-gradient(135deg, #8598f1 0%, #764ba2 100%) !important;
+    border-radius: 12px !important;
+    border: none !important;
+    box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3) !important;
+    color: var(--bg-color) !important;
+    padding: 16px !important;
+    overflow: hidden !important;
+}
+
+.ant-tour-content .ant-tour-title {
+    color: var(--bg-color) !important;
+    font-size: 18px !important;
+    font-weight: 600 !important;
+    margin-bottom: 8px !important;
+}
+
+.ant-tour-content .ant-tour-description {
+    /*color: var(--bg-color) !important;*/
+    font-size: 14px !important;
+    line-height: 1.5 !important;
+}
+
+/*.ant-tour-content .ant-tour-buttons {*/
+/*    margin-top: 16px !important;*/
+/*    display: flex !important;*/
+/*    justify-content: flex-end !important;*/
+/*    gap: 8px !important;*/
+/*}*/
+
+.ant-tour-content .ant-btn {
+    border-radius: 6px !important;
+    font-weight: 500 !important;
+}
+
+.ant-tour-content .ant-btn-primary {
+    background: rgba(255, 255, 255, 0.2) !important;
+    border: 1px solid rgba(255, 255, 255, 0.3) !important;
+    /*color: var(--bg-color) !important;*/
+    /*color: red !important;*/
+    backdrop-filter: blur(10px) !important;
+}
+
+.ant-tour-content .ant-btn-primary:hover {
+    background: rgba(255, 255, 255, 0.3) !important;
+    border-color: rgba(255, 255, 255, 0.4) !important;
+    color: var(--bg-color) !important;
+}
+
+.ant-tour-content .ant-btn-default {
+    background: rgba(255, 255, 255, 0.3) !important;
+    border: 1px solid rgba(255, 255, 255, 0.5) !important;
+    color: color-mix(in srgb, var(--bg-color) 80%, transparent) !important;
+    backdrop-filter: blur(10px) !important;
+}
+
+.ant-tour-content .ant-btn-default:hover {
+    background: rgba(255, 255, 255, 0.2) !important;
+    border-color: rgba(255, 255, 255, 0.3) !important;
+    color: rgba(255, 255, 255, 0.5) !important;
+}
+
+/* Стрелка указателя тура */
+.ant-tour-arrow {
+    border-color: transparent !important;
+}
+
+.ant-tour-arrow-content {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+}
+
+/* Индикатор текущего шага */
+.ant-tour-indicators {
+    margin-top: 12px !important;
+    text-align: center !important;
+}
+
+.ant-tour-indicator {
+    background: rgba(255, 255, 255, 0.3) !important;
+    width: 8px !important;
+    height: 8px !important;
+    border-radius: 50% !important;
+    margin: 0 4px !important;
+}
+
+.ant-tour-indicator-active {
+    background: white !important;
+}

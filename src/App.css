@@ -1,0 +1,371 @@
+:root {
+  --bg-color-light: #ffffff;
+  --bg-color-dark: #121212;
+
+  --text-color-light: #000000;
+  --text-color-dark: #ffffff;
+
+  --main-color-light: #eaffbb;
+  --main-color-dark: #c8fb77;
+
+  --midle-color-dark: #20401a;
+  --midle-color-ligth: #f9ffea;
+
+  --hover-color-dark: #ffffff;
+  --error-color: #ff0202;
+  --close-color: #c37979;
+  --warning-color: #ff9d00;
+  --conected-color: #49ff49;
+  /*цвет сылок*/
+  --link-color-light: #5f8300;
+  --link-hover-color-light: #8ac51e;
+  --link-color-dark: #8ac51e;
+  --link-hover-color-dark: #a8f817;
+  /*##########*/
+  --try-color: #bcf844;
+  --user-data-bg-light: #d4edda;
+  --user-data-bg-dark: #344a36;
+  --shadow-color-light: #e8e8e8;
+  --shadow-color-dark: #000000;
+  /*дальше не нужные*/
+  --blue-color: #1890ff;
+  --new-hover-color: #005fae;
+  --dialog-list-bg-light: #ffffff;
+  --dialog-list-bg-dark: #1f1f1f;
+  --dialog-hover-bg-light: #d6eaf8;
+  --dialog-hover-bg-dark: #333333;
+  --dialog-type-bg-light: #f9f9f9;
+  --dialog-type-bg-dark: #444444;
+
+  --dialog-type-war-light: #fff7e6;
+  --dialog-type-war-dark: #4a4736;
+  --border-radius: 10px;
+
+  --chat-window-border-light: #ccc;
+  --chat-window-border-dark: #444;
+  --input-bg-light: #ffffff;
+  --input-bg-dark: #333333;
+  --input-border-light: #ccc;
+  --input-border-dark: #555;
+  --button-bg-light: #f7ffe9;
+  --button-bg-dark: #e2ffb6;
+  --message-left-bg-light: #f4f4f4;
+  --message-left-bg-dark: #5c5c5c;
+  --message-right-bg-light: #f9ffdd;
+  --message-right-bg-dark: #395a00;
+  --error-message-bg-light: #ffe6e6;
+  --error-message-bg-dark: #663333;
+  --message-name-color-light: darkgray;
+  --message-name-color-dark: lightgray;
+}
+
+body.light {
+  --bg-color: var(--bg-color-light);
+  --text-color: var(--text-color-light);
+  --main-color: var(--main-color-light);
+  --hover-color: var(--main-color-light);
+  --midle-color: var(--midle-color-ligth);
+  --shadow-color: var(--shadow-color-light);
+  --link-color: var(--link-color-light);
+  --link-hover-color: var(--link-hover-color-light);
+  --dialog-bg-color: var(--dialog-type-bg-light);
+  --dialog-war-color: var(--dialog-type-war-light);
+  --ligth-bg-l-color: var(--dialog-list-bg-light);
+  --ligth-bg-d-color: var(--dialog-hover-bg-light);
+  --new-text-color: var(--blue-color);
+  --new-button-color: var(--dialog-hover-bg-light);
+  --new-link-hover-color: var(--new-hover-color);
+  --dialog-hover-bg: var(--dialog-hover-bg-light);
+  --dialog-list-bg: var(--dialog-list-bg-light);
+
+  --chat-window-border: var(--chat-window-border-light);
+  --input-bg: var(--input-bg-light);
+  --input-border: var(--input-border-light);
+  --button-bg: var(--button-bg-light);
+  --message-left-bg: var(--message-left-bg-light);
+  --message-right-bg: var(--message-right-bg-light);
+  --error-message-bg: var(--error-message-bg-light);
+  --message-name-color: var(--message-name-color-light);
+}
+
+body.dark {
+  --bg-color: var(--bg-color-dark);
+  --text-color: var(--text-color-dark);
+  --main-color: var(--main-color-dark);
+  --hover-color: var(--hover-color-dark);
+  --midle-color: var(--midle-color-dark);
+  --shadow-color: var(--shadow-color-dark);
+  --link-color: var(--link-color-dark);
+  --link-hover-color: var(--link-hover-color-dark);
+  --dialog-bg-color: var(--dialog-type-bg-dark);
+  --dialog-war-color: var(--dialog-type-war-dark);
+  --new-text-color: var(--link-color-dark);
+  --new-button-color: var(--main-color);
+  --new-link-hover-color: var(--link-hover-color-dark);
+  --dialog-hover-bg: var(--dialog-hover-bg-dark);
+  --dialog-list-bg: var(--dialog-list-bg-dark);
+
+  --chat-window-border: var(--chat-window-border-dark);
+  --input-bg: var(--input-bg-dark);
+  --input-border: var(--input-border-dark);
+  --button-bg: var(--button-bg-dark);
+  --message-left-bg: var(--message-left-bg-dark);
+  --message-right-bg: var(--message-right-bg-dark);
+  --error-message-bg: var(--error-message-bg-dark);
+  --message-name-color: var(--message-name-color-dark);
+
+  scrollbar-width: thin;
+  scrollbar-color: #444 #222;
+}
+/* Для Chrome, Edge, Safari */
+body.dark::-webkit-scrollbar {
+  width: 8px;
+  background: #222;
+}
+body.dark::-webkit-scrollbar-thumb {
+  background: #444;
+  border-radius: 4px;
+}
+body.dark::-webkit-scrollbar-track {
+  background: #222;
+}
+
+.App {
+  position: relative;
+  height: 100vh;
+  width: 100%;
+  background-color: var(--bg-color);
+  color: var(--text-color);
+  transition: all 0.3s ease;
+}
+
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+.error-message {
+  color: var(--error-color);
+  font-weight: bold;
+  text-align: center;
+  margin: 10px 0;
+  padding: 10px;
+  border: 1px solid var(--error-color);
+  border-radius: 5px;
+  background-color: var(--bg-color-light);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: var(--text-color);
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.top-menu {
+  width: 100%;
+  background-color: #333;
+  padding: 10px 0;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.menu-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.left-content {
+  display: flex;
+}
+
+.left-content p {
+  color: var(--bg-color-light);
+  margin: 0 10px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.right-content {
+  display: flex;
+  align-items: center;
+}
+
+.left-content p:hover {
+  text-decoration: underline;
+}
+
+.ant-select-dropdown {
+  background-color: var(--bg-color);
+}
+
+.ant-select-item-option-selected {
+  background-color: var(--main-color) !important;
+  color: var(--bg-color-dark) !important;
+}
+
+.ant-upload-list,
+.ant-upload-list-item,
+.ant-upload-list-item-name {
+  color: var(--text-color);
+}
+
+.ant-upload-list-item .anticon,
+.ant-upload-list-item .anticon-close,
+.ant-upload-list-item .anticon-paper-clip,
+.ant-upload-list-item .anticon-delete,
+.ant-upload-list-item .anticon-download {
+  color: var(--link-color) !important;
+}
+
+.ant-ribbon .ant-ribbon-text {
+  color: #000000 !important;
+}
+
+.ant-picker-ok button {
+  color: black !important;
+}
+
+/* Цвет текста переключателя месяца/года в календаре */
+.dark .ant-picker-calendar .ant-picker-calendar-header .ant-radio-button-wrapper span {
+  color: var(--text-color-dark) !important;
+}
+
+/* Выбранная ячейка времени */
+.ant-picker-time-panel-cell-selected .ant-picker-time-panel-cell-inner {
+  color: black !important;
+  background-color: var(--main-color) !important;
+}
+
+/* Наведение на ячейку времени */
+.ant-picker-time-panel-cell:hover .ant-picker-time-panel-cell-inner {
+  background-color: var(--midle-color) !important;
+}
+
+/* Изменение цвета ползунка */
+
+.espero-slider-row .ant-slider-handle::after {
+  background: var(--link-hover-color) !important;
+  /*border: none !important;*/
+  /*box-shadow: none !important;*/
+  /*border-radius: 50% !important;*/
+}
+
+/* Изменение цвета трека (активной части) */
+.espero-slider-row .ant-slider-track {
+  background-color: var(--main-color) !important;
+}
+
+.ant-message {
+  z-index: 11000 !important;
+}
+
+
+
+
+
+
+/* Адаптивность для мобильных устройств */
+
+/* Базовые стили для мобильных */
+@media (max-width: 768px) {
+  .App {
+    overflow-x: hidden;
+  }
+
+  .error-message {
+    margin: 5px;
+    padding: 8px;
+    font-size: 14px;
+  }
+
+  .App-header {
+    font-size: calc(8px + 2vmin);
+    padding: 20px 10px;
+  }
+}
+
+/* Очень маленькие экраны (до 480px) */
+@media (max-width: 480px) {
+  .App {
+    min-height: 100vh;
+  }
+
+  .error-message {
+    margin: 5px;
+    padding: 6px;
+    font-size: 13px;
+    border-radius: 3px;
+  }
+
+  .App-header {
+    font-size: calc(6px + 2vmin);
+    padding: 15px 8px;
+  }
+
+  .menu-content {
+    padding: 0 8px;
+  }
+
+  .left-content p {
+    font-size: 14px;
+    margin: 0 6px;
+  }
+}
+
+/* Планшеты (768px - 1023px) */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .menu-content {
+    padding: 0 15px;
+  }
+
+  .left-content p {
+    font-size: 15px;
+    margin: 0 8px;
+  }
+}
+
+/* Большие экраны (1400px и выше) */
+@media (min-width: 1400px) {
+  .menu-content {
+    max-width: 1600px;
+    padding: 0 30px;
+  }
+
+  .left-content p {
+    font-size: 17px;
+    margin: 0 12px;
+  }
+
+  .error-message {
+    margin: 15px 0;
+    padding: 12px;
+    font-size: 16px;
+  }
+}

@@ -1,0 +1,415 @@
+/* Современные стили для CreateModel */
+/* Убираем локальные переменные цветов, используем переменные из App.css */
+
+/* Понижаем z-index маски модальных окон */
+.ant-modal-mask {
+    z-index: 998 !important;
+}
+
+.ant-modal-wrap {
+    z-index: 998 !important;
+}
+
+/* Уведомления должны быть выше */
+.ant-notification {
+    z-index: 9999 !important;
+}
+
+/* Основной контейнер */
+.create-model-container {
+    width: 90%;
+    max-width: none; /* Убираем ограничение максимальной ширины */
+    margin: 0; /* Убираем центрирование */
+    padding: 32px 24px;
+    background: var(--bg-color);
+    border-radius: var(--border-radius);
+    box-shadow: 0 2px 8px var(--shadow-color);
+    transition: all 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
+    min-height: calc(100vh - 125px);
+}
+
+.compact-row td {
+    padding: 4px 8px !important;
+}
+
+.dark .create-model-container {
+    background: #1f1f1f;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Заголовок */
+.create-model-header {
+    text-align: center;
+    margin-bottom: 40px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--midle-color);
+}
+
+.dark .create-model-header {
+    border-bottom-color: #404040;
+}
+
+.create-model-title {
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: 8px;
+    background: linear-gradient(45deg, var(--link-color), var(--link-hover-color));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.create-model-subtitle {
+    padding-bottom: 10px;
+    font-size: 16px;
+    color: var(--text-color);
+    opacity: 0.7;
+    margin: 0;
+}
+
+/* Секции формы */
+.form-section {
+    margin-bottom: 32px;
+    padding: 24px;
+    background: var(--midle-color);
+    border-radius: var(--border-radius);
+    border: 1px solid var(--midle-color);
+    transition: all 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
+}
+
+.dark .form-section {
+    background: #262626;
+    border-color: #404040;
+}
+
+.form-section:hover {
+    border-color: var(--link-color);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.1);
+}
+
+.section-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.section-title::before {
+    content: '';
+    width: 4px;
+    height: 20px;
+    background: linear-gradient(45deg, var(--link-color), var(--link-hover-color));
+    border-radius: 2px;
+}
+
+.section-description {
+    font-size: 14px;
+    color: var(--text-color);
+    opacity: 0.7;
+    margin-bottom: 16px;
+    line-height: 1.5;
+}
+
+/* Поля ввода */
+.create-model-container .ant-form-item {
+    margin-bottom: 24px;
+}
+
+.create-model-container .ant-form-item-label > label {
+    font-weight: 500;
+    color: var(--text-color);
+    font-size: 14px;
+}
+
+.create-model-container .ant-input,
+.create-model-container .ant-input-password,
+.create-model-container .ant-select-selector,
+.create-model-container .ant-picker {
+    border-radius: 8px;
+    border-color: var(--midle-color);
+    background: var(--bg-color);
+    color: var(--text-color);
+    transition: all 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
+    font-size: 14px;
+    height: 42px;
+}
+
+.create-model-container .ant-input:focus,
+.create-model-container .ant-input-password:focus,
+.create-model-container .ant-select-focused .ant-select-selector,
+.create-model-container .ant-picker:focus {
+    border-color: var(--link-color);
+    box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+}
+
+.create-model-container .ant-input-prefix {
+    color: var(--text-color);
+    opacity: 0.6;
+    margin-right: 8px;
+}
+
+.create-model-container .ant-input::placeholder,
+.create-model-container .ant-input-password::placeholder {
+    color: var(--text-color);
+    opacity: 0.5;
+}
+
+/* Textarea */
+.create-model-container .ant-input {
+    min-height: 42px;
+}
+
+.create-model-container textarea.ant-input {
+    min-height: 120px;
+    resize: vertical;
+}
+
+/* Кнопки */
+.create-model-buttons {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px 0;
+    margin-top: 32px;
+    border-top: 1px solid var(--midle-color);
+}
+
+.dark .create-model-buttons {
+    border-top-color: #404040;
+}
+
+.create-model-container .ant-btn {
+    height: 44px;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 14px;
+    transition: all 0.3s cubic-bezier(0.645, 0.045, 0.355, 1);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 24px;
+}
+
+.create-model-container .ant-btn-primary {
+    background: var(--main-color);
+    border-color: var(--main-color);
+    color: var(--bg-color-dark);
+    box-shadow: 0 2px 8px var(--shadow-color);
+}
+
+.create-model-container .ant-btn-primary:hover {
+    background: var(--hover-color) !important;
+    border-color: var(--hover-color) !important;
+    color: var(--bg-color-dark) !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px var(--shadow-color);
+}
+
+.create-model-container .ant-btn-primary:disabled {
+    background: var(--midle-color);
+    border-color: var(--midle-color);
+    color: var(--text-color);
+    opacity: 0.5;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Кнопка "Изменить модель" с основным цветом приложения */
+.create-model-container .update-model-btn {
+    background: var(--main-color);
+    border-color: var(--main-color);
+    color: var(--bg-color-dark);
+    box-shadow: 0 2px 8px var(--shadow-color);
+}
+
+.create-model-container .update-model-btn:hover {
+    background: var(--hover-color) !important;
+    border-color: var(--hover-color) !important;
+    color: var(--bg-color-dark) !important;
+    opacity: 0.8;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px var(--shadow-color);
+}
+
+.create-model-container .update-model-btn:disabled {
+    background: var(--midle-color) !important;
+    border-color: var(--midle-color) !important;
+    color: var(--text-color) !important;
+    opacity: 0.5;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Кнопка "Удалить модель" с цветом ошибки */
+.create-model-container .ant-btn-danger,
+.create-model-container .ant-btn-primary[danger],
+.create-model-container .ant-btn.ant-btn-dangerous,
+.create-model-container .ant-btn-primary.ant-btn-dangerous {
+    background: var(--error-color) !important;
+    border-color: var(--error-color) !important;
+    color: white !important;
+    box-shadow: 0 2px 8px var(--shadow-color);
+}
+
+.create-model-container .ant-btn-danger:hover,
+.create-model-container .ant-btn-primary[danger]:hover,
+.create-model-container .ant-btn.ant-btn-dangerous:hover,
+.create-model-container .ant-btn-primary.ant-btn-dangerous:hover {
+    background: var(--error-color) !important;
+    border-color: var(--error-color) !important;
+    color: white !important;
+    opacity: 0.9;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px var(--shadow-color);
+}
+
+.create-model-container .ant-btn-danger:focus,
+.create-model-container .ant-btn-danger:active,
+.create-model-container .ant-btn-primary[danger]:focus,
+.create-model-container .ant-btn-primary[danger]:active,
+.create-model-container .ant-btn.ant-btn-dangerous:focus,
+.create-model-container .ant-btn.ant-btn-dangerous:active,
+.create-model-container .ant-btn-primary.ant-btn-dangerous:focus,
+.create-model-container .ant-btn-primary.ant-btn-dangerous:active {
+    background: var(--error-color) !important;
+    border-color: var(--error-color) !important;
+    color: white !important;
+}
+
+/* Загрузка */
+.loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    gap: 16px;
+}
+
+.loading-text {
+    font-size: 16px;
+    color: var(--text-color);
+    opacity: 0.7;
+}
+
+/* Анимации */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.create-model-container {
+    animation: slideIn 0.6s ease-out;
+}
+
+.form-section {
+    animation: slideIn 0.6s ease-out;
+    animation-fill-mode: both;
+}
+
+.form-section:nth-child(1) { animation-delay: 0.1s; }
+.form-section:nth-child(2) { animation-delay: 0.2s; }
+.form-section:nth-child(3) { animation-delay: 0.3s; }
+.form-section:nth-child(4) { animation-delay: 0.4s; }
+.form-section:nth-child(5) { animation-delay: 0.5s; }
+
+/* Индикаторы состояния */
+.status-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 4px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.status-indicator.success {
+    background: var(--conected-color);
+    color: var(--bg-color-dark);
+    opacity: 0.8;
+}
+
+.status-indicator.warning {
+    background: var(--warning-color);
+    color: var(--bg-color-dark);
+}
+
+.status-indicator.error {
+    background: var(--error-color);
+    color: white;
+    opacity: 0.9;
+}
+
+/* Прогресс бар */
+.progress-bar {
+    width: 100%;
+    height: 4px;
+    background: var(--midle-color);
+    border-radius: 2px;
+    overflow: hidden;
+    margin: 16px 0;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--link-color), var(--link-hover-color));
+    border-radius: 2px;
+    transition: width 0.3s ease;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .create-model-container {
+        margin: 16px;
+        padding: 24px 16px;
+    }
+
+    .create-model-title {
+        font-size: 24px;
+    }
+
+    .form-section {
+        padding: 16px;
+    }
+
+    .create-model-buttons {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .create-model-container .ant-btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+.create-model-container .ant-form-item-explain-error {
+    color: var(--error-color);
+}
+
+/* Специальные стили для компонентов */
+.model-name-section {
+    /*background: linear-gradient(135deg, var(--main-color), var(--midle-color));*/
+    /*border: 1px solid var(--link-color);*/
+    background: linear-gradient(135deg, rgba(95, 131, 0, 0.05), rgba(234, 255, 187, 0.15));
+    border: 1px solid rgba(95, 131, 0, 0.15);
+    opacity: 0.8;
+}
+
+.dark .model-name-section {
+    background: linear-gradient(135deg, rgba(95, 131, 0, 0.05), rgba(234, 255, 187, 0.15));
+    border: 1px solid rgba(95, 131, 0, 0.15);
+}

@@ -1,0 +1,15 @@
+.title {
+    padding-top: 20px;
+    padding-left: 50px;
+}
+
+.step-model {
+    width: 600px;
+}
+
+.step {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}

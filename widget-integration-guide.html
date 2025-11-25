@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Руководство по интеграции MarusyaWidget</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+            color: #333;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .code-block {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 15px 0;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            overflow-x: auto;
+        }
+        .method {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .warning {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .success {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
+        .tab {
+            margin-left: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Руководство по интеграции MarusyaWidget</h1>
+
+        <p>MarusyaWidget - это настраиваемый чат-виджет с поддержкой кастомизации позиционирования и стилей.</p>
+
+        <h2>📦 Способы интеграции</h2>
+
+        <!-- Способ 1: Автоматическая инициализация -->
+        <div class="method">
+            <h3>🚀 Способ 1: Автоматическая инициализация (Рекомендуется)</h3>
+            <p>Самый простой способ - виджет автоматически инициализируется при загрузке страницы.</p>
+
+            <h4>Вариант 1.1: Через meta-тег</h4>
+            <div class="code-block">
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;meta name="marusya-exam-key" content="ваш-exam-key"&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;!-- Ваш контент сайта --&gt;
+
+    &lt;!-- Подключение виджета --&gt;
+    &lt;script src="https://ваш-домен.com/widget/marusya-widget.js"&gt;&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+            </div>
+
+            <h4>Вариант 1.2: Через data-атрибут скрипта</h4>
+            <div class="code-block">
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;body&gt;
+    &lt;!-- Ваш контент сайта --&gt;
+
+    &lt;!-- Подключение виджета с exam-key --&gt;
+    &lt;script
+        src="https://ваш-домен.com/widget/marusya-widget.js"
+        data-exam-key="ваш-exam-key"&gt;
+    &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+            </div>
+        </div>
+
+        <!-- Способ 2: Программная инициализация -->
+        <div class="method">
+            <h3>⚙️ Способ 2: Программная инициализация</h3>
+            <p>Для полного контроля над виджетом используйте JavaScript API.</p>
+
+            <div class="code-block">
+&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;body&gt;
+    &lt;!-- Ваш контент сайта --&gt;
+
+    &lt;!-- Подключение виджета без автоинициализации --&gt;
+    &lt;script src="https://ваш-домен.com/widget/marusya-widget.js"&gt;&lt;/script&gt;
+
+    &lt;script&gt;
+        // Ждем загрузки API
+        window.addEventListener('load', function() {
+            // Стандартная инициализация
+            const widget = MarusyaWidget.init({
+                examKey: "ваш-exam-key"
+            });
+        });
+    &lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+            </div>
+        </div>
+
+        <!-- Способ 3: Кастомизация -->
+        <div class="method">
+            <h3>🎨 Способ 3: Инициализация с кастомизацией</h3>
+            <p>Настройка позиции, размера и стилей кнопки виджета.</p>
+
+            <div class="code-block">
+&lt;script&gt;
+// Кнопка в левом нижнем углу
+const widget1 = MarusyaWidget.init({
+    examKey: "ваш-exam-key",
+    buttonPosition: { left: '30px', bottom: '30px' },
+    buttonSize: { width: '60px', height: '60px' }
+});
+
+// Кнопка в правом верхнем углу с кастомными стилями
+const widget2 = MarusyaWidget.init({
+    examKey: "ваш-exam-key",
+    buttonPosition: { right: '30px', top: '30px' },
+    buttonSize: { width: '55px', height: '55px' },
+    buttonStyle: {
+        backgroundColor: '#ff6b6b',
+        borderRadius: '15px',
+        boxShadow: '0 8px 16px rgba(255,107,107,0.4)',
+        border: '3px solid white'
+    }
+});
+
+// Большая кнопка с уникальным дизайном
+const widget3 = MarusyaWidget.init({
+    examKey: "ваш-exam-key",
+    buttonPosition: { right: '20px', bottom: '20px' },
+    buttonSize: { width: '80px', height: '80px' },
+    buttonStyle: {
+        backgroundColor: '#4ecdc4',
+        borderRadius: '50%',
+        boxShadow: '0 10px 20px rgba(78,205,196,0.3)',
+        border: '4px solid #45b7aa',
+        transform: 'rotate(0deg)',
+        transition: 'all 0.3s ease'
+    }
+});
+&lt;/script&gt;
+            </div>
+        </div>
+
+        <h2>📋 Параметры конфигурации</h2>
+
+        <div class="success">
+            <h3>Обязательные параметры:</h3>
+            <ul>
+                <li><strong>examKey</strong> (string) - Уникальный ключ экзамена для авторизации</li>
+            </ul>
+        </div>
+
+        <div class="warning">
+            <h3>Опциональные параметры:</h3>
+            <ul>
+                <li><strong>buttonPosition</strong> (object) - Позиция кнопки: { right, bottom, left, top }</li>
+                <li><strong>buttonSize</strong> (object) - Размер кнопки: { width, height }</li>
+                <li><strong>buttonStyle</strong> (object) - CSS стили для кнопки</li>
+            </ul>
+        </div>
+
+        <h2>🔧 Управление виджетом</h2>
+
+        <div class="code-block">
+// Инициализация виджета
+const widget = MarusyaWidget.init({
+    examKey: "ваш-exam-key",
+    buttonPosition: { right: '30px', bottom: '30px' }
+});
+
+// Уничтожение виджета
+widget.destroy();
+
+// Или через глобальный метод
+MarusyaWidget.destroy();
+        </div>
+
+        <h2>📱 Примеры для разных сценариев</h2>
+
+        <div class="method">
+            <h3>🖥️ Десктоп сайт</h3>
+            <div class="code-block">
+MarusyaWidget.init({
+    examKey: "ваш-exam-key",
+    buttonPosition: { right: '30px', bottom: '30px' },
+    buttonSize: { width: '60px', height: '60px' },
+    buttonStyle: {
+        backgroundColor: '#007bff',
+        borderRadius: '50%',
+        boxShadow: '0 4px 12px rgba(0,123,255,0.3)'
+    }
+});
+            </div>
+        </div>
+
+        <div class="method">
+            <h3>📱 Мобильная версия</h3>
+            <div class="code-block">
+// Адаптивное позиционирование
+const isMobile = window.innerWidth <= 768;
+
+MarusyaWidget.init({
+    examKey: "ваш-exam-key",
+    buttonPosition: {
+        right: isMobile ? '15px' : '30px',
+        bottom: isMobile ? '15px' : '30px'
+    },
+    buttonSize: {
+        width: isMobile ? '50px' : '60px',
+        height: isMobile ? '50px' : '60px'
+    }
+});
+            </div>
+        </div>
+
+        <div class="method">
+            <h3>🎯 E-commerce сайт</h3>
+            <div class="code-block">
+MarusyaWidget.init({
+    examKey: "ваш-exam-key",
+    buttonPosition: { right: '20px', bottom: '100px' }, // Выше корзины
+    buttonSize: { width: '70px', height: '70px' },
+    buttonStyle: {
+        backgroundColor: '#28a745',
+        borderRadius: '50%',
+        border: '3px solid white',
+        boxShadow: '0 6px 18px rgba(40,167,69,0.4)'
+    }
+});
+            </div>
+        </div>
+
+        <h2>⚠️ Важные моменты</h2>
+
+        <div class="warning">
+            <ul>
+                <li>Убедитесь, что у вас есть действующий <code>examKey</code></li>
+                <li>Виджет автоматически скрывается на мобильных устройствах (ширина ≤ 425px)</li>
+                <li>Рекомендуется размещать скрипт перед закрывающим тегом <code>&lt;/body&gt;</code></li>
+                <li>Для HTTPS сайтов используйте HTTPS URL виджета</li>
+            </ul>
+        </div>
+
+        <h2>🚨 Отладка</h2>
+
+        <div class="code-block">
+// Проверка доступности API
+if (typeof MarusyaWidget !== 'undefined') {
+    console.log('✅ MarusyaWidget API доступен');
+    console.log('Методы:', Object.keys(MarusyaWidget));
+} else {
+    console.error('❌ MarusyaWidget API не найден');
+}
+
+// Проверка инициализации
+try {
+    const widget = MarusyaWidget.init({
+        examKey: "test-key"
+    });
+    console.log('✅ Виджет успешно инициализирован:', widget);
+} catch (error) {
+    console.error('❌ Ошибка инициализации:', error);
+}
+        </div>
+
+        <h2>📞 Техническая поддержка</h2>
+        <p>При возникновении проблем с интеграцией проверьте:</p>
+        <ul>
+            <li>Корректность <code>examKey</code></li>
+            <li>Доступность файла <code>marusya-widget.js</code></li>
+            <li>Отсутствие конфликтов с другими скриптами</li>
+            <li>Консоль браузера на предмет ошибок</li>
+        </ul>
+    </div>
+</body>
+</html>

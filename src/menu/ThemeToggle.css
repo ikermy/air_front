@@ -1,0 +1,28 @@
+.theme-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    border-radius: 50%;
+    transition: background-color 0.3s, transform 0.3s;
+    z-index: 1001;
+}
+
+.theme-toggle:hover {
+    background-color: rgba(0, 123, 255, 0.1); /* Измените на соответствующий цвет при наведении */
+    transform: scale(1.1); /* Добавляет небольшой эффект увеличения при наведении */
+}
+
+.theme-toggle svg {
+    fill: currentColor;
+}
+
+.theme-toggle.light .moon-icon {
+    fill: black; /* Чёрный цвет для светлой темы */
+}
+
+.theme-toggle.dark .moon-icon {
+    fill: white; /* Белый цвет для тёмной темы */
+}

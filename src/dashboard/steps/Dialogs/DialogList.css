@@ -1,0 +1,715 @@
+/*body.light {*/
+/*    --bg-color: var(--bg-color-light);*/
+/*    --text-color: var(--text-color-light);*/
+/*    --user-data-bg: var(--user-data-bg-light);*/
+/*    --dialog-list-bg: var(--dialog-list-bg-light);*/
+/*    --dialog-hover-bg: var(--dialog-hover-bg-light);*/
+/*    --dialog-type-bg: var(--dialog-type-bg-light);*/
+/*}*/
+
+/*body.dark {*/
+/*    --bg-color: var(--bg-color-dark);*/
+/*    --text-color: var(--text-color-dark);*/
+/*    --user-data-bg: var(--user-data-bg-dark);*/
+/*    --dialog-list-bg: var(--dialog-list-bg-dark);*/
+/*    --dialog-hover-bg: var(--dialog-hover-bg-dark);*/
+/*    --dialog-type-bg: var(--dialog-type-bg-dark);*/
+/*}*/
+
+.container {
+    /*max-width: 700px;*/
+    max-width: 80%;
+    min-width: 500px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.dialog-content {
+    padding-left: 50px;
+}
+
+.dialog-type-caption {
+    width: 130px;
+    max-width: 130px;
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+    gap: 10px;
+}
+
+.dialog-pre-modal {
+    min-width: 70%;
+}
+
+.dialog-list {
+    min-width: 80%;
+    background-color: var(--dialog-list-bg);
+    padding: 10px;
+    border-radius: var(--border-radius);
+}
+
+/* dialog-list элементы */
+.dialog-list ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.dialog-list li {
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 5px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Небольшая тень */
+    position: relative; /* Устанавливаем относительно для позиционирования dialog-type */
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.dialog-list li:hover {
+    background-color: var(--dialog-hover-bg); /* Переменная для фона при наведении */
+}
+
+.dialog-list li div {
+    margin-bottom: 5px;
+}
+
+.dialog-type {
+    position: absolute;
+    top: 10px; /* Расстояние от верхнего края элемента li */
+    left: 10px; /* Расстояние от левого края элемента li */
+    background-color: var(--dialog-bg-color); /* Переменная для фона */
+    /*background-color: var(--dialog-type-bg); !* Переменная для фона *!*/
+    padding: 5px; /* Отступы внутри элемента */
+    border-radius: 3px; /* Скругленные углы */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Небольшая тень */
+}
+
+.dialog-value {
+    margin-left: 100px;
+}
+
+/*Meta indicator*/
+
+.dialog-content {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    align-items: center;
+}
+
+.dialog-main-info {
+    flex-grow: 1;
+}
+
+.dialog-statuses {
+    /*width: 100%;*/
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-left: 15px;
+}
+
+/* Современный дизайн для списка диалогов */
+.dialog-list-modern {
+    padding: 24px;
+    background-color: var(--bg-color-light);
+    /*min-height: 100vh;*/
+}
+
+.dark .dialog-list-modern {
+    background-color: var(--bg-color-dark);
+}
+
+/* Заголовок списка диалогов */
+.dialog-list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #f0f0f0;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.dark .dialog-list-header {
+    border-bottom-color: #404040;
+}
+
+.header-left {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.header-controls {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+/* Фильтр по типу */
+.type-filter {
+    display: flex;
+    align-items: center;
+}
+
+.type-filter .ant-select {
+    min-width: 180px;
+}
+
+.type-filter .ant-select-selector {
+    border-radius: 8px;
+    border-color: #d9d9d9;
+}
+
+.type-filter .ant-select-focused .ant-select-selector {
+    border-color: var(--main-color-light);
+    box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
+}
+
+.dark .type-filter .ant-select-selector {
+    background: #2a2a2a;
+    border-color: #404040;
+    color: #e8e8e8;
+}
+
+.dark .type-filter .ant-select-focused .ant-select-selector {
+    border-color: var(--main-color-light);
+}
+
+/* Переключатель вида */
+.view-toggle {
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.view-toggle .ant-radio-button-wrapper {
+    border-radius: 0;
+    padding: 6px 16px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border-color: #d9d9d9;
+}
+
+.view-toggle .ant-radio-button-wrapper:first-child {
+    border-radius: 8px 8px 0 0;
+}
+
+.view-toggle .ant-radio-button-wrapper:last-child {
+    border-radius: 0 0 8px 8px;
+}
+
+.view-toggle .ant-radio-button-wrapper-checked {
+    background-color: var(--main-color-light);
+    border-color: var(--main-color-light);
+    color: #000;
+}
+
+.dark .view-toggle .ant-radio-button-wrapper {
+    background: #2a2a2a;
+    border-color: #404040;
+    color: #e8e8e8;
+}
+
+.dark .view-toggle .ant-radio-button-wrapper-checked {
+    background-color: var(--main-color-light);
+    border-color: var(--main-color-light);
+    color: #000;
+}
+
+/* Списочный вид диалогов */
+.dialog-list-view {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 32px;
+}
+
+.dialog-list-item {
+    background: #fff;
+    border: 1px solid #f0f0f0;
+    border-radius: 12px;
+    padding: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.dialog-list-item:hover {
+    border-color: var(--main-color-light);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.dark .dialog-list-item {
+    background: #2a2a2a;
+    border-color: #404040;
+}
+
+.dark .dialog-list-item:hover {
+    border-color: var(--main-color-light);
+}
+
+.list-item-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.list-item-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex: 1;
+}
+
+.list-type-icon {
+    font-size: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    background: rgba(24, 144, 255, 0.1);
+    border-radius: 12px;
+    flex-shrink: 0;
+}
+
+.list-item-info {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+}
+
+.list-item-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.list-dialog-id {
+    font-size: 12px;
+    background: rgba(0, 0, 0, 0.04);
+    padding: 2px 8px;
+    border-radius: 4px;
+    color: #8c8c8c !important;
+}
+
+.dark .list-dialog-id {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.list-item-details {
+    display: flex;
+    align-items: center;
+}
+
+.list-info-icon {
+    color: #8c8c8c;
+    font-size: 14px;
+}
+
+.list-item-right {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.list-statuses {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: flex-end;
+    min-width: 140px;
+}
+
+/* Современный дизайн для dialog-statuses */
+.dialog-statuses {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 12px;
+    align-items: center; /* Выравнивание по центру */
+}
+
+/* Современный StatusIndicator */
+.modern-status-indicator {
+    display: flex;
+    align-items: center;
+    justify-content: center; /* Центрирование содержимого */
+    gap: 8px;
+    padding: 6px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    border: 1px solid #f0f0f0;
+    background: #ffffff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    width: 100%; /* Занимает всю ширину родителя */
+    /*min-width: 200px; !* Минимальная ширина *!*/
+    text-align: center; /* Выравнивание текста по центру */
+}
+
+.modern-status-indicator:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.modern-status-indicator.success {
+    background: rgba(82, 196, 26, 0.1);
+    border-color: rgba(82, 196, 26, 0.3);
+    color: #52c41a;
+}
+
+.modern-status-indicator.fail {
+    background: rgba(255, 77, 79, 0.1);
+    border-color: rgba(255, 77, 79, 0.3);
+    color: #ff4d4f;
+}
+
+.dark .modern-status-indicator {
+    background: #2a2a2a;
+    border-color: #404040;
+}
+
+.dark .modern-status-indicator.success {
+    background: rgba(82, 196, 26, 0.15);
+    border-color: rgba(82, 196, 26, 0.4);
+}
+
+.dark .modern-status-indicator.fail {
+    background: rgba(255, 77, 79, 0.15);
+    border-color: rgba(255, 77, 79, 0.4);
+}
+
+.status-icon-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.status-text {
+    white-space: nowrap;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    text-align: center; /* Выравнивание текста по центру */
+    flex: 1; /* Занимает оставшееся место */
+}
+
+/* Список статусов для списочного вида */
+.list-statuses {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    align-items: flex-end;
+    min-width: 140px;
+}
+
+.list-statuses .modern-status-indicator {
+    font-size: 11px;
+    padding: 5px 8px;
+    min-width: 200px; /* Увеличиваем минимальную ширину до 200px */
+    justify-content: center;
+    text-align: center; /* Добавляем выравнивание текста по центру */
+}
+
+/* Стили для информационных строк диалога */
+.dialog-info-row {
+    display: flex;
+    align-items: center;
+    gap: 8px; /* Отступ между иконкой и текстом */
+    margin-bottom: 4px;
+}
+
+.dialog-info-row .info-icon {
+    font-size: 14px;
+    color: #8c8c8c;
+    flex-shrink: 0; /* Предотвращает сжатие иконки */
+}
+
+.dark .dialog-info-row .info-icon {
+    color: #a8a8a8;
+}
+
+/* Стили для заголовка карточки диалога */
+.dialog-card-title {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.dialog-id {
+    font-size: 12px !important;
+}
+
+/* Стили для иконки типа диалога */
+.dialog-type-icon {
+    font-size: 20px;
+    margin-right: 12px;
+    flex-shrink: 0;
+}
+
+/* Анимации */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes statusPulse {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    }
+}
+
+@keyframes successPulse {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), 0 0 0 0 rgba(82, 196, 26, 0.7);
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3), 0 0 0 4px rgba(82, 196, 26, 0.3);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), 0 0 0 0 rgba(82, 196, 26, 0);
+    }
+}
+
+@keyframes failPulse {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), 0 0 0 0 rgba(255, 77, 79, 0.7);
+    }
+    50% {
+        transform: scale(1.05);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3), 0 0 0 4px rgba(255, 77, 79, 0.3);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2), 0 0 0 0 rgba(255, 77, 79, 0);
+    }
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .dialog-list-modern {
+        padding: 16px;
+    }
+
+    .dialog-list-header {
+        flex-direction: column;
+        gap: 8px;
+        align-items: flex-start;
+    }
+
+    .dialog-cards-grid {
+        margin-bottom: 24px;
+    }
+
+    .dialog-card-header {
+        gap: 8px;
+    }
+
+    .dialog-type-icon {
+        width: 32px;
+        height: 32px;
+        font-size: 18px;
+    }
+
+    .modern-status-indicator {
+        padding: 4px 8px;
+        gap: 6px;
+        font-size: 11px;
+    }
+
+    .status-icon-wrapper {
+        width: 16px;
+        height: 16px;
+        font-size: 10px;
+    }
+
+    .status-text {
+        font-size: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .dialog-list-modern {
+        padding: 12px;
+    }
+
+    .header-controls {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .type-filter .ant-select {
+        width: 100%;
+        min-width: unset;
+    }
+
+    .view-toggle {
+        width: 100%;
+    }
+
+    .view-toggle .ant-radio-button-wrapper {
+        flex: 1;
+        text-align: center;
+        justify-content: center;
+    }
+
+    .dialog-statuses {
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    .dialog-pagination {
+        padding: 16px;
+    }
+
+    .dialog-empty-state {
+        padding: 40px 16px;
+    }
+
+    .modern-status-indicator {
+        padding: 3px 6px;
+        gap: 4px;
+        border-radius: 12px;
+    }
+
+    .status-icon-wrapper {
+        width: 14px;
+        height: 14px;
+        font-size: 9px;
+    }
+
+    .status-text {
+        font-size: 9px;
+    }
+}
+
+/* Анимации для карточек */
+.dialog-card {
+    opacity: 0;
+    animation: fadeInUp 0.5s ease forwards;
+    transition: all 0.3s ease;
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.dialog-card:hover {
+    border-color: var(--main-color-light);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+}
+
+.dark .dialog-card {
+    /*border-color: #404040;*/
+}
+
+.dark .dialog-card:hover {
+    border-color: var(--main-color-light);
+}
+
+/* Анимации для списочного вида */
+.dialog-list-item {
+    opacity: 0;
+    animation: fadeInUp 0.4s ease forwards;
+}
+
+.dialog-list-item:nth-child(1) { animation-delay: 0.1s; }
+.dialog-list-item:nth-child(2) { animation-delay: 0.15s; }
+.dialog-list-item:nth-child(3) { animation-delay: 0.2s; }
+.dialog-list-item:nth-child(4) { animation-delay: 0.25s; }
+.dialog-list-item:nth-child(5) { animation-delay: 0.3s; }
+
+/* Улучшения для темной темы */
+.dark .dialog-card .ant-typography {
+    color: #e8e8e8;
+}
+
+.dark .dialog-card .ant-typography-caption {
+    color: #a8a8a8;
+}
+
+.dark .info-icon {
+    color: #a8a8a8;
+}
+
+.dark .dialog-id {
+    color: #8c8c8c !important;
+}
+
+/* Улучшения пагинации */
+.custom-pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.custom-pagination .ant-pagination-total-text {
+    margin-right: 16px;
+    color: var(--text-color-light);
+}
+
+.dark .custom-pagination .ant-pagination-total-text {
+    color: var(--text-color-dark);
+}
+
+/* Стили для Select */
+.type-filter .ant-select-selector {
+    border-radius: 8px;
+    border-color: #d9d9d9;
+}
+
+.type-filter .ant-select-focused .ant-select-selector {
+    border-color: var(--main-color-light);
+    box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
+}
+
+.dark .type-filter .ant-select-selector {
+    background: #2a2a2a;
+    border-color: #404040;
+    color: #e8e8e8;
+}
+
+.dark .type-filter .ant-select-focused .ant-select-selector {
+    border-color: var(--main-color-light);
+}
+
+/*!* Старые стили DialogList - скрываем только специфичные для DialogList *!*/
+/*.dialog-list .container,*/
+/*.dialog-list ul,*/
+/*.dialog-list li,*/
+/*.dialog-type-caption,*/
+/*.dialog-type-text,*/
+/*.dialog-list .status-indicator {*/
+/*    display: none;*/
+/*}*/

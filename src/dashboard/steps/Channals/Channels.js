@@ -1,0 +1,1350 @@
+import React, {useCallback, useEffect, useRef, useState} from "react";
+import {AddChannel} from "./addChanal";
+import {validateAndRefreshToken} from "../../../utils/easyUtils";
+import {getModelData} from "../getModelData";
+import {
+    AndroidOutlined,
+    CommentOutlined,
+    GlobalOutlined,
+    PlayCircleOutlined,
+    QuestionCircleOutlined
+} from "@ant-design/icons";
+import {Badge, Button, Card, Empty, FloatButton, Modal, Spin, Switch, Tour, Typography} from "antd";
+import "./Chanels.css"
+import "./ChannelsModern.css"
+import '../Tour.css';
+import {showErrorNotification, showNotification, showWarningNotification} from "../../hotification/showNotification";
+import {saveChannelData} from "../saveChannelsData";
+import {readChannelData} from "../readChannelData";
+import {deleteChannelData} from "./deleteChannelData";
+import {checkSubscription} from "./checkSubscription";
+import {FaInstagram, FaTelegramPlane, FaWhatsapp} from 'react-icons/fa';
+import {TBotSection} from "./sections/TBotSection";
+import {WidgetSection} from "./sections/WidgetSection";
+import {TelegramAuthService} from "./telegramAuthService";
+import {TgUserBotSection} from "./sections/TgUserBotSection";
+import {telegramGetContact} from "./telegramGetContact";
+import {WhatsBotSection} from "./sections/WhatsBotSection";
+import {WhatsAuthServive} from "./whatsAuthServive";
+import {whatsappGetContact} from "./whatsappGetContact";
+import {chAvailable} from "./chAvailable";
+import {getTourPanelState, setTourPanelState} from "../../../utils/cookieUtils";
+
+
+export const Channels = () => {
+    const {Text} = Typography;
+    const [loading, setLoading] = useState(true);
+    const [modelData, setModelData] = useState(false);
+    const [availableChannels, setAvailableChannels] = useState([
+        {
+            key: "tbot",
+            label: "Telegram Bot",
+            icon: <FaTelegramPlane/>,
+            isExpanded: false,
+            isEnabled: false,
+            data: ''
+        },
+        {
+            key: "widg",
+            label: "WEB Widget",
+            icon: <CommentOutlined/>,
+            isExpanded: false,
+            isEnabled: false,
+            data: ''
+        },
+        {
+            key: "tguserbot",
+            label: "Telegram UserBot",
+            icon: <FaTelegramPlane/>,
+            isExpanded: false,
+            isEnabled: false,
+            data: '',
+            contacts: '',
+            contactsIds: []
+        },
+        {
+            key: "whatsbot",
+            label: "WhatsApp UserBot",
+            icon: <FaWhatsapp/>,
+            isExpanded: false,
+            isEnabled: false,
+            data: '',
+            contacts: '',
+            contactsIds: []
+        },
+        {
+            key: "insta",
+            label: "Instagram UserBot",
+            icon: <FaInstagram/>,
+            isExpanded: false,
+            isEnabled: false,
+            data: '',
+            contacts: '',
+            contactsIds: []
+        }
+    ]); // Элементы меню
+    const [selectedChannels, setSelectedChannels] = useState([]); // Выбранные элементы
+    const [isModalVisible, setIsModalVisible] = useState(false);
+    const [channelToRemove, setChannelToRemove] = useState(null);
+    // const [isGeneratingCode, setIsGeneratingCode] = useState(false);
+    const [isGeneratingQRCode, setIsGeneratingQRCode] = useState(false);
+    const [showQRCode, setShowQRCode] = useState(false);
+    const [isLoadingContacts, setIsLoadingContacts] = useState(false);
+    const [contactsLoadingStatus, setContactsLoadingStatus] = useState({ message: '', progress: 0 });
+
+    const [authService, setAuthService] = useState(null);
+    const [qrCodeUrl, setQrCodeUrl] = useState('');
+    const [needPassword, setNeedPassword] = useState(false);
+    const [password2FA, setPassword2FA] = useState('');
+    const [passwordModalVisible, setPasswordModalVisible] = useState(false);
+    const [tourVisible, setTourVisible] = useState(false);
+    const [current, setCurrent] = useState(0);
+    const [tourPanelVisible, setTourPanelVisible] = useState(getTourPanelState('channels')); // Состояние для видимости панели
+
+    // Состояние для хранения исходных значений каналов
+    const [originalChannelStates, setOriginalChannelStates] = useState({});
+
+    // Состояние рядом с другими useState
+    const [switchDisabled, setSwitchDisabled] = useState({});
+
+    // Refs для Tour targets
+    const channelsHeaderRef = useRef(null);
+    const addChannelRef = useRef(null);
+    const channelsListHeaderRef = useRef(null);
+    const channelsListRef = useRef(null); // Изменено с channelsGridRef на channelsListRef
+
+    const fetchChannelData = useCallback(async () => {
+        try {
+            const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
+            if (token) {
+                // Получаем данные о модели
+                // Сначала из локального хранилища
+                let modelDataResult
+                const stored = localStorage.getItem("userModel");
+                if (stored === 'true') {
+                    modelDataResult = true
+                } else {
+                    modelDataResult = await getModelData(token)
+                }
+                if (
+                    modelDataResult &&
+                    (typeof modelDataResult !== 'object' || Object.keys(modelDataResult).length > 0)
+                ) {
+                    setModelData(true);
+
+                    // Получаем данные о каналах
+                    const channelsData = await readChannelData("channels", token);
+
+                    if (channelsData) {
+                        // Создаем базовый набор каналов внутри функции, независимо от текущего состояния
+                        const baseChannels = [
+                            {
+                                key: "tbot",
+                                label: "Telegram Bot",
+                                icon: <FaTelegramPlane/>,
+                                isExpanded: false,
+                                isEnabled: false,
+                                data: ''
+                            },
+                            {
+                                key: "widg",
+                                label: "WEB Widget",
+                                icon: <CommentOutlined/>,
+                                isExpanded: false,
+                                isEnabled: false,
+                                data: ''
+                            },
+                            {
+                                key: "tguserbot",
+                                label: "Telegram UserBot",
+                                icon: <FaTelegramPlane/>,
+                                isExpanded: false,
+                                isEnabled: false,
+                                data: '',
+                                contacts: '',
+                                contactsIds: []
+                            },
+                            {
+                                key: "whatsbot",
+                                label: "WhatsApp UserBot",
+                                icon: <FaWhatsapp/>,
+                                isExpanded: false,
+                                isEnabled: false,
+                                data: '',
+                                contacts: '',
+                                contactsIds: []
+                            },
+                            {
+                                key: "insta",
+                                label: "Instagram Bot",
+                                icon: <FaInstagram/>,
+                                isExpanded: false,
+                                isEnabled: false,
+                                data: '',
+                                contacts: '',
+                                contactsIds: []
+                            }
+                        ];
+
+                        const newAvailableChannels = [...baseChannels];
+                        const newSelectedChannels = [];
+
+                        // Обработка Telegram бота
+                        if (channelsData.tgbot && channelsData.tgbot.data) {
+                            const tgChannel = newAvailableChannels.find(ch => ch.key === "tbot");
+                            if (tgChannel) {
+                                const index = newAvailableChannels.indexOf(tgChannel);
+                                if (index > -1) {
+                                    newAvailableChannels.splice(index, 1);
+                                }
+                                try {
+                                    const rawData = channelsData.tgbot.data;
+                                    const parsedData = typeof rawData === 'string' ? JSON.parse(rawData) : rawData;
+                                    const tokenValue = parsedData?.token || '';
+                                    newSelectedChannels.push({
+                                        ...tgChannel,
+                                        data: tokenValue,
+                                        isEnabled: Boolean(channelsData.tgbot.enabled)
+                                    });
+                                } catch (error) {
+                                    console.error("Ошибка обработки данных Telegram Bot:", error);
+                                    // В случае ошибки добавляем канал с пустыми данными
+                                    newSelectedChannels.push({
+                                        ...tgChannel,
+                                        data: '',
+                                        isEnabled: Boolean(channelsData.tgbot.enabled)
+                                    });
+                                }
+                            }
+                        }
+
+                        // Обработка виджета
+                        if (channelsData.widget && channelsData.widget.data) {
+                            const widgetChannel = newAvailableChannels.find(ch => ch.key === "widg");
+                            if (widgetChannel) {
+                                const index = newAvailableChannels.indexOf(widgetChannel);
+                                if (index > -1) {
+                                    newAvailableChannels.splice(index, 1);
+                                }
+                                try {
+                                    const widgetData = channelsData.widget.data;
+                                    const scriptData = typeof widgetData === 'object' ? widgetData.script : widgetData;
+                                    newSelectedChannels.push({
+                                        ...widgetChannel,
+                                        data: scriptData || '',
+                                        isEnabled: Boolean(channelsData.widget.enabled)
+                                    });
+                                } catch (error) {
+                                    console.error("Ошибка обработки данных Widget:", error);
+                                    newSelectedChannels.push({
+                                        ...widgetChannel,
+                                        data: '',
+                                        isEnabled: Boolean(channelsData.widget.enabled)
+                                    });
+                                }
+                            }
+                        }
+
+                        // Обработка WhatsApp UserBot
+                        if (channelsData.whatsbot && channelsData.whatsbot.data) {
+                            const whatsChannel = newAvailableChannels.find(ch => ch.key === "whatsbot");
+                            if (whatsChannel) {
+                                const index = newAvailableChannels.indexOf(whatsChannel);
+                                if (index > -1) {
+                                    newAvailableChannels.splice(index, 1);
+                                }
+
+                                let uidsArray = [];
+                                let dataWithoutUids = {};
+
+                                try {
+                                    let whatsData;
+
+                                    // Проверяем тип данных - они могут приходить как объект или JSON строка
+                                    if (typeof channelsData.whatsbot.data === 'string') {
+                                        whatsData = JSON.parse(channelsData.whatsbot.data);
+                                    } else {
+                                        whatsData = channelsData.whatsbot.data;
+                                    }
+
+                                    // Извлекаем Uids если они есть
+                                    if (whatsData.Uids) {
+                                        uidsArray = whatsData.Uids.split(' ').filter(id => id.trim() !== '');
+                                        // Создаем копию объекта без поля Uids
+                                        dataWithoutUids = {...whatsData};
+                                        delete dataWithoutUids.Uids;
+                                    } else {
+                                        dataWithoutUids = whatsData;
+                                    }
+
+                                    newSelectedChannels.push({
+                                        ...whatsChannel,
+                                        data: JSON.stringify(dataWithoutUids),
+                                        contacts: uidsArray.length > 0 ? "added" : "",
+                                        contactsIds: uidsArray,
+                                        isEnabled: Boolean(channelsData.whatsbot.enabled)
+                                    });
+                                } catch (error) {
+                                    console.error("Ошибка обработки данных WhatsApp:", error);
+                                    // В случае ошибки сохраняем оригинальные данные
+                                    newSelectedChannels.push({
+                                        ...whatsChannel,
+                                        data: typeof channelsData.whatsbot.data === 'object'
+                                            ? JSON.stringify(channelsData.whatsbot.data)
+                                            : channelsData.whatsbot.data || '{}',
+                                        contacts: '',
+                                        contactsIds: [],
+                                        isEnabled: Boolean(channelsData.whatsbot.enabled)
+                                    });
+                                }
+                            }
+                        }
+
+                        if (channelsData.tguserbot && channelsData.tguserbot.data) {
+                            let uidsArray = [];
+                            let dataWithoutUidsString = '{}';
+
+                            try {
+                                // Парсим внешний JSON для получения строки token
+                                const outerData = JSON.parse(channelsData.tguserbot.data);
+                                const tokenDataString = outerData?.token || '';
+                                const uidsRegex = /"uids"\s*:\s*"([^"]*)"/;
+                                const uidsMatch = tokenDataString.match(uidsRegex);
+
+                                if (uidsMatch && uidsMatch[1]) {
+                                    const uidsString = uidsMatch[1];
+                                    uidsArray = uidsString.split(' ').filter(id => id.trim() !== '');
+                                    // Удаляем uids и возможную запятую после них
+                                    dataWithoutUidsString = tokenDataString.replace(/"uids"\s*:\s*"[^"]*"\s*,?/, '');
+                                    // Простая проверка, чтобы не осталось висячей запятой в начале или конце
+                                    dataWithoutUidsString = dataWithoutUidsString.replace(/^,|,$/g, '');
+                                    // Если строка стала пустой или только {}, установим '{}'
+                                    if (dataWithoutUidsString.trim() === '' || dataWithoutUidsString.trim() === '{') {
+                                        dataWithoutUidsString = '{}';
+                                    }
+
+                                } else {
+                                    // Если uids не найдены, используем исходную строку token
+                                    dataWithoutUidsString = tokenDataString;
+                                }
+                            } catch (error) {
+                                console.error("Ошибка обработки данных:", error.message);
+                            }
+
+                            // Находим и обновляем канал
+                            const data = newAvailableChannels.find(ch => ch.key === "tguserbot");
+                            if (data) {
+                                const index = newAvailableChannels.indexOf(data);
+                                if (index > -1) {
+                                    newAvailableChannels.splice(index, 1);
+                                }
+
+                                newSelectedChannels.push({
+                                    ...data,
+                                    data: dataWithoutUidsString,
+                                    contacts: uidsArray.length > 0 ? "added" : "",
+                                    contactsIds: uidsArray,
+                                    isEnabled: Boolean(channelsData.tguserbot.enabled)
+                                });
+                            }
+                        }
+
+                        // Обработка Instagram Bot НЕВЕРНАЯ ТЕСТОВАЯ РЕАЛИЗАЦИЯ!!!
+                        if (channelsData.insta && channelsData.insta.data) {
+                            const instaChannel = newAvailableChannels.find(ch => ch.key === "insta");
+                            if (instaChannel) {
+                                const index = newAvailableChannels.indexOf(instaChannel);
+                                if (index > -1) {
+                                    newAvailableChannels.splice(index, 1);
+                                }
+
+                                let uidsArray = [];
+                                let dataWithoutUids = {};
+
+                                try {
+                                    let instaData;
+
+                                    // Проверяем тип данных - они могут приходить как объект или JSON строка
+                                    if (typeof channelsData.insta.data === 'string') {
+                                        instaData = JSON.parse(channelsData.insta.data);
+                                    } else {
+                                        instaData = channelsData.insta.data;
+                                    }
+
+                                    // Извлекаем Uids если они есть
+                                    if (instaData.Uids) {
+                                        uidsArray = instaData.Uids.split(' ').filter(id => id.trim() !== '');
+                                        // Создаем копию объекта без поля Uids
+                                        dataWithoutUids = {...instaData};
+                                        delete dataWithoutUids.Uids;
+                                    } else {
+                                        dataWithoutUids = instaData;
+                                    }
+
+                                    newSelectedChannels.push({
+                                        ...instaChannel,
+                                        data: JSON.stringify(dataWithoutUids),
+                                        contacts: uidsArray.length > 0 ? "added" : "",
+                                        contactsIds: uidsArray,
+                                        isEnabled: Boolean(channelsData.insta.enabled)
+                                    });
+                                } catch (error) {
+                                    console.error("Ошибка обработки данных Instagram:", error);
+                                    // В случае ошибки сохраняем оригинальные данные
+                                    newSelectedChannels.push({
+                                        ...instaChannel,
+                                        data: typeof channelsData.insta.data === 'object'
+                                            ? JSON.stringify(channelsData.insta.data)
+                                            : channelsData.insta.data || '{}',
+                                        contacts: '',
+                                        contactsIds: [],
+                                        isEnabled: Boolean(channelsData.insta.enabled)
+                                    });
+                                }
+                            }
+                        }
+
+                        setAvailableChannels(newAvailableChannels);
+                        setSelectedChannels(newSelectedChannels);
+                    }
+                }
+            }
+        } catch (error) {
+            console.error("Ошибка при загрузке данных каналов:", error);
+        } finally {
+            setLoading(false); // Гарантируем вызов setLoading(false) в любом случае
+        }
+    }, []); // Убираем availableChannels из зависимостей
+
+    useEffect(() => {
+        const fetchDataAsync = async () => {
+            try {
+                await fetchChannelData();
+            } catch (error) {
+                console.error("Ошибка при загрузке данных:", error);
+            }
+        };
+        fetchDataAsync();
+    }, [fetchChannelData]);
+
+    useEffect(() => {
+        const checkModel = async () => {
+            try {
+                const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
+                if (token != null) {
+                    const data = await getModelData(token);
+
+                    if (data != null) {
+                        setModelData(true);
+                    }
+                }
+            } catch (error) {
+                console.error("Ошибка получения данных модели:", error);
+            }
+        };
+
+        checkModel();
+    }, []);
+
+    if (loading) {
+        return <div className="notifications-loading">
+            <Spin size="large" />
+            <Text className="loading-text">
+                Загрузка данных...
+            </Text>
+        </div>
+    }
+
+    async function checkChAvailable(key) {
+        switch (key) {
+            case "widg":
+                const WIDGET_URL = (window.runtimeConfig && window.runtimeConfig.REACT_APP_WIDGET) || process.env.REACT_APP_WIDGET;
+                return await chAvailable(WIDGET_URL);
+            case "tbot":
+                const TGBOT_URL = (window.runtimeConfig && window.runtimeConfig.REACT_APP_TGBOT) || process.env.REACT_APP_TGBOT;
+                return await chAvailable(TGBOT_URL);
+            case "whatsbot":
+                const WHATS_URL = (window.runtimeConfig && window.runtimeConfig.REACT_APP_WHATS) || process.env.REACT_APP_WHATS;
+                return await chAvailable(WHATS_URL);
+            case "tguserbot":
+                const TGUSER_URL = (window.runtimeConfig && window.runtimeConfig.REACT_APP_TGUSER) || process.env.REACT_APP_TGUSER;
+                return await chAvailable(TGUSER_URL);
+            case "insta":
+                const INSTA_URL = (window.runtimeConfig && window.runtimeConfig.REACT_APP_INSTA) || process.env.REACT_APP_INSTA;
+                return await chAvailable(INSTA_URL);
+            default:
+                return false;
+        }
+    }
+
+    const handleChannelSelect = async (key) => {
+        const isAvailable = await checkChAvailable(key);
+        if (!isAvailable) {
+            showErrorNotification("Ошибка", "Этот канал сейчас недоступен");
+            return;
+        }
+        const selectedChannel = availableChannels.find((channel) => channel.key === key);
+        if (selectedChannel) {
+            setSelectedChannels([...selectedChannels, selectedChannel]);
+            setAvailableChannels(availableChannels.filter((channel) => channel.key !== key));
+        }
+    };
+
+    const showRemoveConfirmation = (key) => {
+        setChannelToRemove(key);
+        setIsModalVisible(true);
+    };
+
+    const handleConfirmRemove = async () => {
+        const removedChannel = selectedChannels.find((channel) => channel.key === channelToRemove);
+        if (removedChannel) {
+            const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
+
+            if (token) {
+                const channelType = getChanelName(removedChannel.key)
+                const success = await deleteChannelData(token, channelType);
+
+                if (success) {
+                    // Создаем очищенную копию канала для возврата в доступные
+                    const clearedChannel = {
+                        ...removedChannel,
+                        data: '',
+                        isEnabled: false,
+                        isExpanded: false,
+                        contacts: '',
+                        contactsIds: []
+                    };
+
+                    // Обновляем состояние UI только если удаление прошло успешно
+                    setAvailableChannels(prev => [...prev, clearedChannel]);
+                    setSelectedChannels(prev => prev.filter((channel) => channel.key !== channelToRemove));
+                    showNotification("Канал удален", "Канал успешно удален из системы");
+                } else {
+                    showErrorNotification("Ошибка удаления", "Не удалось удалить канал");
+                }
+            } else {
+                showWarningNotification("Ошибка авторизации", "Токен не обновлен, необходимо повторно авторизоваться!");
+            }
+        }
+
+        setIsModalVisible(false);
+        setChannelToRemove(null);
+    };
+
+    const handleCancelRemove = () => {
+        setIsModalVisible(false);
+        setChannelToRemove(null);
+    };
+
+    const handleGetTgQR = async () => {
+        try {
+            setIsGeneratingQRCode(true);
+            setShowQRCode(false);
+
+            const channel = selectedChannels.find(ch => ch.key === "tguserbot");
+            if (!channel || !channel.phone || !channel.appId || !channel.appHash) {
+                showErrorNotification("Ошибка", "Укажите все параметры для авторизации");
+                setIsGeneratingQRCode(false);
+                return;
+            }
+
+            // Создаем сервис авторизации
+            const service = new TelegramAuthService();
+            setAuthService(service);
+
+            // Настраиваем обработчики событий
+            service.setCallbacks({
+                onQrCode: (qrUrl) => {
+                    setQrCodeUrl(qrUrl);
+                    setShowQRCode(true);
+                    setIsGeneratingQRCode(false);
+                },
+                onPasswordRequest: () => {
+                    setNeedPassword(true);
+                    setShowQRCode(false);
+                    setPasswordModalVisible(true);
+                },
+                // onSuccess: (message) => {
+                onSuccess: async () => {
+                    // showNotification("Успех", message);
+                    showNotification("Успех", "Авторизация успешно завершена");
+                    setShowQRCode(false);
+                    setIsGeneratingQRCode(false);
+                    // Обновляю состояние канала tguserbot локально, для возможности дальнейшей настройки
+                    const channelsData = await readChannelData("channels", localStorage.getItem("authToken"));
+                    // Даже если вылезет ошибка, наверное ничего плохого не случится. Так ведь? :)
+                    setSelectedChannels(prevChannels =>
+                        prevChannels.map(channel =>
+                            channel.key === "tguserbot"
+                                ? {
+                                    ...channel,
+                                    data: channelsData.tguserbot.data,
+                                }
+                                : channel
+                        )
+                    );
+                },
+                onUpdateToken: () => {
+                    showWarningNotification("Ошибка авторизации", "Токен не обновлен, необходимо повторно авторизоваться!");
+                    setShowQRCode(false);
+                    setIsGeneratingQRCode(false);
+                },
+                onError: (error) => {
+                    showErrorNotification("Ошибка авторизации", error);
+                    setShowQRCode(false);
+                    setIsGeneratingQRCode(false);
+                }
+            });
+
+            // Начинаем процесс авторизации
+            await service.startAuthentication({
+                // userId: parseInt(localStorage.getItem("userId") || "0"),
+                appId: channel.appId,
+                appHash: channel.appHash,
+                phone: channel.phone,
+            });
+
+        } catch (error) {
+            console.error("Ошибка запуска авторизации:", error);
+            showErrorNotification("Ошибка", "Не удалось начать процесс авторизации");
+            setIsGeneratingQRCode(false);
+        }
+    };
+
+    const handleGetWhatsQR = async () => {
+        try {
+            setIsGeneratingQRCode(true);
+            setShowQRCode(false);
+
+            // const channel = selectedChannels.find(ch => ch.key === "whatsbot");
+
+            // Создаем сервис авторизации
+            const service = new WhatsAuthServive();
+            setAuthService(service);
+
+            // Настраиваем обработчики событий
+            service.setCallbacks({
+                onQrCode: (qrUrl) => {
+                    setQrCodeUrl(qrUrl);
+                    setShowQRCode(true);
+                    setIsGeneratingQRCode(false);
+                },
+                onQrSuccess: async () => {
+                    showNotification("QR код", "Отсканирован, завершение авторизации...");
+                    setShowQRCode(false);
+                    setIsGeneratingQRCode(false);
+                },
+                onSuccess: async () => {
+                    showNotification("Успех", "Авторизация успешно завершена");
+                    // На всякий случай, скрываю QR-код, хотя он уже не должен быть скрыт
+                    setShowQRCode(false);
+                    setIsGeneratingQRCode(false);
+                    // Обновляю состояние канала whatsbot локально, для возможности дальнейшей настройки
+                    const channelsData = await readChannelData("channels", localStorage.getItem("authToken"));
+                    // Даже если вылезет ошибка, наверное ничего плохого не случится. Так ведь? :)
+                    setSelectedChannels(prevChannels =>
+                        prevChannels.map(channel =>
+                            channel.key === "whatsbot"
+                                ? {
+                                    ...channel,
+                                    data: channelsData.whatsbot.data,
+                                }
+                                : channel
+                        )
+                    );
+                },
+                onUpdateToken: () => {
+                    showWarningNotification("Ошибка авторизации", "Токен не обновлен, необходимо повторно авторизоваться!");
+                    setShowQRCode(false);
+                    setIsGeneratingQRCode(false);
+                },
+                onError: (error) => {
+                    showErrorNotification("Ошибка авторизации", error);
+                    setShowQRCode(false);
+                    setIsGeneratingQRCode(false);
+                }
+            });
+
+            // Начинаем процесс авторизации
+            await service.startAuthentication();
+
+        } catch (error) {
+            console.error("Ошибка запуска авторизации:", error);
+            showErrorNotification("Ошибка", "Не удалось начать процесс авторизации");
+            setIsGeneratingQRCode(false);
+        }
+    };
+
+    const handleGetTgContacts = async () => {
+        try {
+            setIsLoadingContacts(true);
+            setContactsLoadingStatus({ message: 'Инициализация...', progress: 0 });
+
+            const response = await telegramGetContact(
+                localStorage.getItem("authToken"),
+                (progressData) => {
+                    // Обновляем статус загрузки для отображения пользователю
+                    setContactsLoadingStatus({
+                        message: progressData.message,
+                        progress: progressData.progress,
+                        current: progressData.current,
+                        total: progressData.total
+                    });
+                }
+            );
+
+            // Данные уже приходят в правильном формате из telegramGetContact
+            // Просто форматируем поля для совместимости с ContactsModal
+            const formattedContacts = {
+                humans: response.humans ? response.humans.map(human => ({
+                    id: human.id,
+                    firstName: human.first_name || "",
+                    lastName: human.last_name || "",
+                    phone: human.phone,
+                    username: human.username
+                })) : [],
+                bots: response.bots ? response.bots.map(bot => ({
+                    id: bot.id,
+                    firstName: bot.first_name || "",
+                    lastName: bot.last_name || "",
+                    username: bot.username
+                })) : [],
+                channels: response.channels ? response.channels.map(channel => ({
+                    id: channel.id,
+                    firstName: channel.title || "",
+                    title: channel.title,
+                    username: channel.username
+                })) : [],
+                groups: response.groups ? response.groups.map(group => ({
+                    id: group.id,
+                    firstName: group.title || "",
+                    title: group.title
+                })) : [],
+                supergroups: response.supergroups ? response.supergroups.map(group => ({
+                    id: group.id,
+                    firstName: group.title || "",
+                    title: group.title
+                })) : []
+            };
+
+            setSelectedChannels(prevChannels =>
+                prevChannels.map(channel =>
+                    channel.key === "tguserbot"
+                        ? {...channel, contacts: formattedContacts}
+                        : channel
+                )
+            );
+        } catch (error) {
+            console.error('Ошибка при получении контактов:', error);
+            setContactsLoadingStatus({ message: `Ошибка: ${error.message}`, progress: 0 });
+            showErrorNotification("Ошибка", "Не удалось получить контакты, попробуйте позже");
+
+            // Важно: выбрасываем ошибку дальше, чтобы openContactsModal знал о неудаче
+            throw error;
+        } finally {
+            setIsLoadingContacts(false);
+            // Очищаем статус через небольшую задержку
+            setTimeout(() => {
+                setContactsLoadingStatus({ message: '', progress: 0 });
+            }, 2000);
+        }
+    };
+
+    const handleGetWaContacts = async () => {
+        try {
+            setIsLoadingContacts(true);
+            setContactsLoadingStatus({ message: 'Инициализация...', progress: 0 });
+
+            const response = await whatsappGetContact(
+                localStorage.getItem("authToken"),
+                (progressData) => {
+                    // Обновляем статус загрузки для отображения пользователю
+                    setContactsLoadingStatus({
+                        message: progressData.message,
+                        progress: progressData.progress,
+                        current: progressData.current,
+                        total: progressData.total
+                    });
+                }
+            );
+
+            // Теперь response - это простой массив контактов
+            // Форматируем их в структуру, ожидаемую ContactsModal
+            const formattedContacts = {
+                humans: response ? response.map(contact => ({
+                    id: contact.id,
+                    firstName: contact.first_name || contact.name || "",
+                    lastName: contact.last_name,
+                    phone: contact.phone,
+                    username: contact.username
+                })) : [],
+                bots: [], // WhatsApp не различает ботов, все контакты считаются людьми
+                channels: [],
+                groups: [],
+                supergroups: []
+            };
+
+            setSelectedChannels(prevChannels =>
+                prevChannels.map(channel =>
+                    channel.key === "whatsbot"
+                        ? {...channel, contacts: formattedContacts}
+                        : channel
+                )
+            );
+        } catch (error) {
+            console.error('Ошибка при получении контактов WhatsApp:', error);
+            setContactsLoadingStatus({ message: `Ошибка: ${error.message}`, progress: 0 });
+            // showErrorNotification("Ошибка", "Не удалось получить контакты WhatsApp, попробуйте позже");
+
+            // Важно: выбрасываем ошибку дальше, чтобы handleOpenContactsModal знал о неудаче
+            throw error;
+        } finally {
+            setIsLoadingContacts(false);
+            // Очищаем статус через небольшую задержку
+            setTimeout(() => {
+                setContactsLoadingStatus({ message: '', progress: 0 });
+            }, 2000);
+        }
+    };
+
+    const handleSubmitPassword = () => {
+        if (authService && password2FA) {
+            authService.submitPassword(password2FA);
+            setPasswordModalVisible(false);
+            // toggleExpand("tguserbot");
+        }
+    };
+
+    const toggleExpand = (key) => {
+        setSelectedChannels(
+            selectedChannels.map((channel) => {
+                if (channel.key === key) {
+                    if (!channel.isExpanded) {
+                        // При разворачивании сохраняем исходное состояние
+                        setOriginalChannelStates(prev => ({
+                            ...prev,
+                            [key]: {
+                                isEnabled: channel.isEnabled,
+                                data: channel.data,
+                                contacts: channel.contacts,
+                                contactsIds: channel.contactsIds
+                            }
+                        }));
+                    }
+                    return {...channel, isExpanded: !channel.isExpanded};
+                }
+                return channel;
+            })
+        );
+    };
+
+    // Функция для отмены изменений
+    const cancelChanges = (key) => {
+        const originalState = originalChannelStates[key];
+        if (originalState) {
+            setSelectedChannels(
+                selectedChannels.map((channel) => {
+                    if (channel.key === key) {
+                        return {
+                            ...channel,
+                            isEnabled: originalState.isEnabled,
+                            data: originalState.data,
+                            contacts: originalState.contacts,
+                            contactsIds: originalState.contactsIds,
+                            isExpanded: false
+                        };
+                    }
+                    return channel;
+                })
+            );
+
+            // Удаляем сохранённое состояние
+            setOriginalChannelStates(prev => {
+                const newState = {...prev};
+                delete newState[key];
+                return newState;
+            });
+        } else {
+            // Если нет сохранённого состояния, просто сворачиваем
+            toggleExpand(key);
+        }
+    };
+
+    const getChanelName = (key) => {
+        switch (key) {
+            case "tbot":
+                return "tgbot"
+            case "widg":
+                return "widget"
+            case "tguserbot":
+                return "tgubot"
+            case "whatsbot":
+                return "whatsbot"
+            default:
+                return "error"
+        }
+    }
+
+    const saveData = async (key) => {
+        const channel = selectedChannels.find(ch => ch.key === key);
+        const token = await validateAndRefreshToken(localStorage.getItem("authToken"))
+
+        if (token != null) {
+            const channelType = getChanelName(channel.key)
+            const success = await saveChannelData("channels", channelType, channel.data, channel.contactsIds, channel.isEnabled, token);
+
+            if (success) {
+                if (channel.isEnabled) {
+                    showNotification("Канал сохранен и включён", "Ассистент работает с этим каналом!");
+                } else {
+                    showNotification("Канал сохранен но не включён", "Ассистент не работает с этим каналом!");
+                }
+            } else {
+                showErrorNotification("Ошибка сохранения канала", "Ассистент не сможет взаимодействовать с этим каналом!");
+            }
+        } else {
+            showWarningNotification("Ошибка сохранения каналов", "Токен не обновлен, необходимо повторно авторизоваться!")
+        }
+
+        // Close the expanded view after saving for all channel types
+        toggleExpand(key);
+    };
+
+    // Простая обёртка, блокирует переключатель на 2 секунды
+    // javascript
+    const handleToggleWithDisable = async (key) => {
+        setSwitchDisabled(prev => ({ ...prev, [key]: true }));
+        try {
+            await toggleSwitch(key);
+        } catch (e) {
+            // toggleSwitch уже показывает уведомления об ошибках, если нужно — можно обработать дополнительно
+        } finally {
+            // разблокируем сразу после завершения toggleSwitch
+            setSwitchDisabled(prev => ({ ...prev, [key]: false }));
+        }
+    };
+
+    const toggleSwitch = async (key) => {
+
+        try {
+            // Вызов метода проверки подписки, который вернет true/false
+            const canToggle = await checkSubscription();
+
+            if (canToggle) {
+                // Только если проверка прошла успешно, меняем состояние
+                setSelectedChannels(
+                    selectedChannels.map((ch) =>
+                        ch.key === key
+                            ? {...ch, isEnabled: !ch.isEnabled}
+                            : ch
+                    )
+                );
+            } else {
+                // Если проверка не прошла, показываем уведомление
+                showWarningNotification(
+                    "Невозможно активировать канал",
+                    "Необходимо продлить подписку"
+                );
+            }
+        } catch (error) {
+            console.error("Ошибка при проверке доступности канала:", error);
+            showErrorNotification("Ошибка", "Не удалось проверить доступность канала");
+        }
+    };
+
+    // Функция для запуска тура
+    const startTour = () => {
+        setTourVisible(true);
+        setCurrent(0);
+        setTourPanelState('channels', false); // Сохраняем состояние скрытой панели
+    };
+
+    // Функция для показа панели Tour при клике на FloatButton
+    const showTourPanel = () => {
+        setTourPanelVisible(true);
+        setTourPanelState('channels', true); // Сохраняем состояние показанной панели
+    };
+
+    const hideTourPanel = () => {
+        setTourPanelVisible(false);
+        setTourPanelState('channels', false); // Сохраняем состояние скрытой панели
+    };
+
+    // Шаги Tour для Channels - обновленные без упоминания карточек
+    const steps = [
+        {
+            title: '🌐 Добро пожаловать в каналы связи',
+            description: 'Здесь вы можете настроить различные каналы для взаимодействия пользователей с вашим ассистентом: Telegram Bot, Web Widget, Telegram UserBot и WhatsApp UserBot.',
+            target: () => channelsHeaderRef.current,
+        },
+        {
+            title: '➕ Добавление новых каналов',
+            description: 'Нажмите здесь, чтобы добавить новый канал связи. Доступны различные платформы: Telegram, WhatsApp, веб-виджеты для интеграции с сайтом.',
+            target: () => addChannelRef.current,
+        },
+        {
+            title: '📋 Список каналов',
+            description: 'Здесь отображаются все настроенные каналы в удобном списочном формате. Каждый канал показывает статус, настройки и элементы управления.',
+            target: () => channelsListHeaderRef.current,
+        },
+        {
+            title: '⚙️ Управление каналами',
+            description: 'Кликните на канал для настройки параметров, включения/выключения или удаления канала. Используйте переключатель для быстрого включения/отключения канала.',
+            target: () => channelsListRef.current,
+        },
+        {
+            title: '✅ Готово к подключению!',
+            description: 'Теперь вы знаете, как управлять каналами связи. Добавьте нужные каналы, настройте их параметры и начните принимать сообщения от пользователей!',
+            target: () => channelsListRef.current,
+        },
+    ];
+
+    return (
+        <div className="create-model-container">
+            <div className="section-title" ref={channelsHeaderRef}>
+                <GlobalOutlined />
+                Каналы связи
+            </div>
+            <div className="section-description">
+                Настройте каналы для взаимодействия пользователей с вашим ассистентом через различные платформы
+            </div>
+
+            <div className="tour-layout">
+                <div className="tour-content">
+                    <div className="channels-modern">
+                        {!modelData ? (
+                            <div className="no-model-state-modern">
+                                <AndroidOutlined className="no-model-icon-modern" />
+                                <Typography.Title level={3} className="no-model-title-modern">
+                                    Модель ассистента не создана
+                                </Typography.Title>
+                                <Typography.Text className="no-model-description-modern">
+                                    Для настройки каналов необходимо сначала создать модель ассистента
+                                </Typography.Text>
+                            </div>
+                        ) : (
+                            <>
+                                {/* Кнопка создания канала */}
+                                {availableChannels.length > 0 && (
+                                    <div style={{ marginTop: '16px' }} ref={addChannelRef}>
+                                        <AddChannel
+                                            availableChannels={availableChannels}
+                                            onChannelSelect={handleChannelSelect}
+                                        />
+                                    </div>
+                                )}
+
+                                {/* Заголовок с переключателем вида */}
+                                <div className="channels-list-header" ref={channelsListHeaderRef}>
+                                    <div className="header-left">
+                                        <Typography.Title level={3}>
+                                            Настроенные каналы
+                                        </Typography.Title>
+                                        <Typography.Text type="secondary">
+                                            Всего каналов: {selectedChannels.length}
+                                        </Typography.Text>
+                                    </div>
+                                </div>
+
+                                {selectedChannels.length > 0 ? (
+                                    // Списочный вид
+                                    <div className="channels-list-view" ref={channelsListRef}>
+                                        {selectedChannels.map((channel) => (
+                                            <div key={channel.key} className="channel-list-item">
+                                                {channel.isExpanded ? (
+                                                    // Развернутый вид для списка
+                                                    <Card className="channel-card-modern">
+                                                        <div className="channel-card-header-modern">
+                                                            <div className="channel-info-modern">
+                                                                <div className={`channel-icon-modern ${channel.isEnabled ? 'enabled' : ''}`}>
+                                                                    {channel.icon}
+                                                                </div>
+                                                                <Typography.Title level={5} className="channel-title-modern">
+                                                                    {channel.label}
+                                                                </Typography.Title>
+                                                            </div>
+                                                            <div className="channel-status-switch-modern">
+                                                                <Typography.Text style={{ marginRight: 8 }}>Статус:</Typography.Text>
+                                                                <Switch
+                                                                    checked={channel.isEnabled && !!channel.data}
+                                                                    // onChange={() => toggleSwitch(channel.key)}
+                                                                    onChange={() => handleToggleWithDisable(channel.key)}
+                                                                    disabled={!channel.data || !!switchDisabled[channel.key]}
+                                                                    checkedChildren={<span style={{color: "black"}}>Включен</span>}
+                                                                    unCheckedChildren={<span style={{color: "black"}}>Выключен</span>}
+                                                                />
+                                                            </div>
+                                                        </div>
+
+                                                        <div className="channel-card-content-modern">
+                                                            {channel.key === "tbot" && (
+                                                                <TBotSection
+                                                                    channel={channel}
+                                                                    selectedChannels={selectedChannels}
+                                                                    setSelectedChannels={setSelectedChannels}
+                                                                />
+                                                            )}
+                                                            {channel.key === "widg" && (
+                                                                <WidgetSection
+                                                                    channel={channel}
+                                                                    selectedChannels={selectedChannels}
+                                                                    setSelectedChannels={setSelectedChannels}
+                                                                    // isGeneratingCode={isGeneratingCode}
+                                                                    // setIsGeneratingCode={setIsGeneratingCode}
+                                                                    // getWidgetCode={getWidgetCode}
+                                                                />
+                                                            )}
+                                                            {channel.key === "tguserbot" && (
+                                                                <TgUserBotSection
+                                                                    channel={channel}
+                                                                    selectedChannels={selectedChannels}
+                                                                    setSelectedChannels={setSelectedChannels}
+                                                                    isGeneratingQRCode={isGeneratingQRCode}
+                                                                    isLoadingContacts={isLoadingContacts}
+                                                                    contactsLoadingStatus={contactsLoadingStatus}
+                                                                    qrCodeUrl={qrCodeUrl}
+                                                                    showQRCode={showQRCode}
+                                                                    setShowQRCode={setShowQRCode}
+                                                                    authService={authService}
+                                                                    password2FA={password2FA}
+                                                                    setPassword2FA={setPassword2FA}
+                                                                    passwordModalVisible={passwordModalVisible}
+                                                                    setPasswordModalVisible={setPasswordModalVisible}
+                                                                    handleGetQR={handleGetTgQR}
+                                                                    handleGetContacts={handleGetTgContacts}
+                                                                    handleSubmitPassword={handleSubmitPassword}
+                                                                    needPassword={needPassword}
+                                                                    originalChannelStates={originalChannelStates}
+                                                                />
+                                                            )}
+                                                            {channel.key === "whatsbot" && (
+                                                                <WhatsBotSection
+                                                                    channel={channel}
+                                                                    selectedChannels={selectedChannels}
+                                                                    setSelectedChannels={setSelectedChannels}
+                                                                    isGeneratingQRCode={isGeneratingQRCode}
+                                                                    isLoadingContacts={isLoadingContacts}
+                                                                    qrCodeUrl={qrCodeUrl}
+                                                                    showQRCode={showQRCode}
+                                                                    setShowQRCode={setShowQRCode}
+                                                                    authService={authService}
+                                                                    handleGetQR={handleGetWhatsQR}
+                                                                    handleGetContacts={handleGetWaContacts}
+                                                                    originalChannelStates={originalChannelStates}
+                                                                />
+                                                            )}
+
+                                                            <div className="channel-actions-modern">
+                                                                <div className="channel-actions-left-modern">
+                                                                    <Button
+                                                                        type="text"
+                                                                        danger
+                                                                        onClick={() => showRemoveConfirmation(channel.key)}
+                                                                    >
+                                                                        Удалить канал
+                                                                    </Button>
+                                                                </div>
+                                                                <div className="channel-actions-right-modern">
+                                                                    <Button
+                                                                        onClick={() => cancelChanges(channel.key)}
+                                                                    >
+                                                                        Отмена
+                                                                    </Button>
+                                                                    <Button
+                                                                        type="primary"
+                                                                        onClick={() => saveData(channel.key)}
+                                                                        disabled={!channel.data}
+                                                                        style={{color: "black"}}
+                                                                    >
+                                                                        Сохранить
+                                                                    </Button>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </Card>
+                                                ) : (
+                                                    // Свернутый вид для списка
+                                                    <div
+                                                        className="channel-list-item-content"
+                                                        onClick={() => toggleExpand(channel.key)}
+                                                    >
+                                                        <div className="list-item-left-modern">
+                                                            <div className={`list-channel-icon ${channel.isEnabled ? 'enabled' : ''}`}>
+                                                                {channel.icon}
+                                                            </div>
+                                                            <div className="list-item-info-modern">
+                                                                <div className="list-item-header-modern">
+                                                                    <Typography.Text strong>{channel.label}</Typography.Text>
+                                                                </div>
+                                                                <Typography.Text type="secondary">
+                                                                    {channel.data ? 'Настроен и готов к использованию' : 'Требует настройки'}
+                                                                </Typography.Text>
+                                                            </div>
+                                                        </div>
+                                                        <div className="list-item-right-modern">
+                                                            <div className="list-item-status">
+                                                                <Badge
+                                                                    status={channel.isEnabled && !!channel.data ? "success" : "default"}
+                                                                    text={
+                                                                        channel.isEnabled && !!channel.data
+                                                                            ? "Включен"
+                                                                            : (!channel.data ? "Выключен" : "Выключен")
+                                                                    }
+                                                                />
+                                                            </div>
+                                                            <Button
+                                                                type="primary"
+                                                                style={{color: "black"}}
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    toggleExpand(channel.key);
+                                                                }}
+                                                            >
+                                                                Настройки
+                                                            </Button>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <div className="channels-empty-state">
+                                        <Empty
+                                            image={Empty.PRESENTED_IMAGE_SIMPLE}
+                                            description={
+                                                <div>
+                                                    <Typography.Text type="secondary">
+                                                        Каналы не созданы
+                                                    </Typography.Text>
+                                                    <br />
+                                                    <Typography.Text type="secondary">
+                                                        Добавьте каналы для взаимодействия с пользователями
+                                                    </Typography.Text>
+                                                    {availableChannels.length > 0 && (
+                                                        <div style={{ marginTop: 16 }}>
+                                                            <AddChannel
+                                                                availableChannels={availableChannels}
+                                                                onChannelSelect={handleChannelSelect}
+                                                            />
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            }
+                                        />
+                                    </div>
+                                )}
+
+                                <Modal
+                                    title="Подтвердите удаление"
+                                    open={isModalVisible}
+                                    onCancel={handleCancelRemove}
+                                    className="channels-modal"
+                                    footer={[
+                                        <Button key="cancel" onClick={handleCancelRemove}>
+                                            Отмена
+                                        </Button>,
+                                        <Button
+                                            key="confirm"
+                                            danger
+                                            type="primary"
+                                            onClick={handleConfirmRemove}
+                                            // style={{color: "black"}}
+                                        >
+                                            Удалить
+                                        </Button>,
+                                    ]}
+                                >
+                                    <Typography.Text>
+                                        Вы уверены, что хотите удалить этот канал? Все настройки будут потеряны.
+                                    </Typography.Text>
+                                </Modal>
+                            </>
+                        )}
+                    </div>
+                </div>
+
+                {/* Панель управления Tour справа - показывается только когда tourPanelVisible = true */}
+                {tourPanelVisible && (
+                    <div className="tour-controls tour-primary">
+                        <div className="tour-controls-header">
+                            <PlayCircleOutlined className="tour-controls-icon" />
+                            <h3 className="tour-controls-title">
+                                Интерактивный обзор
+                            </h3>
+                            <p className="tour-controls-subtitle">
+                                Изучите настройку каналов связи пошагово
+                            </p>
+                        </div>
+
+                        <div className="tour-start-button">
+                            <Button
+                                type="primary"
+                                block
+                                size="large"
+                                onClick={startTour}
+                            >
+                                🚀 Начать тур
+                            </Button>
+                        </div>
+
+                        {tourVisible && (
+                            <div className="tour-progress">
+                                <div className="tour-progress-step">
+                                    <span className="tour-progress-step-text">
+                                        Шаг {current + 1} из {steps.length}
+                                    </span>
+                                </div>
+                                <div className="tour-progress-bar">
+                                    <div
+                                        className="tour-progress-fill"
+                                        style={{width: `${((current + 1) / steps.length) * 100}%`}}
+                                    />
+                                </div>
+                                <div className="tour-progress-title">
+                                    {steps[current]?.title}
+                                </div>
+                            </div>
+                        )}
+
+                        <div className="tour-info">
+                            <div className="tour-info-title">📋 Что вы изучите:</div>
+                            <ul className="tour-info-list">
+                                <li>Добавление каналов связи</li>
+                                <li>Настройку Telegram и WhatsApp ботов</li>
+                                <li>Интеграцию веб-виджетов</li>
+                                <li>Управление статусами каналов</li>
+                            </ul>
+                        </div>
+                    </div>
+                )}
+            </div>
+
+            <Tour
+                open={tourVisible}
+                onClose={() => {
+                    setTourVisible(false);
+                    setCurrent(0);
+                    hideTourPanel()
+                }}
+                steps={steps}
+                current={current}
+                onChange={setCurrent}
+                indicatorsRender={(current, total) => (
+                    <span className="tour-indicator">
+                        {current + 1} / {total}
+                    </span>
+                )}
+                type="primary"
+                arrow={false}
+            />
+
+            <FloatButton
+                icon={<QuestionCircleOutlined />}
+                tooltip="Начать обзор каналов связи"
+                onClick={showTourPanel}
+                className="tour-float-button"
+            />
+        </div>
+    );
+};

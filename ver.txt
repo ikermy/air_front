@@ -1,0 +1,5 @@
+git add .
+git commit -m "v1.3.0"
+git tag -a v1.3.0 -m "CRM release"
+git push origin master
+git push origin v1.3.0

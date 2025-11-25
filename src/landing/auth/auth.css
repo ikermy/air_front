@@ -1,0 +1,92 @@
+.sub-modal {
+    width: 400px;
+    padding: 0 16px;
+    box-sizing: border-box;
+}
+
+/* Адаптивность для мобильных устройств */
+
+/* Базовые стили для мобильных (до 768px) */
+@media (max-width: 768px) {
+    .sub-modal {
+        width: 100%;
+        max-width: 400px;
+        padding: 0 15px;
+    }
+}
+
+/* Очень маленькие экраны (до 480px) */
+@media (max-width: 480px) {
+    .sub-modal {
+        width: 100%;
+        max-width: 350px;
+        padding: 0 8px;
+    }
+}
+
+/* Планшеты (768px - 1023px) */
+@media (min-width: 768px) and (max-width: 1023px) {
+    .sub-modal {
+        width: 400px;
+        padding: 0 15px;
+    }
+}
+
+/* Большие экраны (1400px и выше) */
+@media (min-width: 1400px) {
+    .sub-modal {
+        width: 450px;
+        padding: 0 30px;
+    }
+}
+
+.confirmation-container {
+    width: 400px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+/* Адаптивность для confirmation-container */
+
+/* Базовые стили для мобильных (до 768px) */
+@media (max-width: 768px) {
+    .confirmation-container {
+        width: 100%;
+        max-width: 400px;
+        padding: 0 15px;
+        box-sizing: border-box;
+    }
+}
+
+/* Очень маленькие экраны (до 480px) */
+@media (max-width: 480px) {
+    .confirmation-container {
+        width: 100%;
+        max-width: 350px;
+        padding: 0 8px;
+        box-sizing: border-box;
+    }
+}
+
+/* Планшеты (768px - 1023px) */
+@media (min-width: 768px) and (max-width: 1023px) {
+    .confirmation-container {
+        width: 400px;
+        padding: 0 15px;
+        box-sizing: border-box;
+    }
+}
+
+/* Большие экраны (1400px и выше) */
+@media (min-width: 1400px) {
+    .confirmation-container {
+        width: 450px;
+        padding: 0 30px;
+        box-sizing: border-box;
+    }
+}

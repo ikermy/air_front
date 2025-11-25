@@ -1,0 +1,457 @@
+.hero-main {
+    margin-top: 50px;
+    margin-left: 50px;
+    margin-right: 50px;
+    background-color: var(--bg-color);
+    /*min-height: calc(100vh - 100px);*/
+}
+
+.hero-main h1 {
+    font-size: 32px;
+    font-weight: bold;
+    padding-inline-end: 40px; /* sm:pe-40 */
+    margin: 0;
+}
+
+.hero-main h1 b {
+    color: var(--main-color-dark);
+}
+.dark .hero-main h1 b {
+    color: var(--main-color-light);
+}
+
+/* Стили для класса highlight в заголовке h1 */
+.hero-main h1 .highlight {
+    /*background: linear-gradient(45deg, var(--link-hover-color-light), var(--link-color-light));*/
+    /*background-clip: text;*/
+    /*-webkit-background-clip: text;*/
+    /*-webkit-text-fill-color: transparent;*/
+    font-weight: bold;
+
+    background: linear-gradient(135deg, #1890ff, #722ed1);
+    background-clip: text;
+}
+
+.dark .hero-main h1 .highlight {
+    /*background: linear-gradient(45deg, var(--link-color-dark), var(--link-hover-color-dark));*/
+    background: linear-gradient(45deg, var(--main-color-dark), var(--main-color-light));
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+div.hero-main.hero-main h4 {
+    color: var(--bg-color-dark);
+    margin: 0;
+}
+
+.dark div.hero-main.hero-main h4 {
+    color: var(--bg-color-light);
+}
+
+.try {
+    margin: 10px;
+    /*background-color: var(--main-color-light);*/
+    background-color: var(--dialog-hover-bg-light);
+    color: var(--bg-color-dark); /* Белый текст */
+    padding: 10px 20px; /* Отступы для создания кнопки */
+    border-radius: 12px; /* Закругленные углы */
+    text-align: center; /* Центрирование текста */
+    cursor: pointer; /* Изменение курсора на указатель */
+    font-size: 16px;
+    font-weight: bold;
+    transition: transform 0.2s ease, background-color 0.2s ease; /* Эффект при наведении */
+}
+
+.dark .try {
+    background-color: var(--main-color-light);
+}
+
+.try:hover {
+    background-color: var(--try-color);
+    transform: scale(1.05); /* Легкое увеличение */
+}
+
+.try:active {
+    transform: scale(0.95); /* Легкое уменьшение при клике */
+}
+
+/* Медиа-запросы для планшетов и мобильных - исправляем отступы */
+@media (max-width: 1023px) {
+    .hero-main {
+        margin-left: 0;
+        margin-right: 0;
+        padding-left: 15px;
+        padding-right: 15px;
+        overflow-x: hidden; /* Возвращаем, чтобы избежать горизонтального скролла страницы */
+    }
+
+    /* Удаляем компенсацию отступов, так как она вызывает проблемы на мобильных */
+    .features-section,
+    .assistant-description,
+    .examples-carousel-section {
+        margin-left: 0;
+        margin-right: 0;
+    }
+}
+
+/* Очень большие экраны (1400px и выше) */
+@media (min-width: 1400px) {
+    .hero-main {
+        margin-left: 80px;
+        margin-right: 420px; /* Увеличенный отступ для больших экранов (350px + 70px) */
+    }
+
+    .features-section {
+        padding: 0 20px;
+        margin-right: 70px; /* Увеличенный отступ справа */
+    }
+
+    .features-title {
+        font-size: 26px;
+        margin-bottom: 36px;
+    }
+
+    .feature-card {
+        height: 220px;
+    }
+
+    .card-overlay {
+        padding: 24px 18px 18px 18px;
+    }
+
+    .feature-card .ant-card-meta-title {
+        font-size: 19px;
+        margin-bottom: 10px;
+    }
+
+    .feature-card .ant-card-meta-description {
+        font-size: 15px;
+        line-height: 1.5;
+    }
+}
+
+/* Адаптивность для различных разрешений экранов */
+
+/* Мобильные устройства 320px */
+@media (max-width: 320px) {
+    .hero-main {
+        margin: 10px 5px;
+        /*min-height: calc(100vh - 20px);*/
+    }
+
+    .hero-main h1 {
+        font-size: 20px;
+        padding-inline-end: 5px;
+        line-height: 1.2;
+    }
+
+    .hero-main h4 {
+        font-size: 14px;
+        margin-top: 15px;
+        padding-inline-end: 5px;
+        line-height: 1.3;
+    }
+
+    .try {
+        margin: 15px 0;
+        width: 250px;
+        padding: 8px 16px;
+        font-size: 14px;
+    }
+}
+
+/* Мобильные устройства 375px */
+@media (min-width: 321px) and (max-width: 375px) {
+    .hero-main {
+        margin: 15px 8px;
+        /*min-height: calc(100vh - 30px);*/
+    }
+
+    .hero-main h1 {
+        font-size: 22px;
+        padding-inline-end: 8px;
+        line-height: 1.2;
+    }
+
+    .hero-main h4 {
+        font-size: 15px;
+        margin-top: 18px;
+        padding-inline-end: 8px;
+        line-height: 1.3;
+    }
+
+    .try {
+        margin: 18px 0;
+        width: 260px;
+        padding: 9px 18px;
+        font-size: 14px;
+    }
+}
+
+/* Мобильные устройства 425px */
+@media (min-width: 376px) and (max-width: 425px) {
+    .hero-main {
+        margin: 20px 10px;
+        /*min-height: calc(100vh - 40px);*/
+    }
+
+    .hero-main h1 {
+        font-size: 24px;
+        padding-inline-end: 10px;
+        line-height: 1.3;
+    }
+
+    .hero-main h4 {
+        font-size: 16px;
+        margin-top: 20px;
+        padding-inline-end: 10px;
+        line-height: 1.4;
+    }
+
+    .try {
+        margin: 20px 0;
+        width: 270px;
+        padding: 10px 20px;
+        font-size: 15px;
+    }
+}
+
+/* Планшеты до 767px (статичное меню) */
+@media (min-width: 426px) and (max-width: 767px) {
+    .hero-main {
+        margin: 30px 20px;
+        /*min-height: calc(100vh - 60px);*/
+    }
+
+    .hero-main h1 {
+        font-size: 28px;
+        padding-inline-end: 30px;
+        line-height: 1.3;
+    }
+
+    .hero-main h4 {
+        font-size: 18px;
+        margin-top: 25px;
+        padding-inline-end: 30px;
+        line-height: 1.4;
+    }
+
+    .try {
+        margin: 25px 0;
+        width: 280px;
+        padding: 12px 24px;
+        font-size: 16px;
+    }
+}
+
+/* Планшеты 768px и выше (фиксированное меню) */
+@media (min-width: 768px) and (max-width: 1024px) {
+    .hero-main {
+        padding-top: 70px; /* Отступ сверху для фиксированного меню */
+        margin: 0 20px 30px 20px;
+        /*min-height: calc(100vh - 100px);*/
+    }
+
+    .hero-main h1 {
+        font-size: 30px;
+        padding-inline-end: 40px;
+        line-height: 1.3;
+    }
+
+    .hero-main h4 {
+        font-size: 19px;
+        margin-top: 25px;
+        padding-inline-end: 40px;
+        line-height: 1.4;
+    }
+
+    .try {
+        margin: 25px 0;
+        width: 290px;
+        padding: 12px 24px;
+        font-size: 16px;
+    }
+}
+
+/* Широкие экраны 1440px */
+@media (min-width: 1025px) and (max-width: 1440px) {
+    .hero-main {
+        margin: 50px 40px;
+        /*min-height: calc(100vh - 100px);*/
+    }
+
+    .hero-main h1 {
+        font-size: 36px;
+        padding-inline-end: 50px;
+        line-height: 1.4;
+    }
+
+    .hero-main h4 {
+        font-size: 22px;
+        margin-top: 35px;
+        padding-inline-end: 50px;
+        line-height: 1.5;
+    }
+
+    .try {
+        margin: 35px 0;
+        width: 320px;
+        padding: 14px 28px;
+        font-size: 17px;
+    }
+}
+
+/* Очень широкие экраны больше 1440px */
+@media (min-width: 1441px) {
+    .hero-main {
+        margin: 60px 60px;
+        /*min-height: calc(100vh - 120px);*/
+    }
+
+    .hero-main h1 {
+        font-size: 40px;
+        padding-inline-end: 60px;
+        line-height: 1.5;
+    }
+
+    .hero-main h4 {
+        font-size: 24px;
+        margin-top: 40px;
+        padding-inline-end: 60px;
+        line-height: 1.5;
+    }
+
+    .try {
+        margin: 40px 0;
+        width: 350px;
+        padding: 16px 32px;
+        font-size: 18px;
+    }
+}
+
+/* Дополнительные медиа-запросы для улучшения UX */
+
+/* Горизонтальная ориентация мобильных устройств */
+@media (max-width: 768px) and (orientation: landscape) {
+    .hero-main {
+        margin: 10px 15px;
+    }
+
+    .hero-main h1 {
+        font-size: 22px;
+        line-height: 1.2;
+    }
+
+    .hero-main h4 {
+        font-size: 16px;
+        margin-top: 15px;
+        line-height: 1.3;
+    }
+
+    .try {
+        margin: 15px 0;
+        padding: 8px 20px;
+    }
+}
+
+/* Высокие экраны */
+@media (min-height: 900px) {
+    .hero-main {
+        margin-top: 80px;
+        margin-bottom: 40px;
+    }
+}
+
+/* Ультра-высокие экраны */
+@media (min-height: 1200px) {
+    .hero-main {
+        margin-top: 120px;
+        margin-bottom: 60px;
+    }
+}
+
+/* Демонстрация панели управления */
+.dashboard-demo-section {
+    padding: 80px 0;
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    margin: 0;
+}
+
+.dark .dashboard-demo-section {
+    background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+}
+
+.dashboard-demo-section .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.demo-section-header {
+    text-align: center;
+    margin-bottom: 50px;
+}
+
+.demo-section-header h2 {
+    font-size: 32px;
+    font-weight: 700;
+    color: #2d3748;
+    margin-bottom: 16px;
+    line-height: 1.2;
+}
+
+.dark .demo-section-header h2 {
+    color: #e2e8f0;
+}
+
+.demo-section-header p {
+    font-size: 18px;
+    color: #4a5568;
+    max-width: 600px;
+    margin: 0 auto;
+    line-height: 1.6;
+}
+
+.dark .demo-section-header p {
+    color: #a0aec0;
+}
+
+/* Адаптивность для секции демо */
+@media (max-width: 768px) {
+    .dashboard-demo-section {
+        padding: 50px 0;
+    }
+
+    .demo-section-header {
+        margin-bottom: 30px;
+    }
+
+    .demo-section-header h2 {
+        font-size: 24px;
+        margin-bottom: 12px;
+    }
+
+    .demo-section-header p {
+        font-size: 16px;
+        padding: 0 10px;
+    }
+
+    .dashboard-demo-section .container {
+        padding: 0 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .dashboard-demo-section {
+        padding: 40px 0;
+    }
+
+    .demo-section-header h2 {
+        font-size: 22px;
+    }
+
+    .demo-section-header p {
+        font-size: 15px;
+    }
+}

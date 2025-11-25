@@ -1,0 +1,432 @@
+.view-dialogs-chat-window {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    height: 80vh;
+    border: 1px solid var(--chat-window-border);
+    padding: 10px;
+    scrollbar-width: thin;
+    min-width: 0; /* Позволяет сжиматься */
+    overflow: hidden; /* Предотвращаем переполнение */
+}
+
+.dark .view-dialogs-chat-window {
+    scrollbar-color: #444 #222; /* Цветы бегунка (#444) и фона дорожки (#222) */
+}
+
+.view-dialogs-chat-messages {
+    min-width: 0; /* Убираем фиксированный min-width */
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    scrollbar-width: thin; /* Уменьшенная ширина прокрутки (для Firefox) */
+}
+
+.dark .chat-messages {
+    scrollbar-color: var(--input-bg-dark) var(--input-border-dark);
+}
+
+.widget-input-container {
+    flex-direction: column;
+    display: flex;
+}
+
+.widget-input-container h3 {
+    padding-top: 20px;
+}
+
+.widget-input-container input {
+    padding: 10px;
+    background-color: var(--input-bg);
+    color: #000; /* Цвет текста по умолчанию */
+    border: 1px solid var(--input-border);
+    border-radius: 5px;
+    margin-bottom: 20px;
+    box-sizing: border-box;
+}
+
+body.dark .widget-input-container input {
+    color: white; /* Белый текст в тёмном режиме */
+}
+
+.widget-input-container button {
+    padding: 10px 20px;
+    border: 2px solid #e2ffb6;;
+    background-color: var(--button-bg);
+    color: black;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+.widget-input-container button:hover {
+    background-color: white;
+    border: 2px solid #e2ffb6;
+    color: black;
+}
+
+.chat-message {
+    margin: 5px 0;
+    padding: 10px;
+    max-width: 70%;
+    animation: fadeIn 0.3s ease;
+    word-break: break-word;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.dark .chat-message {
+    color: var(--text-color);
+}
+
+.chat-message.left {
+    border-radius: 10px 10px 10px 0;
+    background-color: var(--message-left-bg);
+    align-self: flex-start;
+}
+
+.chat-message.right {
+    border-radius: 10px 10px 0 10px;
+    background-color: var(--message-right-bg);
+    align-self: flex-end;
+}
+
+.dark .chat-message.right b {
+    background-color: var(--message-right-bg);
+    align-self: flex-end;
+    color: white;
+}
+
+.message-name {
+    font-weight: lighter;
+    font-size: x-small;
+    color: var(--message-name-color);
+    margin-bottom: 5px;
+    display: flex;
+}
+
+.message-name.left {
+    justify-content: flex-start;
+    /*text-align: right;*/
+}
+
+.message-name.right {
+    justify-content: flex-end;
+}
+
+.message-files {
+    margin-bottom: 8px;
+}
+
+.message-files:empty {
+    margin-bottom: 0;
+}
+
+.message-text {
+    padding: 10px;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+}
+
+.message-text.left {
+    background-color: var(--message-left-bg);
+}
+
+.message-text.right {
+    background-color: var(--message-right-bg);
+}
+
+.message-timestamp {
+    font-size: x-small;
+    color: var(--message-name-color);
+    margin-top: 5px;
+    text-align: right;
+}
+
+.message-timestamp.left {
+    align-self: flex-start;
+    text-align: left;
+}
+
+.message-timestamp.right {
+    align-self: flex-end;
+    text-align: right;
+}
+
+.error-message {
+    /*color: var(--error-message-bg);*/
+    font-weight: bold;
+    text-align: center;
+    margin: 10px 0;
+    padding: 10px;
+    border: 1px solid red;
+    border-radius: 5px;
+    background-color: var(--error-message-bg);
+}
+
+.no-balance {
+    color: #ff9d00;
+    font-weight: bold;
+    text-align: center;
+    margin: 10px 0;
+    padding: 10px;
+    border: 1px solid #ff9d00;
+    border-radius: 5px;
+    background-color: var(--error-message-bg);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px); /* Сообщение появляется снизу */
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0); /* Сообщение возвращается на своё место */
+    }
+}
+
+.chat-container {
+    display: flex;
+    height: 100%;
+    overflow: hidden; /* Предотвращаем переполнение */
+}
+
+.chat-calendar {
+    width: 300px;
+    padding: 10px;
+    flex-shrink: 0; /* Не сжимается */
+    min-width: 250px; /* Минимальная ширина */
+}
+
+.ant-radio-button-label {
+    color: var(--text-color);
+}
+
+.dark .ant-radio-button-wrapper-checked .ant-radio-button-label {
+    color: var(--bg-color-dark) !important;
+}
+
+.date-separator {
+    display: flex;
+    align-items: center;
+    margin: 15px 0;
+    width: 100%;
+}
+
+.date-line {
+    flex-grow: 1;
+    height: 1px;
+    background-color: #888;;
+}
+
+.date-text {
+    padding: 0 15px;
+    color: #888;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+.ant-picker-cell-selected .ant-picker-calendar-date {
+    color: var(--text-color-light) !important;
+}
+
+.export-button-container {
+    margin-top: 15px;
+    padding: 0 10px;
+}
+
+.ant-picker-cell-in-view.ant-picker-cell-in-range {
+    /*background-color: #e6ffe8 !important;*/
+    background-color: var(--main-color) !important;
+    color: var(--bg-color-dark) !important;
+}
+
+.ant-picker-cell-in-view.ant-picker-cell-in-range::before {
+    content: none !important;
+}
+
+.ant-picker-cell-in-view.ant-picker-cell-range-start {
+    background-color: rgba(39, 196, 86, 0.5) !important;
+}
+
+.ant-picker-cell-in-view.ant-picker-cell-range-end {
+    background-color: rgba(39, 196, 86, 0.5) !important;
+}
+
+.ant-picker-cell-in-view.ant-picker-cell-range-start::before {
+    content: none !important;
+}
+
+.ant-picker-cell-in-view.ant-picker-cell-range-end::before {
+    content: none !important;
+}
+
+.dialog-status-container {
+    margin-top: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.dialog-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.status-active {
+    background-color: rgba(82, 196, 26, 0.1);
+}
+
+.status-inactive {
+    background-color: rgba(245, 34, 45, 0.1);
+}
+
+.message-image-container,
+.message-video-container,
+.message-document-container {
+    margin-bottom: 5px;
+}
+
+.message-image-container:last-of-type,
+.message-video-container:last-of-type,
+.message-document-container:last-of-type {
+    margin-bottom: 0;
+}
+
+.chat-video {
+    max-width: 100%;
+    border-radius: 5px;
+}
+
+.document-link {
+    display: inline-block;
+    padding: 8px 12px;
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+    text-decoration: none;
+    color: inherit;
+}
+
+.document-link:hover {
+    background-color: rgba(0, 0, 0, 0.2);
+}
+
+.file-caption {
+    font-size: 12px;
+    /*color: #666;*/
+    margin-top: 4px;
+    font-style: italic;
+}
+
+/* Стили для календаря с отметками дат с сообщениями */
+.calendar-has-messages {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--main-color-light);
+    border-radius: 4px;
+    opacity: 0.3;
+    pointer-events: none;
+}
+
+/* Для темной темы */
+body.dark .calendar-has-messages {
+    background-color: var(--main-color-dark);
+    opacity: 0.4;
+}
+
+/* Принудительно черный цвет для чисел дат с сообщениями */
+.ant-picker-cell:has(.calendar-has-messages) .ant-picker-calendar-date,
+.ant-picker-cell:has(.calendar-has-messages) .ant-picker-calendar-date-content {
+    color: #000000 !important;
+    font-weight: 600 !important;
+    position: relative;
+    z-index: 2;
+}
+
+/* Альтернативный подход через родительский селектор */
+.ant-picker-calendar .ant-picker-cell .ant-picker-calendar-date:has(+ .calendar-has-messages),
+.ant-picker-calendar .ant-picker-cell:has(.calendar-has-messages) .ant-picker-calendar-date {
+    color: #000000 !important;
+    font-weight: 600 !important;
+}
+
+/* Для RangePicker также устанавливаем черный цвет */
+.ant-picker-dropdown .ant-picker-cell:has(.range-picker-dot) .ant-picker-cell-inner {
+    color: #000000 !important;
+    font-weight: 600 !important;
+}
+
+/* Стили для RangePicker точек */
+.calendar-date-cell {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.range-picker-dot {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--main-color-light);
+    border-radius: 4px;
+    opacity: 0.3;
+    pointer-events: none;
+}
+
+body.dark .range-picker-dot {
+    background-color: var(--main-color-dark);
+    opacity: 0.4;
+}
+
+/* Стили для ячеек календаря с сообщениями */
+.ant-picker-cell:has(.calendar-has-messages) .ant-picker-calendar-date {
+    position: relative;
+    z-index: 1;
+}
+
+/* Альтернативный подход для браузеров без поддержки :has() */
+.ant-picker-calendar .ant-picker-calendar-date-content {
+    position: relative;
+}
+
+.ant-picker-calendar .ant-picker-calendar-date:has(.calendar-has-messages) {
+    background-color: var(--main-color-light) !important;
+    border-radius: 4px !important;
+    opacity: 0.8 !important;
+}
+
+body.dark .ant-picker-calendar .ant-picker-calendar-date:has(.calendar-has-messages) {
+    background-color: var(--main-color-dark) !important;
+    opacity: 0.9 !important;
+}
+
+/* Адаптивность для мобильных устройств */
+@media (max-width: 768px) {
+    .chat-container {
+        flex-direction: column;
+    }
+
+    .chat-calendar {
+        width: 100%;
+        height: 200px;
+        overflow-y: auto;
+    }
+
+    .view-dialogs-chat-window {
+        height: 50vh;
+    }
+}

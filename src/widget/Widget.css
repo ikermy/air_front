@@ -1,0 +1,172 @@
+/*body.light {*/
+/*    --chat-window-border: var(--chat-window-border-light);*/
+/*    --input-bg: var(--input-bg-light);*/
+/*    --input-border: var(--input-border-light);*/
+/*    --button-bg: var(--button-bg-light);*/
+/*    --message-left-bg: var(--message-left-bg-light);*/
+/*    --message-right-bg: var(--message-right-bg-light);*/
+/*    --error-message-bg: var(--error-message-bg-light);*/
+/*    --message-name-color: var(--message-name-color-light);*/
+/*    --close-button-bg: #fb4c4c;*/
+/*    --close-button-bg-hover: var(--error-color);*/
+/*}*/
+
+/*body.dark {*/
+/*    --chat-window-border: var(--chat-window-border-dark);*/
+/*    --input-bg: var(--input-bg-dark);*/
+/*    --input-border: var(--input-border-dark);*/
+/*    --button-bg: var(--button-bg-dark);*/
+/*    --message-left-bg: var(--message-left-bg-dark);*/
+/*    --message-right-bg: var(--message-right-bg-dark);*/
+/*    --error-message-bg: var(--error-message-bg-dark);*/
+/*    --message-name-color: var(--message-name-color-dark);*/
+/*    --close-button-bg: #808080;*/
+/*    --close-button-bg-hover: var(--error-color);*/
+/*}*/
+
+/* CSS переменные для виджета убраны - используем из App.css */
+
+.widget-cap {
+    display: flex;
+    align-items: center;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    /*background: #e2ffb6;*/
+    background: var(--dialog-hover-bg-light);
+    height: 38px;
+    padding: 0;
+    margin: 0;
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+    z-index: 1;
+}
+
+.dark .widget-cap {
+    background: var(--main-color-light);
+}
+
+.widget-cap img {
+    padding-left: 10px;
+}
+
+.widget-cap b {
+    padding-left: 10px;
+}
+
+.widget-circle {
+    width: 6px; /* Размер круга */
+    height: 6px; /* Размер круга */
+    border-radius: 50%; /* Делаем круг */
+    position: absolute; /* Абсолютное позиционирование */
+    top: 23px; /* Отступ сверху относительно родителя */
+    left: 28px; /* Отступ слева относительно родителя */
+    z-index: 2; /* Устанавливаем уровень слоя выше изображения */
+}
+
+.widget-circle.connected {
+    background-color: chartreuse;
+}
+
+.widget-circle.disconnected {
+    background-color: red;
+}
+
+.widget-circle.nopermit {
+    background-color: yellow;
+}
+
+/* Скрыть кнопку виджета на мобильных устройствах */
+@media (max-width: 425px) {
+    .widget-open-button {
+        display: none;
+    }
+}
+
+.widget-chat-window {
+    color: black;
+    display: flex;
+    flex-direction: column;
+    width: 350px; /* Фиксированная ширина */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Небольшая тень */
+    margin-left: 16px; /* Отступ от HeroSection */
+    border: 1px solid var(--chat-window-border); /* Динамический цвет бордюра */
+    padding: 10px; /* Внутренний отступ */
+    border-radius: 10px; /* Скругление углов */
+    position: fixed;
+    z-index: 1000; /* Ensure the chat window is above other elements */
+    /*background: var(--input-bg-light);*/
+    overflow: hidden;
+    height: 80vh;
+}
+
+.dark .widget-chat-window {
+    background-color: var(--input-bg-dark);
+}
+
+.widget-open-button {
+    cursor: pointer;
+    position: fixed;
+    border-radius: 50%;
+    background-color: var(--new-hover-color);
+    /*z-index: 999999;*/
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    display: flex;
+    justify-content: center;
+    border: none;
+    outline: none;
+    -webkit-appearance: none;
+    -webkit-tap-highlight-color: transparent; /* для мобильных */
+}
+
+.widget-open-button img {
+    width: 130%;
+    height: 130%;
+}
+
+.widget-open-button:hover {
+    background-color: var(--blue-color);
+    transform: scale(1.1);
+    transition: all 0.2s;
+}
+
+.widget-open-button img {
+    filter: brightness(0) invert(1);
+}
+
+
+.dark .widget-open-button {
+    background: var(--user-data-bg-dark);
+}
+
+.dark .widget-open-button:hover {
+    background: var(--link-color-light);
+}
+
+.dark .widget-open-button img {
+    filter: brightness(0);
+}
+
+.widget-close-button {
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--close-color);
+    color: white;
+    border: none;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    font-size: 24px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.widget-close-button:hover {
+    background: var(--error-color);
+}

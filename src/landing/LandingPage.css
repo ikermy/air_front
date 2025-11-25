@@ -1,0 +1,66 @@
+.main-container {
+    padding: 30px;
+    background-color: var(--bg-color);
+    min-height: 100vh;
+}
+
+.main-container > * {
+    margin-bottom: 60px;
+}
+
+.main-container > *:last-child {
+    margin-bottom: 0;
+}
+
+/* Адаптивность для мобильных устройств */
+
+/* Очень маленькие экраны (до 480px) */
+@media (max-width: 480px) {
+    .main-container {
+        padding: 10px !important;
+        background-color: var(--bg-color);
+    }
+}
+
+/* Мобильные устройства (481px - 767px) */
+@media (min-width: 481px) and (max-width: 767px) {
+    .main-container {
+        padding: 15px !important;
+        background-color: var(--bg-color);
+    }
+}
+
+/* Планшеты (768px - 1023px) */
+@media (min-width: 768px) and (max-width: 1023px) {
+    .main-container {
+        padding: 20px;
+        background-color: var(--bg-color);
+    }
+}
+
+/* Десктопы (1024px и выше) */
+@media (min-width: 1024px) {
+    .main-container {
+        padding: 30px;
+        background-color: var(--bg-color);
+    }
+}
+
+/* Очень большие экраны (1400px и выше) */
+@media (min-width: 1400px) {
+    .main-container {
+        padding: 40px 60px;
+        max-width: 1600px;
+        margin: 0 auto;
+        background-color: var(--bg-color);
+    }
+}
+
+/* Адаптивность для мобильных устройств */
+@media (max-width: 768px) {
+    /* Стили для ключевых преимуществ перенесены в AssistFeatures.css */
+}
+
+@media (max-width: 480px) {
+    /* Стили для ключевых преимуществ перенесены в AssistFeatures.css */
+}

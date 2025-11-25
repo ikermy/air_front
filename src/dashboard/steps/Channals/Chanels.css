@@ -1,0 +1,218 @@
+.channel-list {
+    /*max-width: 500px;*/
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+.channel-item {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 10px;
+    border: 1px solid var(--midle-color);
+    border-radius: 5px;
+    position: relative;
+    flex-direction: column;
+    background: var(--bg-color);
+}
+
+.channel-item-content {
+    width: 100%;
+    margin-top: 12px;
+}
+
+.ant-btn-default:hover {
+    color: var(--text-color) !important;
+}
+
+.ant-btn-primary {
+    color: var(--text-color)
+}
+
+.padding {
+    padding-top: 10px;
+    padding-bottom: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.lining {
+    padding-top: 10px;
+    padding-bottom: 10px;
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.thirty {
+    width: 30%;
+}
+
+.seventy {
+    width: 70%;
+}
+
+.channel-info {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.channel-icon {
+    margin-right: 10px;
+}
+
+.channel-options {
+    display: flex;
+    margin-top: 10px;
+    height: 250px;
+    position: relative;
+}
+
+.options-caption {
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+}
+
+.notification-options-caption {
+    padding-top: 10px;
+    padding-bottom: 10px;
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+    width: 100%;
+}
+
+.bottom-right-button {
+    margin-top: auto;
+    /*align-self: flex-end;*/
+    color: black;
+}
+
+.chanal-name {
+    display: flex;
+    align-items: center;
+}
+
+.settings-button {
+    color: black;
+    margin-top: 10px;
+}
+
+.delete-button {
+    margin-top: 10px;
+    color: var(--error-color);
+}
+
+.chanal-delete {
+    /*position: absolute;*/
+    left: 10px;
+    align-self: flex-end;
+}
+
+.switch-container {
+    width: 100%;
+    text-align: right;
+    margin-left: 10px;
+}
+
+.ant-alert {
+    color: var(--text-color);
+    background: var(--dialog-bg-color);
+}
+
+.confirm-buttons {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    width: 100%;
+    align-items: center;
+}
+
+.confirm-buttons-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+
+.confirm-buttons-group {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+/*Модальное окно контактов*/
+.tg-contact {
+    min-width: 70%;
+}
+.dark .tg-contact {
+    scrollbar-width: thin;
+    scrollbar-color: #444 #222;
+}
+.contact-list-item {
+    cursor: pointer; /* Показываем, что элемент кликабельный */
+    transition: background-color 0.2s ease; /* Плавный переход цвета фона */
+    padding: 12px 16px; /* Добавляем немного отступов для удобства клика */
+    border-radius: 4px; /* Небольшое скругление углов */
+}
+.contact-list-item:hover {
+    background-color: var(--link-hover-color);
+}
+.contact-list-item:hover .ant-list-item-meta-title,
+.contact-list-item:hover .ant-list-item-meta-description {
+    color: var(--bg-color-dark) !important;
+}
+.selected-contact-item {
+    background-color: var(--main-color);
+}
+.selected-contact-item .ant-list-item-meta-title,
+.selected-contact-item .ant-list-item-meta-description {
+    color: var(--bg-color-dark) !important;
+}
+.contact-avatar {
+    text-shadow: 0 4px 8px rgba(83, 83, 83, 0.2);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    font-weight: bold;
+    background-color: var(--link-color);
+    color: white;
+}
+.ant-tabs-tab.ant-tabs-tab-active .ant-tabs-tab-btn {
+    color: var(--text-color) !important;
+}
+.ant-tabs-ink-bar {
+    background-color: var(--link-hover-color) !important;
+}
+.ant-tabs-tab:hover .ant-tabs-tab-btn {
+    color: var(--link-hover-color) !important;
+}
+
+.slider-row {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    gap: 16px;
+}
+.slider-row .ant-slider {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+.slider-row .ant-input-number {
+    margin-left: auto;
+}
+
+.channel-actions-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    margin-top: 16px;
+}

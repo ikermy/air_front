@@ -1,0 +1,70 @@
+/* Стили для компонента Espero */
+
+.espero-container {
+    /*max-width: 600px;*/
+    margin: 0 auto;
+    /*padding: 20px;*/
+}
+
+.espero-section-title {
+    display: flex;
+    align-items: center;
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    gap: 8px;
+}
+
+.espero-step {
+    margin-bottom: 20px;
+    font-size: 16px;
+}
+
+.espero-channel-item {
+    /*border: 1px solid #d9d9d9;*/
+    border-radius: 8px;
+    padding: 20px;
+    background-color: var(--bg-color);
+}
+
+.espero-form-item {
+    margin-bottom: 24px;
+}
+
+.espero-form-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 8px;
+    color: var(--text-color);
+}
+
+.espero-slider-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.espero-slider-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.espero-slider {
+    flex: 1;
+}
+
+.espero-input-number {
+    min-width: 80px;
+}
+
+.espero-switch-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.espero-switch-label {
+    font-size: 14px;
+}

@@ -1,0 +1,200 @@
+/*ChatWindow.css*/
+/*:root {*/
+/*    --chat-window-border-light: #ccc;*/
+/*    --chat-window-border-dark: #444;*/
+/*    --input-bg-light: #ffffff;*/
+/*    --input-bg-dark: #333333;*/
+/*    --input-border-light: #ccc;*/
+/*    --input-border-dark: #555;*/
+/*    --button-bg-light: #f7ffe9;*/
+/*    --button-bg-dark: #e2ffb6;*/
+/*    --message-left-bg-light: #f4f4f4;*/
+/*    --message-left-bg-dark: #5c5c5c;*/
+/*    --message-right-bg-light: #f9ffdd;*/
+/*    --message-right-bg-dark: #395a00;*/
+/*    --error-message-bg-light: #ffe6e6;*/
+/*    --error-message-bg-dark: #663333;*/
+/*    --message-name-color-light: darkgray;*/
+/*    --message-name-color-dark: lightgray;*/
+/*}*/
+
+/*body.light {*/
+/*    --chat-window-border: var(--chat-window-border-light);*/
+/*    --input-bg: var(--input-bg-light);*/
+/*    --input-border: var(--input-border-light);*/
+/*    --button-bg: var(--button-bg-light);*/
+/*    --message-left-bg: var(--message-left-bg-light);*/
+/*    --message-right-bg: var(--message-right-bg-light);*/
+/*    --error-message-bg: var(--error-message-bg-light);*/
+/*    --message-name-color: var(--message-name-color-light);*/
+/*}*/
+
+/*body.dark {*/
+/*    --chat-window-border: var(--chat-window-border-dark);*/
+/*    --input-bg: var(--input-bg-dark);*/
+/*    --input-border: var(--input-border-dark);*/
+/*    --button-bg: var(--button-bg-dark);*/
+/*    --message-left-bg: var(--message-left-bg-dark);*/
+/*    --message-right-bg: var(--message-right-bg-dark);*/
+/*    --error-message-bg: var(--error-message-bg-dark);*/
+/*    --message-name-color: var(--message-name-color-dark);*/
+/*}*/
+
+.chat-window {
+    display: flex;
+    flex-direction: column;
+    height: 80vh;
+    border: 1px solid var(--chat-window-border);
+    padding: 10px;
+}
+
+.chat-messages {
+    padding-top: 40px;
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    scrollbar-width: thin; /* Уменьшенная ширина прокрутки (для Firefox) */
+    box-sizing: border-box;
+}
+
+.dark .chat-messages {
+    scrollbar-color: #444 #222; /* Цветы бегунка (#444) и фона дорожки (#222) */
+}
+
+.input-container {
+    padding-left: 5px;
+    display: flex;
+    width: 100%;
+    justify-content: center;
+    align-items: center;
+}
+
+.input-container h3 {
+    padding-right: 20px;
+}
+
+.input-container input {
+    flex: 1;
+    padding: 10px;
+    background-color: var(--input-bg);
+    color: #000; /* Цвет текста по умолчанию */
+    border: 1px solid var(--input-border);
+    border-radius: 5px;
+}
+body.dark .input-container input {
+    color: white; /* Белый текст в тёмном режиме */
+}
+
+.input-container button {
+    padding: 10px 20px;
+    border: 2px solid #e2ffb6;;
+    background-color: var(--button-bg);
+    color: black;
+    border-radius: 10px;
+    cursor: pointer;
+    margin-left: 10px;
+}
+
+.input-container button:hover {
+    background-color: white;
+    border: 2px solid #e2ffb6;
+    color: black;
+}
+
+.chat-message {
+    margin: 5px 0;
+    padding: 10px;
+    border-radius: 5px;
+    max-width: 70%;
+    animation: fadeIn 0.3s ease; /* Анимация появления */
+    word-break: break-word; /* Чтобы текст не выходил за границы */
+}
+
+.chat-message.left {
+    background-color: var(--message-left-bg);
+    align-self: flex-start;
+}
+
+.chat-message.right {
+    background-color: var(--message-right-bg);
+    align-self: flex-end;
+}
+
+.chat-input {
+    /*border: 1px solid red;*/
+    display: flex;
+}
+
+.message-name {
+    font-weight: lighter;
+    font-size: x-small;
+    color: var(--message-name-color);
+    margin-bottom: 5px;
+    display: flex;
+}
+
+.message-name.left {
+    justify-content: flex-start;
+}
+
+.message-name.right {
+    justify-content: flex-end;
+}
+
+.message-text {
+    padding: 10px;
+    border-radius: 5px;
+    display: flex;
+}
+
+.message-text.left {
+    background-color: var(--message-left-bg);
+}
+
+.message-text.right {
+    background-color: var(--message-right-bg);
+}
+
+.dark .message-text b {
+    color: white;
+}
+
+.message-timestamp {
+    font-size: x-small;
+    color: var(--message-name-color);
+    margin-top: 5px;
+    text-align: right;
+}
+
+.message-timestamp.left {
+    align-self: flex-start;
+    text-align: left;
+}
+
+.message-timestamp.right {
+    align-self: flex-end;
+    text-align: right;
+}
+
+.error-message {
+    color: red;
+    font-weight: bold;
+    text-align: center;
+    margin: 10px 0;
+    padding: 10px;
+    border: 1px solid red;
+    border-radius: 5px;
+    background-color: var(--error-message-bg);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px); /* Сообщение появляется снизу */
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0); /* Сообщение возвращается на своё место */
+    }
+}

@@ -1,0 +1,26 @@
+/* Стили отдельного уведомления */
+.ant-notification-notice {
+    background-color: var(--dialog-bg-color) !important; /* Цвет фона (по умолчанию белый) */
+    color: var(--text-color) !important; /* Цвет текста */
+    border: 1px solid var(--shadow-color) !important; /* Граница */
+}
+
+/* Заголовок уведомления */
+.ant-notification-notice-message {
+    color: var(--text-color) !important; /* Цвет текста заголовка */
+}
+
+/* Описание уведомления */
+.ant-notification-notice-description {
+    color: var(--text-color) !important; /* Цвет текста описания */
+}
+
+/* Стили кнопки закрытия уведомления */
+.ant-notification-notice-close {
+    color: var(--text-color) !important; /* Цвет иконки */
+}
+
+/* Стили кнопки при наведении */
+.ant-notification-notice-close:hover {
+    color: var(--link-hover-color) !important; /* Цвет при наведении */
+}

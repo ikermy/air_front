@@ -1,0 +1,49 @@
+.footer-section {
+    /*width: 100vw;*/
+    /*position: relative;*/
+    /*left: 50%;*/
+    /*right: 50%;*/
+    /*margin-left: -50vw;*/
+    /*margin-right: -50vw;*/
+    background: linear-gradient(135deg, var(--ligth-bg-d-color) 0%, var(--ligth-bg-l-color) 100%);
+    padding: 40px 20px;
+    /*margin-top: 60px;*/
+}
+
+.dark .footer-section {
+    background: linear-gradient(135deg, var(--midle-color) 0%, var(--bg-color) 100%);
+}
+
+.footer-content {
+    width: 90%;
+    margin: 0 auto;
+    text-align: left;
+}
+
+.footer-content p {
+    color: var(--text-color);
+    margin: 8px 0;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+/* Адаптивность для мобильных устройств */
+@media (max-width: 768px) {
+    .footer-section {
+        padding: 30px 15px;
+    }
+
+    .footer-content p {
+        font-size: 13px;
+    }
+}
+
+@media (max-width: 480px) {
+    .footer-section {
+        padding: 20px 10px;
+    }
+
+    .footer-content p {
+        font-size: 12px;
+    }
+}

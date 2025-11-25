@@ -1,0 +1,722 @@
+/* Принудительная адаптивность для ExamplesCarousel */
+
+/* Инклюзивная модель коробки для слайдов slick, чтобы padding учитывался в ширине */
+.examples-carousel .slick-slide {
+    box-sizing: border-box;
+}
+
+/* Базовые стили для ExamplesCarousel */
+.examples-carousel-section {
+    width: 100%;
+    max-width: 1400px;
+    box-sizing: border-box;
+    padding: 40px 20px;
+    background: linear-gradient(135deg, var(--ligth-bg-d-color) 0%, var(--ligth-bg-l-color) 100%);
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.dark .examples-carousel-section {
+    background: linear-gradient(135deg, var(--midle-color) 0%, var(--bg-color) 100%);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.examples-title {
+    text-align: center;
+    color: var(--text-color);
+}
+
+.examples-title .highlight {
+    background: linear-gradient(45deg, var(--link-color-light), var(--link-hover-color-light));
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: bold;
+}
+
+.dark .examples-title .highlight {
+    background: linear-gradient(45deg, var(--link-color-dark), var(--link-hover-color-dark));
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.dark .examples-title {
+    color: var(--text-color);
+}
+
+.examples-carousel {
+    margin: 0 auto;
+    padding: 0;
+    position: relative;
+    width: 100%;
+    box-sizing: border-box;
+    overflow: hidden; /* ДОБАВЛЕНО: Скрываем переполнение карусели */
+}
+
+/* ДОБАВЛЕНО: Принудительное центрирование слайдов */
+.examples-carousel .ant-carousel {
+    overflow: hidden !important;
+}
+
+.examples-carousel .ant-carousel .slick-slider {
+    overflow: hidden !important;
+}
+
+.examples-carousel .ant-carousel .slick-list {
+    overflow: hidden !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.examples-carousel .ant-carousel .slick-track {
+    display: flex !important;
+    align-items: stretch !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+.carousel-slide {
+    padding: 20px;
+    width: 100% !important; /* ДОБАВЛЕНО: Принудительная ширина */
+    box-sizing: border-box !important;
+}
+
+/* ДОБАВЛЕНО: Фиксируем ширину слайдов */
+.examples-carousel .ant-carousel .slick-slide {
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+.examples-carousel .ant-carousel .slick-slide > div {
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+.slide-content {
+    background: var(--bg-color);
+    border-radius: 16px;
+    padding: 30px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+    /*min-height: 400px;*/
+    display: flex;
+    flex-direction: column;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+.dark .slide-content {
+    background: var(--bg-color-dark);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+}
+
+.slide-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    /*border-bottom: 2px solid var(--link-color-light);*/
+    border-bottom: 2px solid var(--blue-color);
+}
+
+.dark .slide-header {
+    border-bottom: 2px solid var(--main-color-light);
+}
+
+.slide-icon {
+    font-size: 32px;
+    margin-right: 15px;
+}
+
+.slide-title {
+    /*color: var(--link-color-light) !important;*/
+    color: var(--blue-color) !important;
+    margin: 0 !important;
+    font-size: 22px !important;
+    font-weight: 600 !important;
+    flex: 1;
+}
+
+.dark .slide-title {
+    color: var(--main-color-light) !important;
+}
+
+.slide-items {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.slide-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.item-bullet {
+    color: var(--main-color-dark);
+    font-weight: bold;
+    margin-top: 2px;
+    min-width: 10px;
+}
+
+.dark .item-bullet {
+    color: var(--main-color-light);
+}
+
+.item-text {
+    color: var(--text-color) !important;
+    line-height: 1.6 !important;
+    margin: 0 !important;
+    font-size: 15px !important;
+}
+
+.dark .item-text {
+    color: var(--text-color) !important;
+}
+
+/* Кастомные стрелки навигации */
+.custom-arrow {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 25px;
+    height: 25px;
+    background: rgba(255, 255, 255, 0.95);
+    border: 2px solid var(--new-text-color);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    /*z-index: 1;*/
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    opacity: 1;
+    visibility: visible;
+}
+
+.custom-arrow-prev {
+    left: 20px; /* Позиционируем слева */
+}
+
+.custom-arrow-next {
+    right: 20px; /* Позиционируем справа */
+}
+
+.custom-arrow:hover {
+    background: var(--new-text-color);
+    border-color: var(--new-text-color);
+    transform: translateY(-50%) scale(1.1);
+}
+
+.custom-arrow .anticon {
+    font-size: 12px;
+    color: var(--new-text-color);
+}
+
+.custom-arrow:hover .anticon {
+    color: white;
+}
+
+/* Темная тема для кастомных стрелок */
+.dark .custom-arrow {
+    background: rgba(51, 51, 51, 0.9);
+    border-color: var(--link-color);
+}
+
+.dark .custom-arrow:hover {
+    background: var(--link-color);
+    border-color: var(--link-color);
+}
+
+.dark .custom-arrow .anticon {
+    color: var(--link-color);
+}
+
+.dark .custom-arrow:hover .anticon {
+    color: #333;
+}
+
+/* Удаляем старые стили для стрелок slick */
+.examples-carousel .ant-carousel .slick-prev,
+.examples-carousel .ant-carousel .slick-next {
+    display: none !important;
+}
+
+/* МОБИЛЬНАЯ АДАПТИВНОСТЬ - КРИТИЧЕСКИЕ ИСПРАВЛЕНИЯ */
+
+/* Основной мобильный диапазон (до 768px) */
+@media (max-width: 768px) {
+    .examples-carousel-section {
+        margin: 30px 0;
+        padding: 20px 0; /* Убраны боковые отступы для выравнивания */
+        border-radius: 16px;
+        width: 100%;
+        overflow: visible; /* Разрешаем видимость за пределами блока */
+    }
+
+    .examples-title {
+        font-size: 22px !important;
+        margin-bottom: 20px !important;
+        padding: 0 8px !important;
+        line-height: 1.3 !important;
+        word-wrap: break-word;
+        hyphens: auto;
+    }
+
+    .examples-carousel {
+        padding: 0 30px !important; /* Добавляем отступы для стрелок */
+        max-width: 100% !important;
+        width: 100% !important;
+    }
+
+    .examples-carousel .ant-carousel {
+        width: 100% !important;
+        overflow: visible; /* Показываем стрелки, которые могут быть за пределами */
+    }
+
+    .examples-carousel .ant-carousel .slick-slider,
+    .examples-carousel .ant-carousel .slick-list,
+    .examples-carousel .ant-carousel .slick-track {
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .carousel-slide {
+        padding: 8px !important;
+        width: 100% !important;
+    }
+
+    .slide-content {
+        padding: 20px 16px !important;
+        min-height: 320px !important; /* Увеличена высота для лучшего вида */
+        border-radius: 12px !important;
+        width: 100% !important;
+    }
+
+    .slide-header {
+        flex-direction: row !important;
+        align-items: center !important;
+        gap: 12px !important;
+        margin-bottom: 16px !important;
+        padding-bottom: 12px !important;
+        /*border-bottom: 2px solid var(--link-color-light) !important;*/
+    }
+
+    .slide-icon {
+        font-size: 28px !important;
+        margin-right: 0 !important;
+    }
+
+    .slide-title {
+        font-size: 18px !important;
+        line-height: 1.2 !important;
+        flex: 1 !important;
+    }
+
+    .slide-items {
+        gap: 12px !important;
+    }
+
+    .slide-item {
+        gap: 8px !important;
+    }
+
+    .item-bullet {
+        font-size: 14px !important;
+        min-width: 10px !important;
+        margin-top: 2px !important;
+    }
+
+    .item-text {
+        font-size: 14px !important;
+        line-height: 1.4 !important;
+    }
+
+    /* Показываем стрелки навигации */
+    .custom-arrow {
+        display: flex !important; /* Используем flex для центрирования иконки */
+        opacity: 0.8;
+        transform: translateY(-50%) scale(0.9);
+    }
+
+    .custom-arrow-prev {
+        left: 0; /* Позиционируем слева */
+    }
+
+    .custom-arrow-next {
+        right: 0; /* Позиционируем справа */
+    }
+}
+
+/* Средние мобильные устройства (до 576px) */
+@media (max-width: 576px) {
+    .examples-carousel-section {
+        margin: 25px 0;
+        padding: 16px 0; /* Убраны боковые отступы */
+        border-radius: 12px;
+    }
+
+    .examples-title {
+        font-size: 20px !important;
+        margin-bottom: 16px !important;
+        padding: 0 15px !important; /* Добавлен внутренний отступ для заголовка */
+        line-height: 1.2 !important;
+    }
+
+    .carousel-slide {
+        padding: 6px !important;
+    }
+
+    .slide-content {
+        padding: 16px 12px !important;
+        min-height: 300px !important; /* Скорректирована высота */
+        border-radius: 10px !important;
+    }
+
+    .slide-header {
+        gap: 10px !important;
+        margin-bottom: 14px !important;
+        padding-bottom: 10px !important;
+    }
+
+    .slide-icon {
+        font-size: 24px !important;
+    }
+
+    .slide-title {
+        font-size: 16px !important;
+        line-height: 1.1 !important;
+    }
+
+    .slide-items {
+        gap: 10px !important;
+    }
+
+    .slide-item {
+        gap: 6px !important;
+    }
+
+    .item-bullet {
+        font-size: 12px !important;
+        min-width: 8px !important;
+    }
+
+    .item-text {
+        font-size: 13px !important;
+        line-height: 1.3 !important;
+    }
+}
+
+/* Маленькие мобильные устройства (до 480px) */
+@media (max-width: 480px) {
+    .examples-carousel-section {
+        margin: 20px 0;
+        padding: 12px 0; /* Убраны боковые отступы */
+        border-radius: 8px;
+    }
+
+    .examples-title {
+        font-size: 18px !important;
+        margin-bottom: 14px !important;
+        padding: 0 10px !important; /* Добавлен внутренний отступ */
+        line-height: 1.1 !important;
+    }
+
+    .carousel-slide {
+        padding: 4px !important;
+    }
+
+    .slide-content {
+        padding: 14px 10px !important;
+        min-height: 280px !important; /* Скорректирована высота */
+        border-radius: 8px !important;
+    }
+
+    .slide-header {
+        gap: 8px !important;
+        margin-bottom: 12px !important;
+        padding-bottom: 8px !important;
+        border-bottom: 1px solid var(--link-color-light) !important;
+    }
+
+    .slide-icon {
+        font-size: 22px !important;
+    }
+
+    .slide-title {
+        font-size: 15px !important;
+        line-height: 1.0 !important;
+    }
+
+    .slide-items {
+        gap: 8px !important;
+    }
+
+    .slide-item {
+        gap: 4px !important;
+    }
+
+    .item-bullet {
+        font-size: 11px !important;
+        min-width: 6px !important;
+    }
+
+    .item-text {
+        font-size: 12px !important;
+        line-height: 1.2 !important;
+    }
+}
+
+/* Очень маленькие экраны (до 360px) */
+@media (max-width: 360px) {
+    .examples-carousel-section {
+        margin: 15px 0;
+        padding: 8px 0; /* Убраны боковые отступы */
+        border-radius: 6px;
+    }
+
+    .examples-title {
+        font-size: 16px !important;
+        margin-bottom: 12px !important;
+        padding: 0 8px !important; /* Добавлен внутренний отступ */
+        line-height: 1.0 !important;
+    }
+
+    .carousel-slide {
+        padding: 2px !important;
+    }
+
+    .slide-content {
+        padding: 12px 8px !important;
+        min-height: 260px !important; /* Скорректирована высота */
+        border-radius: 6px !important;
+    }
+
+    .slide-header {
+        gap: 6px !important;
+        margin-bottom: 10px !important;
+        padding-bottom: 6px !important;
+    }
+
+    .slide-icon {
+        font-size: 20px !important;
+    }
+
+    .slide-title {
+        font-size: 14px !important;
+        line-height: 0.9 !important;
+    }
+
+    .slide-items {
+        gap: 6px !important;
+    }
+
+    .slide-item {
+        gap: 3px !important;
+    }
+
+    .item-bullet {
+        font-size: 10px !important;
+        min-width: 5px !important;
+    }
+
+    .item-text {
+        font-size: 11px !important;
+        line-height: 1.1 !important;
+    }
+}
+
+/* Экстремально маленькие экраны (до 320px) */
+@media (max-width: 320px) {
+    .examples-carousel-section {
+        margin: 12px 0;
+        padding: 6px 0; /* Убраны боковые отступы */
+        border-radius: 4px;
+    }
+
+    .examples-title {
+        font-size: 15px !important;
+        margin-bottom: 10px !important;
+        padding: 0 5px !important; /* Добавлен внутренний отступ */
+        line-height: 0.9 !important;
+    }
+
+    .carousel-slide {
+        padding: 1px !important;
+    }
+
+    .slide-content {
+        padding: 10px 6px !important;
+        min-height: 200px !important; /* Скорректирована высота */
+        border-radius: 4px !important;
+    }
+
+    .slide-header {
+        gap: 4px !important;
+        margin-bottom: 8px !important;
+        padding-bottom: 4px !important;
+    }
+
+    .slide-icon {
+        font-size: 18px !important;
+    }
+
+    .slide-title {
+        font-size: 13px !important;
+        line-height: 0.8 !important;
+    }
+
+    .slide-items {
+        gap: 4px !important;
+    }
+
+    .slide-item {
+        gap: 2px !important;
+    }
+
+    .item-bullet {
+        font-size: 9px !important;
+        min-width: 4px !important;
+    }
+
+    .item-text {
+        font-size: 10px !important;
+        line-height: 1.0 !important;
+    }
+}
+
+/* Горизонтальная ориентация мобильных устройств */
+@media (max-width: 768px) and (orientation: landscape) {
+    .examples-carousel-section {
+        margin: 15px 0;
+        padding: 12px 0; /* Убраны боковые отступы */
+    }
+
+    .examples-title {
+        font-size: 20px !important;
+        margin-bottom: 12px !important;
+    }
+
+    .slide-content {
+        min-height: 220px !important; /* Скорректирована высота */
+        padding: 14px 12px !important;
+    }
+
+    .slide-header {
+        margin-bottom: 10px !important;
+        padding-bottom: 8px !important;
+    }
+
+    .slide-title {
+        font-size: 16px !important;
+    }
+
+    .item-text {
+        font-size: 12px !important;
+        line-height: 1.2 !important;
+    }
+}
+
+/* Планшеты (768px - 1023px) */
+@media (min-width: 768px) and (max-width: 1023px) {
+    .examples-carousel-section {
+        /*margin: 40px 0;*/
+        padding: 32px 20px;
+        overflow: visible; /* Разрешаем видимость за пределами блока */
+    }
+
+    .examples-title {
+        font-size: 22px !important;
+        margin-bottom: 28px !important;
+    }
+
+    .examples-carousel {
+        padding: 0 30px;
+    }
+
+    .slide-content {
+        padding: 28px 22px;
+        /*min-height: 360px;*/
+    }
+
+    .slide-title {
+        font-size: 19px !important;
+    }
+
+    .item-text {
+        font-size: 13px !important;
+    }
+
+    .custom-arrow {
+        width: 30px;
+        height: 30px;
+    }
+
+    .custom-arrow .anticon {
+        font-size: 14px;
+    }
+}
+
+/* Десктопы (1024px и выше) */
+@media (min-width: 1024px) {
+    /*.examples-carousel-section {*/
+    /*    margin: 50px 0;*/
+    /*}*/
+
+    .examples-carousel {
+        padding: 0 40px;
+    }
+
+    .slide-content:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+    }
+
+    .dark .slide-content:hover {
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+    }
+}
+
+/* Очень большие экраны (1400px и выше) */
+@media (min-width: 1400px) {
+    /*.examples-carousel-section {*/
+    /*    margin: 60px 0;*/
+    /*    padding: 48px 24px;*/
+    /*}*/
+
+    .examples-title {
+        font-size: 30px !important;
+        margin-bottom: 36px !important;
+    }
+
+    .examples-carousel {
+        padding: 0 50px;
+        max-width: 1200px;
+    }
+
+    .slide-content {
+        padding: 36px 28px;
+        /*min-height: 450px;*/
+    }
+
+    .slide-title {
+        font-size: 24px !important;
+    }
+
+    .item-text {
+        font-size: 16px !important;
+        line-height: 1.6 !important;
+    }
+
+    .slide-items {
+        gap: 18px;
+    }
+
+    .slide_item {
+        gap: 12px;
+    }
+}

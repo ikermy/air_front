@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🎨 Тест Hover-эффектов виджета</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+            transition: all 0.3s ease;
+        }
+
+        body.dark {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #e0e0e0;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255,255,255,0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+
+        body.dark .container {
+            background: rgba(0,0,0,0.3);
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid rgba(255,255,255,0.3);
+            padding: 10px 15px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            z-index: 1000000;
+        }
+
+        .theme-toggle:hover {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.05);
+        }
+
+        .test-button {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: 2px solid rgba(255,255,255,0.3);
+            padding: 12px 20px;
+            margin: 8px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .test-button:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        .status {
+            padding: 15px;
+            margin: 15px 0;
+            border-radius: 8px;
+            background: rgba(33, 150, 243, 0.8);
+        }
+
+        .success { background: rgba(76, 175, 80, 0.8); }
+        .error { background: rgba(244, 67, 54, 0.8); }
+        .warning { background: rgba(255, 193, 7, 0.8); color: #333; }
+
+        .hover-demo {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border-left: 4px solid #4caf50;
+        }
+    </style>
+</head>
+<body class="light">
+    <button class="theme-toggle" onclick="toggleTheme()">🌙 Темная тема</button>
+
+    <div class="container">
+        <h1>🎨 Тест Hover-эффектов виджета Маруся</h1>
+
+        <div class="hover-demo">
+            <h3>✨ Проверяем hover-эффекты:</h3>
+            <ul>
+                <li><strong>Кнопка открытия:</strong> При наведении меняет цвет и увеличивается (scale 1.1)</li>
+                <li><strong>Кнопка закрытия:</strong> При наведении меняет цвет на указанный в параметрах</li>
+                <li><strong>Плавные переходы:</strong> CSS transitions 0.2s для красивых анимаций</li>
+                <li><strong>Кастомные цвета:</strong> Поддержка buttonHoverBackground и closeButtonHoverBackground</li>
+            </ul>
+        </div>
+
+        <div id="status" class="status">Готов к тестированию hover-эффектов...</div>
+
+        <div>
+            <h3>🧪 Тесты hover-эффектов:</h3>
+            <button class="test-button" onclick="testDefaultHover()">🔥 Тест базовых hover-эффектов</button>
+            <button class="test-button" onclick="testCustomHover()">🎨 Тест кастомных hover-цветов</button>
+            <button class="test-button" onclick="testThemeHover()">🌗 Тест hover с темами</button>
+            <button class="test-button" onclick="destroyWidget()">🗑️ Удалить виджет</button>
+        </div>
+
+        <div class="hover-demo">
+            <h3>📋 Инструкция по тестированию:</h3>
+            <ol>
+                <li>Нажмите одну из кнопок тестирования выше</li>
+                <li>Наведите курсор на кнопку виджета в правом нижнем углу</li>
+                <li>Убедитесь, что кнопка меняет цвет и увеличивается</li>
+                <li>Откройте виджет и наведите на кнопку закрытия (×)</li>
+                <li>Проверьте, что кнопка закрытия тоже меняет цвет</li>
+                <li>Переключите тему и повторите тест</li>
+            </ol>
+        </div>
+    </div>
+
+    <!-- Подключаем обновленный виджет -->
+<!--    <script src="/widget/marusya-widget.js"></script>-->
+    <script src="https://info-bot.online/widget/marusya-widget.js"></script>
+
+    <script>
+        let currentWidget = null;
+        let currentTheme = 'light';
+        const examKey = "08a80a0e08272b86ac75870b43a01d9774285186e783f6068611a34b757f21f8c7327ae19fe4257fc1f";
+
+        function updateStatus(message, type = 'status') {
+            const status = document.getElementById('status');
+            status.innerHTML = message;
+            status.className = 'status ' + type;
+        }
+
+        function toggleTheme() {
+            const body = document.body;
+            const themeButton = document.querySelector('.theme-toggle');
+
+            if (currentTheme === 'light') {
+                body.classList.add('dark');
+                body.classList.remove('light');
+                themeButton.innerHTML = '☀️ Светлая тема';
+                currentTheme = 'dark';
+                updateStatus('🌙 <strong>Переключено на темную тему</strong><br>Hover-эффекты адаптируются автоматически', 'success');
+            } else {
+                body.classList.remove('dark');
+                body.classList.add('light');
+                themeButton.innerHTML = '🌙 Темная тема';
+                currentTheme = 'light';
+                updateStatus('☀️ <strong>Переключено на светлую тему</strong><br>Hover-эффекты адаптируются автоматически', 'success');
+            }
+        }
+
+        function destroyWidget() {
+            if (currentWidget) {
+                currentWidget.destroy();
+                currentWidget = null;
+            }
+            updateStatus('🗑️ Виджет удален', 'status');
+        }
+
+        function testDefaultHover() {
+            destroyWidget();
+            if (window.MarusyaWidget) {
+                try {
+                    currentWidget = window.MarusyaWidget.init({
+                        examKey: examKey,
+                        buttonPosition: { right: '30px', bottom: '30px' },
+                        buttonSize: { width: '60px', height: '60px' },
+                        buttonStyle: {
+                            borderRadius: '50%',
+                            border: '3px solid white',
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+                        }
+                        // НЕ указываем colors - используются значения по умолчанию
+                    });
+                    updateStatus('✅ <strong>Виджет с базовыми hover-эффектами создан!</strong><br>' +
+                               '🎯 Наведите курсор на кнопку виджета<br>' +
+                               '🔥 Ожидаем: ' + (currentTheme === 'light' ? 'синий hover (#1890ff)' : 'голубой hover (#4096ff)'), 'success');
+                } catch (error) {
+                    updateStatus('❌ Ошибка: ' + error.message, 'error');
+                }
+            }
+        }
+
+        function testCustomHover() {
+            destroyWidget();
+            if (window.MarusyaWidget) {
+                try {
+                    currentWidget = window.MarusyaWidget.init({
+                        examKey: examKey,
+                        buttonPosition: { right: '30px', bottom: '30px' },
+                        buttonSize: { width: '60px', height: '60px' },
+                        buttonStyle: {
+                            borderRadius: '50%',
+                            border: '3px solid white',
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+                        },
+                        colors: {
+                            buttonBackground: '#ff6b35',
+                            buttonHoverBackground: '#e55a2b', // Кастомный hover
+                            closeButtonBackground: '#c0392b',
+                            closeButtonHoverBackground: '#a93226' // Кастомный hover для закрытия
+                        }
+                    });
+                    updateStatus('✅ <strong>Виджет с кастомными hover-цветами создан!</strong><br>' +
+                               '🎯 Наведите на кнопку виджета: ожидаем #e55a2b<br>' +
+                               '🎯 Откройте виджет и наведите на ×: ожидаем #a93226', 'success');
+                } catch (error) {
+                    updateStatus('❌ Ошибка: ' + error.message, 'error');
+                }
+            }
+        }
+
+        function testThemeHover() {
+            destroyWidget();
+            if (window.MarusyaWidget) {
+                try {
+                    currentWidget = window.MarusyaWidget.init({
+                        examKey: examKey,
+                        buttonPosition: { right: '30px', bottom: '30px' },
+                        buttonSize: { width: '60px', height: '60px' },
+                        buttonStyle: {
+                            borderRadius: '50%',
+                            border: '3px solid white',
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+                        },
+                        colors: {
+                            buttonBackground: currentTheme === 'light' ? '#4caf50' : '#2196f3',
+                            buttonHoverBackground: currentTheme === 'light' ? '#45a049' : '#1976d2'
+                        }
+                    });
+                    updateStatus('✅ <strong>Виджет с адаптивными hover-цветами создан!</strong><br>' +
+                               '🎯 Текущая тема: ' + currentTheme + '<br>' +
+                               '🔥 Hover цвет: ' + (currentTheme === 'light' ? '#45a049' : '#1976d2') + '<br>' +
+                               '🌗 Переключите тему кнопкой справа вверху!', 'success');
+                } catch (error) {
+                    updateStatus('❌ Ошибка: ' + error.message, 'error');
+                }
+            }
+        }
+
+        // Автоматический тест после загрузки
+        window.addEventListener('load', function() {
+            document.body.classList.add('light');
+
+            setTimeout(() => {
+                if (window.MarusyaWidget) {
+                    updateStatus('✅ <strong>API виджета загружен!</strong><br>Hover-эффекты готовы к тестированию', 'success');
+                    setTimeout(testDefaultHover, 1000);
+                } else {
+                    updateStatus('❌ MarusyaWidget API не загружен', 'error');
+                }
+            }, 500);
+        });
+
+        console.log('=== ТЕСТ HOVER-ЭФФЕКТОВ ВИДЖЕТА ===');
+        console.log('Новые параметры:');
+        console.log('- buttonHoverBackground: цвет кнопки при наведении');
+        console.log('- closeButtonHoverBackground: цвет кнопки закрытия при наведении');
+        console.log('- Автоматические fallback для светлой/темной темы');
+        console.log('- CSS transitions для плавных анимаций');
+    </script>
+</body>
+</html>

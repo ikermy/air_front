@@ -1,0 +1,198 @@
+/*Modal.css*/
+/* CSS переменные для модального окна */
+:root {
+    --modal-overlay-bg-light: rgba(0, 0, 0, 0.5);
+    --modal-overlay-bg-dark: rgba(0, 0, 0, 0.75);
+    --modal-content-bg-light: white;
+    --modal-content-bg-dark: #333;
+}
+
+/* Светлая тема */
+body:not(.dark) {
+    --modal-overlay-bg: var(--modal-overlay-bg-light);
+    --modal-content-bg: var(--modal-content-bg-light);
+}
+
+/* Темная тема */
+body.dark {
+    --modal-overlay-bg: var(--modal-overlay-bg-dark);
+    --modal-content-bg: var(--modal-content-bg-dark);
+}
+
+/* Стили для Ant Design Modal, чтобы он отображался поверх кастомного модала */
+.ant-modal-root {
+    z-index: 10001 !important;
+}
+
+.ant-modal-wrap {
+    z-index: 10001 !important;
+}
+
+.ant-modal-mask {
+    z-index: 10001 !important;
+}
+
+/* Основные стили модального окна */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100vw;
+    height: 100vh;
+    background: var(--modal-overlay-bg);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 10000;
+    padding: 20px;
+    box-sizing: border-box;
+    animation: modalOverlayFadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.modal-content {
+    position: relative;
+    background: var(--modal-content-bg);
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    overflow-y: auto;
+    transform: translateY(0);
+    animation: modalContentSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Темная тема */
+body.dark .modal-content {
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Кнопка закрытия модального окна */
+.modal-close-button {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 32px;
+    height: 32px;
+    border: none;
+    /*background: rgba(0, 0, 0, 0.1);*/
+    background: rgba(255, 0, 0, 0.1);
+    border-radius: 50%;
+    font-size: 20px;
+    font-weight: bold;
+    /*color: rgba(0, 0, 0, 0.6);*/
+    color: rgba(0, 0, 0, 0.4);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    z-index: 10;
+    line-height: 1;
+    padding: 0;
+}
+
+.modal-close-button:hover {
+    background: rgba(255, 0, 0, 1);
+    color: rgba(255, 255, 255, 1);
+    transform: scale(1.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+.modal-close-button:active {
+    transform: scale(0.95);
+}
+
+/* Темная тема для кнопки закрытия */
+body.dark .modal-close-button {
+    background: rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.7);
+}
+
+body.dark .modal-close-button:hover {
+    background: rgba(255, 0, 0, 0.2);
+    color: rgba(255, 100, 100, 1);
+}
+
+/* Анимации появления модального окна */
+@keyframes modalOverlayFadeIn {
+    from {
+        opacity: 0;
+        backdrop-filter: blur(0px);
+        -webkit-backdrop-filter: blur(0px);
+    }
+    to {
+        opacity: 1;
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+    }
+}
+
+@keyframes modalContentSlideIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9) translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+/* Стили для скроллбара в модальном окне */
+.modal-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.modal-content::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 3px;
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 3px;
+}
+
+.modal-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.5);
+}
+
+/* Темная тема для скроллбара */
+body.dark .modal-content::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+body.dark .modal-content::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+body.dark .modal-content::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+}
+
+/* Адаптивность */
+@media (max-width: 767px) {
+    .modal-overlay {
+        padding: 15px;
+        align-items: flex-start;
+    }
+
+    .modal-content {
+        max-width: 100%;
+        max-height: calc(100vh - 120px);
+    }
+}
+
+@media (max-width: 480px) {
+    .modal-overlay {
+        padding: 10px;
+        padding-top: 110px;
+    }
+
+    .modal-content {
+        max-height: calc(100vh - 140px);
+    }
+}

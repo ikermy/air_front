@@ -1,0 +1,631 @@
+.features-section {
+    width: 100%;
+    max-width: 1400px;
+    box-sizing: border-box;
+    padding: 40px 20px;
+    background: linear-gradient(135deg, var(--ligth-bg-d-color) 0%, var(--ligth-bg-l-color) 100%);
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+.intro-title {
+    font-size: 28px;
+    font-weight: 600;
+    /*color: var(--link-hover-color-light);*/
+    /*color: var(--ligth-bg-d-color);*/
+    color: var(--text-color);
+    text-align: center;
+    margin-bottom: 40px;
+    margin-top: 20px;
+    padding: 0 15px;
+}
+
+/*.dark .intro-title {*/
+/*    color: var(--main-color-light);*/
+/*}*/
+
+/*.highlight {*/
+/*    !*color: #1890ff;*!*/
+/*    !*font-weight: 700;*!*/
+/*    background: linear-gradient(45deg, var(--link-color-light), var(--link-hover-color-light));*/
+/*    background-clip: text;*/
+/*    -webkit-background-clip: text;*/
+/*    -webkit-text-fill-color: transparent;*/
+/*    font-weight: bold;*/
+/*}*/
+
+.dark .highlight {
+    /*color: #40a9ff;*/
+    /*background: linear-gradient(45deg, var(--link-color-dark), var(--link-hover-color-dark));*/
+    background: linear-gradient(45deg, var(--main-color-dark), var(--main-color-light));
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.tabs-container {
+    width: 90%;
+    margin: 0 auto;
+    box-sizing: border-box;
+}
+
+.features-tabs {
+    /* border: 2px solid blue; */ /* Удаляем отладочную границу */
+}
+
+.features-tabs .ant-tabs-nav {
+    margin-bottom: 32px;
+}
+
+.features-tabs .ant-tabs-nav .ant-tabs-nav-wrap {
+    justify-content: center;
+}
+
+.features-tabs .ant-tabs-nav .ant-tabs-nav-list {
+    transform: none;
+    /* Не разрешаем перенос вкладок на вторую строку */
+    flex-wrap: nowrap;
+}
+
+.features-tabs .ant-tabs-tab {
+    font-size: 16px;
+    font-weight: 500;
+    padding: 12px 24px;
+    min-width: 0; /* важно для flex-элементов, чтобы работал ellipsis */
+}
+
+.features-tabs .ant-tabs-tab .ant-tabs-tab-btn {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: inline-block;
+    max-width: 100%;
+}
+
+.features-tabs .ant-tabs-tab-active {
+    font-weight: 600;
+}
+
+.dark .features-tabs .ant-tabs-tab {
+    color: rgba(255, 255, 255, 0.65);
+}
+
+.dark .features-tabs .ant-tabs-tab-active {
+    color: #40a9ff;
+}
+
+.dark .features-tabs .ant-tabs-ink-bar {
+    background: #40a9ff;
+}
+
+.message-features-grid {
+    margin-top: 24px;
+    justify-content: center;
+}
+
+.feature-card {
+    border-radius: 16px;
+    transition: all 0.3s ease;
+    height: 200px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: hidden;
+    margin-bottom: 16px;
+}
+
+.feature-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+}
+
+.dark .feature-card {
+    background-color: var(--bg-color-dark);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.dark .feature-card:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.api-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.dark .api-card {
+    background: linear-gradient(135deg, #4a5d7a 0%, #5a4a72 100%);
+}
+
+.card-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(to top, rgba(0, 0, 0, 0.8), transparent);
+    padding: 20px;
+    display: flex;
+    height: 25%;
+    justify-content: center;
+    align-items: center;
+}
+
+.card-overlay .ant-card-meta-title {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.card-overlay .ant-card-meta-description {
+    color: white !important;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+.api-card .card-overlay {
+    background: transparent;
+    position: static;
+    height: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.feature-icon {
+    width: 60px;
+    height: 60px;
+    margin: 20px auto;
+    display: block;
+    object-fit: contain;
+}
+
+.feature-card .ant-card-meta-title {
+    font-size: 18px;
+    font-weight: 600;
+    /*color: var(--main-color-dark);*/
+    color: var(--ligth-bg-d-color);
+    text-align: center;
+    margin-bottom: 8px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.dark .feature-card .ant-card-meta-title {
+    color: var(--main-color-light);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.feature-card .ant-card-meta-description {
+    color: var(--bg-color-dark);
+    text-align: center;
+    font-size: 14px;
+    line-height: 1.4;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.dark .feature-card .ant-card-meta-description {
+    color: var(--bg-color-light);
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
+.feature-card .ant-card-body {
+    padding: 0;
+    height: 100%;
+}
+
+.feature-card .ant-card-cover {
+    padding: 0;
+    margin: 0;
+}
+
+.features-footer {
+    width: 90%; /* Используем ту же ширину что и tabs-container */
+    margin: 24px auto 24px auto; /* Центрируем контейнер */
+}
+
+.features-quick-start {
+    border-radius: 10px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border: none;
+    overflow: hidden;
+    width: 50%; /* Ширина самой карточки */
+    margin-left: auto; /* Выравнивание по правому краю */
+}
+
+.features-quick-start .ant-card-body {
+    padding: 20px;
+}
+
+.features-quick-start-content {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    color: white;
+}
+
+.features-quick-start-icon {
+    font-size: 36px;
+    color: rgba(255, 255, 255, 0.9);
+    flex-shrink: 0;
+}
+
+.features-quick-start-title {
+    color: white !important;
+    margin: 0 0 8px 0 !important;
+    font-weight: 600;
+}
+
+.features-quick-start-text {
+    color: rgba(255, 255, 255, 0.9) !important;
+    font-size: 14px !important;
+    line-height: 1.5;
+}
+
+.features-tabs .ant-tabs-ink-bar {
+    background: var(--blue-color) !important;
+}
+.dark .features-tabs .ant-tabs-ink-bar {
+    background: var(--main-color) !important;
+}
+
+.features-tabs .ant-tabs-tab:hover .ant-tabs-tab-btn {
+    color: var(--blue-color) !important;
+}
+.dark .features-tabs .ant-tabs-tab:hover .ant-tabs-tab-btn {
+    color: var(--main-color) !important;
+}
+
+/* Адаптивность для мобильных устройств */
+@media (max-width: 768px) {
+    .features-section {
+        margin-top: 30px;
+        margin-bottom: 30px;
+        padding: 40px 16px;
+        width: 100%;
+        overflow-x: hidden;
+    }
+
+    .intro-title {
+        font-size: 22px;
+        margin-bottom: 32px;
+        padding: 0 5px;
+        word-wrap: break-word;
+        hyphens: auto;
+    }
+
+    .tabs-container {
+        padding: 0 5px;
+        width: 100%;
+        max-width: none;
+    }
+
+    .features-tabs {
+        width: 100%;
+    }
+
+    .features-tabs .ant-tabs-nav {
+        margin-bottom: 24px;
+    }
+
+    .features-tabs .ant-tabs-tab {
+        font-size: 14px;
+        padding: 8px 12px;
+        flex: 1;
+        text-align: center;
+        min-width: 0; /* позволяем сжиматься */
+    }
+    .features-tabs .ant-tabs-tab .ant-tabs-tab-btn {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        width: 100%;
+        display: block;
+    }
+
+    .message-features-grid {
+        margin-top: 16px;
+        width: 100%;
+    }
+
+    .message-features-grid .ant-row {
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        width: 100%;
+    }
+
+    .message-features-grid .ant-col {
+        padding-left: 4px !important;
+        padding-right: 4px !important;
+    }
+
+    .feature-card {
+        height: 160px;
+        margin-bottom: 12px;
+        width: 100%;
+    }
+
+    .card-overlay {
+        padding: 15px 12px;
+    }
+
+    .card-overlay .ant-card-meta-title {
+        font-size: 16px;
+        margin-bottom: 6px;
+    }
+
+    .card-overlay .ant-card-meta-description {
+        font-size: 12px;
+        line-height: 1.3;
+    }
+
+    .features-footer {
+        width: 100%; /* На мобильных занимаем всю ширину */
+        margin: 24px 0; /* Убираем auto для центрирования */
+    }
+
+    .features-quick-start {
+        width: 100%; /* На мобильных карточка занимает всю ширину */
+        margin-left: 0; /* Убираем выравнивание по правому краю на мобильных */
+    }
+}
+
+@media (max-width: 576px) {
+    .features-section {
+        margin-top: 20px;
+        margin-bottom: 20px;
+        padding: 30px 12px;
+    }
+
+    .intro-title {
+        font-size: 20px;
+        margin-bottom: 24px;
+        padding: 0 3px;
+        line-height: 1.3;
+    }
+
+    .tabs-container {
+        padding: 0 3px;
+    }
+
+    .features-tabs .ant-tabs-tab {
+        font-size: 12px;
+        padding: 6px 8px;
+        min-width: 0;
+    }
+    .features-tabs .ant-tabs-tab .ant-tabs-tab-btn {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        width: 100%;
+        display: block;
+    }
+
+    .message-features-grid .ant-col {
+        padding-left: 2px !important;
+        padding-right: 2px !important;
+    }
+
+    .feature-card {
+        height: 140px;
+        margin-bottom: 8px;
+    }
+
+    .card-overlay {
+        padding: 12px 8px;
+    }
+
+    .card-overlay .ant-card-meta-title {
+        font-size: 14px;
+        margin-bottom: 4px;
+    }
+
+    .card-overlay .ant-card-meta-description {
+        font-size: 11px;
+        line-height: 1.2;
+    }
+
+    .features-footer {
+        width: 100%;
+        margin: 16px 0;
+    }
+
+    .features-quick-start {
+        width: 100%;
+        margin-left: 0;
+    }
+}
+
+@media (max-width: 480px) {
+    .features-section {
+        margin-top: 15px;
+        margin-bottom: 15px;
+        padding: 30px 12px;
+    }
+
+    .intro-title {
+        font-size: 18px;
+        margin-bottom: 20px;
+        padding: 0 2px;
+        line-height: 1.2;
+    }
+
+    .tabs-container {
+        padding: 0 2px;
+    }
+
+    .features-tabs .ant-tabs-tab {
+        font-size: 11px;
+        padding: 4px 6px;
+        min-width: 0;
+    }
+
+    .message-features-grid .ant-col {
+        padding-left: 1px !important;
+        padding-right: 1px !important;
+    }
+
+    .feature-card {
+        height: 130px;
+        margin-bottom: 6px;
+    }
+
+    .card-overlay {
+        padding: 10px 6px;
+    }
+
+    .card-overlay .ant-card-meta-title {
+        font-size: 13px;
+        margin-bottom: 3px;
+    }
+
+    .card-overlay .ant-card-meta-description {
+        font-size: 10px;
+        line-height: 1.1;
+    }
+
+    .features-footer {
+        width: 100%;
+        margin: 16px 0;
+    }
+
+    .features-quick-start {
+        width: 100%;
+        margin-left: 0;
+    }
+}
+
+@media (max-width: 425px) {
+    /* Дополнительно ужимаем отступы, чтобы три вкладки точно помещались */
+    .features-tabs .ant-tabs-tab {
+        padding: 4px 4px;
+        min-width: 0;
+    }
+    .features-tabs .ant-tabs-nav .ant-tabs-nav-list {
+        width: 100%;
+    }
+}
+
+@media (max-width: 360px) {
+    .features-section {
+        margin-top: 10px;
+        margin-bottom: 10px;
+        padding: 30px 12px;
+    }
+
+    .intro-title {
+        font-size: 16px;
+        margin-bottom: 16px;
+        padding: 0 1px;
+        line-height: 1.1;
+    }
+
+    .tabs-container {
+        padding: 0 1px;
+    }
+
+    .features-tabs .ant-tabs-tab {
+        font-size: 10px;
+        padding: 3px 4px;
+    }
+
+    .feature-card {
+        height: 120px;
+        margin-bottom: 4px;
+    }
+
+    .card-overlay {
+        padding: 8px 4px;
+    }
+
+    .card-overlay .ant-card-meta-title {
+        font-size: 12px;
+        margin-bottom: 2px;
+    }
+
+    .card-overlay .ant-card-meta-description {
+        font-size: 9px;
+        line-height: 1.0;
+    }
+
+    .features-footer {
+        width: 100%;
+        margin: 16px 0;
+    }
+
+    .features-quick-start {
+        width: 100%;
+        margin-left: 0;
+    }
+}
+
+/* Планшетные устройства */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .intro-title {
+        font-size: 26px;
+    }
+
+    .features-tabs .ant-tabs-tab {
+        font-size: 15px;
+        padding: 10px 20px;
+    }
+
+    .feature-card {
+        height: 180px;
+    }
+}
+
+/* Большие экраны */
+@media (min-width: 1200px) {
+    .tabs-container {
+        max-width: 1400px;
+    }
+
+    .intro-title {
+        font-size: 32px;
+        margin-bottom: 48px;
+    }
+
+    .features-tabs .ant-tabs-tab {
+        font-size: 18px;
+        padding: 14px 28px;
+    }
+
+    .feature-card {
+        height: 220px;
+    }
+
+    .card-overlay .ant-card-meta-title {
+        font-size: 20px;
+    }
+
+    .card-overlay .ant-card-meta-description {
+        font-size: 15px;
+    }
+}
+
+
+/* Горизонтальная ориентация мобильных устройств */
+@media (max-width: 768px) and (orientation: landscape) {
+    .feature-card {
+        height: 120px;
+    }
+
+    .card-overlay .ant-card-meta-title {
+        font-size: 14px;
+        margin-bottom: 4px;
+    }
+
+    .card-overlay .ant-card-meta-description {
+        font-size: 11px;
+        line-height: 1.2;
+    }
+}
+
+/* Высокие экраны */
+@media (min-height: 800px) {
+    .features-section {
+        margin-top: 60px;
+        margin-bottom: 60px;
+    }
+}

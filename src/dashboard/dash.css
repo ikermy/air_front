@@ -1,0 +1,629 @@
+.dashboard-header-fixed {
+    color: black;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 40px;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding: 0 16px;
+    background: rgba(234, 255, 187, 0.15);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    font-weight: bold;
+    user-select: none;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+.dark .dashboard-header-fixed {
+    /*background: linear-gradient(135deg, var(--main-color-light), var(--link-color-light));*/
+    background: rgba(51, 51, 51, 0.15);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    color: white;
+}
+.dark .dashboard-header-fixed .dashboard-logo {
+    filter: invert(1);
+}
+
+    /* Позиционирование элементов в заголовке */
+.dashboard-header-fixed .dashboard-title {
+    flex: 0 0 auto;
+    text-align: left;
+    margin-left: 10px;
+}
+
+.dashboard-header-fixed .dashboard-lang-switch {
+    margin-left: 15px; /* Расстояние 45px от названия */
+    flex: 0 0 auto;
+}
+
+/* Отступ для основного контента чтобы он не перекрывался заголовком */
+.ant-layout {
+    padding-top: 10px;
+}
+
+/* Фиксация Sider */
+.ant-layout-sider {
+    position: fixed;
+    height: calc(100vh - 40px); /* Уменьшаем высоту на высоту заголовка */
+    top: 40px; /* Начинаем под заголовком */
+    overflow-y: hidden; /* Скрываем вертикальную прокрутку */
+    overflow-x: hidden; /* Скрываем горизонтальную прокрутку */
+    left: 0; /* Зафиксировано слева */
+}
+.ant-menu.ant-menu-root.ant-menu-inline {
+    max-height: calc(100vh - 200px); /* вычитаем место для карточек пользователя */
+    overflow-y: auto;
+    border-right: none;
+}
+/* Сдвигаем контент, чтобы он не перекрывался Sider */
+.ant-layout-content {
+    margin-left: 200px; /* Устанавливаем отступ слева, равный ширине Sider */
+    padding: 16px; /* Внутренние отступы для контента */
+    overflow-y: auto; /* Добавляем вертикальную прокрутку для контента */
+    height: calc(100vh - 40px); /* Контент занимает всю высоту окна минус заголовок */
+}
+
+.ant-layout-sider-children {
+    max-width: 200px;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh; /* Минимальная высота для корректной работы прокрутки */
+}
+
+.dashboard-cap {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start; /* Выравниваем элементы по левому краю */
+    padding: 12px 16px;
+    background: linear-gradient(135deg, var(--main-color-light), var(--main-color-dark));
+    height: 38px;
+    font-weight: bold;
+    user-select: none;
+    position: relative;
+    transition: background 0.2s ease;
+    border-radius: 10px 10px 0 0;
+}
+
+.dark .dashboard-cap {
+    background: linear-gradient(135deg, var(--main-color-light), var(--link-color-light));
+}
+
+.dashboard-logo {
+    height: 24px;
+    width: 24px;
+    margin-right: 12px;
+    transition: transform 0.3s ease;
+    opacity: 0.9;
+}
+
+.dashboard-logo:hover {
+    transform: scale(1.1);
+    opacity: 1;
+}
+
+.dashboard-status-circle {
+    width: 8px;
+    height: 8px;
+    background-color: #4CAF50;
+    border-radius: 50%;
+    margin-left: -19px;
+    margin-top: 13px;
+    animation: dashboard-pulse 2s infinite;
+    z-index: 2;
+}
+
+.user-data {
+    padding-left: 20px;
+    padding-bottom: 10px;
+    padding-top: 5px;
+}
+
+.user-data div {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    line-height: 0.2;
+}
+
+.user-data-right {
+    align-self: flex-end;
+}
+
+.user-data b {
+    color: var(--text-color);
+}
+
+.lang-switch {
+    padding-right: 10px;
+    margin-left: auto;
+}
+
+.ant-layout-sider-children {
+    background: var(--bg-color)
+}
+
+.ant-menu-item.ant-menu-item-selected {
+    background: var(--main-color);
+    color: var(--text-color-light);
+}
+
+@keyframes dashboard-pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 8px rgba(76, 175, 80, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(76, 175, 80, 0);
+    }
+}
+
+.dashboard-lang-switch {
+    margin-left: 15px;
+    /*flex: 1;*/
+    /*order: 3;*/
+}
+
+.dashboard-theme-switch {
+    margin-left: 15px; /* Отступ от переключателя языка */
+    /*flex: 0 0 auto;*/
+    /*position: static; !* Убираем абсолютное позиционирование *!*/
+}
+
+.dark .dashboard-theme-switch {
+    color: white;
+}
+
+.dashboard-title {
+    flex: 1;
+    text-align: left;
+    /*order: 1;*/
+    margin-left: 10px;
+}
+
+/* Современный дизайн данных пользователя */
+.user-data-modern {
+    padding: 16px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* Карточка профиля пользователя */
+.user-profile-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 10px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
+}
+
+.user-profile-card .ant-card-body {
+    padding: 16px;
+}
+
+.user-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.user-avatar-icon {
+    font-size: 24px;
+    color: white;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 4px;
+    border-radius: 50%;
+    backdrop-filter: blur(10px);
+}
+
+.user-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.user-name {
+    color: white !important;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.role-tag {
+    align-self: flex-start;
+    font-size: 10px;
+    font-weight: 600;
+    border: none;
+    backdrop-filter: blur(10px);
+
+    display: inline-flex;
+    align-items: baseline;
+    gap: 4px;
+}
+
+/* Карточка баланса */
+.balance-card {
+    background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+    border-radius: 10px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+}
+
+.balance-card .ant-card-body {
+    padding: 12px;
+}
+
+.balance-icon {
+    font-size: 20px;
+    color: white;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 6px;
+    border-radius: 8px;
+}
+
+.balance-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.balance-label {
+    color: rgba(255, 255, 255, 0.8) !important;
+    font-size: 12px;
+    margin-bottom: 2px;
+}
+
+.balance-amount {
+    color: white !important;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+/* Карточка подписки */
+.subscription-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 10px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+}
+
+.subscription-card .ant-card-body {
+    padding: 12px;
+}
+
+.subscription-icon {
+    font-size: 20px;
+    color: white;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 6px;
+    border-radius: 8px;
+}
+
+.subscription-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.subscription-label {
+    color: rgba(255, 255, 255, 0.8) !important;
+    font-size: 12px;
+    margin-bottom: 2px;
+}
+
+.subscription-date {
+    color: white !important;
+    font-size: 14px;
+    font-weight: 700;
+}
+
+/* Карточка сообщений */
+.messages-card {
+    background: linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%);
+    border-radius: 10px;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+}
+
+.messages-card .ant-card-body {
+    padding: 12px;
+}
+
+.messages-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.messages-icon {
+    font-size: 18px;
+    color: #d4691a;
+}
+
+.messages-title {
+    color: #8b4513 !important;
+    font-size: 14px;
+}
+
+.message-cost-info {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.cost-label {
+    color: rgba(139, 69, 19, 0.7) !important;
+    font-size: 11px;
+}
+
+.cost-amount {
+    color: #8b4513 !important;
+    font-size: 10px;
+    font-weight: 700;
+}
+.message-cost-info .cost-label,
+.message-cost-info .cost-amount {
+    line-height: 1.2;
+    display: flex;
+    align-items: center;
+}
+
+/* Темная тема */
+.dark .user-profile-card {
+    background: linear-gradient(135deg, #2c3e50 0%, #4a6741 100%);
+}
+
+.dark .balance-card {
+    background: linear-gradient(135deg, #1a252f 0%, #2c5f41 100%);
+}
+
+.dark .subscription-card {
+    background: linear-gradient(135deg, #2c3e50 0%, #3a5998 100%);
+}
+
+.dark .messages-card {
+    background: linear-gradient(135deg, #2c3e50 0%, #4a4a4a 100%);
+}
+
+.dark .messages-title {
+    color: #e8e8e8 !important;
+}
+
+.dark .cost-label {
+    color: rgba(232, 232, 232, 0.7) !important;
+}
+
+.dark .cost-amount {
+    color: #e8e8e8 !important;
+}
+
+.dark .messages-icon {
+    color: #a8a8a8;
+}
+
+/* Анимации */
+.user-data-modern .ant-card {
+    transition: all 0.3s ease;
+}
+
+.user-data-modern .ant-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* Адаптивность */
+@media (max-width: 1200px) {
+    .user-data-modern {
+        padding: 12px 8px;
+        gap: 10px;
+    }
+
+    .user-profile-card .ant-card-body,
+    .balance-card .ant-card-body,
+    .subscription-card .ant-card-body,
+    .messages-card .ant-card-body {
+        padding: 10px;
+    }
+}
+
+/* Убираем старые стили user-data если они есть */
+.user-data {
+    display: none;
+}
+
+/* Кнопка переключения меню - базовые стили для всех устройств */
+.menu-toggle-button {
+    position: fixed;
+    top: 50px;
+    left: 16px;
+    z-index: 1100;
+    background-color: var(--main-color);
+    border: 2px solid var(--main-color-dark);
+    border-radius: 8px;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    font-size: 18px;
+    color: var(--bg-color-dark);
+}
+
+.menu-toggle-button:hover,
+.menu-toggle-button:focus,
+.menu-toggle-button:active {
+    background-color: var(--main-color-dark) !important;
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+    border-color: var(--main-color-light);
+}
+
+.dark .menu-toggle-button {
+    background-color: var(--main-color-dark);
+    border-color: var(--main-color-light);
+    color: var(--bg-color-dark);
+}
+
+.dark .menu-toggle-button:hover,
+.dark .menu-toggle-button:focus,
+.dark .menu-toggle-button:active {
+    background-color: var(--main-color-light) !important;
+    color: var(--bg-color-dark);
+}
+
+/* Кнопка меню в DashboardHeader */
+.header-menu-toggle {
+    background-color: transparent;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 6px;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    color: var(--text-color);
+    margin-right: 12px;
+    flex-shrink: 0;
+}
+
+.header-menu-toggle:hover,
+.header-menu-toggle:focus {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    border-color: rgba(255, 255, 255, 0.5) !important;
+    color: var(--text-color) !important;
+    transform: scale(1.05);
+}
+
+.dark .header-menu-toggle {
+    border-color: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+.dark .header-menu-toggle:hover,
+.dark .header-menu-toggle:focus {
+    background-color: rgba(255, 255, 255, 0.15) !important;
+    border-color: rgba(255, 255, 255, 0.4) !important;
+    color: white !important;
+}
+
+/* Скрываем кнопку на больших экранах, когда меню всегда видно */
+@media (min-width: 769px) {
+    .header-menu-toggle {
+        display: none;
+    }
+}
+
+/* Показываем кнопку только на мобильных устройствах */
+@media (max-width: 768px) {
+    .header-menu-toggle {
+        display: flex !important;
+    }
+
+    /* Корректируем отступы других элементов заголовка */
+    .dashboard-logo {
+        margin-left: 8px;
+    }
+}
+
+/* Адаптивность для мобильных устройств */
+@media (max-width: 768px) {
+    .dashboard-cap {
+        padding: 10px 12px;
+        flex-direction: column;
+        gap: 8px;
+        text-align: center;
+    }
+
+    .dashboard-logo {
+        height: 20px;
+        width: 20px;
+        margin-right: 8px;
+    }
+
+    .dashboard-lang-switch {
+        margin-left: 0;
+    }
+
+    /* Кнопка меню всегда видна на мобильных */
+    .menu-toggle-button {
+        display: flex !important;
+        position: fixed !important;
+        top: 50px !important;
+        left: 16px !important;
+        z-index: 1100 !important;
+    }
+
+    /* Скрываем меню по умолчанию на мобильных */
+    .ant-layout-sider {
+        position: fixed !important;
+        left: 0;
+        top: 50px;
+        bottom: 0;
+        z-index: 1000;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+        box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
+        height: calc(100vh - 50px) !important;
+    }
+
+    .dashboard-status-circle {
+        margin-left: -15px;
+    }
+
+    /* Показываем меню когда оно не collapsed */
+    .ant-layout-sider:not(.ant-layout-sider-collapsed) {
+        transform: translateX(0);
+    }
+
+    /* Убираем отступ у контента на мобильных */
+    .ant-layout-content {
+        margin-left: 0 !important;
+        padding: 16px 8px;
+    }
+
+    /* Оверлей для закрытия меню при клике вне его */
+    .ant-layout-sider:not(.ant-layout-sider-collapsed)::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: -1;
+    }
+}
+
+/* Стили для планшетов */
+@media (min-width: 768px) and (max-width: 1023px) {
+    .ant-layout-content {
+        padding: 20px 16px;
+    }
+}
+
+.ant-layout-sider {
+    position: fixed;
+    height: calc(100vh - 40px); /* Уменьшаем высоту на высоту заголовка */
+    top: 40px; /* Начинаем под заголовком */
+    overflow-y: hidden; /* Скрываем вертикальную прокрутку */
+    overflow-x: hidden; /* Скрываем горизонтальную прокрутку */
+    left: 0; /* Зафиксировано слева */
+}
+
+/* exit button */
+.exit-btn {
+    position: absolute;
+    right: 2%;
+    transition: all 0.3s ease;
+}
+
+.exit-btn .ant-btn:hover {
+    background-color: #ff4d4f !important;
+    border-color: #ff4d4f !important;
+    color: white !important;
+}

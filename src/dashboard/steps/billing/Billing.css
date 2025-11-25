@@ -1,0 +1,18 @@
+.bill-slider {
+    max-width: 90%;
+    min-width: 90%;
+    margin: 20px auto 0;
+}
+
+.billing-data {
+    padding-left: 10px;
+}
+
+.bill-slider .ant-slider-handle::after {
+    background: var(--link-hover-color);
+}
+
+/* Изменение цвета трека (активной части) */
+.bill-slider .ant-slider-track {
+    background: linear-gradient(135deg, var(--main-color-light), var(--link-color-dark));
+}

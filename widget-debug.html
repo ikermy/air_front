@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Диагностика виджета</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        .log {
+            background: #000;
+            color: #0f0;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            font-family: monospace;
+            height: 200px;
+            overflow-y: auto;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        .error { background: #ffebee; border-color: #f44336; }
+        .success { background: #e8f5e8; border-color: #4caf50; }
+        .warning { background: #fff3e0; border-color: #ff9800; }
+        button {
+            padding: 10px 20px;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background: #2196f3;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Диагностика MarusyaWidget</h1>
+
+    <div id="status" class="status">Загружаем виджет...</div>
+
+    <div>
+        <button onclick="checkAPI()">Проверить API</button>
+        <button onclick="manualInit()">Ручная инициализация</button>
+        <button onclick="checkDOM()">Проверить DOM</button>
+        <button onclick="forceInit()">Принудительная инициализация</button>
+        <button onclick="clearLogs()">Очистить логи</button>
+    </div>
+
+    <div class="log" id="console-log"></div>
+
+    <!-- Подключаем виджет -->
+    <script src="build/widget/marusya-widget.js"></script>
+
+    <script>
+        // Перехватываем console.log для отображения
+        const originalLog = console.log;
+        const originalError = console.error;
+        const logDiv = document.getElementById('console-log');
+
+        function addLog(message, type = 'log') {
+            const time = new Date().toLocaleTimeString();
+            const color = type === 'error' ? '#f44336' : type === 'warn' ? '#ff9800' : '#0f0';
+            logDiv.innerHTML += `<div style="color: ${color}">[${time}] ${message}</div>`;
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        console.log = function(...args) {
+            originalLog(...args);
+            addLog(args.join(' '), 'log');
+        };
+
+        console.error = function(...args) {
+            originalError(...args);
+            addLog(args.join(' '), 'error');
+        };
+
+        function updateStatus(message, type = 'warning') {
+            const status = document.getElementById('status');
+            status.innerHTML = message;
+            status.className = 'status ' + type;
+        }
+
+        function clearLogs() {
+            logDiv.innerHTML = '';
+        }
+
+        let widget = null;
+        const examKey = "08a80a0e08272b86ac75870b43a01d9774285186e783f6068611a34b757f21f8c7327ae19fe4257fc1f";
+
+        function checkAPI() {
+            console.log('=== ПРОВЕРКА API ===');
+            console.log('window.MarusyaWidget:', typeof window.MarusyaWidget);
+
+            if (window.MarusyaWidget) {
+                console.log('API методы:', Object.keys(window.MarusyaWidget));
+                console.log('init функция:', typeof window.MarusyaWidget.init);
+                updateStatus('✅ API найден: ' + Object.keys(window.MarusyaWidget).join(', '), 'success');
+            } else {
+                console.log('❌ API не найден');
+                updateStatus('❌ MarusyaWidget API не найден', 'error');
+            }
+        }
+
+        function checkDOM() {
+            console.log('=== ПРОВЕРКА DOM ===');
+            const container = document.getElementById('marusya-widget-container');
+            console.log('Контейнер виджета:', container);
+
+            const buttons = document.querySelectorAll('.widget-open-button');
+            console.log('Кнопки виджета найдено:', buttons.length);
+
+            buttons.forEach((btn, i) => {
+                console.log(`Кнопка ${i}:`, btn);
+                console.log(`  - display:`, getComputedStyle(btn).display);
+                console.log(`  - visibility:`, getComputedStyle(btn).visibility);
+                console.log(`  - position:`, getComputedStyle(btn).position);
+                console.log(`  - zIndex:`, getComputedStyle(btn).zIndex);
+            });
+
+            updateStatus(`Найдено ${buttons.length} кнопок виджета`, buttons.length > 0 ? 'success' : 'warning');
+        }
+
+        function manualInit() {
+            console.log('=== РУЧНАЯ ИНИЦИАЛИЗАЦИЯ ===');
+
+            if (!window.MarusyaWidget) {
+                console.error('API недоступен');
+                updateStatus('❌ API недоступен', 'error');
+                return;
+            }
+
+            try {
+                // Удаляем существующий виджет
+                if (widget) {
+                    console.log('Удаляем существующий виджет...');
+                    widget.destroy();
+                }
+
+                console.log('Инициализируем новый виджет...');
+                widget = window.MarusyaWidget.init({
+                    examKey: examKey,
+                    buttonPosition: { right: '30px', bottom: '30px' },
+                    buttonSize: { width: '60px', height: '60px' },
+                    buttonStyle: {
+                        backgroundColor: '#ff4444',
+                        zIndex: '999999',
+                        border: '3px solid white'
+                    }
+                });
+
+                console.log('Результат инициализации:', widget);
+
+                if (widget) {
+                    updateStatus('✅ Виджет инициализирован успешно', 'success');
+                    setTimeout(checkDOM, 500); // Проверяем DOM через полсекунды
+                } else {
+                    updateStatus('❌ Виджет не создался', 'error');
+                }
+            } catch (error) {
+                console.error('Ошибка инициализации:', error);
+                updateStatus('❌ Ошибка: ' + error.message, 'error');
+            }
+        }
+
+        function forceInit() {
+            console.log('=== ПРИНУДИТЕЛЬНАЯ ИНИЦИАЛИЗАЦИЯ ===');
+
+            // Устанавливаем базовый путь принудительно
+            window.WIDGET_STATIC_BASE = './build/widget/';
+            console.log('WIDGET_STATIC_BASE установлен:', window.WIDGET_STATIC_BASE);
+
+            // Ждем немного и пробуем еще раз
+            setTimeout(() => {
+                manualInit();
+            }, 1000);
+        }
+
+        // Автоматическая проверка после загрузки
+        window.addEventListener('load', function() {
+            console.log('=== СТРАНИЦА ЗАГРУЖЕНА ===');
+
+            // Устанавливаем базовый путь для статических файлов
+            if (!window.WIDGET_STATIC_BASE) {
+                window.WIDGET_STATIC_BASE = './build/widget/';
+                console.log('Установлен WIDGET_STATIC_BASE:', window.WIDGET_STATIC_BASE);
+            }
+
+            setTimeout(() => {
+                checkAPI();
+                console.log('Попытка автоматической инициализации через 2 секунды...');
+
+                setTimeout(() => {
+                    if (window.MarusyaWidget) {
+                        console.log('Автоматическая инициализация...');
+                        manualInit();
+                    } else {
+                        updateStatus('❌ API не загрузился за 2 секунды', 'error');
+                    }
+                }, 2000);
+            }, 100);
+        });
+
+        // Отслеживаем появление кнопки
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.type === 'childList') {
+                    mutation.addedNodes.forEach(function(node) {
+                        if (node.nodeType === Node.ELEMENT_NODE) {
+                            if (node.classList && node.classList.contains('widget-open-button')) {
+                                console.log('🎉 Кнопка виджета добавлена в DOM!', node);
+                                updateStatus('🎉 Кнопка виджета найдена!', 'success');
+                            }
+                            // Проверяем дочерние элементы
+                            const buttons = node.querySelectorAll && node.querySelectorAll('.widget-open-button');
+                            if (buttons && buttons.length > 0) {
+                                console.log('🎉 Найдено кнопок виджета:', buttons.length);
+                                updateStatus('🎉 Найдено ' + buttons.length + ' кнопок виджета!', 'success');
+                            }
+                        }
+                    });
+                }
+            });
+        });
+
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+    </script>
+</body>
+</html>
+

@@ -1,0 +1,40 @@
+/*Transceiver.css*/
+.tr-input-container {
+    display: flex;
+    width: 100%;
+}
+
+.tr-input-container h3 {
+    padding-right: 20px;
+}
+
+.tr-input-container input {
+    flex: 1;
+    padding: 10px;
+    background-color: var(--input-bg);
+    color: #000; /* Цвет текста по умолчанию */
+    border: 1px solid var(--input-border);
+    border-radius: 5px;
+}
+
+body.dark .tr-input-container input {
+    color: var(--input-bg-light);
+}
+
+.tr-input-container button {
+    padding: 10px 20px;
+    border: 2px solid #e2ffb6;;
+    background-color: var(--button-bg);
+    color: black;
+    border-radius: 10px;
+    cursor: pointer;
+    margin-left: 10px;
+}
+
+.tr-input-container button:hover {
+    /*background-color: #003366;*/
+    /*background-color: #c8fb77;*/
+    background-color: var(--input-bg-light);
+    border: 2px solid #e2ffb6;
+    color: black;
+}

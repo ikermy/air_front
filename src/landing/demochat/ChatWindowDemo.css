@@ -1,0 +1,776 @@
+/*FloatingChatDemo*/
+.chat-window-demo {
+    position: fixed;
+    display: flex;
+    flex-direction: column;
+    width: 300px;
+    min-width: 300px;
+    height: 550px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    background: #fff;
+    border: 1px solid var(--chat-window-border);
+    padding: 10px;
+    border-radius: 10px;
+    transition: box-shadow 0.2s ease, height 0.3s ease; /* Плавная анимация тени и высоты */
+}
+
+.chat-window-demo:hover {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+}
+
+.dark .chat-window-demo {
+    background-color: #333;
+}
+
+.cap {
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start; /* Изменяем с space-between на flex-start для выравнивания по левому краю */
+    /*padding: 8px 12px;*/
+    background: rgba(234, 255, 187, 0.15);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    font-weight: bold;
+    user-select: none; /* Предотвращаем выделение текста при перетаскивании */
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: absolute; /* Устанавливаем абсолютное позиционирование */
+    top: 0; /* Закрепляем верхнюю границу */
+    left: 0; /* Закрепляем левую границу */
+    width: 100%; /* Охватываем всю ширину родительского элемента */
+    height: 40px;
+    border-radius: 10px 10px 0 0;
+    z-index: 1; /* Для правильного слоя */
+    margin-bottom: 0; /* Убираем margin-bottom для absolute позиционирования */
+}
+
+.cap b {
+    color: black;
+    margin-left: 10px; /* Убираем левый отступ, так как теперь используется flex-start */
+    text-align: left; /* Выравниваем текст по левому краю */
+    order: 2; /* Размещаем текст после изображения и круга */
+}
+.dark .cap b {
+    color: #cdcdcd;
+}
+
+.cap:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: translateY(-1px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.cap:active {
+    background: rgba(255, 255, 255, 0.35);
+}
+
+.dark .cap {
+    background: rgba(51, 51, 51, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.dark .cap:hover {
+    background: rgba(255, 255, 255, 0.15);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.25);
+}
+
+.dark .cap:active {
+    background: rgba(255, 255, 255, 0.25);
+}
+
+.replay-button {
+    margin-left: 10px;
+    cursor: pointer;
+    height: 30px;
+    width: 30px;
+    transition: transform 0.3s ease;
+    opacity: 0.8;
+}
+
+.replay-button:hover {
+    transform: scale(1.2);
+    opacity: 1;
+}
+
+.dark .replay-button {
+    filter: brightness(0) invert(1);
+}
+
+.circle {
+    width: 8px;
+    height: 8px;
+    background-color: #4CAF50;
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+.minimize {
+    color: #000000;
+    font-size: 29px;
+    position: absolute; /* Абсолютное позиционирование */
+    top: 4px; /* Отступ сверху относительно родителя */
+    right: 5%; /* Отступ слева относительно родителя */
+    z-index: 3; /* Устанавливаем уровень слоя выше изображения */
+    overflow: visible;
+}
+
+.minimize::before {
+    content: "";
+    position: absolute;
+    top: 45%;
+    left: 50%;
+    width: 44px;
+    height: 44px;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    border: 3px solid rgba(0, 0, 0, 0.25); /* Кольцо */
+    background: transparent; /* Прозрачная середина */
+    z-index: -1;
+    animation: minimize-pulse 5s infinite;
+    pointer-events: none;
+}
+.dark .minimize::before {
+    border: 3px solid rgba(255, 255, 255, 0.25); /* Кольцо для тёмного режима */
+}
+
+@keyframes minimize-pulse {
+    0% {
+        transform: translate(-50%, -50%) scale(0.7);
+        opacity: 0.5;
+    }
+    70% {
+        transform: translate(-50%, -50%) scale(1.4);
+        opacity: 0;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(1.4);
+        opacity: 0;
+    }
+}
+
+.dark .minimize {
+    color: #cdcdcd;
+}
+
+.minimize:hover {
+    /*color: var(--link-hover-color);*/
+    color: var(--conected-color);
+}
+
+.chat-messages-demo {
+    padding-top: 40px;
+    flex: 1;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    scrollbar-width: thin; /* Уменьшенная ширина прокрутки (для Firefox) */
+    box-sizing: border-box;
+    transition: all 0.1s ease-out; /* Добавляем плавный переход для всех свойств */
+    will-change: transform; /* Оптимизируем для GPU */
+}
+
+.dark .chat-messages-demo {
+    scrollbar-color: #444 #222; /* Цветы бегунка (#444) и фона дорожки (#222) */
+}
+
+@keyframes pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(76, 175, 80, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(76, 175, 80, 0);
+    }
+}
+
+/* Стили для свернутого состояния */
+.chat-window-demo.minimized {
+    height: 50px !important; /* Только высота шапки */
+    overflow: hidden;
+}
+
+/* Адаптивность для FloatingChatDemo */
+
+/* Очень маленькие экраны (до 480px) */
+@media (max-width: 480px) {
+    .chat-window-demo {
+        position: fixed !important;
+        width: 90%;
+        min-width: unset;
+        margin: 0;
+        height: 400px;
+        max-width: 350px;
+    }
+
+    /*.chat-messages {*/
+    /*    margin-top: 50px;*/
+    /*    padding: 8px 0;*/
+    /*}*/
+
+    .input-field {
+        width: 65%;
+        font-size: 14px;
+    }
+
+    .input-container-button {
+        padding: 6px 12px;
+        font-size: 14px;
+    }
+}
+
+/* Мобильные устройства (481px - 767px) */
+@media (min-width: 481px) and (max-width: 767px) {
+    .chat-window-demo {
+        position: fixed !important;
+        width: 90%;
+        min-width: unset;
+        margin: 0;
+        height: 450px;
+        max-width: 400px;
+    }
+
+    /*.chat-messages {*/
+    /*    margin-top: 50px;*/
+    /*    padding: 9px 0;*/
+    /*}*/
+
+    .input-field {
+        width: 68%;
+        font-size: 15px;
+    }
+
+    .input-container-button {
+        padding: 7px 14px;
+        font-size: 15px;
+    }
+}
+
+/* Планшеты (768px - 1023px) - позволяем JavaScript управлять позицией */
+@media (min-width: 768px) and (max-width: 1023px) {
+    .chat-window-demo {
+        position: fixed;
+        width: 280px;
+        min-width: 280px;
+        height: 500px;
+        /* Убираем фиксированные top и right, позволяя JavaScript управлять позицией */
+    }
+
+    /*.chat-messages {*/
+    /*    margin-top: 48px;*/
+    /*}*/
+}
+
+/* Десктопы (1024px и выше) - позволяем JavaScript управлять позицией */
+@media (min-width: 1024px) {
+    .chat-window-demo {
+        position: fixed;
+        width: 300px;
+        height: 550px;
+        /* Убираем фиксированные top и right, позволяя JavaScript управлять позицией */
+    }
+}
+
+/* Очень большие экраны (1400px и выше) - позволяем JavaScript управлять позицией */
+@media (min-width: 1400px) {
+    .chat-window-demo {
+        position: fixed;
+        width: 350px;
+        min-width: 350px;
+        height: 600px;
+        /* Убираем фиксированные top и right, позволяя JavaScript управлять позицией */
+    }
+
+    /*.chat-messages {*/
+    /*    margin-top: 50px;*/
+    /*    padding: 12px 0;*/
+    /*}*/
+
+    .input-field {
+        padding: 10px;
+        font-size: 16px;
+    }
+
+    .input-container-button {
+        padding: 10px 18px;
+        font-size: 16px;
+    }
+}
+
+.after-dialog {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%; /* Занимаем всю ширину */
+    /*height: 100%; !* Добавляем ограничение высоты *!*/
+    box-sizing: border-box; /* Включаем padding в расчет размеров */
+    overflow: hidden; /* Предотвращаем выход за границы */
+}
+
+.combined-text {
+    font-size: 16px;
+    color: var(--text-color-light); /* Общий цвет текста */
+    text-align: left; /* Выравнивание текста по левому краю */
+}
+
+.dark .combined-text {
+    color: var(--bg-color-light);
+}
+
+.tray-container {
+    padding-top: 10px;
+}
+
+.replay-text {
+    text-decoration: none;
+    color: var(--link-color); /* Цвет кликабельной части текста */
+    cursor: pointer; /* Указатель при наведении */
+    transition: color 0.3s ease; /* Плавная смена цвета */
+}
+
+.replay-text:hover {
+    color: var(--main-color-dark); /* Цвет кликабельной части при наведении */
+}
+
+.dark .replay-text {
+    color: var(--main-color-light);
+}
+
+.dark .replay-text:hover {
+    color: var(--main-color-dark);
+}
+
+.dark .dashboard-cap b {
+    color: black;
+}
+
+.circle {
+    width: 6px; /* Размер круга */
+    height: 6px; /* Размер круга */
+    background-color: var(--conected-color); /* Цвет круга */
+    border-radius: 50%; /* Делаем круг */
+    position: absolute; /* Абсолютное позиционирование */
+    top: 25px; /* Отступ сверху относительно родителя */
+    left: 34px; /* Отступ слева относительно родителя */
+    z-index: 2; /* Устанавливаем уровень слоя выше изображения */
+}
+
+/*Кнопки выбора тестовых моделей ассистентов*/
+.button-group {
+    display: flex; /* Используем flexbox */
+    flex-direction: column; /* Элементы располагаются по вертикали */
+    align-items: center; /* Центрируем элементы по горизонтали */
+    gap: 10px; /* Пространство между элементами */
+}
+
+.button-group button {
+    width: 120px; /* Фиксированная ширина кнопок */
+}
+
+.button-group b {
+    padding: 10px;
+}
+
+.dark .button-group b {
+    color: var(--bg-color-light);
+}
+
+.button-group-row {
+    display: flex; /* Создаём строку для кнопок */
+    justify-content: center; /* Центрируем кнопки в строке */
+    gap: 20px; /* Отступ между кнопками */
+    width: 100%; /* Заполняем всю ширину для равномерного распределения */
+}
+
+.button-group {
+    display: flex; /* Flexbox для размещения кнопок */
+    flex-wrap: wrap; /* Позволяет кнопкам переноситься, если не помещаются */
+    justify-content: center; /* Центрируем кнопки по горизонтали */
+    align-items: center; /* Центрируем кнопки по вертикали */
+    width: 100%; /* Заполняет всю ширину родителя */
+    height: 100%; /* Заполняет всю высоту родителя */
+    gap: 20px; /* Расстояние между кнопками */
+}
+
+.dark .button-group {
+    background-color: var(--bg-color-dark);
+}
+
+.button-group button {
+    padding: 10px 0; /* Внутренние отступы кнопок */
+    font-size: 16px; /* Размер шрифта текста кнопок */
+    color: black; /* Цвет текста */
+    background-color: var(--bg-color-light); /* Основной цвет кнопок */
+    border: 2px solid var(--main-color-light);
+    border-radius: 10px; /* Скругляем углы кнопок */
+    cursor: pointer; /* Указываем, что это кликабельный элемент */
+    transition: background-color 0.3s ease; /* Эффект при наведении */
+}
+
+.dark .button-group button {
+    background-color: var(--main-color-light);
+    border: 2px solid var(--main-color-light);
+}
+
+.button-group button:hover {
+    background-color: var(--main-color-light); /* Цвет кнопки при наведении */
+}
+
+.dark .button-group button:hover {
+    background-color: var(--hover-color-dark);
+}
+
+/*Подтверждение запуска тестовой модели*/
+.after-dialog-confirm {
+    display: flex; /* Используем Flexbox для выравнивания содержимого */
+    flex-direction: column; /* Располагаем элементы по вертикали */
+    justify-content: center; /* Центрируем по вертикали */
+    align-items: center; /* Центрируем по горизонтали */
+    width: 100%; /* Занимаем всю ширину родителя */
+    height: calc(100% - 40px); /* Вычитаем высоту заголовка */
+    margin-top: 40px; /* Отступ для заголовка */
+    padding: 20px; /* Внутренние отступы */
+    gap: 20px; /* Расстояние между текстом и кнопкой */
+    background-color: var(--bg-color-light); /* Фон (опционально) */
+    box-sizing: border-box; /* Включаем padding в общую высоту */
+    overflow: hidden; /* Предотвращаем выход за границы */
+}
+
+.dark .after-dialog-confirm {
+    background-color: #333; /* Фон для тёмного режима */
+}
+
+.after-dialog-confirm p {
+    font-size: 16px; /* Уменьшено с 18px до 16px */
+    color: var(--text-color-light); /* Цвет текста */
+    margin: 0; /* Убираем лишние отступы */
+    text-align: center; /* Текст по центру */
+}
+
+.after-dialog-confirm img {
+    height: 120px; /* Уменьшено с 200px до 120px */
+}
+
+/*.dark .after-dialog-confirm img {*/
+/*    filter: invert(99) brightness(99);*/
+/*}*/
+
+.dark .after-dialog-confirm p {
+    color: var(--bg-color-light); /* Цвет текста для тёмного режима */
+}
+
+.after-dialog-confirm button {
+    padding: 10px 20px; /* Внутренние отступы кнопки */
+    font-size: 16px; /* Размер шрифта кнопки */
+    background-color: var(--bg-color-light); /* Основной цвет кнопки */
+    border: 2px solid var(--main-color-light);
+    color: black;
+    border-radius: 10px; /* Скругляем углы кнопки */
+    cursor: pointer; /* Указатель при наведении */
+    transition: background-color 0.3s ease; /* Плавный эффект при наведении */
+}
+
+.dark .after-dialog-confirm button {
+    background-color: var(--main-color-light);
+    border: 2px solid var(--main-color-light);
+}
+
+.after-dialog-confirm button:hover {
+    background-color: var(--hover-color);
+}
+
+.dark .after-dialog-confirm button:hover {
+    background-color: var(--hover-color);
+}
+
+.dark .access-denied {
+    background-color: #333;
+}
+
+.access-denied p {
+    font-size: 18px;
+    color: #d32f2f; /* Красный цвет для сообщения об ошибке */
+    margin: 0;
+    text-align: center;
+    font-weight: 500;
+}
+
+.dark .access-denied p {
+    color: #f44336; /* Более яркий красный для тёмного режима */
+}
+
+/* Медиа-запросы для button-group */
+
+/* Очень маленькие экраны (до 480px) */
+@media (max-width: 480px) {
+    .button-group {
+        gap: 10px; /* Уменьшенное расстояние между кнопками */
+        padding: 10px;
+    }
+
+    .button-group button {
+        width: 100px; /* Уменьшенная ширина кнопок */
+        padding: 8px 0; /* Уменьшенные отступы */
+        font-size: 14px; /* Уменьшенный шрифт */
+    }
+
+    .button-group-row {
+        gap: 15px; /* Уменьшенный отступ между кнопками в строке */
+    }
+}
+
+/* Мобильные устройства (481px - 767px) */
+@media (min-width: 481px) and (max-width: 767px) {
+    .button-group {
+        gap: 15px;
+        padding: 12px;
+    }
+
+    .button-group button {
+        width: 110px;
+        padding: 9px 0;
+        font-size: 15px;
+    }
+
+    .button-group-row {
+        gap: 18px;
+    }
+}
+
+/* Планшеты (768px - 1023px) */
+@media (min-width: 768px) and (max-width: 1023px) {
+    .button-group {
+        gap: 18px;
+        padding: 15px;
+    }
+
+    .button-group button {
+        width: 115px;
+        padding: 9px 0;
+        font-size: 15px;
+    }
+
+    .button-group-row {
+        gap: 20px;
+    }
+}
+
+/* Десктопы (1024px и выше) */
+@media (min-width: 1024px) {
+    .button-group {
+        gap: 20px;
+        padding: 16px;
+    }
+
+    .button-group button {
+        width: 120px;
+        padding: 10px 0;
+        font-size: 16px;
+    }
+
+    .button-group-row {
+        gap: 20px;
+    }
+}
+
+/* Очень большие экраны (1400px и выше) */
+@media (min-width: 1400px) {
+    .button-group {
+        gap: 25px;
+        padding: 20px;
+    }
+
+    .button-group button {
+        width: 130px;
+        padding: 12px 0;
+        font-size: 17px;
+    }
+
+    .button-group-row {
+        gap: 25px;
+    }
+}
+
+/* Медиа-запросы для after-dialog-confirm */
+
+/* Очень маленькие экраны (до 480px) */
+@media (max-width: 480px) {
+    .after-dialog-confirm {
+        gap: 10px; /* Уменьшено с 15px */
+        padding: 15px;
+    }
+
+    .after-dialog-confirm p {
+        font-size: 14px; /* Уменьшено с 16px */
+    }
+
+    .after-dialog-confirm img {
+        height: 80px; /* Уменьшено с 120px */
+    }
+
+    .after-dialog-confirm button {
+        padding: 8px 16px; /* Уменьшенные отступы кнопки */
+        font-size: 14px; /* Уменьшенный размер шрифта кнопки */
+    }
+}
+
+/* Мобильные устройства (481px - 767px) */
+@media (min-width: 481px) and (max-width: 767px) {
+    .after-dialog-confirm {
+        gap: 12px; /* Уменьшено с 18px */
+        padding: 18px;
+    }
+
+    .after-dialog-confirm p {
+        font-size: 15px; /* Уменьшено с 17px */
+    }
+
+    .after-dialog-confirm img {
+        height: 100px; /* Уменьшено с 150px */
+    }
+
+    .after-dialog-confirm button {
+        padding: 9px 18px;
+        font-size: 15px;
+    }
+}
+
+/* Планшеты (768px - 1023px) */
+@media (min-width: 768px) and (max-width: 1023px) {
+    .after-dialog-confirm {
+        gap: 15px; /* Уменьшено с 20px */
+        padding: 20px;
+    }
+
+    .after-dialog-confirm p {
+        font-size: 16px; /* Уменьшено с 18px */
+    }
+
+    .after-dialog-confirm img {
+        height: 110px; /* Уменьшено с 180px */
+    }
+
+    .after-dialog-confirm button {
+        padding: 10px 20px; /* Базовые отступы */
+        font-size: 16px; /* Базовый размер */
+    }
+}
+
+/* Десктопы (1024px и выше) */
+@media (min-width: 1024px) {
+    .after-dialog-confirm {
+        gap: 15px; /* Уменьшено с 20px */
+        padding: 20px;
+    }
+
+    .after-dialog-confirm p {
+        font-size: 16px; /* Уменьшено с 18px */
+    }
+
+    .after-dialog-confirm img {
+        height: 120px; /* Базовая высота */
+    }
+
+    .after-dialog-confirm button {
+        padding: 10px 20px;
+        font-size: 16px;
+    }
+}
+
+/* Очень большие экраны (1400px и выше) */
+@media (min-width: 1400px) {
+    .after-dialog-confirm {
+        gap: 18px; /* Уменьшено с 25px */
+        padding: 25px;
+    }
+
+    .after-dialog-confirm p {
+        font-size: 18px; /* Уменьшено с 20px */
+    }
+
+    .after-dialog-confirm img {
+        height: 140px; /* Уменьшено с 220px */
+    }
+
+    .after-dialog-confirm button {
+        padding: 12px 24px; /* Увеличенные отступы кнопки */
+        font-size: 18px; /* Увеличенный размер шрифта кнопки */
+    }
+}
+
+.chat-image {
+    width: 150px;
+    transition: transform 0.3s ease;
+    cursor: pointer;
+}
+
+.chat-image.zoomed {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    object-fit: contain;
+    z-index: 9999;
+    cursor: zoom-out;
+}
+
+.message-image-container {
+    margin-top: 8px;
+}
+
+.message-image {
+    max-width: 100%;
+    max-height: 300px;
+    border-radius: 8px;
+}
+
+.message-files {
+    margin: 10px 0;
+    display: block;
+}
+
+.message-audio-container {
+    margin: 8px 0;
+    padding: 10px;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    background-color: #f9f9f9;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.chat-audio {
+    width: 100%;
+    max-width: 300px;
+    height: 40px;
+    border-radius: 4px;
+    outline: none;
+}
+
+.file-name {
+    font-size: 0.9em;
+    color: #666;
+    font-weight: 500;
+}
+
+.dark .file-name {
+    color: #9f9f9f;
+}
+
+.chat-message .message-files {
+    margin-top: 8px;
+    margin-bottom: 8px;
+}
+
+.message-audio-container audio {
+    display: block;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}

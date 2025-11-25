@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Маруся AI - Интеграция Виджета</title>
+    <style>
+        :root {
+            --primary-color: #4caf50;
+            --secondary-color: #2196f3;
+            --text-color: #333;
+            --bg-color: #f5f5f5;
+            --border-color: #ddd;
+            --success-color: #28a745;
+            --error-color: #dc3545;
+            --warning-color: #ffc107;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 2rem;
+        }
+
+        .section {
+            margin-bottom: 3rem;
+        }
+
+        .section h2 {
+            color: var(--primary-color);
+            border-bottom: 2px solid var(--primary-color);
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+            font-size: 1.8rem;
+        }
+
+        .section h3 {
+            color: var(--secondary-color);
+            margin: 1.5rem 0 1rem 0;
+            font-size: 1.4rem;
+        }
+
+        .code-block {
+            background: #f8f9fa;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1rem 0;
+            overflow-x: auto;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+
+        .code-block pre {
+            margin: 0;
+            white-space: pre-wrap;
+        }
+
+        .highlight {
+            background: #ffffcc;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+
+        .status {
+            padding: 1rem;
+            border-radius: 8px;
+            margin: 1rem 0;
+            font-weight: bold;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status.warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+
+        .test-section {
+            background: #f8f9fa;
+            border: 2px solid var(--primary-color);
+            border-radius: 10px;
+            padding: 2rem;
+            margin: 2rem 0;
+        }
+
+        .button-group {
+            display: flex !important;
+            gap: 1rem !important;
+            margin: 1rem 0 !important;
+            flex-direction: row !important;
+            justify-content: flex-start !important;
+            align-items: center !important;
+            flex-wrap: nowrap !important;
+        }
+
+        /* Принудительное применение стилей для кнопок */
+        .test-section .button-group {
+            display: flex !important;
+            flex-direction: row !important;
+            flex-wrap: nowrap !important;
+        }
+
+        .test-section .button-group .btn {
+            display: inline-block !important;
+            flex: 0 0 auto !important;
+        }
+
+        /* На очень узких экранах кнопки переходят в столбик */
+        @media (max-width: 600px) {
+            .button-group,
+            .test-section .button-group {
+                flex-direction: column !important;
+                align-items: stretch !important;
+            }
+
+            .btn,
+            .test-section .button-group .btn {
+                min-width: auto !important;
+                width: 100% !important;
+            }
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            min-width: 150px;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: var(--secondary-color);
+            color: white;
+        }
+
+        .btn-warning {
+            background: var(--warning-color);
+            color: #333;
+        }
+
+        .btn-danger {
+            background: var(--error-color);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .config-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0;
+        }
+
+        .config-table th,
+        .config-table td {
+            border: 1px solid var(--border-color);
+            padding: 0.75rem;
+            text-align: left;
+        }
+
+        .config-table th {
+            background: var(--primary-color);
+            color: white;
+            font-weight: bold;
+        }
+
+        .config-table tr:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .api-method {
+            background: #e3f2fd;
+            border-left: 4px solid var(--secondary-color);
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .input-group {
+            margin: 1rem 0;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: bold;
+            color: var(--text-color);
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid var(--border-color);
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        .theme-preview {
+            display: none;
+            background: #f0f0f0;
+            border: 2px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+
+        .theme-preview.active {
+            display: block;
+        }
+
+        /* Темная тема */
+        body.dark {
+            --text-color: #e0e0e0;
+            --bg-color: #121212;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+
+        body.dark .container {
+            background: #1e1e1e;
+        }
+
+        body.dark .code-block {
+            background: #2d2d2d;
+            color: #e0e0e0;
+        }
+
+        body.dark .config-table tr:nth-child(even) {
+            background: #2d2d2d;
+        }
+
+        /* Дополнительные стили для темной темы */
+        body.dark .test-section {
+            background: #2d2d2d;
+            border-color: var(--primary-color);
+        }
+
+        body.dark .config-table {
+            background: #1e1e1e;
+        }
+
+        body.dark .config-table th,
+        body.dark .config-table td {
+            border-color: #444;
+        }
+
+        body.dark .api-method {
+            background: #2d2d2d;
+            border-left-color: var(--secondary-color);
+        }
+
+        body.dark .status.success {
+            background: #1f4c2f;
+            color: #4ade80;
+            border-color: #22c55e;
+        }
+
+        body.dark .status.error {
+            background: #4c1f1f;
+            color: #f87171;
+            border-color: #ef4444;
+        }
+
+        body.dark .status.warning {
+            background: #4c3f1f;
+            color: #fbbf24;
+            border-color: #f59e0b;
+        }
+
+        body.dark .highlight {
+            background: #4a5568;
+            color: #e2e8f0;
+        }
+    </style>
+</head>
+<body class="light">
+    <div class="container">
+        <div class="header">
+            <h1>🤖 Маруся AI</h1>
+            <p>Руководство по интеграции виджета</p>
+        </div>
+
+        <div class="content">
+            <!-- Тестовая секция -->
+            <div class="test-section">
+                <h2>🧪 Тестирование Виджета</h2>
+
+                <div class="button-group">
+                    <button class="btn btn-primary" onclick="testLightTheme()">☀️ Светлая тема</button>
+                    <button class="btn btn-secondary" onclick="testDarkTheme()">🌙 Темная тема</button>
+                    <button class="btn btn-warning" onclick="testCustomStyle()">🎨 Кастомный стиль</button>
+                </div>
+
+                <div id="status" class="status" style="display: none;"></div>
+            </div>
+
+            <!-- Быстрый старт -->
+            <div class="section">
+                <h2>🚀 Быстрый старт</h2>
+                <p>Для подключения виджета Маруся AI на ваш сайт выполните следующие шаги:</p>
+
+                <h3>1. Подключение с атрибутом data-exam-key</h3>
+                <div class="code-block">
+                    <pre>&lt;script src="https://info-bot.online/widget/marusya-widget.js" data-exam-key="${urlExamKey}"&gt;&lt;/script&gt;</pre>
+                </div>
+
+                <h3>2. Альтернативный способ с мета-тегом</h3>
+                <div class="code-block">
+                    <pre>&lt;meta name="marusya-exam-key" content="${urlExamKey}"&gt;
+&lt;script src="https://info-bot.online/widget/marusya-widget.js"&gt;&lt;/script&gt;</pre>
+                </div>
+
+                <h3>3. Программная инициализация</h3>
+                <div class="code-block">
+                    <pre>&lt;script src="https://info-bot.online/widget/marusya-widget.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+window.addEventListener('load', function() {
+    if (window.MarusyaWidget) {
+        window.MarusyaWidget.init({
+            examKey: '${urlExamKey}'
+        });
+    }
+});
+&lt;/script&gt;</pre>
+                </div>
+            </div>
+
+            <!-- API методы -->
+            <div class="section">
+                <h2>📚 API Методы</h2>
+
+                <div class="api-method">
+                    <h3>MarusyaWidget.init(options)</h3>
+                    <p><strong>Описание:</strong> Инициализирует виджет с заданными параметрами.</p>
+                    <p><strong>Возвращает:</strong> Объект с методами управления виджетом или null при ошибке.</p>
+                </div>
+
+                <div class="api-method">
+                    <h3>MarusyaWidget.destroy()</h3>
+                    <p><strong>Описание:</strong> Удаляет виджет с страницы.</p>
+                    <p><strong>Возвращает:</strong> undefined</p>
+                </div>
+
+                <h3>Пример использования API:</h3>
+                <div class="code-block">
+                    <pre>// Инициализация виджета
+const widget = window.MarusyaWidget.init({
+    examKey: '${urlExamKey}',
+    buttonPosition: { right: '30px', bottom: '30px' },
+    buttonSize: { width: '60px', height: '60px' },
+    colors: {
+        buttonBackground: '#4caf50',
+        windowBackground: '#ffffff'
+    }
+});
+
+// Удаление виджета
+window.MarusyaWidget.destroy();</pre>
+                </div>
+            </div>
+
+            <!-- Конфигурация -->
+            <div class="section">
+                <h2>⚙️ Параметры конфигурации</h2>
+
+                <h3>Основные параметры</h3>
+                <table class="config-table">
+                    <thead>
+                        <tr>
+                            <th>Параметр</th>
+                            <th>Тип</th>
+                            <th>Описание</th>
+                            <th>По умолчанию</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>examKey</code></td>
+                            <td>string</td>
+                            <td>Обязательный ключ экзамена</td>
+                            <td>-</td>
+                        </tr>
+                        <tr>
+                            <td><code>buttonPosition</code></td>
+                            <td>object</td>
+                            <td>Позиция кнопки виджета</td>
+                            <td><code>{ right: '30px', bottom: '30px' }</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>buttonSize</code></td>
+                            <td>object</td>
+                            <td>Размер кнопки виджета</td>
+                            <td><code>{ width: '50px', height: '50px' }</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>buttonStyle</code></td>
+                            <td>object</td>
+                            <td>Дополнительные CSS стили кнопки</td>
+                            <td><code>{}</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>colors</code></td>
+                            <td>object</td>
+                            <td>Настройки цветовой схемы</td>
+                            <td>Автоматически по теме</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Позиционирование кнопки (buttonPosition)</h3>
+                <div class="code-block">
+                    <pre>{
+    right: '30px',    // Отступ справа
+    bottom: '30px',   // Отступ снизу
+    left: 'auto',     // Отступ слева (альтернатива right)
+    top: 'auto'       // Отступ сверху (альтернатива bottom)
+}</pre>
+                </div>
+
+                <h3>Размеры кнопки (buttonSize)</h3>
+                <div class="code-block">
+                    <pre>{
+    width: '60px',    // Ширина кнопки
+    height: '60px'    // Высота кнопки
+}</pre>
+                </div>
+
+                <h3>Цветовая схема (colors)</h3>
+                <table class="config-table">
+                    <thead>
+                        <tr>
+                            <th>Свойство</th>
+                            <th>Описание</th>
+                            <th>По умолчанию</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>buttonBackground</code></td><td>Фон кнопки виджета</td><td><code>'#4caf50'</code></td></tr>
+                        <tr><td><code>buttonIconFilter</code></td><td>Фильтр иконки кнопки</td><td><code>'brightness(0) invert(1)'</code></td></tr>
+                        <tr><td><code>windowBackground</code></td><td>Фон окна чата</td><td><code>'#ffffff'</code></td></tr>
+                        <tr><td><code>windowBorder</code></td><td>Цвет границы окна</td><td><code>'#dddddd'</code></td></tr>
+                        <tr><td><code>textColor</code></td><td>Основной цвет текста</td><td><code>'#333333'</code></td></tr>
+                        <tr><td><code>headerBackground</code></td><td>Фон заголовка</td><td><code>'#f5f5f5'</code></td></tr>
+                        <tr><td><code>headerText</code></td><td>Цвет текста заголовка</td><td><code>'#333333'</code></td></tr>
+                        <tr><td><code>messageBackgroundUser</code></td><td>Фон сообщений пользователя</td><td><code>'#e3f2fd'</code></td></tr>
+                        <tr><td><code>messageTextUser</code></td><td>Цвет текста пользователя</td><td><code>'#000000'</code></td></tr>
+                        <tr><td><code>messageBackgroundBot</code></td><td>Фон сообщений бота</td><td><code>'#f5f5f5'</code></td></tr>
+                        <tr><td><code>messageTextBot</code></td><td>Цвет текста бота</td><td><code>'#333333'</code></td></tr>
+                        <tr><td><code>inputBackground</code></td><td>Фон поля ввода</td><td><code>'#ffffff'</code></td></tr>
+                        <tr><td><code>inputText</code></td><td>Цвет текста в поле ввода</td><td><code>'#333333'</code></td></tr>
+                        <tr><td><code>sendButtonBackground</code></td><td>Фон кнопки отправки</td><td><code>'#4caf50'</code></td></tr>
+                        <tr><td><code>closeButtonBackground</code></td><td>Фон кнопки закрытия</td><td><code>'#dc3545'</code></td></tr>
+                        <tr><td><code>connectedIndicator</code></td><td>Цвет индикатора подключения</td><td><code>'#28a745'</code></td></tr>
+                        <tr><td><code>disconnectedIndicator</code></td><td>Цвет индикатора отключения</td><td><code>'#dc3545'</code></td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Примеры интеграции -->
+            <div class="section">
+                <h2>💡 Примеры интеграции</h2>
+
+                <h3>Базовая интеграция</h3>
+                <div class="code-block">
+                    <pre>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+    &lt;title&gt;Мой сайт с Маруся AI&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+    &lt;h1&gt;Добро пожаловать на мой сайт&lt;/h1&gt;
+
+    &lt;script src="https://info-bot.online/widget/marusya-widget.js" data-exam-key="${urlExamKey}"&gt;&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</pre>
+                </div>
+
+                <h3>Интеграция с настройками позиции и размера</h3>
+                <div class="code-block">
+                    <pre>&lt;script src="https://info-bot.online/widget/marusya-widget.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+window.addEventListener('load', function() {
+    if (window.MarusyaWidget) {
+        window.MarusyaWidget.init({
+            examKey: '${urlExamKey}',
+            buttonPosition: { right: '20px', bottom: '20px' },
+            buttonSize: { width: '70px', height: '70px' },
+            buttonStyle: {
+                borderRadius: '50%',
+                boxShadow: '0 4px 12px rgba(0,0,0,0.3)'
+            }
+        });
+    }
+});
+&lt;/script&gt;</pre>
+                </div>
+
+                <h3>Интеграция с кастомными цветами</h3>
+                <div class="code-block">
+                    <pre>&lt;script src="https://info-bot.online/widget/marusya-widget.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+window.addEventListener('load', function() {
+    if (window.MarusyaWidget) {
+        window.MarusyaWidget.init({
+            examKey: '${urlExamKey}',
+            colors: {
+                buttonBackground: '#2196f3',
+                windowBackground: '#ffffff',
+                headerBackground: '#2196f3',
+                headerText: '#ffffff',
+                messageBackgroundUser: '#e3f2fd',
+                messageBackgroundBot: '#f5f5f5'
+            }
+        });
+    }
+});
+&lt;/script&gt;</pre>
+                </div>
+
+                <h3>Условная загрузка виджета</h3>
+                <div class="code-block">
+                    <pre>&lt;script&gt;
+// Загружаем виджет только для определенных страниц
+if (window.location.pathname.includes('/support') ||
+    window.location.pathname.includes('/help')) {
+
+    const script = document.createElement('script');
+    script.src = 'https://info-bot.online/widget/marusya-widget.js';
+    script.setAttribute('data-exam-key', '${urlExamKey}');
+    document.head.appendChild(script);
+}
+&lt;/script&gt;</pre>
+                </div>
+
+                <h3>Динамическое управление виджетом</h3>
+                <div class="code-block">
+                    <pre>&lt;button onclick="initWidget()"&gt;Показать чат&lt;/button&gt;
+&lt;button onclick="destroyWidget()"&gt;Скрыть чат&lt;/button&gt;
+
+&lt;script src="https://info-bot.online/widget/marusya-widget.js"&gt;&lt;/script&gt;
+&lt;script&gt;
+let widget = null;
+
+function initWidget() {
+    if (!widget && window.MarusyaWidget) {
+        widget = window.MarusyaWidget.init({
+            examKey: '${urlExamKey}',
+            buttonPosition: { right: '30px', bottom: '30px' }
+        });
+    }
+}
+
+function destroyWidget() {
+    if (window.MarusyaWidget) {
+        window.MarusyaWidget.destroy();
+        widget = null;
+    }
+}
+&lt;/script&gt;</pre>
+                </div>
+
+                <h3>Интеграция в WordPress</h3>
+                <div class="code-block">
+                    <pre>&lt;!-- Добавьте в footer.php или используйте плагин для вставки кода --&gt;
+&lt;script src="https://info-bot.online/widget/marusya-widget.js" data-exam-key="${urlExamKey}"&gt;&lt;/script&gt;</pre>
+                </div>
+
+                <h3>Интеграция в Shopify</h3>
+                <div class="code-block">
+                    <pre>&lt;!-- Добавьте в theme.liquid перед закрывающим тегом &lt;/body&gt; --&gt;
+&lt;script src="https://info-bot.online/widget/marusya-widget.js" data-exam-key="${urlExamKey}"&gt;&lt;/script&gt;</pre>
+                </div>
+            </div>
+
+            <!-- Готовые темы -->
+            <div class="section">
+                <h2>🎨 Готовые стили</h2>
+
+                <h3>Базовый стиль</h3>
+                <div class="code-block">
+                    <pre>window.MarusyaWidget.init({
+    examKey: '${urlExamKey}',
+    colors: {
+        buttonBackground: '#4caf50',
+        windowBackground: '#ffffff',
+        headerBackground: '#f5f5f5',
+        messageBackgroundUser: '#e3f2fd',
+        messageBackgroundBot: '#f5f5f5',
+        textColor: '#333333'
+    }
+});</pre>
+                </div>
+
+                <h3>Синий стиль</h3>
+                <div class="code-block">
+                    <pre>window.MarusyaWidget.init({
+    examKey: '${urlExamKey}',
+    colors: {
+        buttonBackground: '#2196f3',
+        windowBackground: '#ffffff',
+        headerBackground: '#2196f3',
+        headerText: '#ffffff',
+        messageBackgroundUser: '#e3f2fd',
+        messageBackgroundBot: '#f5f5f5'
+    }
+});</pre>
+                </div>
+
+                <h3>Кастомный яркий стиль</h3>
+                <div class="code-block">
+                    <pre>window.MarusyaWidget.init({
+    examKey: '${urlExamKey}',
+    colors: {
+        buttonBackground: '#00ffea',
+        buttonIconFilter: '#000000',
+        windowBackground: '#94b854',
+        windowBorder: '#000000',
+        textColor: '#000000',
+        headerBackground: '#ffe138',
+        headerText: '#000000',
+        headerIconFilter: '#000000',
+        messageBackgroundUser: '#b0c199',
+        messageTextUser: '#253c83',
+        messageBackgroundBot: '#bda889',
+        messageTextBot: '#000000',
+        inputBackground: 'rgba(255,242,201,0.75)',
+        inputText: '#000000',
+        inputPlaceholder: '#7a7a7a',
+        sendButtonBackground: '#00ffea',
+        sendButtonIconFilter: '#000000',
+        closeButtonBackground: '#b6ff44',
+        closeButtonText: '#003cff',
+        connectedIndicator: '#ffffff',
+        disconnectedIndicator: '#dc3545'
+    }
+});</pre>
+                </div>
+
+                <div class="status warning">
+                    <strong>Примечание:</strong> Цветовая схема автоматически адаптируется к светлой/темной теме системы или классу на элементе <code>body</code>. Указанные цвета применяются поверх автоматической темы.
+                </div>
+            </div>
+
+            <!-- Устранение неполадок -->
+            <div class="section">
+                <h2>🔧 Устранение неполадок</h2>
+
+                <h3>Виджет не загружается</h3>
+                <ul>
+                    <li>Проверьте правильность URL скрипта</li>
+                    <li>Убедитесь, что examKey указан корректно</li>
+                    <li>Проверьте консоль браузера на ошибки</li>
+                    <li>Убедитесь, что нет блокировщиков рекламы</li>
+                </ul>
+
+                <h3>Виджет не подключается к серверу</h3>
+                <ul>
+                    <li>Проверьте интернет-соединение</li>
+                    <li>Убедитесь, что сервер https://info-bot.online:8083 доступен</li>
+                    <li>Проверьте настройки CORS в браузере</li>
+                </ul>
+
+                <h3>Проблемы со стилями</h3>
+                <ul>
+                    <li>Убедитесь, что нет конфликтов CSS</li>
+                    <li>Проверьте z-index других элементов на странице</li>
+                    <li>Используйте параметр colors для переопределения стилей</li>
+                </ul>
+
+                <div class="code-block">
+                    <pre>// Отладочная информация
+console.log('MarusyaWidget доступен:', !!window.MarusyaWidget);
+console.log('Конфигурация:', window.runtimeConfig);
+console.log('Статический базовый путь:', window.WIDGET_STATIC_BASE);</pre>
+                </div>
+            </div>
+
+            <!-- Поддержка -->
+            <div class="section">
+                <h2>📞 Поддержка</h2>
+                <p>Если у вас возникли вопросы или проблемы с интеграцией виджета:</p>
+                <ul>
+                    <li>📧 Email: support@info-bot.online</li>
+                    <li>💬 Telegram: @marusya_support</li>
+                    <li>🌐 Сайт: https://info-bot.online</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Подключаем скрипт виджета для тестирования -->
+    <script src="https://info-bot.online/widget/marusya-widget.js"></script>
+
+    <script>
+        let currentWidget = null;
+        let currentTheme = 'light';
+
+        // Получаем examKey из URL при загрузке страницы
+        function getExamKeyFromUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get('examKey');
+        }
+
+        function updateStatus(message, type) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = message;
+            statusDiv.className = `status ${type}`;
+            statusDiv.style.display = 'block';
+        }
+
+        function testLightTheme() {
+            if (currentWidget && currentWidget.destroy) {
+                currentWidget.destroy();
+                currentWidget = null;
+            } else if (window.MarusyaWidget) {
+                window.MarusyaWidget.destroy();
+            }
+
+            currentTheme = 'light';
+            document.body.className = 'light';
+
+            const examKey = getExamKeyFromUrl();
+            if (!examKey) {
+                updateStatus('❌ ExamKey не найден в URL. Добавьте параметр ?examKey=ваш-ключ к URL страницы', 'error');
+                return;
+            }
+
+            if (window.MarusyaWidget) {
+                try {
+                    currentWidget = window.MarusyaWidget.init({
+                        examKey: examKey,
+                    });
+                    updateStatus(`✅ <strong>Светлая тема активирована!</strong><br>`, 'success');
+                } catch (error) {
+                    updateStatus('❌ Ошибка: ' + error.message, 'error');
+                }
+            } else {
+                updateStatus('❌ MarusyaWidget не загружен', 'error');
+            }
+        }
+
+        function testDarkTheme() {
+            if (currentWidget && currentWidget.destroy) {
+                currentWidget.destroy();
+                currentWidget = null;
+            } else if (window.MarusyaWidget) {
+                window.MarusyaWidget.destroy();
+            }
+
+            currentTheme = 'dark';
+            document.body.className = 'dark';
+
+            const examKey = getExamKeyFromUrl();
+            if (!examKey) {
+                updateStatus('❌ ExamKey не найден в URL. Добавьте параметр ?examKey=ваш-ключ к URL страницы', 'error');
+                return;
+            }
+
+            if (window.MarusyaWidget) {
+                try {
+                    currentWidget = window.MarusyaWidget.init({
+                        examKey: examKey,
+                    });
+                    updateStatus(`✅ <strong>Темная тема активирована!</strong><br>`, 'success');
+                } catch (error) {
+                    updateStatus('❌ Ошибка: ' + error.message, 'error');
+                }
+            } else {
+                updateStatus('❌ MarusyaWidget не загружен', 'error');
+            }
+        }
+
+        function testCustomStyle() {
+            if (currentWidget && currentWidget.destroy) {
+                currentWidget.destroy();
+                currentWidget = null;
+            } else if (window.MarusyaWidget) {
+                window.MarusyaWidget.destroy();
+            }
+
+            currentTheme = 'custom';
+            document.body.className = 'light';
+
+            const examKey = getExamKeyFromUrl();
+            if (!examKey) {
+                updateStatus('❌ ExamKey не найден в URL. Добавьте параметр ?examKey=ваш-ключ к URL страницы', 'error');
+                return;
+            }
+
+            if (window.MarusyaWidget) {
+                try {
+                    currentWidget = window.MarusyaWidget.init({
+                        examKey: examKey,
+                        buttonPosition: { right: '30px', bottom: '30px' },
+                        buttonSize: { width: '60px', height: '60px' },
+                        buttonStyle: {
+                            backgroundColor: '#00ffea',
+                            borderRadius: '50%',
+                            border: '3px solid white'
+                        },
+                        colors: {
+                            buttonBackground: '#00ffea',
+                            buttonIconFilter: '#000000',
+                            windowBackground: '#94b854',
+                            windowBorder: '#000000',
+                            textColor: '#000000',
+                            headerBackground: '#ffe138',
+                            headerText: '#000000',
+                            headerIconFilter: '#000000',
+                            messageBackgroundUser: '#b0c199',
+                            messageTextUser: '#253c83',
+                            messageBackgroundBot: '#bda889',
+                            messageTextBot: '#000000',
+                            inputBackground: 'rgba(255,242,201,0.75)',
+                            inputText: '#000000',
+                            inputPlaceholder: '#7a7a7a',
+                            sendButtonBackground: '#00ffea',
+                            sendButtonIconFilter: '#000000',
+                            closeButtonBackground: '#b6ff44',
+                            closeButtonText: '#003cff',
+                            connectedIndicator: '#ffffff',
+                            disconnectedIndicator: '#dc3545',
+                        }
+                    });
+                    updateStatus(`✅ <strong>Кастомный стиль применен!</strong><br><br>Яркие неоновые цвета активированы!`, 'success');
+                } catch (error) {
+                    updateStatus('❌ Ошибка: ' + error.message, 'error');
+                }
+            } else {
+                updateStatus('❌ MarusyaWidget не загружен', 'error');
+            }
+        }
+
+        // Инициализация при загрузке страницы
+        window.addEventListener('load', function() {
+            // Проверяем examKey из URL
+            const urlExamKey = getExamKeyFromUrl();
+
+            // Функция для замены ${urlExamKey} на реальный ключ во всех блоках кода
+            function updateCodeBlocks() {
+                const codeBlocks = document.querySelectorAll('.code-block pre');
+                codeBlocks.forEach(block => {
+                    if (block.textContent.includes('${urlExamKey}')) {
+                        const newContent = block.textContent.replace(/\$\{urlExamKey\}/g, urlExamKey || 'ваш-ключ-экзамена');
+                        block.textContent = newContent;
+                    }
+                });
+
+                // Также обновляем выделенный текст в предупреждении
+                const highlights = document.querySelectorAll('.highlight');
+                highlights.forEach(highlight => {
+                    if (highlight.textContent.includes('${urlExamKey}')) {
+                        highlight.textContent = urlExamKey || 'ваш-ключ-экзамена';
+                    }
+                });
+            }
+
+            if (urlExamKey) {
+                updateCodeBlocks();
+                updateStatus(`📝 ExamKey загружен из URL: ${urlExamKey}<br>Выберите тему для тестирования виджета.`, 'success');
+            } else {
+                updateStatus('⚠️ ExamKey не найден в URL. Добавьте параметр ?examKey=ваш-ключ к URL страницы для тестирования виджета.', 'warning');
+            }
+
+            if (window.MarusyaWidget) {
+                updateStatus(urlExamKey ?
+                    `✅ MarusyaWidget загружен и готов к работе!` :
+                    '✅ MarusyaWidget загружен. Добавьте examKey в URL для тестирования.', 'success');
+            } else {
+                updateStatus('⏳ Загрузка MarusyaWidget...', 'warning');
+                // Проверяем каждые 500мс
+                const checkInterval = setInterval(() => {
+                    if (window.MarusyaWidget) {
+                        clearInterval(checkInterval);
+                        const examKey = getExamKeyFromUrl();
+                        updateStatus(examKey ?
+                            `✅ MarusyaWidget загружен и готов к работе!` :
+                            '✅ MarusyaWidget загружен. Добавьте examKey в URL для тестирования.', 'success');
+
+                        // Обновляем блоки кода после загрузки виджета
+                        if (examKey) {
+                            updateCodeBlocks();
+                        }
+                    }
+                }, 500);
+
+                // Прекращаем проверку через 10 секунд
+                setTimeout(() => {
+                    clearInterval(checkInterval);
+                    if (!window.MarusyaWidget) {
+                        updateStatus('❌ Не удалось загрузить MarusyaWidget. Проверьте подключение к интернету.', 'error');
+                    }
+                }, 10000);
+            }
+        });
+    </script>
+</body>
+</html>

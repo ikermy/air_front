@@ -1,0 +1,670 @@
+/* Основной контейнер для каналов */
+.channels-modern {
+    padding: 24px;
+    background-color: var(--bg-color-light);
+    /*min-height: 100vh;*/
+    position: relative;
+    z-index: 1;
+}
+
+.dark .channels-modern {
+    background-color: var(--bg-color-dark);
+}
+
+/* Заголовок секции */
+.channels-header {
+    margin-bottom: 32px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #f0f0f0;
+    position: relative;
+    z-index: 5;
+}
+
+.dark .channels-header {
+    border-bottom-color: #404040;
+}
+
+.channels-title {
+    color: var(--text-color-light);
+    margin-bottom: 8px !important;
+}
+
+.dark .channels-title {
+    color: var(--text-color-dark);
+}
+
+.channels-description {
+    color: var(--text-color-light);
+    font-size: 16px;
+    opacity: 0.8;
+}
+
+.dark .channels-description {
+    color: var(--text-color-dark);
+}
+
+/* Секция добавления каналов */
+.add-channel-section {
+    margin-bottom: 32px;
+    position: relative;
+    z-index: 5;
+}
+
+/* Заголовок списка каналов */
+.channels-list-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 24px;
+    padding: 20px 0;
+    border-bottom: 1px solid #f0f0f0;
+    position: relative;
+    z-index: 5;
+}
+
+.dark .channels-list-header {
+    border-bottom-color: #404040;
+}
+
+.header-left {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.header-controls {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+/* Контейнер для каналов */
+.channels-container {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+/* Карточка канала */
+.channel-card-modern {
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    overflow: hidden;
+    border: 1px solid #f0f0f0;
+    position: relative;
+    z-index: 10 !important;
+    background: var(--bg-color) !important;
+    border: 1px solid var(--midle-color) !important;
+}
+
+/* Вертикальная раскладка для карточек каналов */
+.channel-card-vertical-layout {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px;
+    gap: 16px;
+    background: #fafafa;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.dark .channel-card-vertical-layout {
+    background: #333333;
+    border-bottom-color: #404040;
+}
+
+/* Иконка канала по центру */
+.channel-icon-modern-centered {
+    font-size: 48px;
+    width: 80px;
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 16px;
+    background: rgba(24, 144, 255, 0.1);
+    color: #1890ff;
+    transition: all 0.3s ease;
+}
+
+.channel-icon-modern-centered.enabled {
+    background: rgba(82, 196, 26, 0.1);
+    color: #52c41a;
+}
+
+/* Название канала по центру */
+.channel-title-modern-centered {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-color-light);
+    margin: 0;
+    text-align: center;
+}
+
+.dark .channel-title-modern-centered {
+    color: var(--text-color-dark);
+}
+
+/* Переключатель по центру */
+.channel-status-switch-modern-centered {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* Заголовок карточки канала */
+.channel-card-header-modern {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px;
+    background: #fafafa;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.dark .channel-card-header-modern {
+    background: #333333;
+    border-bottom-color: #404040;
+}
+
+.channel-info-modern {
+    min-height: 120px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.channel-icon-modern {
+    font-size: 24px;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    background: rgba(24, 144, 255, 0.1);
+    color: #1890ff;
+    transition: all 0.3s ease;
+}
+
+.channel-icon-modern.enabled {
+    background: rgba(82, 196, 26, 0.1);
+    color: #52c41a;
+}
+
+.channel-title-modern {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-color-light);
+    margin: 0;
+}
+
+.dark .channel-title-modern {
+    color: var(--text-color-dark);
+}
+
+.channel-status-switch-modern {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Содержимое карточки канала */
+.channel-card-content-modern {
+    padding: 24px;
+}
+
+.channel-section {
+    margin-bottom: 20px;
+}
+
+.channel-section:last-child {
+    margin-bottom: 0;
+}
+
+/* Кнопки действий */
+.channel-actions-modern {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+    padding-top: 16px;
+    border-top: 1px solid #f0f0f0;
+}
+
+.dark .channel-actions-modern {
+    border-top-color: #404040;
+}
+
+.channel-actions-left-modern {
+    display: flex;
+    align-items: center;
+}
+
+.channel-actions-right-modern {
+    display: flex;
+    gap: 12px;
+}
+
+.channel-actions-modern .ant-btn {
+    border-radius: 8px;
+    font-weight: 500;
+    height: 36px;
+    padding: 0 16px;
+}
+
+/* Состояние загрузки */
+.channels-loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    gap: 16px;
+}
+
+.loading-text {
+    color: var(--text-color-light);
+    font-size: 16px;
+}
+
+.dark .loading-text {
+    color: var(--text-color-dark);
+}
+
+/* Пустое состояние */
+.no-model-state-modern {
+    text-align: center;
+    padding: 60px 20px;
+    background: #ffffff;
+    border-radius: 12px;
+    border: 1px solid #f0f0f0;
+}
+
+.dark .no-model-state-modern {
+    background: #2a2a2a;
+    border-color: #404040;
+}
+
+.no-model-icon-modern {
+    font-size: 48px;
+    color: #bfbfbf;
+    margin-bottom: 16px;
+}
+
+.no-model-title-modern {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text-color-light);
+    margin-bottom: 8px;
+}
+
+.dark .no-model-title-modern {
+    color: var(--text-color-dark);
+}
+
+.no-model-description-modern {
+    color: var(--text-color-light);
+    opacity: 0.8;
+    font-size: 16px;
+}
+
+.dark .no-model-description-modern {
+    color: var(--text-color-dark);
+}
+
+/* Секции каналов */
+.tbot-section,
+.widget-section,
+.tguserbot-section,
+.whatsbot-section {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 16px;
+    border: 1px solid #e9ecef;
+}
+
+.dark .tbot-section,
+.dark .widget-section,
+.dark .tguserbot-section,
+.dark .whatsbot-section {
+    background: #333333;
+    border-color: #404040;
+}
+
+/* Группы полей ввода */
+.input-group-modern {
+    margin-bottom: 16px;
+}
+
+.input-group-modern .ant-input,
+.input-group-modern .ant-input-password,
+.input-group-modern .ant-input-password-large,
+.input-group-modern .ant-select-selector {
+    border-radius: 8px;
+    border-color: #d9d9d9;
+    transition: all 0.3s ease;
+}
+
+.input-group-modern .ant-input-password .ant-input-suffix {
+    margin-right: 10px;
+}
+
+.input-group-modern .ant-input-password {
+    padding: 0;
+}
+
+.input-group-modern .ant-input-password .ant-input {
+    padding: 4px 11px;
+}
+
+.input-group-modern .ant-input:focus,
+.input-group-modern .ant-input-password:focus,
+.input-group-modern .ant-select-focused .ant-select-selector {
+    border-color: var(--main-color-light);
+    box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
+}
+
+.dark .input-group-modern .ant-input,
+.dark .input-group-modern .ant-input-password,
+.dark .input-group-modern .ant-select-selector {
+    background: #2a2a2a;
+    border-color: #404040;
+    color: #e8e8e8;
+}
+
+/* QR код секция */
+.qr-section-modern {
+    text-align: center;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+    margin: 16px 0;
+}
+
+.dark .qr-section-modern {
+    background: #333333;
+    border-color: #404040;
+}
+
+.qr-code-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 200px;
+    background: #ffffff;
+    border-radius: 8px;
+    border: 2px dashed #d9d9d9;
+    margin: 16px 0;
+}
+
+.dark .qr-code-container {
+    background: #2a2a2a;
+    border-color: #404040;
+}
+
+.qr-code-image {
+    max-width: 200px;
+    max-height: 200px;
+}
+
+/* Контакты секция */
+.contacts-section-modern {
+    margin-top: 16px;
+    padding: 16px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+}
+
+.dark .contacts-section-modern {
+    background: #333333;
+    border-color: #404040;
+}
+
+.contacts-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.contacts-count {
+    color: var(--text-color-light);
+    opacity: 0.8;
+}
+
+.dark .contacts-count {
+    color: var(--text-color-dark);
+}
+
+/* Виджет код секция */
+.widget-code-section {
+    margin-top: 16px;
+    padding: 16px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #e9ecef;
+}
+
+.dark .widget-code-section {
+    background: #333333;
+    border-color: #404040;
+}
+
+.widget-code-textarea {
+    margin-top: 12px;
+}
+
+.widget-code-textarea .ant-input {
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    font-size: 12px;
+    background: #1e1e1e;
+    color: #d4d4d4;
+    border-color: #404040;
+}
+
+/* Кнопки генерации */
+.generate-button-modern {
+    width: 100%;
+    height: 40px;
+    border-radius: 8px;
+    font-weight: 600;
+    margin-top: 12px;
+}
+
+/* Модальное окно */
+.channels-modal .ant-modal-content {
+    border-radius: 12px;
+}
+
+.channels-modal .ant-modal-header {
+    border-radius: 12px 12px 0 0;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.dark .channels-modal .ant-modal-content {
+    background: #2a2a2a;
+}
+
+.dark .channels-modal .ant-modal-header {
+    background: #333333;
+    border-bottom-color: #404040;
+}
+
+/* Предупреждения и алерты */
+.channel-alert-modern {
+    margin-bottom: 16px;
+    border-radius: 8px;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+    .channels-modern {
+        padding: 16px;
+    }
+
+    .channel-card-header-modern {
+        padding: 16px;
+        flex-direction: column;
+        gap: 12px;
+        align-items: flex-start;
+    }
+
+    .channel-card-content-modern {
+        padding: 16px;
+    }
+
+    .channel-actions-modern {
+        flex-direction: column;
+        gap: 12px;
+        align-items: stretch;
+    }
+
+    .channel-actions-right-modern {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .channels-list-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 16px;
+    }
+
+    .header-controls {
+        flex-direction: column;
+        gap: 12px;
+        width: 100%;
+    }
+
+    .view-toggle {
+        width: 100%;
+    }
+
+    .view-toggle .ant-radio-button-wrapper {
+        flex: 1;
+        text-align: center;
+        justify-content: center;
+    }
+}
+
+/* Списочный вид каналов */
+.channels-list-view {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.channel-list-item {
+    background: #ffffff;
+    border: 1px solid #f0f0f0;
+    border-radius: 12px;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    position: relative;
+    z-index: 10;
+}
+
+.dark .channel-list-item {
+    background: #2a2a2a;
+    border-color: #404040;
+}
+
+.channel-list-item:hover {
+    border-color: var(--main-color-light, #1890ff);
+    box-shadow: 0 2px 8px rgba(24, 144, 255, 0.1);
+}
+
+.channel-list-item-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    background: var(--bg-color);
+    border: 1px solid var(--midle-color);
+    border-radius: 8px;
+    position: relative;
+    z-index: 10;
+}
+
+.channel-list-item-content:hover {
+    background-color: #fafafa;
+}
+
+.dark .channel-list-item-content:hover {
+    background-color: #333333;
+}
+
+.list-item-left-modern {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex: 1;
+}
+
+.list-channel-icon {
+    font-size: 24px;
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    background: rgba(24, 144, 255, 0.1);
+    color: #1890ff;
+    transition: all 0.3s ease;
+}
+
+.list-channel-icon.enabled {
+    background: rgba(82, 196, 26, 0.1);
+    color: #52c41a;
+}
+
+.list-item-info-modern {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.list-item-header-modern {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.list-item-right-modern {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.list-item-status {
+    display: flex;
+    align-items: center;
+}
+
+/* Адаптивность для списочного вида */
+@media (max-width: 768px) {
+    .channel-list-item-content {
+        flex-direction: column;
+        gap: 16px;
+        align-items: stretch;
+    }
+
+    .list-item-left-modern {
+        justify-content: flex-start;
+    }
+
+    .list-item-right-modern {
+        justify-content: space-between;
+        width: 100%;
+    }
+}
