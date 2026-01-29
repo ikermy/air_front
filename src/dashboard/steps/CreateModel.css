@@ -406,10 +406,180 @@
     /*border: 1px solid var(--link-color);*/
     background: linear-gradient(135deg, rgba(95, 131, 0, 0.05), rgba(234, 255, 187, 0.15));
     border: 1px solid rgba(95, 131, 0, 0.15);
-    opacity: 0.8;
+    /* Переопределяем анимацию для этого элемента */
+    animation: none !important;
+    opacity: 1 !important;
 }
 
 .dark .model-name-section {
     background: linear-gradient(135deg, rgba(95, 131, 0, 0.05), rgba(234, 255, 187, 0.15));
     border: 1px solid rgba(95, 131, 0, 0.15);
 }
+
+.blur-modal-mask {
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+
+/* Усиленное правило для маски модального окна с классом blur-modal-mask */
+.ant-modal-mask.blur-modal-mask,
+.blur-modal-mask {
+    backdrop-filter: blur(4px) !important;
+    -webkit-backdrop-filter: blur(4px) !important;
+    background-color: rgba(0,0,0,0.35) !important; /* полупрозрачный, чтобы blur был видим */
+}
+
+/* При активном флаге modal-blur-active размываем всё кроме модального окна Ant */
+body.modal-blur-active > *:not(.ant-modal-root) {
+    filter: blur(4px) !important;
+    -webkit-filter: blur(4px) !important;
+    pointer-events: none !important; /* предотвращаем взаимодействие с фоном */
+    user-select: none !important;
+}
+
+/* Убедимся, что сам modal остаётся интерактивным */
+.ant-modal-root,
+.ant-modal-wrap {
+    pointer-events: auto !important;
+}
+
+/* Подсветка строк для типа бота — правильные селекторы для AntD таблицы */
+/* Telegram боты — светло-голубой фон для всех ячеек в строке */
+tr.bot-row-telegram td {
+    background-color: rgba(24, 144, 255, 0.05) !important;
+}
+
+/* WhatsApp боты — светло-зелёный фон для всех ячеек в строке */
+tr.bot-row-whatsapp td {
+    background-color: rgba(82, 196, 26, 0.05) !important;
+}
+
+
+/* Контакты/боты с обоими провайдерами (Telegram И WhatsApp) */
+tr.bot-row-telegram.bot-row-whatsapp td {
+    /* Нет выделения фона для остальных полей */
+    background-color: transparent !important;
+}
+
+/* Убираем левую полосу для контактов с обоими провайдерами в ячейке # */
+tr.bot-row-telegram.bot-row-whatsapp td:first-child {
+    border-left: none !important;
+    padding-left: 8px !important;
+    margin-left: -8px !important;
+}
+
+/* Стили для Select dropdown */
+.create-model-container .ant-select {
+    width: 100% !important;
+}
+
+.create-model-container .ant-select-dropdown {
+    z-index: 1050 !important;
+    background-color: var(--bg-color) !important;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+.create-model-container .ant-select-item-option {
+    min-height: 44px !important;
+    padding: 8px 12px !important;
+    line-height: 1.5 !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    overflow: visible !important;
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    color: var(--text-color) !important;
+}
+
+.create-model-container .ant-select-item-option:not(.ant-select-item-option-disabled):hover {
+    background-color: var(--midle-color) !important;
+}
+
+/* Убедимся что dropdown список полностью видим */
+.ant-select-dropdown {
+    background-color: var(--bg-color) !important;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Дополнительные правила для видимости */
+.ant-select-item {
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    height: auto !important;
+}
+
+/* Убедимся что содержимое опций видно */
+.ant-select-item-option > * {
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+/* Максимально позволяем видеть все элементы в выпадающем списке */
+.ant-select-dropdown .ant-select-item-option-content {
+    display: block !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+    height: auto !important;
+    color: var(--text-color) !important;
+}
+
+/* Расширяем высоту для dropdown ТОЛЬКО в create-model-container */
+.create-model-container .rc-virtual-list {
+    max-height: none !important;
+    height: auto !important;
+}
+
+.create-model-container .rc-virtual-list-holder {
+    max-height: none !important;
+    height: auto !important;
+}
+
+/* Полностью видимый список ТОЛЬКО в create-model-container */
+.create-model-container .ant-select-dropdown-placement-bottomLeft .rc-virtual-list,
+.create-model-container .ant-select-dropdown-placement-bottomRight .rc-virtual-list {
+    max-height: none !important;
+    height: auto !important;
+}
+
+/* Специальный класс для dropdown моделей */
+.model-select-dropdown {
+    background-color: var(--bg-color) !important;
+    box-shadow: 0 3px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+.model-select-dropdown .ant-select-item-option {
+    min-height: 44px !important;
+    padding: 8px 12px !important;
+    color: var(--text-color) !important;
+}
+
+.model-select-dropdown .rc-virtual-list {
+    max-height: none !important;
+    height: auto !important;
+}
+
+.model-select-dropdown .rc-virtual-list-holder {
+    max-height: none !important;
+    height: auto !important;
+}
+
+/* Убедимся что Select внутри model-name-section всегда видим */
+.model-name-section .ant-select {
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+.model-name-section .ant-select-dropdown {
+    opacity: 1 !important;
+    visibility: visible !important;
+    background-color: var(--bg-color) !important;
+}
+
+.model-name-section .ant-select-item-option {
+    opacity: 1 !important;
+    visibility: visible !important;
+    color: var(--text-color) !important;
+}
+

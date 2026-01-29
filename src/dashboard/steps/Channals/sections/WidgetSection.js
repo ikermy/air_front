@@ -1,6 +1,8 @@
 import TextArea from "antd/es/input/TextArea";
 import {Alert, Button} from "antd";
-import {getWidgetCode} from "../getWidget";
+import {getWidgetCode} from "../chUtils";
+import {useTranslation} from "react-i18next";
+
 import {validateAndRefreshToken} from "../../../../utils/easyUtils";
 
 export const WidgetSection = ({
@@ -8,6 +10,8 @@ export const WidgetSection = ({
                          selectedChannels,
                          setSelectedChannels,
                      }) => {
+    const {t} = useTranslation();
+
     const fetchDataAsync = async () => {
         try {
             const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
@@ -22,7 +26,7 @@ export const WidgetSection = ({
                     )
                 );
             } else {
-                console.error("Ошибка: токен недействителен");
+                console.error(t("widgetTokenError") || "Ошибка: токен недействителен");
             }
         } catch (error) {
             console.error("Ошибка при загрузке данных:", error);
@@ -38,15 +42,14 @@ export const WidgetSection = ({
         <div className="padding">
             <Alert
                 className="channel-alert"
-                message={channel.data ? "Добавьте виджет себе на сайт" : "Получите HTML код виджета"}
+                message={channel.data ? (t("widgetAddToSite") || "Добавьте виджет себе на сайт") : (t("widgetGetCode") || "Получите HTML код виджета")}
                 description={channel.data ?
                     <>
-                        Всё готово для добавления виджета на сайт. Посмотрите наше
-                         руководство с примерами кастомизации и интеграции виджета.
+                        {t("widgetReadyDesc") || "Всё готово для добавления виджета на сайт. Посмотрите наше руководство с примерами кастомизации и интеграции виджета."}
                     </>
                     :
                     <>
-                        Для получения кода виджета, нажмите кнопку получить код.
+                        {t("widgetGetCodeDesc") || "Для получения кода виджета, нажмите кнопку получить код."}
                     </>
                 }
                 type={channel.data ? "success" : "warning"}
@@ -58,7 +61,7 @@ export const WidgetSection = ({
                 type="primary"
                 onClick={openIntegrationGuide}
             >
-                Примеры интеграции виджета
+                {t("widgetIntegrationButton") || "Примеры интеграции виджета"}
             </Button> :
                 <Button
                 style={{ color: "black" }}
@@ -66,7 +69,7 @@ export const WidgetSection = ({
                 disabled={channel.data}
                 onClick={fetchDataAsync}
             >
-                Получить код
+                {t("widgetGetCodeButton") || "Получить код"}
             </Button>}
 
             {channel.data && (

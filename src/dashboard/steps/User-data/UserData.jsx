@@ -47,10 +47,12 @@ import {TbTimezone} from "react-icons/tb";
 import {setUserTimeZone} from "./setUserTimeZone";
 import {validateAndRefreshToken} from "../../../utils/easyUtils";
 import {showErrorNotification, showNotification} from "../../hotification/showNotification";
+import {useTranslation} from "react-i18next";
 
 const {Title, Text, Paragraph} = Typography;
 
 export const UserData = () => {
+    const {t} = useTranslation();
     const [userData, setUserData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -90,11 +92,10 @@ export const UserData = () => {
                 setLoading(true);
                 const token = localStorage.getItem('authToken');
                 if (!token) {
-                    throw new Error('Токен авторизации не найден');
+                    throw new Error(t("authTokenNotFound") || 'Токен авторизации не найден');
                 }
 
                 const data = await getUserData(token);
-                console.log(data);
                 setUserData(data);
             } catch (err) {
                 setError(err.message);
@@ -104,7 +105,7 @@ export const UserData = () => {
         };
 
         fetchUserData();
-    }, []);
+    }, [t]);
 
     // Очистка WebSocket соединения при размонтировании компонента
     useEffect(() => {
@@ -119,7 +120,7 @@ export const UserData = () => {
         return (
             <div className="user-data-loading">
                 <Spin size="large"/>
-                <Text style={{marginTop: 16}}>Загрузка данных пользователя...</Text>
+                <Text style={{marginTop: 16}}>{t("userLoadingData") || "Загрузка данных пользователя..."}</Text>
             </div>
         );
     }
@@ -127,7 +128,7 @@ export const UserData = () => {
     if (error) {
         return (
             <div className="user-data-error">
-                <Alert message="Ошибка загрузки" description={error} type="error" showIcon/>
+                <Alert message={t("userLoadingError") || "Ошибка загрузки"} description={error} type="error" showIcon/>
             </div>
         );
     }
@@ -196,9 +197,9 @@ export const UserData = () => {
 
             setUserData(updatedUserData);
             setEditModalVisible(false);
-            message.success('Данные успешно обновлены');
+            message.success(t("userDataUpdated") || 'Данные успешно обновлены');
         } catch (error) {
-            message.error('Ошибка при обновлении данных');
+            message.error(t("userDataUpdateError") || 'Ошибка при обновлении данных');
             console.error('Error updating user data:', error);
         } finally {
             setSaveLoading(false);
@@ -232,14 +233,14 @@ export const UserData = () => {
 
             const token = localStorage.getItem('authToken');
             const LAND_WSS = (window.runtimeConfig && window.runtimeConfig.REACT_APP_LAND_WSS) || process.env.REACT_APP_LAND_WSS;
-            const wsUrl = `${LAND_WSS}/deleteall`;
+            const wsUrl = `${LAND_WSS}/ws/deleteall`;
             const wsUrlWithToken = `${wsUrl}?token=${encodeURIComponent(token)}`;
             wsRef.current = new WebSocket(wsUrlWithToken);
 
             // Обработчик открытия соединения
             wsRef.current.onopen = () => {
                 console.log('WebSocket connection opened for user deletion');
-                setDeleteMessages(prev => [...prev, '🔌 Соединение с сервером установлено']);
+                setDeleteMessages(prev => [...prev, t("userDeleteConnectionEstablished") || '🔌 Соединение с сервером установлено']);
             };
 
             // Обработчик сообщений от сервера
@@ -254,11 +255,10 @@ export const UserData = () => {
                     if (data.status === 'success') {
                         setDeleteComplete(true);
                     } else if (data.error) {
-                        message.error(`Ошибка удаления: ${data.error}`);
+                        message.error(t("userDeleteError", {error: data.error}) || `Ошибка удаления: ${data.error}`);
                     }
                 } catch (e) {
-                    // Если это не JSON, просто отображаем текст как есть
-                    console.log('Received non-JSON message:', event.data);
+                    // Сообщение уже добавлено в список на строке 248, дополнительная обработка не требуется
                 }
             };
 
@@ -268,11 +268,11 @@ export const UserData = () => {
 
                 // Если соединение закрылось нормально (код 1000), значит операция завершена
                 if (event.code === 1000) {
-                    setDeleteMessages(prev => [...prev, '✅ Операция удаления завершена успешно']);
+                    setDeleteMessages(prev => [...prev, t("userDeleteCompleted") || '✅ Операция удаления завершена успешно']);
                     setDeleteComplete(true);
 
                     setTimeout(() => {
-                        message.success('Все данные пользователя удалены');
+                        message.success(t("userAllDataDeleted") || 'Все данные пользователя удалены');
                         setDeleteProgressVisible(false);
 
                         // Очищаем localStorage и перенаправляем на страницу входа
@@ -280,8 +280,8 @@ export const UserData = () => {
                         window.location.href = '/';
                     }, 5000);
                 } else {
-                    setDeleteMessages(prev => [...prev, '❌ Произошла ошибка при удалении данных']);
-                    message.error('Произошла ошибка при удалении данных');
+                    setDeleteMessages(prev => [...prev, t("userDeleteFailed") || '❌ Произошла ошибка при удалении данных']);
+                    message.error(t("userDeleteFailed") || 'Произошла ошибка при удалении данных');
                 }
 
                 setDeleteLoading(false);
@@ -290,13 +290,13 @@ export const UserData = () => {
             // Обработчик ошибок
             wsRef.current.onerror = (error) => {
                 console.error('WebSocket error:', error);
-                setDeleteMessages(prev => [...prev, '❌ Ошибка соединения с сервером']);
-                message.error('Ошибка соединения при удалении данных');
+                setDeleteMessages(prev => [...prev, t("userDeleteConnectionError") || '❌ Ошибка соединения с сервером']);
+                message.error(t("userDeleteConnectionErrorMsg") || 'Ошибка соединения при удалении данных');
                 setDeleteLoading(false);
             };
 
         } catch (error) {
-            message.error('Ошибка при удалении данных');
+            message.error(t("userDeleteDataError") || 'Ошибка при удалении данных');
             console.error('Error deleting user data:', error);
             setDeleteLoading(false);
             setDeleteProgressVisible(false);
@@ -312,13 +312,13 @@ export const UserData = () => {
     const getEditFieldTitle = () => {
         switch (editingField) {
             case 'name':
-                return 'Редактирование имени пользователя';
+                return t("userEditNameTitle") || 'Редактирование имени пользователя';
             case 'language':
-                return 'Изменение языка интерфейса';
+                return t("userEditLanguageTitle") || 'Изменение языка интерфейса';
             case 'currency':
-                return 'Изменение валюты';
+                return t("userEditCurrencyTitle") || 'Изменение валюты';
             default:
-                return 'Редактирование';
+                return t("userEditing") || 'Редактирование';
         }
     };
 
@@ -330,7 +330,7 @@ export const UserData = () => {
                     value={editValue}
                     onChange={setEditValue}
                     style={{width: '100%'}}
-                    placeholder="Выберите валюту"
+                    placeholder={t("userSelectCurrency") || "Выберите валюту"}
                     getPopupContainer={(trigger) => trigger.parentNode}
                 >
                     {userData.AvailibleCurrency?.map(currency => (
@@ -348,7 +348,7 @@ export const UserData = () => {
                     value={editValue}
                     onChange={setEditValue}
                     style={{width: '100%'}}
-                    placeholder="Выберите язык"
+                    placeholder={t("userSelectLanguage") || "Выберите язык"}
                     getPopupContainer={(trigger) => trigger.parentNode}
                 >
                     {userData.AvailibleLang?.map(language => (
@@ -366,7 +366,7 @@ export const UserData = () => {
             <Input
                 value={editValue}
                 onChange={(e) => setEditValue(e.target.value)}
-                placeholder={editingField === 'name' ? 'Введите новое имя' : 'Введите значение'}
+                placeholder={editingField === 'name' ? (t("userEnterNewName") || 'Введите новое имя') : (t("userEnterValue") || 'Введите значение')}
                 type="text"
             />
         );
@@ -403,20 +403,20 @@ export const UserData = () => {
                         TimeZone: newTimezone
                     }));
 
-                    showNotification('Часовой пояс обновлен');
+                    showNotification(t("userTimezoneUpdated") || 'Часовой пояс обновлен');
                 } else {
-                    message.error('Ошибка при обновлении часового пояса');
-                    showErrorNotification('Ошибка при обновлении часового пояса');
+                    message.error(t("userTimezoneUpdateError") || 'Ошибка при обновлении часового пояса');
+                    showErrorNotification(t("userTimezoneUpdateError") || 'Ошибка при обновлении часового пояса');
                 }
 
             } catch (error) {
                 console.error('Error updating timezone:', error);
-                message.error('Ошибка при обновлении часового пояса');
-                showErrorNotification('Ошибка при обновлении часового пояса');
+                message.error(t("userTimezoneUpdateError") || 'Ошибка при обновлении часового пояса');
+                showErrorNotification(t("userTimezoneUpdateError") || 'Ошибка при обновлении часового пояса');
             }
         } else {
-            showErrorNotification('Ошибка при обновлении часового пояса');
-            message.error('Ошибка при обновлении часового пояса: токен не обновлен');
+            showErrorNotification(t("userTimezoneUpdateError") || 'Ошибка при обновлении часового пояса');
+            message.error(t("userTimezoneUpdateErrorToken") || 'Ошибка при обновлении часового пояса: токен не обновлен');
         }
     };
 
@@ -442,43 +442,43 @@ export const UserData = () => {
     // Шаги Tour для UserData
     const steps = [
         {
-            title: '👤 Добро пожаловать в профиль пользователя',
-            description: 'Здесь вы можете просматривать и редактировать всю информацию о вашем профиле, балансе, подписке и настройках системы.',
+            title: t("userTourWelcomeTitle") || '👤 Добро пожаловать в профиль пользователя',
+            description: t("userTourWelcomeDesc") || 'Здесь вы можете просматривать и редактировать всю информацию о вашем профиле, балансе, подписке и настройках системы.',
             target: () => userHeaderRef.current,
         },
         {
-            title: '📝 Информация профиля',
-            description: 'В этой карточке отображается основная информация: имя, email, язык интерфейса и GPT модель. Нажмите на иконку редактирования для изменения данных.',
+            title: t("userTourProfileTitle") || '📝 Информация профиля',
+            description: t("userTourProfileDesc") || 'В этой карточке отображается основная информация: имя, email, язык интерфейса и GPT модель. Нажмите на иконку редактирования для изменения данных.',
             target: () => profileCardRef.current,
         },
         {
-            title: '💰 Баланс и подписка',
-            description: 'Отслеживайте ваш текущий баланс, информацию о подписке, сроках действия и стоимости. Здесь же можно изменить валюту отображения.',
+            title: t("userTourBalanceTitle") || '💰 Баланс и подписка',
+            description: t("userTourBalanceDesc") || 'Отслеживайте ваш текущий баланс, информацию о подписке, сроках действия и стоимости. Здесь же можно изменить валюту отображения.',
             target: () => balanceCardRef.current,
         },
         {
-            title: '📊 Использование ресурсов',
-            description: 'Мониторьте использование лимитов сообщений и дискового пространства. Прогресс-бары показывают текущее использование относительно лимитов.',
+            title: t("userTourResourcesTitle") || '📊 Использование ресурсов',
+            description: t("userTourResourcesDesc") || 'Мониторьте использование лимитов сообщений и дискового пространства. Прогресс-бары показывают текущее использование относительно лимитов.',
             target: () => resourcesCardRef.current,
         },
         {
-            title: '🔔 Настройки уведомлений',
-            description: 'Управляйте настройками уведомлений через Telegram, Email или мгновенные Instant уведомления в интерфейсе . Здесь отображается статус подключения различных способов связи.',
+            title: t("userTourNotificationsTitle") || '🔔 Настройки уведомлений',
+            description: t("userTourNotificationsDesc") || 'Управляйте настройками уведомлений через Telegram, Email или мгновенные Instant уведомления в интерфейсе . Здесь отображается статус подключения различных способов связи.',
             target: () => notificationsCardRef.current,
         },
         {
-            title: '📡 Доступные каналы',
-            description: 'Просматривайте статус всех доступных каналов связи: Telegram бот, виджет, WhatsApp и Instagram. Каждый канал может быть включен или отключен.',
+            title: t("userTourChannelsTitle") || '📡 Доступные каналы',
+            description: t("userTourChannelsDesc") || 'Просматривайте статус всех доступных каналов связи: Telegram бот, виджет, WhatsApp и Instagram. Каждый канал может быть включен или отключен.',
             target: () => channelsCardRef.current,
         },
         {
-            title: '⚠️ Опасная зона',
-            description: 'Область для критических операций, таких как полное удаление данных пользователя. Используйте с особой осторожностью!',
+            title: t("userTourDangerZoneTitle") || '⚠️ Опасная зона',
+            description: t("userTourDangerZoneDesc") || 'Область для критических операций, таких как полное удаление данных пользователя. Используйте с особой осторожностью!',
             target: () => dangerZoneRef.current,
         },
         {
-            title: '✅ Готово к использованию!',
-            description: 'Теперь вы знаете все возможности управления профилем. Редактируйте данные, отслеживайте использование ресурсов и настраивайте систему под себя!',
+            title: t("userTourCompleteTitle") || '✅ Готово к использованию!',
+            description: t("userTourCompleteDesc") || 'Теперь вы знаете все возможности управления профилем. Редактируйте данные, отслеживайте использование ресурсов и настраивайте систему под себя!',
             target: () => profileCardRef.current,
         },
     ];
@@ -487,10 +487,10 @@ export const UserData = () => {
         <div className="create-model-container">
             <div className="section-title">
                 <UserOutlined/>
-                Данные пользователя
+                {t("userDataTitle") || "Данные пользователя"}
             </div>
             <div className="section-description">
-                Подробная информация о вашем профиле и использовании сервиса
+                {t("userDataDesc") || "Подробная информация о вашем профиле и использовании сервиса"}
             </div>
 
             <div className="tour-layout">
@@ -498,22 +498,22 @@ export const UserData = () => {
                     <div className="user-data-container" ref={userHeaderRef}>
                         <div className="user-data-header">
                             <Title level={3} className="user-data-title">
-                                Профиль пользователя
+                                {t("userProfileTitle") || "Профиль пользователя"}
                             </Title>
                             <Paragraph className="user-data-subtitle">
-                                Управляйте настройками профиля и отслеживайте использование сервиса
+                                {t("userProfileSubtitle") || "Управляйте настройками профиля и отслеживайте использование сервиса"}
                             </Paragraph>
                         </div>
 
                         <Row gutter={[24, 24]}>
                             {/* Основная информация */}
                             <Col xs={24} lg={12}>
-                                <Card title="Профиль" className="user-data-card" ref={profileCardRef}>
+                                <Card title={t("userProfile") || "Профиль"} className="user-data-card" ref={profileCardRef}>
                                     <Space direction="vertical" size="large" style={{width: '100%'}}>
                                         <div className="user-info-item">
                                             <UserOutlined className="info-icon"/>
                                             <div style={{flex: 1}}>
-                                                <Text strong>Имя пользователя</Text>
+                                                <Text strong>{t("userUsername") || "Имя пользователя"}</Text>
                                                 <br/>
                                                 <Text>{userData?.Name}</Text>
                                             </div>
@@ -521,7 +521,7 @@ export const UserData = () => {
                                                 icon={<EditOutlined/>}
                                                 size="small"
                                                 onClick={() => handleEdit('name', userData?.Name)}
-                                                title="Изменить имя пользователя"
+                                                title={t("userEditUsername") || "Изменить имя пользователя"}
                                                 disabled={true}
                                             />
                                         </div>
@@ -529,7 +529,7 @@ export const UserData = () => {
                                         <div className="user-info-item">
                                             <MailOutlined className="info-icon"/>
                                             <div>
-                                                <Text strong>Email</Text>
+                                                <Text strong>{t("userEmail") || "Email"}</Text>
                                                 <br/>
                                                 <Text>{userData?.Email}</Text>
                                             </div>
@@ -538,7 +538,7 @@ export const UserData = () => {
                                         <div className="user-info-item">
                                             <GrLanguage className="info-icon"/>
                                             <div style={{flex: 1}}>
-                                                <Text strong>Язык интерфейса</Text>
+                                                <Text strong>{t("userInterfaceLanguage") || "Язык интерфейса"}</Text>
                                                 <br/>
                                                 <Text>{getLanguageName(userData?.Lang)}</Text>
                                             </div>
@@ -546,7 +546,7 @@ export const UserData = () => {
                                                 icon={<EditOutlined/>}
                                                 size="small"
                                                 onClick={() => handleEdit('language', userData?.Lang)}
-                                                title="Изменить язык"
+                                                title={t("userEditLanguage") || "Изменить язык"}
                                                 disabled={true}
                                             />
                                         </div>
@@ -554,7 +554,7 @@ export const UserData = () => {
                                         <div className="user-info-item">
                                             <AndroidOutlined className="info-icon"/>
                                             <div>
-                                                <Text strong>GPT Модель</Text>
+                                                <Text strong>{t("userGPTModel") || "GPT Модель"}</Text>
                                                 <br/>
                                                 <Text>{userData?.GPTName}</Text>
                                             </div>
@@ -563,7 +563,7 @@ export const UserData = () => {
                                         <div className="user-info-item">
                                             <CalendarOutlined className="info-icon"/>
                                             <div>
-                                                <Text strong>Дата регистрации</Text>
+                                                <Text strong>{t("userRegistrationDate") || "Дата регистрации"}</Text>
                                                 <br/>
                                                 <Text>{formatDate(userData?.Date)}</Text>
                                             </div>
@@ -571,25 +571,27 @@ export const UserData = () => {
 
                                         <div className="user-info-item">
                                             <TbTimezone className="info-icon"/>
-                                            <div style={{flex: 1}}>
-                                                <Text strong>Часовой пояс</Text>
+                                            <div style={{flex: 1}} className="timezone-select-wrapper">
+                                                <Text strong>{t("userTimezone") || "Часовой пояс"}</Text>
                                                 <br/>
                                                 <Select
                                                     value={userData?.TimeZone}
                                                     onChange={handleTimezoneChange}
-                                                    style={{width: '90%'}}
-                                                    placeholder="Выберите часовой пояс"
+                                                    className="timezone-select"
+                                                    style={{width: '90%', maxWidth: '400px'}}
+                                                    placeholder={t("userSelectTimezone") || "Выберите часовой пояс"}
                                                     showSearch
+                                                    virtual
+                                                    listHeight={256}
+                                                    popupMatchSelectWidth={300}
                                                     filterOption={(input, option) =>
-                                                        option.children.toLowerCase().includes(input.toLowerCase())
+                                                        (option?.label || '').toLowerCase().includes(input.toLowerCase())
                                                     }
-                                                >
-                                                    {timezoneOptions.map(tz => (
-                                                        <Select.Option key={tz.value} value={tz.value}>
-                                                            {tz.label}
-                                                        </Select.Option>
-                                                    ))}
-                                                </Select>
+                                                    options={timezoneOptions.map(tz => ({
+                                                        value: tz.value,
+                                                        label: tz.label
+                                                    }))}
+                                                />
                                             </div>
                                         </div>
 
@@ -599,7 +601,7 @@ export const UserData = () => {
 
                             {/* Баланс */}
                             <Col xs={24} lg={12}>
-                                <Card title="Баланс и подписка" className="user-data-card" ref={balanceCardRef}>
+                                <Card title={t("userBalanceSubscription") || "Баланс и подписка"} className="user-data-card" ref={balanceCardRef}>
                                     <Space direction="vertical" size="large" style={{width: '100%'}}>
                                         <div className="balance-item" style={{
                                             display: 'flex',
@@ -613,14 +615,14 @@ export const UserData = () => {
                                                         {userData?.Balance} {getCurrencySymbol(userData?.Currency)}
                                                     </Text>
                                                     <br/>
-                                                    <Text type="secondary">Текущий баланс</Text>
+                                                    <Text type="secondary">{t("userCurrentBalance") || "Текущий баланс"}</Text>
                                                 </div>
                                             </div>
                                             <Button
                                                 icon={<EditOutlined/>}
                                                 size="small"
                                                 onClick={() => handleEdit('currency', userData?.Currency)}
-                                                title="Изменить валюту"
+                                                title={t("userEditCurrency") || "Изменить валюту"}
                                                 disabled={true}
                                             />
                                         </div>
@@ -629,20 +631,23 @@ export const UserData = () => {
                                             <>
                                                 <Divider/>
                                                 <div className="user-subscription-info">
-                                                    <Text strong>Подписка</Text>
+                                                    <Text strong>{t("userSubscription") || "Подписка"}</Text>
                                                     <br/>
                                                     <Text>
-                                                        С {formatDate(userData.Subscription.StartDate)} по {formatDate(userData.Subscription.EndDate)}
+                                                        {t("userSubscriptionPeriod", {
+                                                            start: formatDate(userData.Subscription.StartDate),
+                                                            end: formatDate(userData.Subscription.EndDate)
+                                                        }) || `С ${formatDate(userData.Subscription.StartDate)} по ${formatDate(userData.Subscription.EndDate)}`}
                                                     </Text>
                                                     <br/>
                                                     <Text type="secondary">
-                                                        Оплачено месяцев: {userData.Subscription.MonthsPaid}
+                                                        {t("userMonthsPaid") || "Оплачено месяцев:"} {userData.Subscription.MonthsPaid}
                                                     </Text>
                                                     <br/>
                                                     <Text type="secondary">
-                                                        Стоимость: {userData.Subscription.TotalCost} {getCurrencySymbol(userData.Currency)}
+                                                        {t("userCost") || "Стоимость:"} {userData.Subscription.TotalCost} {getCurrencySymbol(userData.Currency)}
                                                         {userData.Subscription.Discount > 0 &&
-                                                            ` (скидка: ${userData.Subscription.Discount} ${getCurrencySymbol(userData.Currency)})`
+                                                            ` (${t("userDiscount") || "скидка"}: ${userData.Subscription.Discount} ${getCurrencySymbol(userData.Currency)})`
                                                         }
                                                     </Text>
                                                 </div>
@@ -655,23 +660,27 @@ export const UserData = () => {
                             {/* Использование ресурсов */}
                             {userData?.Subscription && (
                                 <Col xs={24}>
-                                    <Card title="Использование ресурсов" className="user-data-card"
+                                    <Card title={t("userResourceUsage") || "Использование ресурсов"} className="user-data-card"
                                           ref={resourcesCardRef}>
                                         <Row gutter={[24, 24]}>
                                             <Col xs={24} md={12}>
                                                 <div className="usage-item">
                                                     <div className="usage-header">
                                                         <MessageOutlined className="usage-icon"/>
-                                                        <Text strong>Сообщения</Text>
+                                                        <Text strong>{t("userMessages") || "Сообщения"}</Text>
                                                     </div>
                                                     <Progress
                                                         percent={messagesUsagePercent}
                                                         status={messagesUsagePercent > 80 ? 'exception' : 'active'}
                                                         format={() => `${userData.Subscription.MessagesUsed} / ${userData.Subscription.MessageLimit}`}
                                                     />
-                                                    <Text type="secondary">
-                                                        Использовано {messagesUsagePercent.toFixed(1)}% лимита сообщений
-                                                    </Text>
+
+                                                    {userData.Subscription.MessageLimit > 0 ? (
+                                                        <Text type="secondary">
+                                                            {t("userMessagesUsed", {percent: messagesUsagePercent.toFixed(1)}) || `Использовано ${messagesUsagePercent.toFixed(1)}% лимита сообщений`}
+                                                        </Text>
+                                                    ) : null}
+
                                                 </div>
                                             </Col>
 
@@ -679,7 +688,7 @@ export const UserData = () => {
                                                 <div className="usage-item">
                                                     <div className="usage-header">
                                                         <DatabaseOutlined className="usage-icon"/>
-                                                        <Text strong>Хранилище</Text>
+                                                        <Text strong>{t("userStorage") || "Хранилище"}</Text>
                                                     </div>
                                                     <Progress
                                                         percent={storageUsagePercent}
@@ -687,8 +696,7 @@ export const UserData = () => {
                                                         format={() => `${formatBytes(userData.Subscription.StorageUsed)} / ${formatBytes(userData.Subscription.StorageLimit)}`}
                                                     />
                                                     <Text type="secondary">
-                                                        Использовано {storageUsagePercent.toFixed(1)}% дискового
-                                                        пространства
+                                                        {t("userStorageUsed", {percent: storageUsagePercent.toFixed(1)}) || `Использовано ${storageUsagePercent.toFixed(1)}% дискового пространства`}
                                                     </Text>
                                                 </div>
                                             </Col>
@@ -700,12 +708,12 @@ export const UserData = () => {
                             {/* Уведомления */}
                             {userData?.Notifications && (
                                 <Col xs={24} md={12}>
-                                    <Card title="Настройки уведомлений" className="user-data-card"
+                                    <Card title={t("userNotificationsSettings") || "Настройки уведомлений"} className="user-data-card"
                                           ref={notificationsCardRef}>
                                         <Space direction="vertical" size="middle" style={{width: '100%'}}>
                                             <div className="notification-item">
                                                 <FaTelegramPlane className="notification-icon"/>
-                                                <Text>Telegram бот настроен</Text>
+                                                <Text>{t("userTelegramBotConfigured") || "Telegram бот настроен"}</Text>
                                                 {userData.Notifications.TgBotIsSet ?
                                                     <CheckCircleOutlined className="status-enabled"/> :
                                                     <CloseCircleOutlined className="status-disabled"/>
@@ -714,7 +722,7 @@ export const UserData = () => {
 
                                             <div className="notification-item">
                                                 <BellOutlined className="notification-icon"/>
-                                                <Text>Telegram уведомления</Text>
+                                                <Text>{t("userTelegramNotifications") || "Telegram уведомления"}</Text>
                                                 {userData.Notifications.TelegramEnabled ?
                                                     <CheckCircleOutlined className="status-enabled"/> :
                                                     <CloseCircleOutlined className="status-disabled"/>
@@ -723,7 +731,7 @@ export const UserData = () => {
 
                                             <div className="notification-item">
                                                 <ThunderboltOutlined className="notification-icon"/>
-                                                <Text>Instant уведомления</Text>
+                                                <Text>{t("userInstantNotifications") || "Instant уведомления"}</Text>
                                                 {userData.Notifications.Instant ?
                                                     <CheckCircleOutlined className="status-enabled"/> :
                                                     <CloseCircleOutlined className="status-disabled"/>
@@ -732,7 +740,7 @@ export const UserData = () => {
 
                                             <div className="notification-item">
                                                 <MailOutlined className="notification-icon"/>
-                                                <Text>Email уведомления</Text>
+                                                <Text>{t("userEmailNotifications") || "Email уведомления"}</Text>
                                                 {userData.Notifications.Email ?
                                                     <CheckCircleOutlined className="status-enabled"/> :
                                                     <CloseCircleOutlined className="status-disabled"/>
@@ -746,7 +754,7 @@ export const UserData = () => {
                             {/* Доступные каналы */}
                             {userData?.ChannelsAvailable && (
                                 <Col xs={24} md={12}>
-                                    <Card title="Доступные каналы" className="user-data-card" ref={channelsCardRef}>
+                                    <Card title={t("userAvailableChannels") || "Доступные каналы"} className="user-data-card" ref={channelsCardRef}>
                                         <Row gutter={[12, 12]}>
                                             <Col xs={12} sm={6}>
 
@@ -755,7 +763,19 @@ export const UserData = () => {
                                                         className={`channel-icon-small ${userData.ChannelsAvailable.TgBotEnabled ? '' : 'channel-icon-disabled'}`}
                                                     />
                                                     <div className="user-channel-info">
-                                                        <Text size="small">Telegram</Text>
+                                                        <Text size="small">{"TelegramBot"}</Text>
+                                                    </div>
+                                                </div>
+                                            </Col>
+
+                                            <Col xs={12} sm={6}>
+
+                                                <div className="channel-item-compact">
+                                                    <FaTelegramPlane
+                                                        className={`channel-icon-small ${userData.ChannelsAvailable.TgUserBotEnabled ? '' : 'channel-icon-disabled'}`}
+                                                    />
+                                                    <div className="user-channel-info">
+                                                        <Text size="small">{"TelegramUser"}</Text>
                                                     </div>
                                                 </div>
                                             </Col>
@@ -766,7 +786,7 @@ export const UserData = () => {
                                                         className={`channel-icon-small ${userData.ChannelsAvailable.WidgetEnabled ? '' : 'channel-icon-disabled'}`}
                                                     />
                                                     <div className="channel-info">
-                                                        <Text size="small">Виджет</Text>
+                                                        <Text size="small">{t("userWidget") || "Виджет"}</Text>
                                                     </div>
                                                 </div>
                                             </Col>
@@ -777,7 +797,7 @@ export const UserData = () => {
                                                         className={`channel-icon-small ${userData.ChannelsAvailable.WhatsEnabled ? '' : 'channel-icon-disabled'}`}
                                                     />
                                                     <div className="channel-info">
-                                                        <Text size="small">WhatsApp</Text>
+                                                        <Text size="small">{t("userWhatsApp") || "WhatsApp"}</Text>
                                                     </div>
                                                 </div>
                                             </Col>
@@ -788,7 +808,7 @@ export const UserData = () => {
                                                         className={`channel-icon-small ${userData.ChannelsAvailable.InstaEnabled ? '' : 'channel-icon-disabled'}`}
                                                     />
                                                     <div className="channel-info">
-                                                        <Text size="small">Instagram</Text>
+                                                        <Text size="small">{t("userInstagram") || "Instagram"}</Text>
                                                     </div>
                                                 </div>
                                             </Col>
@@ -802,7 +822,7 @@ export const UserData = () => {
                                 <Card
                                     title={
                                         <span style={{color: '#ff4d4f'}}>
-                                            <ExclamationCircleOutlined/> Необратимые действия
+                                            <ExclamationCircleOutlined/> {t("userIrreversibleActions") || "Необратимые действия"}
                                         </span>
                                     }
                                     className="user-data-card danger-zone-card"
@@ -811,20 +831,17 @@ export const UserData = () => {
                                 >
                                     <Space direction="vertical" size="middle" style={{width: '100%'}}>
                                         <div>
-                                            <Text strong style={{color: '#ff4d4f'}}>Удаление всех данных
-                                                пользователя</Text>
+                                            <Text strong style={{color: '#ff4d4f'}}>{t("userDeleteAllData") || "Удаление всех данных пользователя"}</Text>
                                             <br/>
                                             <Text type="secondary">
-                                                Все данные пользователя будут удалены безвозвратно без возможности
-                                                восстановления,
-                                                включая данные о модели, каналах, диалогах, подписках и платежах.
+                                                {t("userDeleteAllDataDesc") || "Все данные пользователя будут удалены безвозвратно без возможности восстановления, включая данные о модели, каналах, диалогах, подписках и платежах."}
                                             </Text>
                                         </div>
                                         <Tooltip
                                             title={
                                                 userData.Role === 1
-                                                    ? "Невозможно удалить данные пользователя со статусом demo."
-                                                    : "Нельзя отменить! Все данные будут удалены без возможности восстановления."
+                                                    ? (t("userDeleteDemoNotAllowed") || "Невозможно удалить данные пользователя со статусом demo.")
+                                                    : (t("userDeleteWarning") || "Нельзя отменить! Все данные будут удалены без возможности восстановления.")
                                             }
                                         >
                                             <Button
@@ -834,7 +851,7 @@ export const UserData = () => {
                                                 size="large"
                                                 disabled={userData.Role === 1}
                                             >
-                                                Удалить все данные пользователя
+                                                {t("userDeleteAllDataButton") || "Удалить все данные пользователя"}
                                             </Button>
                                         </Tooltip>
                                     </Space>
@@ -849,8 +866,8 @@ export const UserData = () => {
                             onOk={handleSaveEdit}
                             onCancel={handleCancelEdit}
                             confirmLoading={saveLoading}
-                            okText="Сохранить"
-                            cancelText="Отмена"
+                            okText={t("save") || "Сохранить"}
+                            cancelText={t("cancel") || "Отмена"}
                             okButtonProps={{style: {color: 'black'}}}
                         >
                             {renderEditInput()}
@@ -860,21 +877,21 @@ export const UserData = () => {
                         <Modal
                             title={
                                 <span style={{color: '#ff4d4f'}}>
-                                    <ExclamationCircleOutlined/> Подтверждение удаления всех данных
+                                    <ExclamationCircleOutlined/> {t("userDeleteConfirmationTitle") || "Подтверждение удаления всех данных"}
                                 </span>
                             }
                             open={deleteModalVisible}
                             onOk={handleConfirmDelete}
                             onCancel={handleCancelDelete}
                             confirmLoading={deleteLoading}
-                            okText="Удалить все данные"
-                            cancelText="Отмена"
+                            okText={t("userDeleteAllDataButton") || "Удалить все данные"}
+                            cancelText={t("cancel") || "Отмена"}
                             okButtonProps={{danger: true}}
                             width={600}
                         >
                             <Space direction="vertical" size="middle" style={{width: '100%'}}>
                                 <Alert
-                                    message="Внимание! Это действие необратимо!"
+                                    message={t("userDeleteIrreversibleWarning") || "Внимание! Это действие необратимо!"}
                                     type="error"
                                     showIcon
                                     style={{marginBottom: 16}}
@@ -882,24 +899,22 @@ export const UserData = () => {
 
                                 <div>
                                     <Text strong style={{color: '#ff4d4f'}}>
-                                        Все данные пользователя будут удалены безвозвратно без возможности
-                                        восстановления,
-                                        в том числе:
+                                        {t("userDeleteAllDataWarningText") || "Все данные пользователя будут удалены безвозвратно без возможности восстановления, в том числе:"}
                                     </Text>
                                     <ul style={{marginTop: 8, paddingLeft: 20}}>
-                                        <li>Данные о модели GPT и настройки</li>
-                                        <li>Все каналы связи</li>
-                                        <li>Все диалоги и история сообщений</li>
-                                        <li>Данные о подписках и платежах</li>
-                                        <li>Настройки уведомлений</li>
-                                        <li>Личная информация (имя, email)</li>
-                                        <li>Баланс и валютные настройки</li>
+                                        <li>{t("userDeleteModelData") || "Данные о модели GPT и настройки"}</li>
+                                        <li>{t("userDeleteChannels") || "Все каналы связи"}</li>
+                                        <li>{t("userDeleteDialogs") || "Все диалоги и история сообщений"}</li>
+                                        <li>{t("userDeleteSubscriptions") || "Данные о подписках и платежах"}</li>
+                                        <li>{t("userDeleteNotifications") || "Настройки уведомлений"}</li>
+                                        <li>{t("userDeletePersonalInfo") || "Личная информация (имя, email)"}</li>
+                                        <li>{t("userDeleteBalance") || "Баланс и валютные настройки"}</li>
                                     </ul>
                                 </div>
 
                                 <div>
                                     <Text strong>
-                                        Для окончательного подтверждения удаления всех данных введите{' '}
+                                        {t("userDeleteConfirmationText") || "Для окончательного подтверждения удаления всех данных введите"}{' '}
                                         <Text code
                                               style={{backgroundColor: '#ff4d4f', color: 'white', padding: '2px 4px'}}>
                                             yes
@@ -908,7 +923,7 @@ export const UserData = () => {
                                     <Input
                                         value={deleteConfirmation}
                                         onChange={(e) => setDeleteConfirmation(e.target.value)}
-                                        placeholder="Введите 'yes' для окончательного подтверждения"
+                                        placeholder={t("userDeleteConfirmationPlaceholder") || "Введите 'yes' для окончательного подтверждения"}
                                         style={{marginTop: 8}}
                                         size="large"
                                     />
@@ -920,7 +935,7 @@ export const UserData = () => {
                         <Modal
                             title={
                                 <span style={{color: '#ff4d4f'}}>
-                                    <DeleteOutlined/> Удаление данных пользователя
+                                    <DeleteOutlined/> {t("userDeletingData") || "Удаление данных пользователя"}
                                 </span>
                             }
                             open={deleteProgressVisible}
@@ -936,10 +951,10 @@ export const UserData = () => {
                                     <div className="delete-progress-header">
                                         <Spin size="large"/>
                                         <Title level={4} style={{margin: '16px 0', color: '#ff4d4f'}}>
-                                            Выполняется удаление данных...
+                                            {t("userDeletingDataProgress") || "Выполняется удаление данных..."}
                                         </Title>
                                         <Text type="secondary">
-                                            Пожалуйста, дождитесь завершения операции. Не закрывайте это окно.
+                                            {t("userDeletingDataWait") || "Пожалуйста, дождитесь завершения операции. Не закрывайте это окно."}
                                         </Text>
                                     </div>
                                 )}
@@ -948,10 +963,10 @@ export const UserData = () => {
                                     <div className="delete-complete-header">
                                         <CheckCircleOutlined style={{fontSize: '48px', color: '#52c41a'}}/>
                                         <Title level={4} style={{margin: '16px 0', color: '#52c41a'}}>
-                                            Удаление завершено успешно!
+                                            {t("userDeletingDataComplete") || "Удаление завершено успешно!"}
                                         </Title>
                                         <Text type="secondary">
-                                            Все данные пользователя удалены. Перенаправление на главную страницу...
+                                            {t("userDeletingDataRedirect") || "Все данные пользователя удалены. Перенаправление на главную страницу..."}
                                         </Text>
                                     </div>
                                 )}
@@ -960,7 +975,7 @@ export const UserData = () => {
 
                                 <div className="delete-messages-container">
                                     <Text strong style={{marginBottom: '12px', display: 'block'}}>
-                                        Журнал операций:
+                                        {t("userOperationLog") || "Журнал операций:"}
                                     </Text>
 
                                     <div className="delete-messages-list">
@@ -975,7 +990,7 @@ export const UserData = () => {
 
                                         {deleteMessages.length === 0 && !deleteComplete && (
                                             <div className="delete-message-item">
-                                                <Text type="secondary">Ожидание сообщений от сервера...</Text>
+                                                <Text type="secondary">{t("userWaitingServerMessages") || "Ожидание сообщений от сервера..."}</Text>
                                             </div>
                                         )}
                                     </div>
@@ -1003,10 +1018,10 @@ export const UserData = () => {
                         <div className="tour-controls-header">
                             <PlayCircleOutlined className="tour-controls-icon"/>
                             <h3 className="tour-controls-title">
-                                Интерактивный обзор
+                                {t("interactiveTourTitle") || "Интерактивный обзор"}
                             </h3>
                             <p className="tour-controls-subtitle">
-                                Изучите интерфейс профиля пользователя пошагово
+                                {t("userTourSubtitle") || "Изучите интерфейс профиля пользователя пошагово"}
                             </p>
                         </div>
 
@@ -1017,7 +1032,7 @@ export const UserData = () => {
                                 size="large"
                                 onClick={startTour}
                             >
-                                🚀 Начать тур
+                                {t("startTour") || "🚀 Начать тур"}
                             </Button>
                         </div>
 
@@ -1025,7 +1040,7 @@ export const UserData = () => {
                             <div className="tour-progress">
                                 <div className="tour-progress-step">
                                     <span className="tour-progress-step-text">
-                                        Шаг {current + 1} из {steps.length}
+                                        {t("tourStep", {current: current + 1, total: steps.length}) || `Шаг ${current + 1} из ${steps.length}`}
                                     </span>
                                 </div>
                                 <div className="tour-progress-bar">
@@ -1041,13 +1056,13 @@ export const UserData = () => {
                         )}
 
                         <div className="tour-info">
-                            <div className="tour-info-title">📋 Что вы изучите:</div>
+                            <div className="tour-info-title">{t("tourWhatYouLearn") || "📋 Что вы изучите:"}</div>
                             <ul className="tour-info-list">
-                                <li>Редактирование профиля</li>
-                                <li>Управление балансом и подпиской</li>
-                                <li>Мониторинг ресурсов</li>
-                                <li>Настройка уведомлений</li>
-                                <li>Управление каналами связи</li>
+                                <li>{t("userTourProfileEdit") || "Редактирование профиля"}</li>
+                                <li>{t("userTourBalanceManagement") || "Управление балансом и подпиской"}</li>
+                                <li>{t("userTourResourceMonitoring") || "Мониторинг ресурсов"}</li>
+                                <li>{t("userTourNotificationSettings") || "Настройка уведомлений"}</li>
+                                <li>{t("userTourChannelManagement") || "Управление каналами связи"}</li>
                             </ul>
                         </div>
                     </div>
@@ -1075,7 +1090,7 @@ export const UserData = () => {
 
             <FloatButton
                 icon={<QuestionCircleOutlined/>}
-                tooltip="Начать обзор интерфейса"
+                tooltip={t("tourFloatButtonTooltip") || "Начать обзор интерфейса"}
                 onClick={showTourPanel}
                 className="tour-float-button"
             />

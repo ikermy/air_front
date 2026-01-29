@@ -197,6 +197,7 @@ body.dark .widget-input-container input {
     padding: 10px;
     flex-shrink: 0; /* Не сжимается */
     min-width: 250px; /* Минимальная ширина */
+    position: relative; /* чтобы абсолютная иконка внутри календаря позиционировалась относительно него */
 }
 
 .ant-radio-button-label {
@@ -412,6 +413,31 @@ body.dark .range-picker-dot {
 body.dark .ant-picker-calendar .ant-picker-calendar-date:has(.calendar-has-messages) {
     background-color: var(--main-color-dark) !important;
     opacity: 0.9 !important;
+}
+
+/* Иконка удаления диалога внизу слева */
+.delete-dialog-icon {
+    position: absolute;
+    left: 10px;
+    bottom: 10px;
+    cursor: pointer;
+    color: rgba(0,0,0,0.45);
+    background: rgba(255,255,255,0.85);
+    border-radius: 6px;
+    padding: 6px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+    transition: color 0.15s ease, background 0.15s ease, transform 0.08s ease;
+    z-index: 50;
+}
+
+.delete-dialog-icon:hover {
+    color: #ff4d4f;
+    transform: translateY(-1px);
+}
+
+body.dark .delete-dialog-icon {
+    background: rgba(255,255,255,0.06);
+    color: rgba(255,255,255,0.85);
 }
 
 /* Адаптивность для мобильных устройств */

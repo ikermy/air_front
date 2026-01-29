@@ -205,12 +205,12 @@ export async function deleteCRMConfig(token, crmType = 'amocrm') {
 }
 
 /**
- * Сохранение конфигурации AmoCRM (Шаг 1 OAuth)
+ * Сохранение конфигурации amocrm (Шаг 1 OAuth)
  * Gateway: /crm/api/configs/amocrm → CRM: /configs/amocrm
  * @param {string} token - JWT токен авторизации
  * @param {Object} configData - Данные конфигурации
  * @param {string} configData.name - Название конфигурации
- * @param {string} configData.subdomain - Поддомен AmoCRM
+ * @param {string} configData.subdomain - Поддомен amocrm
  * @param {string} configData.clientId - ID интеграции
  * @param {string} configData.clientSecret - Секретный ключ
  * @returns {Promise<{success: boolean, config?: Object, error?: string}>}
@@ -224,7 +224,7 @@ export async function saveAmoCRMConfig(token, configData) {
                 "Authorization": `Bearer ${token}`
             },
             body: JSON.stringify({
-                name: configData.name || 'AmoCRM',
+                name: configData.name || 'amocrm',
                 subdomain: configData.subdomain,
                 credentials: {
                     client_id: configData.clientId,
@@ -251,7 +251,7 @@ export async function saveAmoCRMConfig(token, configData) {
 }
 
 /**
- * Получение URL для авторизации AmoCRM (Шаг 2 OAuth)
+ * Получение URL для авторизации amocrm (Шаг 2 OAuth)
  * Gateway: /crm/api/oauth/amocrm/auth → CRM: /oauth/amocrm/auth
  * @param {string} token - JWT токен авторизации
  * @param {string} redirectUrl - URL для callback (опционально)
@@ -332,7 +332,7 @@ export async function exchangeAmoCRMCode(token, code, state) {
 }
 
 /**
- * Тест соединения с AmoCRM
+ * Тест соединения с amocrm
  * Gateway: /crm/api/configs/amocrm/test → CRM: /configs/amocrm/test
  * @param {string} token - JWT токен авторизации
  * @param {string} crmType - Тип CRM (по умолчанию 'amocrm')
@@ -360,7 +360,7 @@ export async function testAmoCRMConnection(token, crmType = 'amocrm') {
         const result = await response.json().catch(() => ({}));
         return {
             success: true,
-            message: result.message || 'Соединение с AmoCRM успешно',
+            message: result.message || 'Соединение с amocrm успешно',
             account: result.account || null,
             details: result.details || result
         };
@@ -370,7 +370,7 @@ export async function testAmoCRMConnection(token, crmType = 'amocrm') {
 }
 
 /**
- * Получение списка кастомных полей контактов AmoCRM
+ * Получение списка кастомных полей контактов amocrm
  * Gateway: /crm/api/contacts/amocrm/custom-fields → CRM: /contacts/amocrm/custom-fields
  * @param {string} token - JWT токен авторизации
  * @param {string} crmType - Тип CRM (по умолчанию 'amocrm')
@@ -415,7 +415,7 @@ export async function getAmoCRMCustomFields(token, crmType = 'amocrm') {
 }
 
 /**
- * Получение списка воронок (pipelines) AmoCRM с их статусами
+ * Получение списка воронок (pipelines) amocrm с их статусами
  * Gateway: /crm/api/pipelines/:crm_type → CRM: /pipelines/:crm_type
  * @param {string} token - JWT токен авторизации
  * @param {string} crmType - Тип CRM (по умолчанию 'amocrm')
@@ -479,7 +479,7 @@ export async function getAmoCRMPipelines(token, crmType = 'amocrm') {
  */
 export async function openAmoCRMAuthWindow(authURL, state) {
     return new Promise((resolve) => {
-        const popup = window.open(authURL, 'amoCRM Authorization', 'width=600,height=700,scrollbars=yes');
+        const popup = window.open(authURL, 'amocrm Authorization', 'width=600,height=700,scrollbars=yes');
         if (!popup) {
             resolve({ success: false, error: 'Не удалось открыть окно (popup заблокирован)' });
             return;
@@ -515,12 +515,12 @@ export async function openAmoCRMAuthWindow(authURL, state) {
             }
 
             // Проверяем origin только для старых способов авторизации
-            const isAmoCRM = event.origin === 'https://www.amocrm.ru';
-            if (!isAmoCRM) {
+            const isamocrm = event.origin === 'https://www.amocrm.ru';
+            if (!isamocrm) {
                 return;
             }
 
-            // Обработка кода авторизации от AmoCRM (старый способ)
+            // Обработка кода авторизации от amocrm (старый способ)
             if (data.code) {
                 codeReceived = true;
                 clearTimeout(timeout);
@@ -559,7 +559,7 @@ export async function openAmoCRMAuthWindow(authURL, state) {
 }
 
 /**
- * Получить конфиг AmoCRM (raw) – уже есть getCRMConfig, но эта обёртка возвращает boolean.
+ * Получить конфиг amocrm (raw) – уже есть getCRMConfig, но эта обёртка возвращает boolean.
  * @param {string} token
  * @returns {Promise<boolean>}
  */
@@ -593,7 +593,7 @@ export async function authorizeAmoCRM(token, configData) {
         return {
             success: true,
             expires_at: popupRes.expires_at,
-            message: 'AmoCRM успешно авторизована'
+            message: 'amocrm успешно авторизована'
         };
     }
 
@@ -604,7 +604,7 @@ export async function authorizeAmoCRM(token, configData) {
 }
 
 /**
- * Сохранение поля источника перехода AmoCRM
+ * Сохранение поля источника перехода amocrm
  * Gateway: /crm/api/configs/:crm_type/marusia-source-field → CRM: /configs/:crm_type/marusia-source-field
  * @param {string} token - JWT токен авторизации
  * @param {number} fieldId - ID поля источника перехода
@@ -641,7 +641,7 @@ export async function saveAmoCRMSourceField(token, fieldId, crmType = 'amocrm') 
 }
 
 /**
- * Установка настроек лида по умолчанию (pipeline + статус) для AmoCRM конфигурации
+ * Установка настроек лида по умолчанию (pipeline + статус) для amocrm конфигурации
  * Gateway: /crm/api/configs/:crm_type/default-pipeline → CRM: /configs/:crm_type/default-pipeline
  * Сервер ожидает: { pipeline_id: number, status_id: number }
  * @param {string} token - JWT токен авторизации
@@ -805,7 +805,7 @@ export async function saveCRMChannelSettings(token, settings, crmType = 'amocrm'
 }
 
 /**
- * Получение метаданных всех кастомных полей контактов AmoCRM
+ * Получение метаданных всех кастомных полей контактов amocrm
  * Gateway: /crm/api/configs/:crm_type/custom-fields → CRM: /configs/:crm_type/custom-fields
  * @param {string} token - JWT токен авторизации
  * @param {string} crmType - Тип CRM (по умолчанию 'amocrm')
@@ -866,7 +866,7 @@ export async function getAmoCRMCustomFieldsMetadata(token, crmType = 'amocrm') {
 }
 
 /**
- * Создание нового кастомного поля контактов AmoCRM
+ * Создание нового кастомного поля контактов amocrm
  * Gateway: /crm/api/configs/:crm_type/custom-fields → CRM: /configs/:crm_type/custom-fields
  * @param {string} token - JWT токен авторизации
  * @param {Object} fieldData - Данные для создания поля

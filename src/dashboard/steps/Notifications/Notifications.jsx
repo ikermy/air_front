@@ -1,22 +1,26 @@
 import {AddChannel} from "../Channals/addChanal";
 import React, {useEffect, useState, useRef} from "react";
+import {useTranslation} from 'react-i18next';
 import {validateAndRefreshToken} from "../../../utils/easyUtils";
 import {getModelData} from "../getModelData";
-import {MailOutlined, AndroidOutlined, BellOutlined, QuestionCircleOutlined, PlayCircleOutlined, ThunderboltOutlined} from "@ant-design/icons";
+import {MailOutlined, AndroidOutlined, BellOutlined, QuestionCircleOutlined, PlayCircleOutlined, ThunderboltOutlined, CheckCircleOutlined} from "@ant-design/icons";
 import {FaPlay, FaStop, FaTelegramPlane} from 'react-icons/fa';
 import {Alert, Button, Input, Modal, Spin, Switch, Card, Typography, Tour, FloatButton} from "antd";
-import {saveChannelData} from "../saveChannelsData";
 import {showErrorNotification, showNotification, showWarningNotification} from "../../hotification/showNotification";
-import {readChannelData} from "../readChannelData";
-import {sendVerifCode} from "./sendVerifCode";
 import {generateRandomThreeDigitNumber} from "../../../widget/utils";
-import {getMail} from "./getMail";
 import {FiTarget} from "react-icons/fi";
-import {saveNotifEvent} from "./saveNotifEvent";
-import {deleteNotifChanel} from "./deleteNotifChanel";
 import './Notifications.css';
 import '../Tour.css';
 import {getTourPanelState, setTourPanelState} from "../../../utils/cookieUtils";
+import {
+    deleteNotifChanel,
+    getMail,
+    readNotificationsData,
+    saveNotifEvent,
+    saveNotificationsData,
+    sendVerifCode
+} from "./notificationUtils";
+import {restartActiveChannels, chAvailable} from "../Channals/chUtils";
 
 const { Text, Title } = Typography;
 
@@ -48,6 +52,7 @@ const INITIAL_AVAILABLE_CHANNELS = [
 ];
 
 export const Notifications = () => {
+    const {t} = useTranslation();
     const [loading, setLoading] = useState(true);
     const [modelData, setModelData] = useState(null);
     const [availableChannels, setAvailableChannels] = useState(INITIAL_AVAILABLE_CHANNELS);
@@ -70,6 +75,13 @@ export const Notifications = () => {
     const [tourVisible, setTourVisible] = useState(false);
     const [current, setCurrent] = useState(0);
     const [tourPanelVisible, setTourPanelVisible] = useState(getTourPanelState('notifications')); // Состояние для видимости панели
+
+    // State для модального окна перезапуска сервисов
+    const [isRestartServicesModalOpen, setIsRestartServicesModalOpen] = useState(false);
+    const [restartProgressVisible, setRestartProgressVisible] = useState(false);
+    const [restartMessages, setRestartMessages] = useState([]);
+    const [restartComplete, setRestartComplete] = useState(false);
+    const [restartLoading, setRestartLoading] = useState(false);
 
     // Refs для Tour targets
     const notificationsHeaderRef = useRef(null);
@@ -96,7 +108,19 @@ export const Notifications = () => {
         }
     };
 
-    const toggleExpand = (channelKey) => {
+    const toggleExpand = async (channelKey) => {
+        // Проверка доступности канала Telegram
+        if (channelKey === 'telega') {
+            const isAvailable = await chAvailable('tgbot');
+            if (!isAvailable) {
+                showErrorNotification(
+                    t("error") || "Ошибка",
+                    t("channelUnavailable") || "Этот канал сейчас недоступен"
+                );
+                return;
+            }
+        }
+
         setVerificationStatus('success') // ТОЛЬКО ДЛЯ ТЕСТОВ!!!
         setSelectedChannels(selectedChannels.map(ch => {
             if (ch.key === channelKey) {
@@ -132,12 +156,12 @@ export const Notifications = () => {
                 const result = deleteNotifChanel(token, channelToMove.label)
 
                 if (result) {
-                    showNotification("Канал для уведомлений удален", "Ассистент ассистент больше не будет присылать уведомления в этот канал!");
+                    showNotification(t("notifChannelDeleted") || "Канал для уведомлений удален", t("notifChannelDeletedDesc") || "Агент больше не будет присылать уведомления в этот канал!");
                 }
             }
         } catch (error) {
             console.error("Ошибка при получении email:", error);
-            showErrorNotification("Ошибка", "Не удалось получить email пользователя");
+            showErrorNotification(t("error") || "Ошибка", t("notifEmailError") || "Не удалось получить email пользователя");
         }
     };
 
@@ -161,19 +185,26 @@ export const Notifications = () => {
                 channelType = "instant";
             }
 
-            const success = await saveChannelData("notifications", channelType, channel.data, null, channel.isEnabled, token);
+            const result = await saveNotificationsData(channelType, channel.data, null, channel.isEnabled, token);
 
-            if (success) {
+            if (result.success) {
                 if (channel.isEnabled) {
-                    showNotification("Канал для уведомлений сохранен", "Ассистент будет присылать уведомления в этот канал!");
+                    showNotification(t("notifChannelSaved") || "Канал для уведомлений сохранен", t("notifChannelSavedEnabled") || "Агент будет присылать уведомления в этот канал!");
                 } else {
-                    showNotification("Канал для уведомлений сохранен но не активирован", "Ассистент не будет присылать уведомления в этот канал!");
+                    showNotification(t("notifChannelSavedDisabled") || "Канал для уведомлений сохранен но не активирован", t("notifChannelSavedDisabledDesc") || "Агент не будет присылать уведомления в этот канал!");
+                }
+
+                // Проверяем, есть ли активные сервисы для перезапуска
+                if ((channelType !== "instant") && (channelType !== "telega") && (channelType !== "email")) {
+                    if (result.active_channels) {
+                        setIsRestartServicesModalOpen(true);
+                    }
                 }
             } else {
-                showErrorNotification("Ошибка сохранения канала для уведомлений", "Вы не будете получать уведомления ассистента из этого канала!");
+                showErrorNotification(t("notifChannelSaveError") || "Ошибка сохранения канала для уведомлений", t("notifChannelSaveErrorDesc") || "Вы не будете получать уведомления агента из этого канала!");
             }
         } else {
-            showWarningNotification("Ошибка сохранения канала уведомлений", "Токен не обновлен, необходимо повторно авторизоваться!")
+            showWarningNotification(t("notifTokenError") || "Ошибка сохранения канала уведомлений", t("notifTokenErrorDesc") || "Токен не обновлен, необходимо повторно авторизоваться!")
         }
 
         toggleExpand(key);
@@ -193,7 +224,7 @@ export const Notifications = () => {
             }
         } catch (error) {
             console.error("Ошибка при получении email:", error);
-            showErrorNotification("Ошибка", "Не удалось получить email пользователя");
+            showErrorNotification(t("error") || "Ошибка", t("notifEmailError") || "Не удалось получить email пользователя");
         }
     };
 
@@ -214,7 +245,7 @@ export const Notifications = () => {
                         setModelData(true);
 
                         // Получаем данные о каналах
-                        const channelsData = await readChannelData("notifications", token);
+                        const channelsData = await readNotificationsData(token);
                         if (channelsData) {
                             const newAvailableChannels = [...INITIAL_AVAILABLE_CHANNELS]; // Используем константу вместо availableChannels
                             const newSelectedChannels = [];
@@ -271,7 +302,7 @@ export const Notifications = () => {
                                 }
                             }
 
-                            // Обработка Events
+                            // Обработка LeadEvents
                             if (channelsData.events) {
                                 setStartDialog(Boolean(channelsData.events.start))
                                 setEndDialog(Boolean(channelsData.events.end))
@@ -304,7 +335,7 @@ export const Notifications = () => {
             <div className="notifications-loading">
                 <Spin size="large" />
                 <Text className="loading-text">
-                    Загрузка данных...
+                    {t("loading") || "Загрузка данных..."}
                 </Text>
             </div>
         );
@@ -344,18 +375,18 @@ export const Notifications = () => {
                 setTimeout(() => {
                     setIsCodeSent(true);
                     setIsVerifying(false);
-                    showNotification("Код подтверждения отправлен",
-                        "Проверьте сообщения в Telegram и введите код из сообщения");
+                    showNotification(t("notifCodeSent") || "Код подтверждения отправлен",
+                        t("notifCodeSentDesc") || "Проверьте сообщения в Telegram и введите код из сообщения");
                 }, 1000);
             } else {
                 setIsVerifying(false);
-                showErrorNotification("Ошибка отправки кода",
-                    "Не удалось отправить код подтверждения. Проверьте ID Telegram.");
+                showErrorNotification(t("notifCodeSendError") || "Ошибка отправки кода",
+                    t("notifCodeSendErrorDesc") || "Не удалось отправить код подтверждения. Проверьте ID Telegram.");
             }
         } else {
             setIsVerifying(false);
-            showErrorNotification("Ошибка отправки кода",
-                "Не удалось отправить код подтверждения. Проверьте ID Telegram.");
+            showErrorNotification(t("notifCodeSendError") || "Ошибка отправки кода",
+                t("notifCodeSendErrorDesc") || "Не удалось отправить код подтверждения. Проверьте ID Telegram.");
         }
     };
 
@@ -366,14 +397,14 @@ export const Notifications = () => {
             setTimeout(() => {
                 setIsVerifying(false);
                 setVerificationStatus('success');
-                showNotification("Telegram подтвержден",
-                    "Ваш Telegram успешно подтвержден для получения уведомлений");
+                showNotification(t("notifTelegramVerified") || "Telegram подтвержден",
+                    t("notifTelegramVerifiedDesc") || "Ваш Telegram успешно подтвержден для получения уведомлений");
             }, 1000);
         } else {
             setIsVerifying(false);
             setVerificationStatus('error');
-            showErrorNotification("Ошибка проверки кода",
-                "Введенный код неверный. Попробуйте еще раз.");
+            showErrorNotification(t("notifCodeVerifyError") || "Ошибка проверки кода",
+                t("notifCodeVerifyErrorDesc") || "Введенный код неверный. Попробуйте еще раз.");
         }
     };
 
@@ -382,18 +413,23 @@ export const Notifications = () => {
         if (token) {
             const s = overrides.start ?? startDialog;
             const e = overrides.end ?? endDialog;
-            const t = overrides.target ?? targetDialog;
-            const res = await saveNotifEvent(token, s, e, t)
-            if (res) {
-                showNotification("События уведомлений успешно сохранены",
-                    "Вы будете получать уведомления при наступлении выбранных событий");
+            const targetValue = overrides.target ?? targetDialog;
+            const res = await saveNotifEvent(token, s, e, targetValue)
+            if (res.success) {
+                showNotification(t("notifEventsSaved") || "События уведомлений успешно сохранены",
+                    t("notifEventsSavedDesc") || "Вы будете получать уведомления при наступлении выбранных событий");
+
+                // Проверяем, есть ли активные сервисы для перезапуска
+                if (res.active_channels) {
+                    setIsRestartServicesModalOpen(true);
+                }
             }
             else {
-                showWarningNotification("Ошибка сохранения событий уведомлений", "Повторите попытку")
+                showWarningNotification(t("notifEventsSaveError") || "Ошибка сохранения событий уведомлений", t("notifEventsSaveErrorRetry") || "Повторите попытку")
             }
         } else {
-            showErrorNotification("Ошибка сохранения событий уведомлений",
-                "Внутренняя ощипка сервера. Повторите попытку позже.")
+            showErrorNotification(t("notifEventsSaveError") || "Ошибка сохранения событий уведомлений",
+                t("notifEventsSaveErrorDesc") || "Внутренняя ошибка сервера. Повторите попытку позже.")
         }
     };
 
@@ -419,28 +455,28 @@ export const Notifications = () => {
     // Шаги Tour для Notifications
     const steps = [
         {
-            title: '🔔 Добро пожаловать в настройки уведомлений',
-            description: 'Здесь вы можете настроить каналы для получения уведомлений о событиях и работе вашего ассистента. Настройте Email и Telegram для получения важных уведомлений.',
+            title: t("notifTourWelcome") || '🔔 Добро пожаловать в настройки уведомлений',
+            description: t("notifTourWelcomeDesc") || 'Здесь вы можете настроить каналы для получения уведомлений о событиях и работе вашего агента. Настройте Email и Telegram для получения важных уведомлений.',
             target: () => notificationsHeaderRef.current,
         },
         {
-            title: '➕ Добавление каналов уведомлений',
-            description: 'Нажмите здесь, чтобы добавить новые каналы уведомлений. Доступны Email (автоматически из профиля) и Telegram канал для мгновенных уведомлений.',
+            title: t("notifTourAddChannels") || '➕ Добавление каналов уведомлений',
+            description: t("notifTourAddChannelsDesc") || 'Нажмите здесь, чтобы добавить новые каналы уведомлений. Доступны Email (автоматически из профиля) и Telegram канал для мгновенных уведомлений.',
             target: () => addChannelRef.current,
         },
         {
-            title: '⚙️ Управление каналами',
-            description: 'В этой секции отображаются все настроенные каналы. Вы можете включать/выключать каналы, редактировать их настройки и проверять статус подключения.',
+            title: t("notifTourManageChannels") || '⚙️ Управление каналами',
+            description: t("notifTourManageChannelsDesc") || 'В этой секции отображаются все настроенные каналы. Вы можете включать/выключать каналы, редактировать их настройки и проверять статус подключения.',
             target: () => channelsContainerRef.current,
         },
         {
-            title: '📅 События для уведомлений',
-            description: 'Выберите события ассистента, о которых хотите получать уведомления: начало диалога, окончание диалога, достижение цели. Настройки автоматически сохраняются при изменении.',
+            title: t("notifTourEvents") || '📅 События для уведомлений',
+            description: t("notifTourEventsDesc") || 'Выберите события агента, о которых хотите получать уведомления: начало диалога, окончание диалога, достижение цели. Настройки автоматически сохраняются при изменении.',
             target: () => eventsGridRef.current,
         },
         {
-            title: '✅ Система уведомлений готова!',
-            description: 'Поздравляем! Теперь ваша система уведомлений настроена. Вы будете получать важные события работы ассистента в выбранные каналы связи.',
+            title: t("notifTourReady") || '✅ Система уведомлений готова!',
+            description: t("notifTourReadyDesc") || 'Поздравляем! Теперь ваша система уведомлений настроена. Вы будете получать важные события работы агента в выбранные каналы связи.',
             target: () => eventsGridRef.current,
         },
     ];
@@ -449,10 +485,10 @@ export const Notifications = () => {
         <div className="create-model-container">
             <div className="section-title" ref={notificationsHeaderRef}>
                 <BellOutlined />
-                Уведомления модели
+                {t("notifModelTitle") || "Уведомления модели"}
             </div>
             <div className="section-description">
-                Настройте каналы для получения уведомлений о событиях и работе вашего ассистента
+                {t("notifModelDesc") || "Настройте каналы для получения уведомлений о событиях и работе вашего агента"}
             </div>
 
             <div className="tour-layout">
@@ -462,10 +498,10 @@ export const Notifications = () => {
                             <div className="no-model-state">
                                 <AndroidOutlined className="no-model-icon" />
                                 <Title level={3} className="no-model-title">
-                                    Модель ассистента не создана
+                                    {t("notifNoModel") || "Модель агента не создана"}
                                 </Title>
                                 <Text className="no-model-description">
-                                    Для настройки уведомлений необходимо сначала создать модель ассистента
+                                    {t("notifNoModelDesc") || "Для настройки уведомлений необходимо сначала создать модель агента"}
                                 </Text>
                             </div>
                         ) : (
@@ -474,7 +510,7 @@ export const Notifications = () => {
                                 {availableChannels.length > 0 && (
                                     <div className="add-channel-section" ref={addChannelRef}>
                                         <Title level={4} className="add-channel-title">
-                                            Добавить канал уведомлений
+                                            {t("notifAddChannel") || "Добавить канал уведомлений"}
                                         </Title>
                                         <AddChannel
                                             availableChannels={availableChannels}
@@ -502,16 +538,18 @@ export const Notifications = () => {
                                                         {channel.label}
                                                     </Title>
                                                 </div>
-                                                <div className="channel-status-switch">
-                                                    <Text>Статус:</Text>
-                                                    <Switch
-                                                        checked={channel.isEnabled}
-                                                        onChange={() => toggleSwitch(channel.key)}
-                                                        disabled={channel.key === "instant" ? false : (!channel.data || false || channel.data === '')}
-                                                        checkedChildren={<span style={{color: "black"}}>Включен</span>}
-                                                        unCheckedChildren={<span style={{color: "black"}}>Выключен</span>}
-                                                    />
-                                                </div>
+                                                {channel.isExpanded && (
+                                                    <div className="channel-status-switch">
+                                                        <Text>{t("notifStatus") || "Статус:"}</Text>
+                                                        <Switch
+                                                            checked={channel.isEnabled}
+                                                            onChange={() => toggleSwitch(channel.key)}
+                                                            disabled={channel.key === "instant" ? false : (!channel.data || false || channel.data === '')}
+                                                            checkedChildren={<span style={{color: "black"}}>{t("notifEnabled") || "Включен"}</span>}
+                                                            unCheckedChildren={<span style={{color: "black"}}>{t("notifDisabled") || "Выключен"}</span>}
+                                                        />
+                                                    </div>
+                                                )}
                                             </div>
 
                                             {channel.isExpanded && (
@@ -521,15 +559,15 @@ export const Notifications = () => {
                                                         <>
                                                             <Alert
                                                                 className="channel-alert"
-                                                                message="Использовать Email для всех уведомлений"
+                                                                message={t("notifEmailTitle") || "Использовать Email для всех уведомлений"}
                                                                 description={
                                                                     <>
-                                                                        При регистрации вы указали этот адрес электронной почты:
+                                                                        {t("notifEmailDesc") || "При регистрации вы указали этот адрес электронной почты:"}
                                                                         <Text strong style={{color: 'var(--link-color)', marginLeft: 8}}>
                                                                             {channel.data}
                                                                         </Text>
                                                                         <br />
-                                                                        Критические уведомления всегда будут приходить на этот email
+                                                                        {t("notifEmailCritical") || "Критические уведомления всегда будут приходить на этот email"}
                                                                     </>
                                                                 }
                                                                 type={channel.data ? "success" : "warning"}
@@ -545,11 +583,10 @@ export const Notifications = () => {
                                                         <>
                                                             <Alert
                                                                 className="channel-alert"
-                                                                message="Настройка уведомлений в Telegram"
+                                                                message={t("notifTelegramTitle") || "Настройка уведомлений в Telegram"}
                                                                 description={
                                                                     <>
-                                                                        Для получения уведомлений о событиях вашего ассистента,
-                                                                        запустите{' '}
+                                                                        {t("notifTelegramDesc1") || "Для получения уведомлений о событиях вашего агента, запустите"}{' '}
                                                                         <a
                                                                             href={`https://t.me/${botName}`}
                                                                             target="_blank"
@@ -557,7 +594,7 @@ export const Notifications = () => {
                                                                         >
                                                                             {botName}
                                                                         </a>
-                                                                        {' '}выполните команду /start, и скопируйте полученный Telegram ID
+                                                                        {' '}{t("notifTelegramDesc2") || "выполните команду /start, и скопируйте полученный Telegram ID"}
                                                                     </>
                                                                 }
                                                                 type={channel.data ? "success" : "warning"}
@@ -566,16 +603,16 @@ export const Notifications = () => {
                                                             <div className="channel-input-group">
                                                                 <Input
                                                                     prefix={<FaTelegramPlane/>}
-                                                                    placeholder="Введите Ваш Telegram ID"
+                                                                    placeholder={t("notifTelegramIdPlaceholder") || "Введите Ваш Telegram ID"}
                                                                     value={channel.data}
                                                                     onChange={(e) => {
                                                                         const value = e.target.value;
                                                                         const isNumeric = /^[0-9]*$/.test(value);
                                                                         const error =
                                                                             !isNumeric
-                                                                                ? 'Telegram ID должен содержать только цифры!'
+                                                                                ? (t("notifTelegramIdNumeric") || 'Telegram ID должен содержать только цифры!')
                                                                                 : value.length > 0 && value.length < 9
-                                                                                    ? 'Telegram ID должен быть не менее 9 символов!'
+                                                                                    ? (t("notifTelegramIdLength") || 'Telegram ID должен быть не менее 9 символов!')
                                                                                     : '';
 
                                                                         setSelectedChannels(
@@ -603,7 +640,7 @@ export const Notifications = () => {
                                                                             loading={isVerifying}
                                                                             disabled={!channel.data || channel.error || isCodeSent || verificationStatus === 'success'}
                                                                         >
-                                                                            Отправить код
+                                                                            {t("notifVerifyButton") || "Подтвердить"}
                                                                         </Button>
                                                                     }
                                                                 />
@@ -615,9 +652,10 @@ export const Notifications = () => {
                                                             {isCodeSent && verificationStatus !== 'success' && (
                                                                 <div className="verification-section">
                                                                     <Input
-                                                                        placeholder="Введите код подтверждения"
+                                                                        placeholder={t("notifCodePlaceholder") || "Введите код подтверждения"}
                                                                         value={verificationCode}
                                                                         onChange={(e) => setVerificationCode(e.target.value)}
+                                                                        onPressEnter={() => verificationCode && !isVerifying && verifyCode(verificationCode)}
                                                                         status={verificationStatus === 'error' ? "error" : ""}
                                                                         addonAfter={
                                                                             <Button
@@ -627,13 +665,13 @@ export const Notifications = () => {
                                                                                 loading={isVerifying}
                                                                                 disabled={!verificationCode}
                                                                             >
-                                                                                Проверить
+                                                                                {t("notifVerifyCode") || "Проверить"}
                                                                             </Button>
                                                                         }
                                                                     />
                                                                     {verificationStatus === 'error' && (
                                                                         <Text type="danger">
-                                                                            Неверный код подтверждения
+                                                                            {t("notifCodeVerifyErrorDesc") || "Неверный код подтверждения"}
                                                                         </Text>
                                                                     )}
                                                                 </div>
@@ -646,14 +684,13 @@ export const Notifications = () => {
                                                         <>
                                                             <Alert
                                                                 className="channel-alert"
-                                                                message="Получение сообщений в панели управления"
+                                                                message={t("notifInstantTitle") || "Получение сообщений в панели управления"}
                                                                 description={
                                                                     <>
-                                                                        Уведомления будут отображаться в панели управления в режиме реального времени.
-                                                                        Вы увидите все важные события работы вашего ассистента прямо в интерфейсе.
+                                                                        {t("notifInstantDesc") || "Уведомления будут отображаться в панели управления в режиме реального времени. Вы увидите все важные события работы вашего агента прямо в интерфейсе."}
                                                                         <br />
                                                                         <Text type="secondary">
-                                                                            Этот канал не требует дополнительной настройки - просто включите его.
+                                                                            {t("notifInstantNoSetup") || "Этот канал не требует дополнительной настройки - просто включите его."}
                                                                         </Text>
                                                                     </>
                                                                 }
@@ -670,7 +707,7 @@ export const Notifications = () => {
                                                                     danger
                                                                     onClick={() => showRemoveConfirmation(channel.key)}
                                                                 >
-                                                                    Удалить канал
+                                                                    {t("notifRemoveButton") || "Удалить канал"}
                                                                 </Button>
                                                             )}
                                                         </div>
@@ -678,7 +715,7 @@ export const Notifications = () => {
                                                             <Button
                                                                 onClick={() => toggleExpand(channel.key)}
                                                             >
-                                                                Отмена
+                                                                {t("cancel") || "Отмена"}
                                                             </Button>
                                                             <Button
                                                                 style={{color: "black"}}
@@ -692,7 +729,7 @@ export const Notifications = () => {
                                                                         : !channel.data
                                                                 }
                                                             >
-                                                                Сохранить
+                                                                {t("save") || "Сохранить"}
                                                             </Button>
                                                         </div>
                                                     </div>
@@ -703,7 +740,7 @@ export const Notifications = () => {
                                                 <div className="channel-actions">
                                                     <div className="channel-actions-left">
                                                         <Text type="secondary">
-                                                            {channel.data ? 'Настроен' : 'Требует настройки'}
+                                                            {channel.data ? (t("configured") || 'Настроен') : (t("requiresSetup") || 'Требует настройки')}
                                                         </Text>
                                                     </div>
                                                     <div className="channel-actions-right">
@@ -712,7 +749,7 @@ export const Notifications = () => {
                                                             type="primary"
                                                             onClick={() => toggleExpand(channel.key)}
                                                         >
-                                                            Настройки
+                                                            {t("settings") || "Настройки"}
                                                         </Button>
                                                     </div>
                                                 </div>
@@ -726,10 +763,10 @@ export const Notifications = () => {
                                     <div className="events-section" ref={eventsGridRef}>
                                         <div className="events-header">
                                             <Title level={3} className="events-title">
-                                                События для уведомлений
+                                                {t("notifEventsTitle") || "События для уведомлений"}
                                             </Title>
                                             <Text className="events-subtitle">
-                                                Выберите события ассистента, о которых вы будете получать уведомления
+                                                {t("notifEventsDesc") || "Выберите события агента, о которых вы будете получать уведомления"}
                                             </Text>
                                         </div>
 
@@ -747,7 +784,7 @@ export const Notifications = () => {
                                                         >
                                                             <FaPlay />
                                                         </div>
-                                                        <Text className="event-name">Начало диалога</Text>
+                                                        <Text className="event-name">{t("notifStartDialog") || "Начало диалога"}</Text>
                                                     </div>
                                                     <Switch
                                                         checked={startDialog}
@@ -756,16 +793,16 @@ export const Notifications = () => {
                                                             setStartDialog(newValue);
                                                             await saveNotification({ start: newValue });
                                                         }}
-                                                        checkedChildren={<span style={{color: "black"}}>Включен</span>}
-                                                        unCheckedChildren={<span style={{color: "black"}}>Выключен</span>}
+                                                        checkedChildren={<span style={{color: "black"}}>{t("notifEnabled") || "Включен"}</span>}
+                                                        unCheckedChildren={<span style={{color: "black"}}>{t("notifDisabled") || "Выключен"}</span>}
                                                         style={{color: "black"}}
                                                     />
                                                 </div>
                                                 <div className="event-card-content">
                                                     <Alert
                                                         style={{height: '270px'}}
-                                                        message="Старт нового диалога"
-                                                        description="Получать уведомление о начале диалога. Ассистент пришлёт уведомление с данными пользователя, начавшего диалог"
+                                                        message={t("notifStartDialogTitle") || "Старт нового диалога"}
+                                                        description={t("notifStartDialogDesc") || "Получать уведомление о начале диалога. Агент пришлёт уведомление с данными пользователя, начавшего диалог"}
                                                         type={startDialog ? "success" : "warning"}
                                                         showIcon
                                                     />
@@ -785,7 +822,7 @@ export const Notifications = () => {
                                                         >
                                                             <FaStop />
                                                         </div>
-                                                        <Text className="event-name">Окончание диалога</Text>
+                                                        <Text className="event-name">{t("notifEndDialog") || "Окончание диалога"}</Text>
                                                     </div>
                                                     <Switch
                                                         checked={endDialog}
@@ -794,16 +831,16 @@ export const Notifications = () => {
                                                             setEndDialog(newValue);
                                                             await saveNotification({ end: newValue});
                                                         }}
-                                                        checkedChildren={<span style={{color: "black"}}>Включен</span>}
-                                                        unCheckedChildren={<span style={{color: "black"}}>Выключен</span>}
+                                                        checkedChildren={<span style={{color: "black"}}>{t("notifEnabled") || "Включен"}</span>}
+                                                        unCheckedChildren={<span style={{color: "black"}}>{t("notifDisabled") || "Выключен"}</span>}
                                                         style={{color: "black"}}
                                                     />
                                                 </div>
                                                 <div className="event-card-content">
                                                     <Alert
                                                         style={{height: '270px'}}
-                                                        message="Окончание диалога"
-                                                        description="Получать уведомление при окончании диалога. Ассистент пришлёт уведомление с данными пользователя при окончании диалога, если это поддерживается каналом"
+                                                        message={t("notifEndDialogTitle") || "Окончание диалога"}
+                                                        description={t("notifEndDialogDesc") || "Получать уведомление при окончании диалога. Агент пришлёт уведомление с данными пользователя при окончании диалога, если это поддерживается каналом"}
                                                         type={endDialog ? "success" : "warning"}
                                                         showIcon
                                                     />
@@ -823,7 +860,7 @@ export const Notifications = () => {
                                                         >
                                                             <FiTarget />
                                                         </div>
-                                                        <Text className="event-name">Достижение цели</Text>
+                                                        <Text className="event-name">{t("notifTargetReached") || "Достижение цели"}</Text>
                                                     </div>
                                                     <Switch
                                                         checked={targetDialog}
@@ -832,16 +869,16 @@ export const Notifications = () => {
                                                             setTargetDialog(newValue);
                                                             await saveNotification({ target: newValue });
                                                         }}
-                                                        checkedChildren={<span style={{color: "black"}}>Включен</span>}
-                                                        unCheckedChildren={<span style={{color: "black"}}>Выключен</span>}
+                                                        checkedChildren={<span style={{color: "black"}}>{t("notifEnabled") || "Включен"}</span>}
+                                                        unCheckedChildren={<span style={{color: "black"}}>{t("notifDisabled") || "Выключен"}</span>}
                                                         style={{color: "black"}}
                                                     />
                                                 </div>
                                                 <div className="event-card-content">
                                                     <Alert
                                                         style={{height: '270px'}}
-                                                        message="Достижение цели диалога"
-                                                        description="Получать уведомление при достижении цели, заданной в настройках модели. Ассистент пришлёт уведомление с данными пользователя при достижении цели"
+                                                        message={t("notifTargetReachedTitle") || "Достижение цели диалога"}
+                                                        description={t("notifTargetReachedDesc") || "Получать уведомление при достижении цели, заданной в настройках модели. Агент пришлёт уведомление с данными пользователя при достижении цели"}
                                                         type={targetDialog ? "success" : "warning"}
                                                         showIcon
                                                     />
@@ -856,16 +893,19 @@ export const Notifications = () => {
                                     open={isModalVisible}
                                     onCancel={handleCancelRemove}
                                     className="notifications-modal"
+                                    maskClassName="blur-modal-mask"
+                                    maskClosable={false}
+                                    zIndex={20000}
                                     footer={[
                                         <Button key="cancel" onClick={handleCancelRemove}>
-                                            Отмена
+                                            {t("cancel") || "Отмена"}
                                         </Button>,
                                         <Button key="confirm" danger type="primary" onClick={handleConfirmRemove}>
-                                            Удалить
+                                            {t("delete") || "Удалить"}
                                         </Button>,
                                     ]}
                                 >
-                                    Вы уверены, что хотите удалить этот канал? Все настройки будут потеряны.
+                                    {t("notifRemoveConfirm") || "Вы уверены, что хотите удалить этот канал? Все настройки будут потеряны."}
                                 </Modal>
                             </>
                         )}
@@ -878,10 +918,10 @@ export const Notifications = () => {
                         <div className="tour-controls-header">
                             <PlayCircleOutlined className="tour-controls-icon" />
                             <h3 className="tour-controls-title">
-                                Интерактивный обзор
+                                {t("notifTourTitle") || "Интерактивный обзор"}
                             </h3>
                             <p className="tour-controls-subtitle">
-                                Изучите настройки уведомлений пошагово
+                                {t("notifTourSubtitle") || "Изучите настройки уведомлений пошагово"}
                             </p>
                         </div>
 
@@ -892,7 +932,7 @@ export const Notifications = () => {
                                 size="large"
                                 onClick={startTour}
                             >
-                                🚀 Начать тур
+                                {t("notifTourStart") || "🚀 Начать тур"}
                             </Button>
                         </div>
 
@@ -900,7 +940,7 @@ export const Notifications = () => {
                             <div className="tour-progress">
                                 <div className="tour-progress-step">
                                     <span className="tour-progress-step-text">
-                                        Шаг {current + 1} из {steps.length}
+                                        {t("notifTourStep") || "Шаг"} {current + 1} {t("notifTourOf") || "из"} {steps.length}
                                     </span>
                                 </div>
                                 <div className="tour-progress-bar">
@@ -916,12 +956,12 @@ export const Notifications = () => {
                         )}
 
                         <div className="tour-info">
-                            <div className="tour-info-title">📋 Что вы изучите:</div>
+                            <div className="tour-info-title">{t("notifTourWhatYouLearn") || "📋 Что вы изучите:"}</div>
                             <ul className="tour-info-list">
-                                <li>Добавление каналов уведомлений</li>
-                                <li>Настройку Email и Telegram</li>
-                                <li>Выбор событий для мониторинга</li>
-                                <li>Управление статусами каналов</li>
+                                <li>{t("notifTourLearn1") || "Добавление каналов уведомлений"}</li>
+                                <li>{t("notifTourLearn2") || "Настройку Email и Telegram"}</li>
+                                <li>{t("notifTourLearn3") || "Выбор событий для мониторинга"}</li>
+                                <li>{t("notifTourLearn4") || "Управление статусами каналов"}</li>
                             </ul>
                         </div>
                     </div>
@@ -949,10 +989,104 @@ export const Notifications = () => {
 
             <FloatButton
                 icon={<QuestionCircleOutlined />}
-                tooltip="Начать обзор настроек уведомлений"
+                tooltip={t("notifTourTooltip") || "Начать обзор настроек уведомлений"}
                 onClick={showTourPanel}
                 className="tour-float-button"
             />
+
+            {/* Модальное окно перезапуска сервисов */}
+            <Modal
+                title={restartProgressVisible ? (t("createModelRestartTitleProgress") || "Перезапуск сервисов в процессе...") : (t("createModelRestartTitle") || "Перезапуск сервисов")}
+                open={isRestartServicesModalOpen}
+
+                onOk={async () => {
+                    if (!restartProgressVisible) {
+                        // Начинаем процесс перезапуска
+                        try {
+                            setRestartLoading(true);
+                            setRestartProgressVisible(true);
+                            setRestartMessages([]);
+                            setRestartComplete(false);
+
+                            const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
+                            if (token) {
+                                // Функция для перевода сообщений от сервера
+                                const translateMessage = (msg) => {
+                                    const translations = {
+                                        '🔌 Соединение с сервером установлено': t("chUtilsConnectionEstablished") || '🔌 Соединение с сервером установлено',
+                                        '✅ Перезапуск сервисов завершен успешно': t("chUtilsRestartCompleted") || '✅ Перезапуск сервисов завершен успешно',
+                                        '❌ Произошла ошибка при перезапуске сервисов': t("chUtilsRestartError") || '❌ Произошла ошибка при перезапуске сервисов',
+                                        '❌ Ошибка соединения с сервером': t("chUtilsConnectionError") || '❌ Ошибка соединения с сервером'
+                                    };
+                                    return translations[msg] || msg;
+                                };
+
+                                // Передаём callback для получения сообщений
+                                await restartActiveChannels(token, (message) => {
+                                    setRestartMessages(prev => [...prev, translateMessage(message)]);
+                                });
+
+                                setRestartComplete(true);
+                                setRestartLoading(false);
+
+                                setTimeout(() => {
+                                    showNotification(t("createModelRestartSuccess") || 'Успешно', t("createModelRestartSuccessMsg") || 'Активные сервисы перезапущены');
+                                    setRestartProgressVisible(false);
+                                    setIsRestartServicesModalOpen(false);
+                                }, 2000);
+                            } else {
+                                throw new Error(t("notifTokenError") || "Токен не обновлен");
+                            }
+                        } catch (error) {
+                            setRestartMessages(prev => [...prev, `❌ ${error.message || (t("createModelRestartErrorMsg") || 'Ошибка при перезапуске активных сервисов')}`]);
+                            showErrorNotification(t("createModelRestartError") || 'Ошибка', error.message || (t("createModelRestartErrorMsg") || 'Ошибка при перезапуске активных сервисов'));
+                            setRestartLoading(false);
+                        }
+                    } else {
+                        // Закрываем окно после завершения
+                        setRestartProgressVisible(false);
+                        setIsRestartServicesModalOpen(false);
+                    }
+                }}
+                onCancel={() => {
+                    setRestartProgressVisible(false);
+                    setIsRestartServicesModalOpen(false);
+                }}
+                okText={restartProgressVisible ? (t("createModelRestartOkComplete") || "Закрыть") : (t("createModelRestartOk") || "Перезапустить")}
+                okButtonProps={{
+                    style: { color: 'black' },
+                    disabled: restartLoading
+                }}
+                cancelText={t("channelsCancelButton") || "Отмена"}
+                cancelButtonProps={{
+                    style: { display: restartProgressVisible ? 'none' : 'inline-block' }
+                }}
+                closable={!restartLoading}
+                maskClosable={false}
+                centered
+                zIndex={10000}
+            >
+                {!restartProgressVisible ? (
+                    <p>{t("createModelRestartText") || "Есть активные сервисы работающие со старой моделью Агента, перезапустить сервисы?"}</p>
+                ) : (
+                    <>
+                        {restartLoading && <Spin size="large" />}
+                        <div style={{ marginTop: '20px', maxHeight: '300px', overflowY: 'auto' }}>
+                            {restartMessages.map((msg, index) => (
+                                <div key={index} style={{ marginBottom: '8px', padding: '8px', backgroundColor: 'var(--dialog-bg-color)', borderRadius: '4px' }}>
+                                    {msg}
+                                </div>
+                            ))}
+                        </div>
+                        {restartComplete && (
+                            <div style={{ marginTop: '16px', textAlign: 'center' }}>
+                                <CheckCircleOutlined style={{ fontSize: '24px', color: '#52c41a', marginRight: '8px' }} />
+                                <span>{t("createModelRestartComplete") || "Перезапуск завершен!"}</span>
+                            </div>
+                        )}
+                    </>
+                )}
+            </Modal>
         </div>
     );
 }

@@ -5,6 +5,7 @@ import {encryptPassword, getKey} from "../../utils/easyUtils";
 import './auth.css';
 import {useNavigate} from "react-router-dom";
 import {useAuth} from "../../AuthContext";
+import {useTranslation} from "react-i18next";
 
 // const LAND_URL = process.env.REACT_APP_LAND;
 const LAND_URL = window.runtimeConfig?.REACT_APP_LAND || process.env.REACT_APP_LAND;
@@ -33,6 +34,7 @@ async function sendData({mail, pass, token}) {
 }
 
 export function ResetPass({userId, email, token, handleSuccess, handleError}) {
+    const {t} = useTranslation();
     const [form] = Form.useForm(); // Создаём экземпляр формы
     const navigate = useNavigate();
     const {setShowLoginForm} = useAuth();
@@ -91,16 +93,16 @@ export function ResetPass({userId, email, token, handleSuccess, handleError}) {
 
     const validatePassword = (_, value) => {
         if (!value) {
-            return Promise.reject("Пароль обязателен!");
+            return Promise.reject(t("passwordRequired") || 'Пароль обязателен!');
         }
         if (value.length < 6) {
-            return Promise.reject("Пароль должен быть не менее 6 символов!");
+            return Promise.reject(t("passwordMinLength") || 'Пароль должен быть не менее 6 символов!');
         }
         if (!/[A-Z]/.test(value)) {
-            return Promise.reject("Пароль должен содержать хотя бы одну заглавную букву!");
+            return Promise.reject(t("passwordNeedCapital") || 'Пароль должен содержать хотя бы одну заглавную букву!');
         }
         if (!/[0-9]/.test(value)) {
-            return Promise.reject("Пароль должен содержать хотя бы одну цифру!");
+            return Promise.reject(t("passwordNeedDigit") || 'Пароль должен содержать хотя бы одну цифру!');
         }
         return Promise.resolve();
     };
@@ -119,25 +121,25 @@ export function ResetPass({userId, email, token, handleSuccess, handleError}) {
                     name="password"
                     rules={[{validator: validatePassword}]}
                 >
-                    <Input.Password prefix={<LockOutlined/>} placeholder="Придумайте новый пароль"/>
+                    <Input.Password prefix={<LockOutlined/>} placeholder={t("newPasswordPlaceholder") || 'Придумайте новый пароль'}/>
                 </Form.Item>
 
                 <Form.Item
                     name="confirmPassword"
                     dependencies={["password"]} // Ссылка на поле "password"
                     rules={[
-                        {required: true, message: "Пожалуйста, подтвердите пароль!"},
+                        {required: true, message: t("passwordConfirmRequired") || 'Пожалуйста, подтвердите пароль!'},
                         ({getFieldValue}) => ({
                             validator(_, value) {
                                 if (!value || getFieldValue("password") === value) {
                                     return Promise.resolve();
                                 }
-                                return Promise.reject("Пароли не совпадают!");
+                                return Promise.reject(t("passwordsDoNotMatch") || 'Пароли не совпадают!');
                             },
                         }),
                     ]}
                 >
-                    <Input.Password prefix={<LockOutlined/>} placeholder="Подтвердите новый пароль"/>
+                    <Input.Password prefix={<LockOutlined/>} placeholder={t("confirmPasswordPlaceholder") || 'Подтвердите новый пароль'}/>
                 </Form.Item>
 
                 <Form.Item>
@@ -149,7 +151,7 @@ export function ResetPass({userId, email, token, handleSuccess, handleError}) {
                             color: "black",
                         }}
                     >
-                        Сменить пароль
+                        {t("changePasswordButton") || 'Сменить пароль'}
                     </Button>
                 </Form.Item>
             </Form>

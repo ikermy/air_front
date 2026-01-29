@@ -7,6 +7,7 @@ import { UserContext } from "../../../index";
 import { getKey, encryptPassword } from '../../../utils/easyUtils';
 import { useAuth } from "../../../AuthContext";
 import { showNotification, showWarningNotification, showErrorNotification } from "../../hotification/showNotification.js";
+import logoImage from '../../../assets/img/logo.png';
 
 const LAND_URL = (window.runtimeConfig && window.runtimeConfig.REACT_APP_LAND) || process.env.REACT_APP_LAND;
 
@@ -64,7 +65,7 @@ export function SimpleAuthForm() {
             switch (auth.status) {
                 case "permit":
                     login();
-                    if (values.checker) localStorage.setItem("authToken", auth.sta);
+                    localStorage.setItem("authToken", auth.sta);
                     showNotification("Успех", "Вы успешно авторизованы");
                     navigate("/dashboard");
                     break;
@@ -95,6 +96,17 @@ export function SimpleAuthForm() {
                  transform: "translate(-50%, -50%)"
              }}
         >
+            <img
+                src={logoImage}
+                alt="Logo"
+                style={{
+                    width: '200px',
+                    height: 'auto',
+                    marginBottom: '20px',
+                    display: 'block',
+                    margin: '0 auto 20px auto'
+                }}
+            />
             <br />
             <Form
                 form={form}

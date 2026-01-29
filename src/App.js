@@ -15,7 +15,7 @@ import SimpleAuthForm from "./dashboard/steps/Dev-tolls/SimpleAuthForm";
 import PrivacyPolicy from "./landing/PrivacyPolicy";
 import { useAppPreloader } from "./utils/useAppPreloader";
 
-const showSimpleAuth = process.env.REACT_APP_SHOW_SIMPLE_AUTH === "true";
+const showSimpleAuth = process.env.REACT_APP_SHOW_SIMPLE_AUTH === "false";
 
 const ProtectedRoute = ({ children }) => {
     const { isAuthenticated } = useAuth();

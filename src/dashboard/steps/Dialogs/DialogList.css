@@ -460,6 +460,54 @@
     flex-shrink: 0;
 }
 
+/* Позволяем размещать абсолютные элементы внутри карточки и списка */
+.dialog-card {
+    position: relative;
+    overflow: visible; /* чтобы иконка могла выходить за пределы при необходимости */
+}
+
+.dialog-card > .ant-card-body {
+    padding-right: 0 !important; /* убираем внутренний отступ справа, чтобы иконка была вплотную */
+}
+
+.dialog-list-item {
+    position: relative;
+    padding-right: 0; /* убираем правый padding, чтобы иконка была вплотную */
+    overflow: visible;
+}
+
+/* Иконка удаления в правом верхнем углу карточки */
+.dialog-delete-icon {
+    position: absolute;
+    right: 0; /* вплотную к правому краю */
+    top: 12px;
+    cursor: pointer;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+}
+
+/* Иконка удаления для списочного элемента (также правый верхний угол) */
+.list-delete-icon {
+    position: absolute;
+    right: 0; /* вплотную к правому краю */
+    top: 12px;
+    cursor: pointer;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+}
+
+/* Резервируем пространство справа внутри контента, чтобы иконка не перекрывала текст */
+.dialog-card .dialog-card-header,
+.dialog-list-item .list-item-content {
+    padding-right: 0; /* убираем отступ — иконка будет вплотную к правому краю */
+}
+
 /* Анимации */
 @keyframes fadeInUp {
     from {

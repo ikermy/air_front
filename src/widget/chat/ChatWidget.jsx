@@ -1,14 +1,14 @@
 import React, {useState, useRef, useCallback, useEffect, useContext} from 'react';
 import './ChatWidget.css';
 import {useTranslation} from "react-i18next";
-import {ReadDialog} from "../../dialog/ReadDialog";
 import {TypingIndicator} from "../../utils/TypingIndicator";
-import {fetchUserName, getWidgetURL} from "../utils";
+import {fetchUserName} from "../utils";
 import {Transceiver} from "../Transceiver";
 import {Receiver} from "../Receiver";
 import {Spin, Typography} from 'antd';
 import axios from "axios";
 import {UserContext} from "../../index";
+import {ReadDialog} from "../../dialog/dialogUtils";
 
 const animationAssistWrite = 25; // 25 мс на символ
 
@@ -34,6 +34,7 @@ export function ChatWidget({
     const [isInitialLoading, setIsInitialLoading] = useState(true);
     const [userNameLoading, setUserNameLoading] = useState(false);
     const [shouldAutoScroll, setShouldAutoScroll] = useState(false); // Флаг для контроля автопрокрутки
+    const userNameFetchedRef = useRef(false); // Флаг для отслеживания выполненной загрузки
 
     const [appState, setAppState] = useState(null);
     const respId = useContext(UserContext);
@@ -58,8 +59,9 @@ export function ChatWidget({
     useEffect(() => {
         const checkConnection = async () => {
             try {
-                const WIDGET_URL = getWidgetURL();
-                const url = `${WIDGET_URL}/available`;
+                const LAND_URL = (window.runtimeConfig && window.runtimeConfig.REACT_APP_LAND) || process.env.REACT_APP_LAND;
+
+                const url = `${LAND_URL}/available/widget`;
                 const response = await axios.get(url);
 
                 if (response.status >= 400) {
@@ -96,8 +98,9 @@ export function ChatWidget({
         if (connected) {
             const checkPermission = async () => {
                 try {
-                    const WIDGET_URL = getWidgetURL();
-                    const response = await fetch(`${WIDGET_URL}/exam`, {
+                    const LAND_URL = (window.runtimeConfig && window.runtimeConfig.REACT_APP_LAND) || process.env.REACT_APP_LAND;
+
+                    const response = await fetch(`${LAND_URL}/widget/exam`, {
                         method: 'POST',
                         headers: {'Content-Type': 'application/json'},
                         body: JSON.stringify({
@@ -330,27 +333,28 @@ export function ChatWidget({
     }, [connected, isInitialLoading, appState]);
 
     useEffect(() => {
-        // if (!connected || token == null) {
-        //     return;
-        // }
-
-        if (!userNameLoading) {
-            setUserNameLoading(true);
-            (async () => {
-                try {
-                    await fetchUserName({
-                        token,
-                        setToken,
-                        setUserName,
-                    });
-                } catch (error) {
-                    console.error('Ошибка при загрузке имени пользователя:', error);
-                } finally {
-                    setUserNameLoading(false);
-                }
-            })();
+        if (!connected || token == null || userNameFetchedRef.current) {
+            return;
         }
-    }, [token]);
+
+        userNameFetchedRef.current = true;
+        setUserNameLoading(true);
+
+        (async () => {
+            try {
+                console.log('Загрузка имени пользователя...');
+                await fetchUserName({
+                    token,
+                    setToken,
+                    setUserName,
+                });
+            } catch (error) {
+                console.error('Ошибка при загрузке имени пользователя:', error);
+            } finally {
+                setUserNameLoading(false);
+            }
+        })();
+    }, [token, connected]);
 
     useEffect(() => {
         if (connected && !isInitialLoading && !userNameLoading && token) {

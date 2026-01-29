@@ -5,13 +5,15 @@ import {
     DeleteOutlined,
     CheckCircleOutlined
 } from "@ant-design/icons";
+import { useTranslation } from "react-i18next";
 import { validateAndRefreshToken } from "../../utils/easyUtils";
 import { showErrorNotification, showNotification, showWarningNotification } from "../hotification/showNotification";
 
 const LAND_WSS = (window.runtimeConfig && window.runtimeConfig.REACT_APP_LAND_WSS) || process.env.REACT_APP_LAND_WSS;
 const { Text, Title } = Typography;
 
-export const DeleteModel = ({ onModelDeleted }) => {
+export const DeleteModel = ({ onModelDeleted, selectedProvider }) => {
+    const { t } = useTranslation();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [deleteConfirmation, setDeleteConfirmation] = useState('');
     const [deleteLoading, setDeleteLoading] = useState(false);
@@ -56,23 +58,29 @@ export const DeleteModel = ({ onModelDeleted }) => {
             const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
 
             if (!token) {
-                showWarningNotification("Ошибка удаления модели", "Токен не обновлен!");
+                showWarningNotification(
+                    t("serviceModelDeleteTokenError") || "Ошибка удаления модели",
+                    t("serviceModelDeleteTokenErrorMessage") || "Токен не обновлен!"
+                );
                 setDeleteLoading(false);
                 setDeleteProgressVisible(false);
                 return;
             }
 
-            const wsUrl = `${LAND_WSS}/ws-delete-model`;
-            const wsUrlWithToken = `${wsUrl}?token=${encodeURIComponent(token)}`;
+            const wsUrl = `${LAND_WSS}/ws/delete-model`;
+            const providerParam = selectedProvider ? `&provider=${selectedProvider}` : '';
+            const wsUrlWithToken = `${wsUrl}?token=${encodeURIComponent(token)}${providerParam}`;
             wsRef.current = new WebSocket(wsUrlWithToken);
 
             // Обработчик открытия соединения
             wsRef.current.onopen = () => {
-                setDeleteMessages(prev => [...prev, '🔌 Соединение с сервером установлено']);
+                setDeleteMessages(prev => [...prev, t("serviceModelDeleteConnectionEstablished") || '🔌 Соединение с сервером установлено']);
             };
 
             // Обработчик сообщений от сервера
             wsRef.current.onmessage = (event) => {
+                console.log('Получено сообщение:', event.data);
+
                 // Добавляем любое сообщение от сервера в список
                 setDeleteMessages(prev => [...prev, event.data]);
 
@@ -81,11 +89,14 @@ export const DeleteModel = ({ onModelDeleted }) => {
                     if (data.status === 'success') {
                         setDeleteComplete(true);
                     } else if (data.error) {
-                        showErrorNotification("Ошибка удаления", `${data.error}`);
+                        showErrorNotification(
+                            t("serviceModelDeleteError") || "Ошибка удаления",
+                            `${data.error}`
+                        );
                     }
                 } catch (e) {
-                    // Если это не JSON, просто отображаем текст как есть
-                    console.error('Received non-JSON message:', event.data);
+                    // Если это не JSON, это текстовое сообщение прогресса
+                    // Уже добавлено в список сообщений выше
                 }
             };
 
@@ -94,11 +105,14 @@ export const DeleteModel = ({ onModelDeleted }) => {
 
                 // Если соединение закрылось нормально (код 1000), значит операция завершена
                 if (event.code === 1000) {
-                    setDeleteMessages(prev => [...prev, '✅ Операция удаления модели завершена успешно']);
+                    setDeleteMessages(prev => [...prev, t("serviceModelDeleteSuccess") || '✅ Операция удаления модели завершена успешно']);
                     setDeleteComplete(true);
 
                     setTimeout(() => {
-                        showNotification("Модель ассистента", "Успешно удалена!");
+                        showNotification(
+                            t("serviceModelDeleteNotificationTitle") || "Модель агента",
+                            t("serviceModelDeleteNotificationSuccess") || "Успешно удалена!"
+                        );
                         setDeleteProgressVisible(false);
 
                         // Сохраняем в localStorage что модель удалена и вызываем callback
@@ -106,8 +120,11 @@ export const DeleteModel = ({ onModelDeleted }) => {
                         if (onModelDeleted) onModelDeleted();
                     }, 3000);
                 } else {
-                    setDeleteMessages(prev => [...prev, '❌ Произошла ошибка при удалении модели']);
-                    showErrorNotification("Ошибка удаления", "Модели ассистента");
+                    setDeleteMessages(prev => [...prev, t("serviceModelDeleteErrorMessage") || '❌ Произошла ошибка при удалении модели']);
+                    showErrorNotification(
+                        t("serviceModelDeleteError") || "Ошибка удаления",
+                        t("serviceModelDeleteNotificationError") || "Модели агента"
+                    );
                 }
 
                 setDeleteLoading(false);
@@ -116,13 +133,19 @@ export const DeleteModel = ({ onModelDeleted }) => {
             // Обработчик ошибок
             wsRef.current.onerror = (error) => {
                 console.error('WebSocket error:', error);
-                setDeleteMessages(prev => [...prev, '❌ Ошибка соединения с сервером']);
-                showErrorNotification("Ошибка удаления", "Ошибка соединения с сервером");
+                setDeleteMessages(prev => [...prev, t("serviceModelDeleteConnectionError") || '❌ Ошибка соединения с сервером']);
+                showErrorNotification(
+                    t("serviceModelDeleteError") || "Ошибка удаления",
+                    t("serviceModelDeleteConnectionError") || "Ошибка соединения с сервером"
+                );
                 setDeleteLoading(false);
             };
 
         } catch (error) {
-            showErrorNotification("Ошибка удаления", "Модели ассистента");
+            showErrorNotification(
+                t("serviceModelDeleteError") || "Ошибка удаления",
+                t("serviceModelDeleteNotificationError") || "Модели агента"
+            );
             console.error('Error deleting model:', error);
             setDeleteLoading(false);
             setDeleteProgressVisible(false);
@@ -137,53 +160,54 @@ export const DeleteModel = ({ onModelDeleted }) => {
                 onClick={showModal}
                 size="large"
             >
-                Удалить модель
+                {t("serviceModelDeleteButton") || "Удалить модель"}
             </Button>
 
             {/* Модальное окно подтверждения удаления */}
             <Modal
                 title={
                     <span style={{ color: '#ff4d4f' }}>
-                        <ExclamationCircleOutlined /> Подтверждение удаления модели
+                        <ExclamationCircleOutlined /> {t("serviceModelDeleteModalTitle") || "Подтверждение удаления модели"}
                     </span>
                 }
                 open={isModalOpen}
                 onCancel={handleCancel}
                 onOk={handleConfirm}
                 confirmLoading={deleteLoading}
-                okText="Удалить модель"
-                cancelText="Отмена"
+                okText={t("serviceModelDeleteButton") || "Удалить модель"}
+                cancelText={t("cancelButton") || "Отмена"}
                 okButtonProps={{ danger: true }}
                 width={600}
+                
             >
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                     <Alert
-                        message="Внимание! Это действие необратимо!"
+                        message={t("serviceModelDeleteModalWarning") || "Внимание! Это действие необратимо!"}
                         type="error"
                         showIcon
                     />
 
                     <div>
                         <Text strong style={{ color: '#ff4d4f' }}>
-                            Модель ассистента будет удалена безвозвратно без возможности восстановления.
+                            {t("serviceModelDeleteModalText1") || "Модель агента будет удалена безвозвратно без возможности восстановления."}
                         </Text>
                         <br />
                         <Text type="secondary">
-                            Вся конфигурация модели, настройки и связанные данные будут потеряны.
+                            {t("serviceModelDeleteModalText2") || "Вся конфигурация модели, настройки и связанные данные будут потеряны."}
                         </Text>
                     </div>
 
                     <div>
                         <Text strong>
-                            Для окончательного подтверждения удаления модели введите{' '}
+                            {t("serviceModelDeleteModalConfirmText") || "Для окончательного подтверждения удаления модели введите"}{' '}
                             <Text code style={{ backgroundColor: '#ff4d4f', color: 'white', padding: '2px 4px' }}>
-                                yes
+                                {t("serviceModelDeleteModalCodeText") || "yes"}
                             </Text>
                         </Text>
                         <Input
                             value={deleteConfirmation}
                             onChange={(e) => setDeleteConfirmation(e.target.value)}
-                            placeholder="Введите 'yes' для окончательного подтверждения"
+                            placeholder={t("serviceModelDeleteModalInputPlaceholder") || "Введите 'yes' для окончательного подтверждения"}
                             style={{ marginTop: 8 }}
                             size="large"
                         />
@@ -195,7 +219,7 @@ export const DeleteModel = ({ onModelDeleted }) => {
             <Modal
                 title={
                     <span style={{ color: '#ff4d4f' }}>
-                        <DeleteOutlined /> Удаление модели ассистента
+                        <DeleteOutlined /> {t("serviceModelDeleteProgressTitle") || "Удаление модели агента"}
                     </span>
                 }
                 open={deleteProgressVisible}
@@ -204,6 +228,7 @@ export const DeleteModel = ({ onModelDeleted }) => {
                 centered
                 width={700}
                 maskClosable={false}
+                
                 className="delete-progress-modal"
             >
                 <div className="delete-progress-container">
@@ -211,10 +236,10 @@ export const DeleteModel = ({ onModelDeleted }) => {
                         <div className="delete-progress-header">
                             <Spin size="large" />
                             <Title level={4} style={{ margin: '16px 0', color: '#ff4d4f' }}>
-                                Выполняется удаление модели...
+                                {t("serviceModelDeleteProgressMessage") || "Выполняется удаление модели..."}
                             </Title>
                             <Text type="secondary">
-                                Пожалуйста, дождитесь завершения операции. Не закрывайте это окно.
+                                {t("serviceModelDeleteProgressWait") || "Пожалуйста, дождитесь завершения операции. Не закрывайте это окно."}
                             </Text>
                         </div>
                     )}
@@ -223,10 +248,10 @@ export const DeleteModel = ({ onModelDeleted }) => {
                         <div className="delete-complete-header">
                             <CheckCircleOutlined style={{ fontSize: '48px', color: '#52c41a' }} />
                             <Title level={4} style={{ margin: '16px 0', color: '#52c41a' }}>
-                                Удаление модели завершено успешно!
+                                {t("serviceModelDeleteCompleteTitle") || "Удаление модели завершено успешно!"}
                             </Title>
                             <Text type="secondary">
-                                Модель ассистента удалена. Окно закроется автоматически...
+                                {t("serviceModelDeleteCompleteMessage") || "Модель агента удалена. Окно закроется автоматически..."}
                             </Text>
                         </div>
                     )}
@@ -235,7 +260,7 @@ export const DeleteModel = ({ onModelDeleted }) => {
 
                     <div className="delete-messages-container">
                         <Text strong style={{ marginBottom: '12px', display: 'block' }}>
-                            Журнал операций:
+                            {t("serviceModelDeleteLogTitle") || "Журнал операций:"}
                         </Text>
 
                         <div className="delete-messages-list">
@@ -250,7 +275,7 @@ export const DeleteModel = ({ onModelDeleted }) => {
 
                             {deleteMessages.length === 0 && !deleteComplete && (
                                 <div className="delete-message-item">
-                                    <Text type="secondary">Ожидание сообщений от сервера...</Text>
+                                    <Text type="secondary">{t("serviceModelDeleteLogWaiting") || "Ожидание сообщений от сервера..."}</Text>
                                 </div>
                             )}
                         </div>

@@ -54,7 +54,7 @@ export class PaymentSSEManager {
      */
     async connect(orderId) {
         try {
-            const PAY_URL = window.runtimeConfig?.REACT_APP_PAY || process.env.REACT_APP_PAY;
+            const LAND_URL = (window.runtimeConfig && window.runtimeConfig.REACT_APP_LAND) || process.env.REACT_APP_LAND;
 
             // Валидируем и обновляем токен перед подключением
             const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
@@ -67,7 +67,7 @@ export class PaymentSSEManager {
             this.disconnect();
             this.currentOrderId = orderId;
             this.eventSource = new EventSource(
-                `${PAY_URL}/payment-status-stream?token=${encodeURIComponent(token)}&orderId=${encodeURIComponent(orderId)}`
+                `${LAND_URL}/pay/payment-status-stream?token=${encodeURIComponent(token)}&orderId=${encodeURIComponent(orderId)}`
             );
 
             this.setupEventListeners();
@@ -543,7 +543,7 @@ export class PaymentSSEManager {
         if (!this.currentOrderId) return;
 
         try {
-            const PAY_URL = window.runtimeConfig?.REACT_APP_PAY || process.env.REACT_APP_PAY;
+            const LAND_URL = (window.runtimeConfig && window.runtimeConfig.REACT_APP_LAND) || process.env.REACT_APP_LAND;
             const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
 
             if (!token) {
@@ -552,7 +552,7 @@ export class PaymentSSEManager {
             }
 
             const response = await fetch(
-                `${PAY_URL}/payment-status?orderId=${encodeURIComponent(this.currentOrderId)}`,
+                `${LAND_URL}/pay/payment-status?orderId=${encodeURIComponent(this.currentOrderId)}`,
                 {
                     headers: {
                         'Authorization': `Bearer ${token}`,

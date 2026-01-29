@@ -86,6 +86,8 @@ body.light {
   --message-right-bg: var(--message-right-bg-light);
   --error-message-bg: var(--error-message-bg-light);
   --message-name-color: var(--message-name-color-light);
+
+  --icon-bg: var(--bg-color-dark);
 }
 
 body.dark {
@@ -113,6 +115,8 @@ body.dark {
   --message-right-bg: var(--message-right-bg-dark);
   --error-message-bg: var(--error-message-bg-dark);
   --message-name-color: var(--message-name-color-dark);
+
+  --icon-bg: var(--main-color);
 
   scrollbar-width: thin;
   scrollbar-color: #444 #222;
@@ -280,6 +284,13 @@ body.dark::-webkit-scrollbar-track {
 /* Изменение цвета трека (активной части) */
 .espero-slider-row .ant-slider-track {
   background-color: var(--main-color) !important;
+}
+
+/* Глобальное изменение маски для всех модальных окон */
+.ant-modal-mask {
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  background-color: rgba(0, 0, 0, 0.35) !important;
 }
 
 .ant-message {

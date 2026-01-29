@@ -4,7 +4,7 @@ import {useTranslation} from 'react-i18next';
 import './SimpleTransceiver.css';
 import {IoSend} from "react-icons/io5";
 
-const DEMO_URL = window.runtimeConfig?.REACT_APP_DEMO || process.env.REACT_APP_DEMO;
+const LAND_URL = (window.runtimeConfig && window.runtimeConfig.REACT_APP_LAND) || process.env.REACT_APP_LAND;
 
 export function SimpleTransceiver({
                                       userName,
@@ -19,7 +19,7 @@ export function SimpleTransceiver({
         if (message.trim() === '') return; // Не отправлять пустое сообщение
 
         try {
-            const response = await axios.post(`${DEMO_URL}/data`, {
+            const response = await axios.post(`${LAND_URL}/demo/data`, {
                 type: 'user',
                 token: token,
                 uname: userName,

@@ -1,6 +1,8 @@
 const LAND_URL = (window.runtimeConfig && window.runtimeConfig.REACT_APP_LAND) || process.env.REACT_APP_LAND;
 
 export async function getModelData(token) {
+    // Пауза 500 мс перед перезагрузкой списка контактов
+    await new Promise(resolve => setTimeout(resolve, 250));
     try {
         const response = await fetch(`${LAND_URL}/model?token=${encodeURIComponent(token)}`, {
             method: "GET",
@@ -18,5 +20,18 @@ export async function getModelData(token) {
         console.error('Ошибка при получении модели:', error);
         throw error;
     }
+}
+
+// Вспомогательные функции для работы с новым форматом
+export function extractAllModels(data) {
+    return data?.models || {};
+}
+
+export function getActiveProviderName(data) {
+    return data?.active_provider || null;
+}
+
+export function getProviderModel(data, provider) {
+    return data?.models?.[provider] || null;
 }
 

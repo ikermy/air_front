@@ -1,0 +1,227 @@
+/* Контейнер компонента тестирования */
+.model-test-container {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Стили для сообщений */
+.messages-container {
+  transition: background-color 0.3s ease;
+  overflow: visible;  /* ← Видимый overflow для внутреннего контента */
+}
+
+.message-item {
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  border-radius: var(--border-radius, 10px);
+  background-color: var(--bg-color, #ffffff);
+  box-shadow: 0 1px 2px var(--shadow-color, rgba(0, 0, 0, 0.05));
+  transition: all 0.3s ease;
+  overflow: hidden;  /* ← Скрывает переполнение в элементе сообщения */
+}
+
+.message-item:hover {
+  box-shadow: 0 2px 4px var(--shadow-color, rgba(0, 0, 0, 0.1));
+}
+
+.message-user {
+  flex-direction: row-reverse;
+  background-color: var(--message-right-bg, #f9ffdd);
+}
+
+.message-system {
+  background-color: var(--dialog-war-color, #fffbe6);
+  border-left: 3px solid var(--warning-color, #faad14);
+}
+
+.message-avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: var(--main-color, #1890ff);
+  color: var(--bg-color, #ffffff);
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.message-user .message-avatar {
+  background-color: var(--conected-color, #52c41a);
+}
+
+.message-system .message-avatar {
+  background-color: var(--warning-color, #faad14);
+}
+
+.message-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.message-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.message-time {
+  font-size: 12px;
+  white-space: nowrap;
+  color: var(--message-name-color, darkgray);
+}
+
+.message-text {
+  color: var(--text-color, rgba(0, 0, 0, 0.85));
+  word-wrap: break-word;
+  line-height: 1.5;
+}
+
+.message-text .system-text {
+  font-style: italic;
+  opacity: 0.8;
+}
+
+.message-status {
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+}
+
+.message-status svg {
+  transition: all 0.3s ease;
+}
+
+.message-status svg:hover {
+  transform: scale(1.2);
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .message-item {
+    padding: 8px;
+    gap: 8px;
+  }
+
+  .message-avatar {
+    width: 28px;
+    height: 28px;
+    font-size: 14px;
+  }
+}
+
+/* Анимации */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.message-item {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.message-status svg {
+  animation: scaleIn 0.3s ease-out;
+}
+
+/* Анимация печати (три точки) */
+.typing-indicator {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 12px;
+}
+
+.typing-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--text-color, rgba(0, 0, 0, 0.65));
+  opacity: 0.4;
+  animation: typing 1.4s infinite;
+}
+
+.typing-dot:nth-child(1) {
+  animation-delay: 0s;
+}
+
+.typing-dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.typing-dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes typing {
+  0%, 60%, 100% {
+    opacity: 0.4;
+    transform: scale(1);
+  }
+  30% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
+}
+
+/* Контейнер для индикатора печати */
+.typing-indicator-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-color, rgba(0, 0, 0, 0.85));
+  font-size: 14px;
+  padding: 4px 0;
+}
+
+.typing-indicator-text {
+  opacity: 0.85;
+  font-style: italic;
+  color: var(--text-color, rgba(0, 0, 0, 0.65));
+}
+
+/* Скроллбар */
+.messages-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.messages-container::-webkit-scrollbar-track {
+  background: var(--dialog-list-bg, #f1f1f1);
+  border-radius: 4px;
+}
+
+.messages-container::-webkit-scrollbar-thumb {
+  background: var(--shadow-color, #888);
+  border-radius: 4px;
+}
+
+.messages-container::-webkit-scrollbar-thumb:hover {
+  background: var(--main-color, #555);
+}
+
+

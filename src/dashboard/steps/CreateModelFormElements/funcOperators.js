@@ -21,14 +21,13 @@ export async function funcOperators(token) {
 
 export const saveOperators = async (token, data) => {
     try {
-        const response = await fetch(`${LAND_URL}/operators`, {
+        const response = await fetch(`${LAND_URL}/operators?token=${token}`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
             },
             credentials: "include",
             body: JSON.stringify({
-                token: token,
                 data: data,
             }),
         });

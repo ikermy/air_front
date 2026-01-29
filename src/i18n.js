@@ -41,3 +41,6 @@ i18n
     .catch(err => {
         console.error('i18next initialization failed', err);
     });
+
+export default i18n;
+

@@ -14,10 +14,6 @@ import "./Chanels.css"
 import "./ChannelsModern.css"
 import '../Tour.css';
 import {showErrorNotification, showNotification, showWarningNotification} from "../../hotification/showNotification";
-import {saveChannelData} from "../saveChannelsData";
-import {readChannelData} from "../readChannelData";
-import {deleteChannelData} from "./deleteChannelData";
-import {checkSubscription} from "./checkSubscription";
 import {FaInstagram, FaTelegramPlane, FaWhatsapp} from 'react-icons/fa';
 import {TBotSection} from "./sections/TBotSection";
 import {WidgetSection} from "./sections/WidgetSection";
@@ -27,11 +23,13 @@ import {telegramGetContact} from "./telegramGetContact";
 import {WhatsBotSection} from "./sections/WhatsBotSection";
 import {WhatsAuthServive} from "./whatsAuthServive";
 import {whatsappGetContact} from "./whatsappGetContact";
-import {chAvailable} from "./chAvailable";
 import {getTourPanelState, setTourPanelState} from "../../../utils/cookieUtils";
+import {chAvailable, checkSubscription, deleteChannelData, readChannelData, saveChannelData} from "./chUtils";
+import {useTranslation} from "react-i18next";
 
 
 export const Channels = () => {
+    const {t} = useTranslation();
     const {Text} = Typography;
     const [loading, setLoading] = useState(true);
     const [modelData, setModelData] = useState(false);
@@ -124,6 +122,7 @@ export const Channels = () => {
                 if (stored === 'true') {
                     modelDataResult = true
                 } else {
+                    // TODO создать отдельный маршрут для проверки существоаания моделей!
                     modelDataResult = await getModelData(token)
                 }
                 if (
@@ -133,7 +132,7 @@ export const Channels = () => {
                     setModelData(true);
 
                     // Получаем данные о каналах
-                    const channelsData = await readChannelData("channels", token);
+                    const channelsData = await readChannelData(token);
 
                     if (channelsData) {
                         // Создаем базовый набор каналов внутри функции, независимо от текущего состояния
@@ -458,20 +457,15 @@ export const Channels = () => {
     async function checkChAvailable(key) {
         switch (key) {
             case "widg":
-                const WIDGET_URL = (window.runtimeConfig && window.runtimeConfig.REACT_APP_WIDGET) || process.env.REACT_APP_WIDGET;
-                return await chAvailable(WIDGET_URL);
+                return await chAvailable('widget');
             case "tbot":
-                const TGBOT_URL = (window.runtimeConfig && window.runtimeConfig.REACT_APP_TGBOT) || process.env.REACT_APP_TGBOT;
-                return await chAvailable(TGBOT_URL);
+                return await chAvailable('tgbot');
             case "whatsbot":
-                const WHATS_URL = (window.runtimeConfig && window.runtimeConfig.REACT_APP_WHATS) || process.env.REACT_APP_WHATS;
-                return await chAvailable(WHATS_URL);
+                return await chAvailable('whats');
             case "tguserbot":
-                const TGUSER_URL = (window.runtimeConfig && window.runtimeConfig.REACT_APP_TGUSER) || process.env.REACT_APP_TGUSER;
-                return await chAvailable(TGUSER_URL);
+                return await chAvailable('tguser');
             case "insta":
-                const INSTA_URL = (window.runtimeConfig && window.runtimeConfig.REACT_APP_INSTA) || process.env.REACT_APP_INSTA;
-                return await chAvailable(INSTA_URL);
+                return await chAvailable('insta');
             default:
                 return false;
         }
@@ -480,7 +474,7 @@ export const Channels = () => {
     const handleChannelSelect = async (key) => {
         const isAvailable = await checkChAvailable(key);
         if (!isAvailable) {
-            showErrorNotification("Ошибка", "Этот канал сейчас недоступен");
+            showErrorNotification(t("error") || "Ошибка", t("channelUnavailable") || "Этот канал сейчас недоступен");
             return;
         }
         const selectedChannel = availableChannels.find((channel) => channel.key === key);
@@ -518,12 +512,12 @@ export const Channels = () => {
                     // Обновляем состояние UI только если удаление прошло успешно
                     setAvailableChannels(prev => [...prev, clearedChannel]);
                     setSelectedChannels(prev => prev.filter((channel) => channel.key !== channelToRemove));
-                    showNotification("Канал удален", "Канал успешно удален из системы");
+                    showNotification(t("channelDeleted") || "Канал удален", t("channelDeletedSuccess") || "Канал успешно удален из системы");
                 } else {
-                    showErrorNotification("Ошибка удаления", "Не удалось удалить канал");
+                    showErrorNotification(t("channelDeleteError") || "Ошибка удаления", t("channelDeleteFailed") || "Не удалось удалить канал");
                 }
             } else {
-                showWarningNotification("Ошибка авторизации", "Токен не обновлен, необходимо повторно авторизоваться!");
+                showWarningNotification(t("authError") || "Ошибка авторизации", t("tokenNotFound") || "Токен не найден");
             }
         }
 
@@ -543,13 +537,13 @@ export const Channels = () => {
 
             const channel = selectedChannels.find(ch => ch.key === "tguserbot");
             if (!channel || !channel.phone || !channel.appId || !channel.appHash) {
-                showErrorNotification("Ошибка", "Укажите все параметры для авторизации");
+                showErrorNotification(t("error") || "Ошибка", t("channelAuthRequired") || "Укажите все параметры для авторизации");
                 setIsGeneratingQRCode(false);
                 return;
             }
 
             // Создаем сервис авторизации
-            const service = new TelegramAuthService();
+            const service = new TelegramAuthService(t);
             setAuthService(service);
 
             // Настраиваем обработчики событий
@@ -567,11 +561,11 @@ export const Channels = () => {
                 // onSuccess: (message) => {
                 onSuccess: async () => {
                     // showNotification("Успех", message);
-                    showNotification("Успех", "Авторизация успешно завершена");
+                    showNotification(t("channelAuthSuccess") || "Успех", t("channelAuthCompleted") || "Авторизация успешно завершена");
                     setShowQRCode(false);
                     setIsGeneratingQRCode(false);
                     // Обновляю состояние канала tguserbot локально, для возможности дальнейшей настройки
-                    const channelsData = await readChannelData("channels", localStorage.getItem("authToken"));
+                    const channelsData = await readChannelData(localStorage.getItem("authToken"));
                     // Даже если вылезет ошибка, наверное ничего плохого не случится. Так ведь? :)
                     setSelectedChannels(prevChannels =>
                         prevChannels.map(channel =>
@@ -585,12 +579,12 @@ export const Channels = () => {
                     );
                 },
                 onUpdateToken: () => {
-                    showWarningNotification("Ошибка авторизации", "Токен не обновлен, необходимо повторно авторизоваться!");
+                    showWarningNotification(t("authError") || "Ошибка авторизации", t("tokenNotFound") || "Токен не найден");
                     setShowQRCode(false);
                     setIsGeneratingQRCode(false);
                 },
                 onError: (error) => {
-                    showErrorNotification("Ошибка авторизации", error);
+                    showErrorNotification(t("authError") || "Ошибка авторизации", error);
                     setShowQRCode(false);
                     setIsGeneratingQRCode(false);
                 }
@@ -606,7 +600,7 @@ export const Channels = () => {
 
         } catch (error) {
             console.error("Ошибка запуска авторизации:", error);
-            showErrorNotification("Ошибка", "Не удалось начать процесс авторизации");
+            showErrorNotification(t("error") || "Ошибка", t("channelAuthStartError") || "Не удалось начать процесс авторизации");
             setIsGeneratingQRCode(false);
         }
     };
@@ -619,7 +613,7 @@ export const Channels = () => {
             // const channel = selectedChannels.find(ch => ch.key === "whatsbot");
 
             // Создаем сервис авторизации
-            const service = new WhatsAuthServive();
+            const service = new WhatsAuthServive(t);
             setAuthService(service);
 
             // Настраиваем обработчики событий
@@ -630,17 +624,17 @@ export const Channels = () => {
                     setIsGeneratingQRCode(false);
                 },
                 onQrSuccess: async () => {
-                    showNotification("QR код", "Отсканирован, завершение авторизации...");
+                    showNotification(t("channelQRCodeScanned") || "QR код", t("channelQRCodeScannedMessage") || "Отсканирован, завершение авторизации...");
                     setShowQRCode(false);
                     setIsGeneratingQRCode(false);
                 },
                 onSuccess: async () => {
-                    showNotification("Успех", "Авторизация успешно завершена");
+                    showNotification(t("channelAuthSuccess") || "Успех", t("channelAuthCompleted") || "Авторизация успешно завершена");
                     // На всякий случай, скрываю QR-код, хотя он уже не должен быть скрыт
                     setShowQRCode(false);
                     setIsGeneratingQRCode(false);
                     // Обновляю состояние канала whatsbot локально, для возможности дальнейшей настройки
-                    const channelsData = await readChannelData("channels", localStorage.getItem("authToken"));
+                    const channelsData = await readChannelData(localStorage.getItem("authToken"));
                     // Даже если вылезет ошибка, наверное ничего плохого не случится. Так ведь? :)
                     setSelectedChannels(prevChannels =>
                         prevChannels.map(channel =>
@@ -654,12 +648,12 @@ export const Channels = () => {
                     );
                 },
                 onUpdateToken: () => {
-                    showWarningNotification("Ошибка авторизации", "Токен не обновлен, необходимо повторно авторизоваться!");
+                    showWarningNotification(t("authError") || "Ошибка авторизации", t("tokenNotFound") || "Токен не найден");
                     setShowQRCode(false);
                     setIsGeneratingQRCode(false);
                 },
                 onError: (error) => {
-                    showErrorNotification("Ошибка авторизации", error);
+                    showErrorNotification(t("authError") || "Ошибка авторизации", error);
                     setShowQRCode(false);
                     setIsGeneratingQRCode(false);
                 }
@@ -670,7 +664,7 @@ export const Channels = () => {
 
         } catch (error) {
             console.error("Ошибка запуска авторизации:", error);
-            showErrorNotification("Ошибка", "Не удалось начать процесс авторизации");
+            showErrorNotification(t("error") || "Ошибка", t("channelAuthStartError") || "Не удалось начать процесс авторизации");
             setIsGeneratingQRCode(false);
         }
     };
@@ -690,7 +684,8 @@ export const Channels = () => {
                         current: progressData.current,
                         total: progressData.total
                     });
-                }
+                },
+                t
             );
 
             // Данные уже приходят в правильном формате из telegramGetContact
@@ -737,7 +732,7 @@ export const Channels = () => {
         } catch (error) {
             console.error('Ошибка при получении контактов:', error);
             setContactsLoadingStatus({ message: `Ошибка: ${error.message}`, progress: 0 });
-            showErrorNotification("Ошибка", "Не удалось получить контакты, попробуйте позже");
+            showErrorNotification(t("error") || "Ошибка", t("channelContactsError") || "Не удалось получить контакты, попробуйте позже");
 
             // Важно: выбрасываем ошибку дальше, чтобы openContactsModal знал о неудаче
             throw error;
@@ -765,7 +760,8 @@ export const Channels = () => {
                         current: progressData.current,
                         total: progressData.total
                     });
-                }
+                },
+                t
             );
 
             // Теперь response - это простой массив контактов
@@ -891,19 +887,19 @@ export const Channels = () => {
 
         if (token != null) {
             const channelType = getChanelName(channel.key)
-            const success = await saveChannelData("channels", channelType, channel.data, channel.contactsIds, channel.isEnabled, token);
+            const success = await saveChannelData(channelType, channel.data, channel.contactsIds, channel.isEnabled, token);
 
             if (success) {
                 if (channel.isEnabled) {
-                    showNotification("Канал сохранен и включён", "Ассистент работает с этим каналом!");
+                    showNotification(t("channelSaveSuccess") || "Канал сохранен и включён", t("channelSaveSuccessMessage") || "Агент работает с этим каналом!");
                 } else {
-                    showNotification("Канал сохранен но не включён", "Ассистент не работает с этим каналом!");
+                    showNotification(t("channelSaveDisabled") || "Канал сохранен но не включён", t("channelSaveDisabledMessage") || "Агент не работает с этим каналом!");
                 }
             } else {
-                showErrorNotification("Ошибка сохранения канала", "Ассистент не сможет взаимодействовать с этим каналом!");
+                showErrorNotification(t("channelSaveError") || "Ошибка сохранения канала", t("channelSaveWarning") || "Агент не сможет взаимодействовать с этим каналом!");
             }
         } else {
-            showWarningNotification("Ошибка сохранения каналов", "Токен не обновлен, необходимо повторно авторизоваться!")
+            showWarningNotification(t("channelSaveError") || "Ошибка сохранения каналов", t("tokenNotFound") || "Токен не найден")
         }
 
         // Close the expanded view after saving for all channel types
@@ -948,7 +944,7 @@ export const Channels = () => {
             }
         } catch (error) {
             console.error("Ошибка при проверке доступности канала:", error);
-            showErrorNotification("Ошибка", "Не удалось проверить доступность канала");
+            showErrorNotification(t("error") || "Ошибка", t("channelCheckError") || "Не удалось проверить доступность канала");
         }
     };
 
@@ -973,28 +969,28 @@ export const Channels = () => {
     // Шаги Tour для Channels - обновленные без упоминания карточек
     const steps = [
         {
-            title: '🌐 Добро пожаловать в каналы связи',
-            description: 'Здесь вы можете настроить различные каналы для взаимодействия пользователей с вашим ассистентом: Telegram Bot, Web Widget, Telegram UserBot и WhatsApp UserBot.',
+            title: t("channelsTourWelcome") || "🌐 Добро пожаловать в каналы связи",
+            description: t("channelsTourWelcomeDesc") || "Здесь вы можете настроить различные каналы для взаимодействия пользователей с вашим агентом: Telegram Bot, Web Widget, Telegram UserBot и WhatsApp UserBot.",
             target: () => channelsHeaderRef.current,
         },
         {
-            title: '➕ Добавление новых каналов',
-            description: 'Нажмите здесь, чтобы добавить новый канал связи. Доступны различные платформы: Telegram, WhatsApp, веб-виджеты для интеграции с сайтом.',
+            title: t("channelsTourAdd") || "➕ Добавление новых каналов",
+            description: t("channelsTourAddDesc") || "Нажмите здесь, чтобы добавить новый канал связи. Доступны различные платформы: Telegram, WhatsApp, веб-виджеты для интеграции с сайтом.",
             target: () => addChannelRef.current,
         },
         {
-            title: '📋 Список каналов',
-            description: 'Здесь отображаются все настроенные каналы в удобном списочном формате. Каждый канал показывает статус, настройки и элементы управления.',
+            title: t("channelsTourList") || "📋 Список каналов",
+            description: t("channelsTourListDesc") || "Здесь отображаются все настроенные каналы в удобном списочном формате. Каждый канал показывает статус, настройки и элементы управления.",
             target: () => channelsListHeaderRef.current,
         },
         {
-            title: '⚙️ Управление каналами',
-            description: 'Кликните на канал для настройки параметров, включения/выключения или удаления канала. Используйте переключатель для быстрого включения/отключения канала.',
+            title: t("channelsTourManage") || "⚙️ Управление каналами",
+            description: t("channelsTourManageDesc") || "Кликните на канал для настройки параметров, включения/выключения или удаления канала. Используйте переключатель для быстрого включения/отключения канала.",
             target: () => channelsListRef.current,
         },
         {
-            title: '✅ Готово к подключению!',
-            description: 'Теперь вы знаете, как управлять каналами связи. Добавьте нужные каналы, настройте их параметры и начните принимать сообщения от пользователей!',
+            title: t("channelsTourReady") || "✅ Готово к подключению!",
+            description: t("channelsTourReadyDesc") || "Теперь вы знаете, как управлять каналами связи. Добавьте нужные каналы, настройте их параметры и начните принимать сообщения от пользователей!",
             target: () => channelsListRef.current,
         },
     ];
@@ -1003,10 +999,10 @@ export const Channels = () => {
         <div className="create-model-container">
             <div className="section-title" ref={channelsHeaderRef}>
                 <GlobalOutlined />
-                Каналы связи
+                {t("channels") || "Каналы связи"}
             </div>
             <div className="section-description">
-                Настройте каналы для взаимодействия пользователей с вашим ассистентом через различные платформы
+                {t("channelsDescription") || "Настройте каналы для взаимодействия пользователей с вашим агентом через различные платформы"}
             </div>
 
             <div className="tour-layout">
@@ -1016,10 +1012,10 @@ export const Channels = () => {
                             <div className="no-model-state-modern">
                                 <AndroidOutlined className="no-model-icon-modern" />
                                 <Typography.Title level={3} className="no-model-title-modern">
-                                    Модель ассистента не создана
+                                    {t("modelNotCreated") || "Модель агента не создана"}
                                 </Typography.Title>
                                 <Typography.Text className="no-model-description-modern">
-                                    Для настройки каналов необходимо сначала создать модель ассистента
+                                    {t("modelNotCreatedDescription") || "Для настройки каналов необходимо сначала создать модель агента"}
                                 </Typography.Text>
                             </div>
                         ) : (
@@ -1038,10 +1034,10 @@ export const Channels = () => {
                                 <div className="channels-list-header" ref={channelsListHeaderRef}>
                                     <div className="header-left">
                                         <Typography.Title level={3}>
-                                            Настроенные каналы
+                                            {t("channelsConfigured") || "Настроенные каналы"}
                                         </Typography.Title>
                                         <Typography.Text type="secondary">
-                                            Всего каналов: {selectedChannels.length}
+                                            {t("channelsTotal", { count: selectedChannels.length }) || `Всего каналов: ${selectedChannels.length}`}
                                         </Typography.Text>
                                     </div>
                                 </div>
@@ -1064,14 +1060,14 @@ export const Channels = () => {
                                                                 </Typography.Title>
                                                             </div>
                                                             <div className="channel-status-switch-modern">
-                                                                <Typography.Text style={{ marginRight: 8 }}>Статус:</Typography.Text>
+                                                                <Typography.Text style={{ marginRight: 8 }}>{t("channelStatus") || "Статус:"}</Typography.Text>
                                                                 <Switch
                                                                     checked={channel.isEnabled && !!channel.data}
                                                                     // onChange={() => toggleSwitch(channel.key)}
                                                                     onChange={() => handleToggleWithDisable(channel.key)}
                                                                     disabled={!channel.data || !!switchDisabled[channel.key]}
-                                                                    checkedChildren={<span style={{color: "black"}}>Включен</span>}
-                                                                    unCheckedChildren={<span style={{color: "black"}}>Выключен</span>}
+                                                                    checkedChildren={<span style={{color: "black"}}>{t("channelEnabled") || "Включен"}</span>}
+                                                                    unCheckedChildren={<span style={{color: "black"}}>{t("channelDisabled") || "Выключен"}</span>}
                                                                 />
                                                             </div>
                                                         </div>
@@ -1141,14 +1137,14 @@ export const Channels = () => {
                                                                         danger
                                                                         onClick={() => showRemoveConfirmation(channel.key)}
                                                                     >
-                                                                        Удалить канал
+                                                                        {t("channelDelete") || "Удалить канал"}
                                                                     </Button>
                                                                 </div>
                                                                 <div className="channel-actions-right-modern">
                                                                     <Button
                                                                         onClick={() => cancelChanges(channel.key)}
                                                                     >
-                                                                        Отмена
+                                                                        {t("channelsCancelButton") || "Отмена"}
                                                                     </Button>
                                                                     <Button
                                                                         type="primary"
@@ -1156,7 +1152,7 @@ export const Channels = () => {
                                                                         disabled={!channel.data}
                                                                         style={{color: "black"}}
                                                                     >
-                                                                        Сохранить
+                                                                        {t("save") || "Сохранить"}
                                                                     </Button>
                                                                 </div>
                                                             </div>
@@ -1177,7 +1173,7 @@ export const Channels = () => {
                                                                     <Typography.Text strong>{channel.label}</Typography.Text>
                                                                 </div>
                                                                 <Typography.Text type="secondary">
-                                                                    {channel.data ? 'Настроен и готов к использованию' : 'Требует настройки'}
+                                                                    {channel.data ? t("channelConfigured") || "Настроен и готов к использованию" : t("channelRequiresSetup") || "Требует настройки"}
                                                                 </Typography.Text>
                                                             </div>
                                                         </div>
@@ -1187,8 +1183,8 @@ export const Channels = () => {
                                                                     status={channel.isEnabled && !!channel.data ? "success" : "default"}
                                                                     text={
                                                                         channel.isEnabled && !!channel.data
-                                                                            ? "Включен"
-                                                                            : (!channel.data ? "Выключен" : "Выключен")
+                                                                            ? (t("channelEnabled") || "Включен")
+                                                                            : (t("channelDisabled") || "Выключен")
                                                                     }
                                                                 />
                                                             </div>
@@ -1200,7 +1196,7 @@ export const Channels = () => {
                                                                     toggleExpand(channel.key);
                                                                 }}
                                                             >
-                                                                Настройки
+                                                                {t("channelSettings") || "Настройки"}
                                                             </Button>
                                                         </div>
                                                     </div>
@@ -1215,11 +1211,11 @@ export const Channels = () => {
                                             description={
                                                 <div>
                                                     <Typography.Text type="secondary">
-                                                        Каналы не созданы
+                                                        {t("channelsNotCreated") || "Каналы не созданы"}
                                                     </Typography.Text>
                                                     <br />
                                                     <Typography.Text type="secondary">
-                                                        Добавьте каналы для взаимодействия с пользователями
+                                                        {t("channelsAddChannels") || "Добавьте каналы для взаимодействия с пользователями"}
                                                     </Typography.Text>
                                                     {availableChannels.length > 0 && (
                                                         <div style={{ marginTop: 16 }}>
@@ -1236,27 +1232,29 @@ export const Channels = () => {
                                 )}
 
                                 <Modal
-                                    title="Подтвердите удаление"
+                                    title={t("channelsConfirmDelete") || "Подтвердите удаление"}
                                     open={isModalVisible}
                                     onCancel={handleCancelRemove}
                                     className="channels-modal"
+                                    maskClassName="blur-modal-mask"
+                                    maskClosable={false}
+                                    zIndex={20000}
                                     footer={[
                                         <Button key="cancel" onClick={handleCancelRemove}>
-                                            Отмена
+                                            {t("channelsCancelButton") || "Отмена"}
                                         </Button>,
                                         <Button
                                             key="confirm"
                                             danger
                                             type="primary"
                                             onClick={handleConfirmRemove}
-                                            // style={{color: "black"}}
                                         >
-                                            Удалить
+                                            {t("delete") || "Удалить"}
                                         </Button>,
                                     ]}
                                 >
                                     <Typography.Text>
-                                        Вы уверены, что хотите удалить этот канал? Все настройки будут потеряны.
+                                        {t("channelsDeleteConfirm") || "Вы уверены, что хотите удалить этот канал? Все настройки будут потеряны."}
                                     </Typography.Text>
                                 </Modal>
                             </>
@@ -1270,10 +1268,10 @@ export const Channels = () => {
                         <div className="tour-controls-header">
                             <PlayCircleOutlined className="tour-controls-icon" />
                             <h3 className="tour-controls-title">
-                                Интерактивный обзор
+                                {t("channelsTourTitle") || "Интерактивный обзор"}
                             </h3>
                             <p className="tour-controls-subtitle">
-                                Изучите настройку каналов связи пошагово
+                                {t("channelsTourSubtitle") || "Изучите настройку каналов связи пошагово"}
                             </p>
                         </div>
 
@@ -1284,7 +1282,7 @@ export const Channels = () => {
                                 size="large"
                                 onClick={startTour}
                             >
-                                🚀 Начать тур
+                                {t("channelsTourStart") || "🚀 Начать тур"}
                             </Button>
                         </div>
 
@@ -1292,7 +1290,7 @@ export const Channels = () => {
                             <div className="tour-progress">
                                 <div className="tour-progress-step">
                                     <span className="tour-progress-step-text">
-                                        Шаг {current + 1} из {steps.length}
+                                        {t("channelsTourStep", { current: current + 1, total: steps.length }) || `Шаг ${current + 1} из ${steps.length}`}
                                     </span>
                                 </div>
                                 <div className="tour-progress-bar">
@@ -1308,12 +1306,12 @@ export const Channels = () => {
                         )}
 
                         <div className="tour-info">
-                            <div className="tour-info-title">📋 Что вы изучите:</div>
+                            <div className="tour-info-title">{t("channelsTourInfo") || "📋 Что вы изучите:"}</div>
                             <ul className="tour-info-list">
-                                <li>Добавление каналов связи</li>
-                                <li>Настройку Telegram и WhatsApp ботов</li>
-                                <li>Интеграцию веб-виджетов</li>
-                                <li>Управление статусами каналов</li>
+                                <li>{t("channelsTourItem1") || "Добавление каналов связи"}</li>
+                                <li>{t("channelsTourItem2") || "Настройку Telegram и WhatsApp ботов"}</li>
+                                <li>{t("channelsTourItem3") || "Интеграцию веб-виджетов"}</li>
+                                <li>{t("channelsTourItem4") || "Управление статусами каналов"}</li>
                             </ul>
                         </div>
                     </div>
@@ -1341,7 +1339,7 @@ export const Channels = () => {
 
             <FloatButton
                 icon={<QuestionCircleOutlined />}
-                tooltip="Начать обзор каналов связи"
+                tooltip={t("channelsTourGuide") || "Начать обзор каналов связи"}
                 onClick={showTourPanel}
                 className="tour-float-button"
             />

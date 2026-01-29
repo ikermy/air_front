@@ -1,22 +1,88 @@
 [
   {
-    "question": "¿Cuál es tu nombre?",
-    "answer": "Mi nombre es Marusya."
+    "question": "¡Hola!",
+    "answer": "¡Hola! Soy Marusya, tu agente virtual. ¿En qué puedo ayudarte hoy? 😊",
+    "answerFiles": {
+      "images": [
+        {
+          "url": "/img/land/marusia_ai.png",
+          "file_name": "marusia_avatar.png",
+          "type": "image"
+        }
+      ]
+    }
   },
   {
-    "question": "¿Qué día es hoy?",
-    "answer": "¡Hoy es un hermoso día!"
+    "question": "¿Tienes instrucciones sobre lo que puedes hacer?",
+    "answer": "Por supuesto, aquí tienes un PDF con instrucciones para trabajar con nuestro servicio 😉",
+    "answerFiles": {
+      "documents": [
+        {
+          "url": "/img/land/ru_fun_cat_text.pdf",
+          "file_name": "Instrucciones para trabajar con MarusiaAI.pdf",
+          "type": "pdf"
+        }
+      ]
+    }
   },
   {
-    "question": "¿Qué puedes hacer?",
-    "answer": "Puedo ayudar con diversas questions y tareas."
+    "question": "¿Puedes analizar documentos?",
+    "answer": "¡Por supuesto! Envíame cualquier documento y te ayudaré con el análisis 📄"
   },
   {
-    "question": "¿Qué eres?",
-    "answer": "¡Soy algo desconocido para la naturaleza!"
+    "question": "¿Qué hay en este documento?",
+    "questionFiles": {
+      "images": [
+        {
+          "url": "/img/land/fun_cat.webp",
+          "file_name": "fun_cat.webp",
+          "type": "image"
+        }
+      ]
+    },
+    "answer": "¡Es una foto de un gatito lindo! 🐱 Se ve muy gracioso y amigable. Si quieres, puedo contarte más sobre él o mostrarte otras imágenes de gatitos!"
   },
   {
-    "question": "?",
-    "answer": "<img src=\"/img/land/marusia_ai.png\" alt=\"marusia ai\" />"
+    "question": "¡Mejor muéstrame un video con gatitos!",
+    "answer": "Por supuesto, aquí tienes un video de un gatito jugando con un ratón de juguete ▶️",
+    "answerFiles": {
+      "videos": [
+        {
+          "url": "/img/land/cat_with_mouse.mp4",
+          "file_name": "Gatito jugando con un ratón.mp4",
+          "type": "video"
+        }
+      ]
+    }
+  },
+  {
+    "question": "¿Puedes escribir una historia divertida sobre este gatito en formato PDF y enviármela?",
+    "answer": "¡Por supuesto! Aquí tienes una historia divertida sobre el gatito en formato PDF 📖",
+    "answerFiles": {
+      "documents": [
+        {
+          "url": "/img/land/ru_fun_cat_text.pdf",
+          "file_name": "Historia divertida sobre un gatito.pdf",
+          "type": "documents"
+        }
+      ]
+    }
+  },
+  {
+    "question": "¿Puedes escuchar este archivo de audio?",
+    "answer": "Por supuesto, ¡es un archivo de audio con el ronroneo de un gatito! 🐾",
+    "questionFiles": {
+      "audio": [
+        {
+          "url": "/img/land/maw.mp3",
+          "file_name": "Algunos sonidos.mp3",
+          "type": "audio"
+        }
+      ]
+    }
+  },
+  {
+    "question": "¡Gracias, Marusya! ¡Eres genial!",
+    "answer": "Contáctame en cualquier momento, ¡siempre lista para ayudar! 🚀"
   }
 ]

@@ -2,13 +2,12 @@ export async function setUserTimeZone(token, data) {
     const LAND_URL = (window.runtimeConfig && window.runtimeConfig.REACT_APP_LAND) || process.env.REACT_APP_LAND;
 
     try {
-        const response = await fetch(`${LAND_URL}/timezone`, {
+        const response = await fetch(`${LAND_URL}/user/timezone?token=${token}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                "token": token,
                 "data": data,
             }),
         });

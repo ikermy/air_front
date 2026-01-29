@@ -1,11 +1,13 @@
 import React, {useEffect, useState} from "react";
-import {Alert, Button, Input, Modal, QRCode, Progress} from "antd";
-import {PhoneOutlined} from "@ant-design/icons";
+import {Alert, Button, Input, Modal, QRCode, Progress, Form} from "antd";
+import {PhoneOutlined, QrcodeOutlined} from "@ant-design/icons";
 import {ContactsModal} from "../ContactsModal";
 import {showErrorNotification, showNotification} from "../../../hotification/showNotification";
 import { Typography } from 'antd';
 import {validateAndRefreshToken} from "../../../../utils/easyUtils";
-import {getBotName} from "../getBotName";
+import {getBotName} from "../chUtils";
+import {useTranslation} from "react-i18next";
+
 const { Title, Paragraph } = Typography;
 
 export const TgUserBotSection = ({
@@ -29,6 +31,7 @@ export const TgUserBotSection = ({
                                      needPassword,
                                      originalChannelStates
                                  }) => {
+    const {t} = useTranslation();
     // Состояние для видимости модального окна контактов
     const [isContactsModalVisible, setIsContactsModalVisible] = useState(false);
 
@@ -41,9 +44,9 @@ export const TgUserBotSection = ({
     const handleSaveSelectedContacts = (selectedIds) => {
         channel.contactsIds = selectedIds;
         // handleSetContactsIds(selectedIds);
-        const usersCount = "Выбрано пользователей - " + selectedIds.length;
+        const usersCount = `${t("tguserBotContactsSelected") || "Выбрано пользователей -"} ${selectedIds.length}`;
         showNotification(usersCount,
-            "После сохранения настроек Ассистент будет взаимодействовать с выбранными пользователями");
+            t("tguserBotContactsSaveDesc") || "После сохранения настроек Агент будет взаимодействовать с выбранными пользователями");
     };
 
     // Функция для открытия модального окна контактов
@@ -55,7 +58,7 @@ export const TgUserBotSection = ({
             setIsContactsModalVisible(true);
         } catch (error) {
             console.error("Ошибка при получении контактов:", error);
-            showErrorNotification('Ошибка', `Не удалось загрузить контакты: ${error.message}`, 'error');
+            showErrorNotification(t("error") || 'Ошибка', `${t("channelContactsError") || "Не удалось загрузить контакты"}: ${error.message}`, 'error');
         }
     };
 
@@ -107,8 +110,8 @@ export const TgUserBotSection = ({
                     className="channel-alert"
                     description={
                         needPassword
-                            ? "Введите пароль для двухфакторной аутентификации"
-                            : "Подготовка QR-кода для авторизации в Telegram. Если учетная запись требует двухфакторную авторизацию, будьте готовы ввести пароль и проверочный код"
+                            ? t("tguserBotNeedPassword") || "Введите пароль для двухфакторной аутентификации"
+                            : (t("tguserBotQRPreparing") || "Подготовка QR-кода для авторизации в Telegram. Если учетная запись требует двухфакторную авторизацию, будьте готовы ввести пароль и проверочный код")
                     }
                     type={needPassword ? "warning" : "info"}
                 />
@@ -137,19 +140,17 @@ export const TgUserBotSection = ({
                 <div className="padding">
                     <Alert
                         className="channel-alert"
-                        message="Telegram UserBot создан"
+                        message={t("tguserBotCreated") || "Telegram UserBot создан"}
                         description={
                             botName != null ? (
                                 <>
-                                    Сейчас ваш Telegram UserBot <b>{botName}</b> запущен и взаимодействует с Ассистентом.
-                                    Если требуется повторная авторизация, или вы хотите повторно создать канал Telegram
-                                    UserBot, вам нужно удалить текущий канал.
+                                    {t("tguserBotRunning") || "Сейчас ваш Telegram UserBot"} <b>{botName}</b> {t("tguserBotInteracting") || "запущен и взаимодействует с Агентом."}
+                                    {t("tguserBotReauth") || "Если требуется повторная авторизация, или вы хотите повторно создать канал Telegram UserBot, вам нужно удалить текущий канал."}
                                 </>
                             ) : (
                                 <>
-                                    Дополнительные действия не требуются.
-                                    Если требуется повторная авторизация, или вы хотите повторно создать канал Telegram
-                                    UserBot, вам нужно удалить текущий канал.
+                                    {t("tguserBotNoAction") || "Дополнительные действия не требуются."}
+                                    {t("tguserBotReauth") || "Если требуется повторная авторизация, или вы хотите повторно создать канал Telegram UserBot, вам нужно удалить текущий канал."}
                                 </>
                             )
                         }
@@ -160,7 +161,7 @@ export const TgUserBotSection = ({
                     {isLoadingContacts && contactsLoadingStatus && contactsLoadingStatus.message && (
                         <Alert
                             className="channel-alert"
-                            message="Загрузка контактов"
+                            message={t("tguserBotLoadingContacts") || "Загрузка контактов"}
                             description={
                                 <div>
                                     <div style={{ marginBottom: 8 }}>{contactsLoadingStatus.message}</div>
@@ -192,8 +193,8 @@ export const TgUserBotSection = ({
                             onClick={openContactsModal}
                             disabled={isLoadingContacts || !(channel.isEnabled && !!channel.data)}
                         >
-                            {isLoadingContacts ? 'Загружаем контакты...' :
-                             currentSelectedIds.length > 0 ? 'Изменить выбор контактов' : 'Выбрать контакты'}
+                            {isLoadingContacts ? (t("tguserBotLoadingMsg") || 'Загружаем контакты...') :
+                             currentSelectedIds.length > 0 ? (t("tguserBotChangeContacts") || 'Изменить выбор контактов') : (t("tguserBotSelectContacts") || 'Выбрать контакты')}
                         </Button>
 
                         {currentSelectedIds.length > 0 && (
@@ -217,12 +218,12 @@ export const TgUserBotSection = ({
 
                                     // Показываем уведомление
                                     showNotification(
-                                        "Настройки изменены",
-                                        "После сохранения Ассистент будет взаимодействовать со всеми вашими контактами"
+                                        t("tguserBotSettingsChanged") || "Настройки изменены",
+                                        t("tguserBotAfterSave") || "После сохранения Агент будет взаимодействовать со всеми вашими контактами"
                                     );
                                 }}
                             >
-                                Слушать всех
+                                {t("tguserBotListenAll") || "Слушать всех"}
                             </Button>
                         )}
                     </div>
@@ -232,13 +233,11 @@ export const TgUserBotSection = ({
                             <>
                                 {channel.contacts ? (
                                     <>
-                                        Сейчас Ассистент работает с выбранными вами контактами или группами.
+                                        {t("tguserBotSelectedContacts") || "Сейчас Агент работает с выбранными вами контактами или группами."}
                                     </>
                                 ) : (
                                     <>
-                                        Сейчас Ассистент работает со всеми вашими существующими и новыми контактами. Так
-                                        же вы можете выбрать отдельные контакты или группы с которыми будет
-                                        взаимодействовать Ассистент
+                                        {t("tguserBotAllContacts") || "Сейчас Агент работает со всеми вашими существующими и новыми контактами. Так же вы можете выбрать отдельные контакты или группы с которыми будет взаимодействовать Агент"}
                                     </>
                                 )}
                             </>
@@ -261,24 +260,22 @@ export const TgUserBotSection = ({
         <div className="padding">
             <Alert
                 className="channel-alert"
-                message="Настройка параметров Telegram UserBot"
+                message={t("tguserBotSetup") || "Настройка параметров Telegram UserBot"}
                 description={
                     <>
-                        Для того что бы ваш ассистент мог вести себя как реальный
-                        человек в Telegram, нужно получить
-                        api_id и api_hash перейдя по ссылке <a
+                        {t("tguserBotSetupDesc") || "Для того что бы ваш агент мог вести себя как реальный человек в Telegram, нужно получить api_id и api_hash перейдя по ссылке"} <a
                         href="https://my.telegram.org/" target="_blank"
                         rel="noopener noreferrer">my.telegram.org</a>&nbsp;
-                        Подробнее о процесса создания Telegram UserBot в можно
+                        {t("moreAbout") || "Подробнее о процесса создания Telegram UserBot в можно узнать в"}
                         {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
-                        узнать в <a onClick={showManual}>руководстве</a>
+                        <a onClick={showManual}>{t("tguserBotManual") || "руководстве"}</a>
                     </>
                 }
                 type={channel.phone ? "success" : "warning"}
             />
             <Input
                 prefix={<PhoneOutlined/>}
-                placeholder="Введите номер телефона"
+                placeholder={t("tguserBotPhonePlaceholder") || "Введите номер телефона"}
                 value={channel.phone || ''}
                 onChange={(e) => {
                     // Разрешаем только цифры, +, пробелы, дефисы и скобки
@@ -289,7 +286,7 @@ export const TgUserBotSection = ({
 
                     // Проверяем только если поле не пустое
                     const error = value && !phoneRegex.test(value)
-                        ? 'Формат: +X(XXX)XXX-XX-XX'
+                        ? (t("tguserBotPhoneFormat") || 'Формат: +X(XXX)XXX-XX-XX')
                         : '';
 
                     setSelectedChannels(
@@ -305,7 +302,7 @@ export const TgUserBotSection = ({
             <div className="lining">
                 <div className="thirty">
                     <Input
-                        placeholder="Введите API ID"
+                        placeholder={t("tguserBotApiIdPlaceholder") || "Введите API ID"}
                         value={channel.appId || ''}
                         onChange={(e) => {
                             // Разрешаем только цифры
@@ -323,7 +320,7 @@ export const TgUserBotSection = ({
                 </div>
                 <div className="seventy">
                     <Input
-                        placeholder="Введите API Hash"
+                        placeholder={t("tguserBotApiHashPlaceholder") || "Введите API Hash"}
                         value={channel.appHash || ''}
                         onChange={(e) => {
                             setSelectedChannels(
@@ -351,7 +348,7 @@ export const TgUserBotSection = ({
                     )}
                     onClick={handleGetQR}
                 >
-                    Получить QR код авторизации
+                    {t("tguserBotGetQR") || "Получить QR код авторизации"}
                 </Button>
             )}
 
@@ -359,7 +356,7 @@ export const TgUserBotSection = ({
 
             {showQRCode && (
                 <Modal
-                    title="QR-код для авторизации в Telegram"
+                    title={t("tguserBotQRTitle") || "QR-код для авторизации в Telegram"}
                     open={showQRCode}
                     onCancel={() => {
                         setShowQRCode(false);
@@ -368,20 +365,22 @@ export const TgUserBotSection = ({
                         }
                     }}
                     footer={null}
+                    width={400}
                 >
                     <Alert
                         className="channel-alert"
-                        description="Отсканируйте QR-код через приложение Telegram для авторизации"
+                        description={t("tguserBotQRDesc") || "Отсканируйте QR-код через приложение Telegram для авторизации"}
                         type="success"
                         style={{marginBottom: 16}}
                     />
-                    <div style={{display: 'flex', justifyContent: 'center'}}>
+                    <div style={{display: 'flex', justifyContent: 'center', marginBottom: 16}}>
                         <QRCode
                             type={'svg'}
                             errorLevel={'Q'}
-                            value={qrCodeUrl}
+                            value={qrCodeUrl || 'loading...'}
                             color="#000000"
                             bgColor="#ffffff"
+                            size={256}
                         />
                     </div>
                 </Modal>
@@ -389,36 +388,72 @@ export const TgUserBotSection = ({
 
             {passwordModalVisible && (
                 <Modal
-                    title="Двухфакторная аутентификация"
+                    title={t("tguserBot2FATitle") || "Двухфакторная аутентификация"}
                     open={passwordModalVisible}
-                    onOk={handleSubmitPassword}
                     onCancel={() => {
                         setPasswordModalVisible(false);
                         if (authService) {
                             authService.closeConnection();
                         }
                     }}
-                    okText="Отправить"
-                    cancelText="Отмена"
-                    okButtonProps={{style: {color: "black"}}}
+                    footer={null}
+                    width={400}
                 >
-                    <p>Введите пароль для двухфакторной аутентификации:</p>
-                    <Input.Password
-                        value={password2FA}
-                        onChange={(e) => setPassword2FA(e.target.value)}
-                        placeholder="Пароль 2FA"
-                        onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                                handleSubmitPassword();
-                            }
+                    <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+                        <QrcodeOutlined style={{ fontSize: '32px', color: '#1890ff' }} />
+                    </div>
+                    <Form
+                        layout="vertical"
+                        onFinish={() => {
+                            handleSubmitPassword();
                         }}
-                    />
+                    >
+                        <Form.Item
+                            name="password"
+                            label={t("tguserBot2FAPassword") || "Пароль 2FA"}
+                            rules={[
+                                { required: true, message: t("tguserBot2FARequired") || 'Введите пароль двухфакторной аутентификации' }
+                            ]}
+                        >
+                            <Input.Password
+                                value={password2FA}
+                                onChange={(e) => setPassword2FA(e.target.value)}
+                                placeholder={t("tguserBot2FAPassword") || "Пароль 2FA"}
+                                size="large"
+                            />
+                        </Form.Item>
+                        <Form.Item>
+                            <Button
+                                type="primary"
+                                htmlType="submit"
+                                size="large"
+                                style={{ width: '100%', color: 'black' }}
+                            >
+                                {t("send") || "Отправить"}
+                            </Button>
+                        </Form.Item>
+                        <Form.Item style={{ marginBottom: 0 }}>
+                            <Button
+                                type="default"
+                                size="large"
+                                onClick={() => {
+                                    setPasswordModalVisible(false);
+                                    if (authService) {
+                                        authService.closeConnection();
+                                    }
+                                }}
+                                style={{ width: '100%' }}
+                            >
+                                {t("channelsCancelButton") || "Отмена"}
+                            </Button>
+                        </Form.Item>
+                    </Form>
                 </Modal>
             )}
 
             {isManualOpen && (
                 <Modal
-                    title="Руководство по настройке Telegram UserBot"
+                    title={t("tguserBotGuideTitle") || "Руководство по настройке Telegram UserBot"}
                     open={isManualOpen}
                     onCancel={handleCancel}
                     footer={null}
@@ -428,18 +463,16 @@ export const TgUserBotSection = ({
                         style={{
                             fontSize: '16px',
                         }}>
-                        1. Создание Telegram API
+                        {t("tguserBotGuideStep1") || "1. Создание Telegram API"}
                     </Title>
                     <Paragraph>
-                        Чтобы получить Telegram API, вам нужно зарегистрировать приложение Marusia на портале
-                        разработки Telegram и получить api_id и api_hash. Это нужно для создания пользовательского
-                        бота взаимодействующего с Telegram.
+                        {t("tguserBotGuideStep1Desc") || "Чтобы получить Telegram API, вам нужно зарегистрировать приложение Marusia на портале разработки Telegram и получить api_id и api_hash. Это нужно для создания пользовательского бота взаимодействующего с Telegram."}
                     </Paragraph>
                     <Title
                         style={{
                             fontSize: '14px',
                         }}>
-                        Процесс получения API:
+                        {t("tguserBotGuideProcess") || "Процесс получения API:"}
                     </Title>
                     <Paragraph
                         code={true}
@@ -465,7 +498,7 @@ export const TgUserBotSection = ({
                         style={{
                             fontSize: '16px',
                         }}>
-                        2. Проверка двухфакторной аутентификации 2FA
+                        {t("tguserBotGuideStep2") || "2. Проверка двухфакторной аутентификации 2FA"}
                     </Title>
                     <Paragraph
                         code={true}

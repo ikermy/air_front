@@ -1,8 +1,10 @@
 import React from "react";
 import { Button, Dropdown } from "antd";
 import { DownOutlined, PlusOutlined } from "@ant-design/icons";
+import { useTranslation } from "react-i18next";
 
 export const AddChannel = ({ availableChannels, onChannelSelect }) => {
+    const { t } = useTranslation();
     const items = availableChannels.map((channel) => ({
         key: channel.key,
         icon: channel.icon,
@@ -28,7 +30,7 @@ export const AddChannel = ({ availableChannels, onChannelSelect }) => {
                 type="primary"
                 icon={<PlusOutlined />}
             >
-                Создать канал <DownOutlined />
+                {t("channelCreateButton") || "Создать канал"} <DownOutlined />
             </Button>
         </Dropdown>
     );

@@ -4,8 +4,11 @@ import {MdOutlineSupportAgent} from "react-icons/md";
 import {funcOperators, saveOperators} from "./funcOperators";
 import {validateAndRefreshToken} from "../../../utils/easyUtils";
 import {showErrorNotification, showNotification} from "../../hotification/showNotification";
+import {chAvailable} from "../Channals/chUtils";
+import {useTranslation} from "react-i18next";
 
 export const Operator = ({initial, value, onChange, token}) => {
+    const {t} = useTranslation();
     const {Title, Paragraph} = Typography;
     const [isTargetOpen, setIsTargetOpen] = useState(false);
     const [isOperatorsModalOpen, setIsOperatorsModalOpen] = useState(false);
@@ -13,6 +16,7 @@ export const Operator = ({initial, value, onChange, token}) => {
     const [editableOperators, setEditableOperators] = useState([]);
     const [saving, setSaving] = useState(false);
     const [newOperatorId, setNewOperatorId] = useState('');
+    const [isServiceAvailable, setIsServiceAvailable] = useState(false);
 
     const showTarget = () => {
         setIsTargetOpen(true);
@@ -42,7 +46,7 @@ export const Operator = ({initial, value, onChange, token}) => {
             setEditableOperators([...editableOperators, newOperatorId.trim()]);
             setNewOperatorId('');
         } else if (editableOperators.includes(newOperatorId.trim())) {
-            message.warning('Этот оператор уже добавлен');
+            message.warning(t("operatorAlreadyAdded") || 'Этот оператор уже добавлен');
         }
     };
 
@@ -58,29 +62,29 @@ export const Operator = ({initial, value, onChange, token}) => {
                 const result = await saveOperators(token, editableOperators);
                 if (result) {
                     setOperators([...editableOperators]);
-                    showNotification("Операторы успешно сохранены");
+                    showNotification(t("operatorsSaved") || "Операторы успешно сохранены");
                     setIsOperatorsModalOpen(false);
                     setNewOperatorId('');
                 } else {
                     setIsOperatorsModalOpen(false);
-                    showErrorNotification("Ошибка при сохранении операторов");
+                    showErrorNotification(t("operatorsSaveError") || "Ошибка при сохранении операторов");
                 }
             } catch (error) {
                 setIsOperatorsModalOpen(false);
-                showErrorNotification("Ошибка при сохранении операторов");
+                showErrorNotification(t("operatorsSaveError") || "Ошибка при сохранении операторов");
             } finally {
                 setSaving(false);
             }
         } else {
-            message.error('Ошибка аутентификации. Пожалуйста, войдите снова.');
+            message.error(t("authError") || 'Ошибка аутентификации. Пожалуйста, войдите снова.');
         }
     };
 
     const getOperatorsCountText = (count) => {
-        if (count === 0) return 'Операторы не зарегистрированы';
-        if (count === 1) return 'Зарегистрирован 1 оператор';
-        if (count < 5) return `Зарегистрировано ${count} оператора`;
-        return `Зарегистрировано ${count} операторов`;
+        if (count === 0) return t("operatorNoRegistered") || 'Операторы не зарегистрированы';
+        if (count === 1) return t("operatorRegisteredOne") || 'Зарегистрирован 1 оператор';
+        if (count < 5) return t("operatorRegisteredFew", {count}) || `Зарегистрировано ${count} оператора`;
+        return t("operatorRegisteredMany", {count}) || `Зарегистрировано ${count} операторов`;
     };
 
     // Определяем текущее значение: приоритет у value из формы, затем у initial
@@ -93,10 +97,25 @@ export const Operator = ({initial, value, onChange, token}) => {
         }
     };
 
+    // Проверка доступности сервиса операторов
+    const checkServiceAvailability = useCallback(async () => {
+        if (!token) {
+            setIsServiceAvailable(false);
+            return;
+        }
+        try {
+            const available= await chAvailable('oper');
+            setIsServiceAvailable(available);
+        } catch (e) {
+            console.error(t("operatorServiceCheckError") || 'Ошибка проверки доступности сервиса операторов:', e);
+            setIsServiceAvailable(false);
+        }
+    }, [token, t]);
+
     // Единая функция загрузки операторов
     const loadOperators = useCallback(async () => {
         if (!token) {
-            console.error('Ошибка аутентификации. Пожалуйста, войдите снова.');
+            console.error(t("authError") || 'Ошибка аутентификации. Пожалуйста, войдите снова.');
             setOperators([]);
             return [];
         }
@@ -105,40 +124,42 @@ export const Operator = ({initial, value, onChange, token}) => {
             setOperators(data || []);
             return data || [];
         } catch (e) {
-            console.error('Ошибка загрузки операторов:', e);
+            console.error(t("operatorLoadError") || 'Ошибка загрузки операторов:', e);
             setOperators([]);
             return [];
         }
-    }, [token]);
+    }, [token, t]);
 
-    // Загрузка операторов с задержкой 500 мс
+    // Проверка доступности сервиса и загрузка операторов с задержкой 500 мс
     useEffect(() => {
         const timer = setTimeout(() => {
+            checkServiceAvailability();
             loadOperators();
         }, 500);
         return () => clearTimeout(timer);
-    }, [loadOperators]);
+    }, [checkServiceAvailability, loadOperators]);
 
     return (
         <>
             <div className="section-title">
                 <MdOutlineSupportAgent/>
-                Вызов оператора
+                {t("operatorTitle") || "Операторский режим"}
             </div>
             <div className="section-description">
-                Если в настройках модели выбран оператор, то модель будет переключаться на него при срабатывании условия
+                {t("operatorDescription") || "Настройка переключения диалога на живых операторов при определенных условиях"}
             </div>
 
             <div className="step">
                     <span>
                         {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
-                        Добавьте <a onClick={showTarget}>список операторов</a>&nbsp; на которых будут переводиться вопросы пользователей
+                        {t("operatorUseMode") || "Использовать операторский"} <a onClick={showTarget}>{t("operatorModeLink") || "режим"}</a>&nbsp;
                     </span>
                 <Switch
                     checked={currentValue}
-                    checkedChildren={<span style={{color: "black"}}>Да</span>}
-                    unCheckedChildren={<span style={{color: "black"}}>Нет</span>}
+                    checkedChildren={<span style={{color: "black"}}>{t("Yes") || "Да"}</span>}
+                    unCheckedChildren={<span style={{color: "black"}}>{t("No") || "Нет"}</span>}
                     onChange={handleSwitchChange}
+                    disabled={!isServiceAvailable}
                 />
             </div>
 
@@ -167,7 +188,7 @@ export const Operator = ({initial, value, onChange, token}) => {
                     >
                         <span>{getOperatorsCountText(operators.length)}</span>
                         <Button type="link" size="small">
-                            Управление
+                            {t("management") || "Управление"}
                         </Button>
                     </div>
                 </div>
@@ -175,13 +196,13 @@ export const Operator = ({initial, value, onChange, token}) => {
 
             {/* Модальное окно для управления операторами */}
             <Modal
-                title="Управление операторами"
+                title={t("operatorManagement") || "Управление операторами"}
                 open={isOperatorsModalOpen}
                 onCancel={handleOperatorsModalCancel}
                 width={600}
                 footer={[
                     <Button key="cancel" onClick={handleOperatorsModalCancel}>
-                        Отмена
+                        {t("cancel") || "Отмена"}
                     </Button>,
                     <Button
                         style={{color: 'black'}}
@@ -190,7 +211,7 @@ export const Operator = ({initial, value, onChange, token}) => {
                         loading={saving}
                         onClick={handleSaveOperators}
                     >
-                        Сохранить изменения
+                        {t("saveChanges") || "Сохранить изменения"}
                     </Button>
                 ]}
             >
@@ -198,7 +219,7 @@ export const Operator = ({initial, value, onChange, token}) => {
                     <Input.Group compact>
                         <InputNumber
                             style={{ width: 'calc(100% - 100px)' }}
-                            placeholder="Введите Telegram ID оператора"
+                            placeholder={t("operatorEnterTelegramId") || "Введите Telegram ID оператора"}
                             value={newOperatorId}
                             onChange={(val) => setNewOperatorId(val ?? '')}
                             stringMode
@@ -214,24 +235,24 @@ export const Operator = ({initial, value, onChange, token}) => {
                             onClick={addOperator}
                             disabled={!newOperatorId.trim()}
                         >
-                            Добавить
+                            {t("add") || "Добавить"}
                         </Button>
                     </Input.Group>
                 </div>
 
                 <List
                     dataSource={editableOperators}
-                    locale={{emptyText: 'Нет добавленных операторов'}}
+                    locale={{emptyText: t("operatorNoOperators") || 'Нет добавленных операторов'}}
                     renderItem={(operatorId) => (
                         <List.Item
                             actions={[
                                 <Popconfirm
                                     key="delete"
-                                    title="Удалить оператора?"
-                                    description={`Вы уверены, что хотите удалить оператора ${operatorId}?`}
+                                    title={t("operatorDeleteConfirm") || "Удалить оператора?"}
+                                    description={t("operatorDeleteDescription", {id: operatorId}) || `Вы уверены, что хотите удалить оператора ${operatorId}?`}
                                     onConfirm={() => removeOperator(operatorId)}
-                                    okText="Удалить"
-                                    cancelText="Отмена"
+                                    okText={t("delete") || "Удалить"}
+                                    cancelText={t("cancel") || "Отмена"}
                                     okButtonProps={{style: {color: 'black'}}}
                                     getPopupContainer={() => document.querySelector('.ant-modal-body') || document.body}
                                     zIndex={1050}
@@ -240,14 +261,14 @@ export const Operator = ({initial, value, onChange, token}) => {
                                         type="link"
                                         danger size="small"
                                     >
-                                        Удалить
+                                        {t("delete") || "Удалить"}
                                     </Button>
                                 </Popconfirm>
                             ]}
                         >
                             <List.Item.Meta
-                                title={`Оператор ${operatorId}`}
-                                description={`Telegram ID: ${operatorId}`}
+                                title={t("operatorLabel", {id: operatorId}) || `Оператор ${operatorId}`}
+                                description={t("operatorTelegramId", {id: operatorId}) || `Telegram ID: ${operatorId}`}
                             />
                         </List.Item>
                     )}
@@ -255,7 +276,7 @@ export const Operator = ({initial, value, onChange, token}) => {
             </Modal>
 
             <Modal
-                title="Список операторов"
+                title={t("operatorsList") || "Список операторов"}
                 open={isTargetOpen}
                 onCancel={handleCancel}
                 footer={null}
@@ -267,8 +288,7 @@ export const Operator = ({initial, value, onChange, token}) => {
                         fontSize: '16px',
                         marginBottom: '16px'
                     }}>
-                    ID Telegram аккаунтов которые будут отвечать пользователям в случае переключения модели в
-                    операторский режим.
+                    {t("operatorListDescription") || "ID Telegram аккаунтов которые будут отвечать пользователям в случае переключения модели в операторский режим."}
                 </Title>
 
                 <Paragraph
@@ -282,19 +302,15 @@ export const Operator = ({initial, value, onChange, token}) => {
                         marginBottom: '16px'
                     }}
                 >
-                    Можно указать несколько <Typography.Text strong>TelegramID</Typography.Text>. В таком случае
-                    операторы будут выбираться в
-                    зависимости от загруженности, сначала те у кого меньше всего активных диалогов. Если у всех
-                    операторов одинаковая загруженность,
-                    то выбирается случайный.
+                    {t("operatorMultipleIds") || "Можно указать несколько TelegramID. В таком случае операторы будут выбираться в зависимости от загруженности, сначала те у кого меньше всего активных диалогов. Если у всех операторов одинаковая загруженность, то выбирается случайный."}
                 </Paragraph>
 
                 <Paragraph style={{marginBottom: '16px'}}>
-                    <Typography.Text strong>TelegramID</Typography.Text> можно узнать с помощью бота{' '}
+                    <Typography.Text strong>TelegramID</Typography.Text> {t("operatorGetIdBot") || "можно узнать с помощью бота"}{' '}
                     <a href="https://t.me/MarusiaAiOperatorBot" target="_blank" rel="noopener noreferrer">
                         @MarusiaAiOperatorBot
                     </a>{' '}
-                    отправив команду /start
+                    {t("operatorSendStart") || "отправив команду /start"}
                 </Paragraph>
                 <Paragraph
                     code={true}
@@ -307,17 +323,11 @@ export const Operator = ({initial, value, onChange, token}) => {
                         marginBottom: '16px'
                     }}
                 >
-                    При включении операторского режима, оператор получит историю сообщений Агента и пользователя.
-                    Все сообщения пользователя к модели будет получать оператор включая <Typography.Text strong>голосовые
-                    сообщения и файлы</Typography.Text>.
-                    В ответ оператор так же может отправлять <Typography.Text
-                    strong>файлы</Typography.Text> пользователю.
-                    В любой момент оператор может завершить диалог и работа Агента продолжится в обычном режиме.
+                    {t("operatorHistoryNote") || "При включении операторского режима, оператор получит историю сообщений Агента и пользователя. Все сообщения пользователя к модели будет получать оператор включая голосовые сообщения и файлы. В ответ оператор так же может отправлять файлы пользователю. В любой момент оператор может завершить диалог и работа Агента продолжится в обычном режиме."}
                 </Paragraph>
 
                 <Paragraph style={{marginBottom: '16px'}}>
-                    <Typography.Text strong>Для корректной работы операторского режима</Typography.Text> нужно верно
-                    указать это в настройках модели, например так:
+                    <Typography.Text strong>{t("operatorSetupNote") || "Для корректной работы операторского режима"}</Typography.Text> {t("operatorSetupExample") || "нужно верно указать это в настройках модели, например так:"}
                 </Paragraph>
 
                 <Paragraph
@@ -332,10 +342,7 @@ export const Operator = ({initial, value, onChange, token}) => {
                     }}
                 >
                     <Typography.Text code>
-                        ## Режим оператора
-                        operator=true ТОЛЬКО если в вопросе пользователя была фраза "соедини меня с оператором"{"\n"}
-                        В таком случае отвечай "Соединяю с оператором 👨‍💼"{"\n"}
-                        Во ВСЕХ остальных случаях operator=false{"\n"}
+                        {t("operatorPromptExample") || "## Режим оператора\noperator=true ТОЛЬКО если в вопросе пользователя была фраза \"соедини меня с оператором\"\nВ таком случае отвечай \"Соединяю с оператором 👨‍💼\"\nВо ВСЕХ остальных случаях operator=false"}
                     </Typography.Text>
                 </Paragraph>
             </Modal>

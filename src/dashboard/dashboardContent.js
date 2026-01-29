@@ -13,7 +13,7 @@ import {UserData} from "./steps/User-data/UserData";
 import {CreateService} from "./steps/Services/CreateService";
 import {CreateCRM} from "./steps/CRM/CreateCRM";
 
-const showSimpleAuth = process.env.REACT_APP_SHOW_SIMPLE_AUTH === "true";
+const showSimpleAuth = process.env.REACT_APP_SHOW_SIMPLE_AUTH === "false";
 
 export const dashboardContent = (selectedMenu, refreshUserData, userRole = null, onMenuChange = null) => {
     // Возвращает контент в зависимости от выбранного меню

@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { List, Avatar, Empty, Tabs, Input, Modal } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
+import { useTranslation } from 'react-i18next';
 import "./Chanels.css";
 
 const { TabPane } = Tabs;
 
 export const ContactsModal = ({ visible, onClose, contacts: contactsData, onSave, initialSelectedIds = [] }) => {
+    const { t } = useTranslation();
     const [selectedIds, setSelectedIds] = useState(
         new Set(initialSelectedIds.map(id => String(id)))
     );
@@ -51,26 +53,63 @@ export const ContactsModal = ({ visible, onClose, contacts: contactsData, onSave
         onClose();
     };
 
+    const categoryTitles = {
+        humans: t("contactTypeHumans") || 'Пользователи',
+        bots: t("contactTypeBots") || 'Боты',
+        channels: t("contactTypeChannels") || 'Каналы',
+        groups: t("contactTypeGroups") || 'Группы',
+        supergroups: t("contactTypeSupergroups") || 'Супергруппы',
+    };
+
     const availableCategories = Object.keys(categoryTitles)
         .filter(key => contactsData && Array.isArray(contactsData[key]) && contactsData[key].length > 0);
 
     const hasContacts = availableCategories.length > 0;
 
+    const getAvatar = (contact) => {
+        const name = contact.firstName || contact.title || contact.username || '?';
+        const initials = name.charAt(0).toUpperCase();
+        return <Avatar className="contact-avatar">{initials}</Avatar>;
+    };
+
+    const getDisplayName = (contact) => {
+        if (contact.firstName || contact.lastName) {
+            return `${contact.firstName || ''} ${contact.lastName || ''}`.trim();
+        }
+        return contact.title || contact.username || 'Без имени';
+    };
+
+    const getDescription = (contact, categoryKey) => {
+        if (contact.phone) return contact.phone;
+        if (contact.username) return `@${contact.username}`;
+
+        let typeLabel = '';
+        switch (categoryKey) {
+            case 'humans': typeLabel = t("contactTypeUser") || 'Пользователь'; break;
+            case 'bots': typeLabel = t("contactTypeBot") || 'Бот'; break;
+            case 'channels': typeLabel = t("contactTypeChannel") || 'Канал'; break;
+            case 'groups': typeLabel = t("contactTypeGroup") || 'Группа'; break;
+            case 'supergroups': typeLabel = t("contactTypeSupergroup") || 'Супергруппа'; break;
+            default: typeLabel = t("contactTypeLabel") || 'Контакт';
+        }
+        return `${typeLabel} ID: ${contact.id}`;
+    };
+
     return (
         <Modal
-            title="Выберите контакты для Ассистента"
+            title={t("contactsModalTitle") || "Выберите контакты для Агента"}
             open={visible}
             onCancel={onClose}
             onOk={handleOk}
-            okText="Сохранить выбор"
-            cancelText="Отмена"
+            okText={t("save") || "Сохранить"}
+            cancelText={t("channelsCancelButton") || "Отмена"}
             width={700}
             className="tg-contact"
             okButtonProps={{ style: { color: "black" } }}
         >
             {/* Компонент поиска */}
             <Input
-                placeholder="Поиск контактов..."
+                placeholder={t("contactsModalPlaceholder") || "Поиск контактов..."}
                 prefix={<SearchOutlined />}
                 onChange={handleSearch}
                 value={searchText}
@@ -110,55 +149,17 @@ export const ContactsModal = ({ visible, onClose, contacts: contactsData, onSave
                                             }}
                                         />
                                     ) : (
-                                        <Empty description="Ничего не найдено" />
+                                        <Empty description={t("contactsModalNotFound") || "Ничего не найдено"} />
                                     )}
                                 </TabPane>
                             );
                         })}
                     </Tabs>
                 ) : (
-                    <Empty description="Список контактов пуст или еще не загружен." />
+                    <Empty description={t("contactsModalEmpty") || "Список контактов пуст или еще не загружен."} />
                 )}
             </div>
         </Modal>
     );
 };
 
-// Оставшиеся вспомогательные функции
-const getAvatar = (contact) => {
-    const name = contact.firstName || contact.title || contact.username || '?';
-    const initials = name.charAt(0).toUpperCase();
-    return <Avatar className="contact-avatar">{initials}</Avatar>;
-};
-
-const getDisplayName = (contact) => {
-    if (contact.firstName || contact.lastName) {
-        return `${contact.firstName || ''} ${contact.lastName || ''}`.trim();
-    }
-    return contact.title || contact.username || 'Без имени';
-};
-
-const getDescription = (contact, categoryKey) => {
-    if (contact.phone) return contact.phone;
-    if (contact.username) return `@${contact.username}`;
-
-    let typeLabel = '';
-    switch (categoryKey) {
-        case 'humans': typeLabel = 'Пользователь'; break;
-        case 'bots': typeLabel = 'Бот'; break;
-        case 'channels': typeLabel = 'Канал'; break;
-        case 'groups': typeLabel = 'Группа'; break;
-        case 'supergroups': typeLabel = 'Супергруппа'; break;
-        default: typeLabel = 'Контакт';
-    }
-    return `${typeLabel} ID: ${contact.id}`;
-};
-
-// Заголовки для категорий
-const categoryTitles = {
-    humans: 'Пользователи',
-    bots: 'Боты',
-    channels: 'Каналы',
-    groups: 'Группы',
-    supergroups: 'Супергруппы',
-};

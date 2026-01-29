@@ -7,8 +7,10 @@ import {useNavigate} from "react-router-dom";
 import './dash.css';
 import {RxExit} from "react-icons/rx";
 import {MenuOutlined} from "@ant-design/icons";
+import {useTranslation} from "react-i18next";
 
 export const DashboardHeader = ({ setSiderCollapsed, siderCollapsed }) => {
+    const {t} = useTranslation();
     const {logout} = useAuth();
     const navigate = useNavigate();
 
@@ -31,16 +33,16 @@ export const DashboardHeader = ({ setSiderCollapsed, siderCollapsed }) => {
                 type="text"
                 icon={<MenuOutlined />}
                 onClick={handleMenuToggle}
-                title="Показать/скрыть меню"
+                title={t('headerMenuToggleTitle') || "Показать/скрыть меню"}
             />
 
             <img
                 src="/landing/aperture.svg"
-                alt="Логотип"
+                alt={t('headerLogoAlt') || "Логотип"}
                 className="dashboard-logo"
             />
             <div className="dashboard-status-circle"></div>
-            <b className="dashboard-title">Маруся AI</b>
+            <b className="dashboard-title">{t('headerBrandName') || "Маруся AI"}</b>
             <div className="dashboard-lang-switch">
                 <LanguageSwitcher/>
             </div>
@@ -57,7 +59,7 @@ export const DashboardHeader = ({ setSiderCollapsed, siderCollapsed }) => {
                     iconPosition="end"
                     onClick={handleExit}
                 >
-                    Выход
+                    {t('headerLogout') || "Выход"}
                 </Button>
             </div>
         </div>

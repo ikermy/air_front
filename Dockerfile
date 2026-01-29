@@ -78,7 +78,8 @@ COPY _release/WhatsBot /data/WhatsBot
 COPY _release/Demo /data/Demo
 COPY _release/Widget /data/Widget
 COPY _release/Operator /data/Operator
-COPY _release/TG-lead /data/TG-lead
+COPY _release/LeadHunter /data/LeadHunter
+COPY _release/CRM /data/CRM
 # Копирую пока отключённые сервисы
 RUN if [ -e "_release/Insta" ]; then cp -r _release/Insta /data/Insta; else echo "Warning: _release/Insta not found, skipping copy."; fi
 
@@ -91,7 +92,7 @@ COPY _release/host-key.pem /etc/ssl/custom/host-key.pem
 
 # Устанавливаем права на исполнение для всех бинарных файлов
 RUN #chmod +x /data/Landing /data/Payment /data/TgBot /data/TgUserBot /data/WhatsBot /init-mariadb.sh
-RUN chmod +x /data/Landing /data/Payment /data/Analytics /data/TgBot /data/TgUserBot /data/WhatsBot /data/Demo /data/Widget /data/Operator /data/TG-lead
+RUN chmod +x /data/Landing /data/Payment /data/Analytics /data/TgBot /data/TgUserBot /data/WhatsBot /data/Demo /data/Widget /data/Operator /data/LeadHunter /data/CRM
 # Устанавливаем права на исполнение для файлов которых может не быть
 RUN sh -c '[ -e /data/Insta ] && chmod +x /data/Insta || echo "Warning: /data/Insta not found, skipping chmod."'
 

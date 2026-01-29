@@ -191,15 +191,50 @@
 
 /* Современный дизайн данных пользователя */
 .user-data-modern {
-    padding: 16px 12px;
+    margin-top: 10px;
+    padding: 2px 6px;
     display: flex;
     flex-direction: column;
-    gap: 12px;
+}
+
+/* Единая компактная карточка пользователя */
+.unified-user-card {
+    /*background: linear-gradient(135deg, #2d98f8, #6c28c6);*/
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) ;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(79, 70, 229, 0.3);
+    border: none !important;
+    margin-bottom: 8px;
+    transition: all 0.3s ease;
+}
+
+.unified-user-card:hover {
+    box-shadow: 0 8px 30px rgba(79, 70, 229, 0.5);
+    transform: translateY(-2px);
+}
+
+.unified-user-card .ant-card-body {
+    padding: 12px !important;
+}
+
+/* Темная тема для карточки */
+.dark .unified-user-card {
+    background: linear-gradient(45deg, #385309, #87cc00);
+    box-shadow: 0 4px 20px rgba(82, 196, 26, 0.4);
+}
+
+.dark .unified-user-card:hover {
+    box-shadow: 0 8px 30px rgba(30, 58, 138, 0.6);
+}
+
+/* Когда сайдбар свёрнут, скрываем карточку */
+.ant-layout-sider-collapsed .user-data-modern {
+    display: none;
 }
 
 /* Карточка профиля пользователя */
 .user-profile-card {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #91a8fd 0%, #ac77dd 100%);
     border-radius: 10px;
     box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
 }
@@ -627,3 +662,4 @@
     border-color: #ff4d4f !important;
     color: white !important;
 }
+

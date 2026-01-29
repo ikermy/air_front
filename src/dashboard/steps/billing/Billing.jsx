@@ -2,7 +2,6 @@ import React, {useEffect, useState, useRef} from "react";
 import {validateAndRefreshToken} from "../../../utils/easyUtils";
 import {showErrorNotification, showNotification} from "../../hotification/showNotification";
 import {Button, Slider, Table, Modal, Card, Row, Col, Typography, Space, Spin, message, Progress, QRCode, Tour, FloatButton} from "antd";
-import {getUserTariff} from "./getUserTariff";
 import {
     CreditCardOutlined,
     DollarOutlined,
@@ -14,17 +13,17 @@ import {
     QuestionCircleOutlined
 } from "@ant-design/icons";
 import "./Billing.css"
-import {checkPayAvailability} from "./checkPayAvailability";
-import {fetchCurrencies} from "./fetchCurrencies";
-import {createCryptoPayment} from './createCryptoPayment';
 import {paymentSSEManager} from './paymentSSEManager';
 import {getTourPanelState, setTourPanelState} from "../../../utils/cookieUtils";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
+import {checkPayAvailability, createCryptoPayment, fetchCurrencies, getUserTariff} from "./payUtils";
+import {useTranslation} from "react-i18next";
 
 const {Text, Title} = Typography;
 
 export function Billing({refreshUserData}) {
+    const {t} = useTranslation();
     const [payment, setPayment] = useState({
         month: 1,
         discount: 0,
@@ -73,8 +72,8 @@ export function Billing({refreshUserData}) {
             const data = await getUserTariff(token)
 
             if (data.status === "error") {
-                showErrorNotification("Ошибка получения данных оплаты",
-                    "Внутренняя ошибка сервера, попробуйте позже!");
+                showErrorNotification(t("billingErrorPaymentData") || "Ошибка получения данных оплаты",
+                    t("billingErrorServerInternal") || "Внутренняя ошибка сервера, попробуйте позже!");
             } else {
                 setPayment({
                     currency: data.Currency,
@@ -90,7 +89,7 @@ export function Billing({refreshUserData}) {
                 setBillingHistory(data.Billing);
             }
         } catch (error) {
-            showErrorNotification("Ошибка", "Не удалось загрузить данные пользователя");
+            showErrorNotification(t("error") || "Ошибка", t("billingErrorUserData") || "Не удалось загрузить данные пользователя");
         } finally {
             setLoading(false);
         }
@@ -106,7 +105,7 @@ export function Billing({refreshUserData}) {
             } catch (error) {
                 console.error('Ошибка инициализации компонента:', error);
                 setIsPaymentServiceAvailable(false);
-                showErrorNotification("Ошибка системы оплаты", error.message);
+                showErrorNotification(t("billingErrorPaymentSystem") || "Ошибка системы оплаты", error.message);
                 setLoading(false);
             }
         };
@@ -120,7 +119,7 @@ export function Billing({refreshUserData}) {
                 await fetchCurrencies(setLoadingCurrencies, setCurrencies);
             } catch (error) {
                 console.error('Ошибка загрузки валют при инициализации:', error);
-                showErrorNotification("Ошибка загрузки валют", error.message);
+                showErrorNotification(t("billingErrorLoadCurrencies") || "Ошибка загрузки валют", error.message);
             }
         };
 
@@ -180,7 +179,7 @@ export function Billing({refreshUserData}) {
 
     const addMonthsAndFormat = (dateString, monthsToAdd) => {
         if (!dateString || typeof monthsToAdd !== 'number') {
-            return "Неверная дата или количество месяцев";
+            return t("billingInvalidDateOrMonths") || "Неверная дата или количество месяцев";
         }
         try {
             const date = new Date(dateString); // Преобразуем строку в дату
@@ -194,7 +193,7 @@ export function Billing({refreshUserData}) {
             return `${year}-${month}-${day}`;
         } catch (error) {
             console.error("Ошибка обработки даты:", error);
-            return "Ошибка даты";
+            return t("billingDateError") || "Ошибка даты";
         }
     };
 
@@ -203,10 +202,10 @@ export function Billing({refreshUserData}) {
         if (value === undefined || value === null) return '';
         const val = Math.abs(value) % 100;
         const num = val % 10;
-        if (val > 10 && val < 20) return 'месяцев'; // для 11-19
-        if (num > 1 && num < 5) return 'месяца';   // для 2, 3, 4
-        if (num === 1) return 'месяц';            // для 1
-        return 'месяцев';                         // для 0, 5, 6, 7, 8, 9
+        if (val > 10 && val < 20) return t("billingMonthPlural2") || 'месяцев'; // для 11-19
+        if (num > 1 && num < 5) return t("billingMonthPlural1") || 'месяца';   // для 2, 3, 4
+        if (num === 1) return t("billingMonthSingular") || 'месяц';            // для 1
+        return t("billingMonthPlural2") || 'месяцев';                         // для 0, 5, 6, 7, 8, 9
     };
 
     // Функция форматирования для tooltip
@@ -293,13 +292,13 @@ export function Billing({refreshUserData}) {
                 // Обработка поля reused для улучшения UX
                 if (paymentResult.reused) {
                     showNotification(
-                        "Активный платёж найден",
-                        `Переведите ${paymentResult.amount} ${paymentResult.currency} на указанный адрес`
+                        t("billingActivePaymentFound") || "Активный платёж найден",
+                        t("billingTransferAmount", {amount: paymentResult.amount, currency: paymentResult.currency}) || `Переведите ${paymentResult.amount} ${paymentResult.currency} на указанный адрес`
                     );
                 } else {
                     showNotification(
-                        "Счёт для оплаты создан",
-                        `Переведите ${paymentResult.amount} ${paymentResult.currency} на указанный адрес`
+                        t("billingInvoiceCreated") || "Счёт для оплаты создан",
+                        t("billingTransferAmount", {amount: paymentResult.amount, currency: paymentResult.currency}) || `Переведите ${paymentResult.amount} ${paymentResult.currency} на указанный адрес`
                     );
                 }
             }
@@ -337,8 +336,8 @@ export function Billing({refreshUserData}) {
 
         } catch (error) {
             showErrorNotification(
-                "Ошибка",
-                error.message || "Произошла ошибка при загрузке данных для оплаты"
+                t("error") || "Ошибка",
+                error.message || t("billingErrorLoadPaymentData") || "Произошла ошибка при загрузке данных для оплаты"
             );
         } finally {
             setIsProcessing(false);
@@ -363,7 +362,7 @@ export function Billing({refreshUserData}) {
     // Определяем колонки для таблицы
     const columns = [
         {
-            title: 'Дата платежа',
+            title: t("billingTableDate") || 'Дата платежа',
             dataIndex: 'Date',
             key: 'date',
             render: (text) => {
@@ -372,29 +371,29 @@ export function Billing({refreshUserData}) {
             }
         },
         {
-            title: 'Сумма платежа',
+            title: t("billingTableAmount") || 'Сумма платежа',
             dataIndex: 'Payment',
             key: 'payment',
             render: (text) => `${text} ${payment.currency}`
         },
         {
-            title: 'Валюта платежа',
+            title: t("billingTableCurrency") || 'Валюта платежа',
             key: 'currency',
             render: () => payment.currency
         },
         {
-            title: 'Оплачено месяцев',
+            title: t("billingTableMonths") || 'Оплачено месяцев',
             dataIndex: 'Months',
             key: 'months'
         },
         {
-            title: 'Оплачено сообщений',
+            title: t("billingTableMessages") || 'Оплачено сообщений',
             dataIndex: 'Messages',
             key: 'messages',
             render: (text) => text?.toLocaleString('ru-RU')
         },
         {
-            title: 'Размер скидки',
+            title: t("billingTableDiscount") || 'Размер скидки',
             dataIndex: 'Discount',
             key: 'discount',
             render: (text) => `${text} ${payment.currency}`
@@ -449,37 +448,37 @@ export function Billing({refreshUserData}) {
                 return {
                     color: '#faad14',
                     icon: <ClockCircleOutlined/>,
-                    text: 'Ожидание платежа'
+                    text: t("billingStatusPending") || 'Ожидание платежа'
                 };
             case 'partial':
                 return {
                     color: '#1890ff',
                     icon: <ExclamationCircleOutlined/>,
-                    text: 'Частичное поступление'
+                    text: t("billingStatusPartial") || 'Частичное поступление'
                 };
             case 'confirmed':
                 return {
                     color: '#52c41a',
                     icon: <CheckCircleOutlined/>,
-                    text: 'Подтверждён'
+                    text: t("billingStatusConfirmed") || 'Подтверждён'
                 };
             case 'failed':
                 return {
                     color: '#ff4d4f',
                     icon: <ExclamationCircleOutlined/>,
-                    text: 'Ошибка'
+                    text: t("billingStatusFailed") || 'Ошибка'
                 };
             case 'expired':
                 return {
                     color: '#d9d9d9',
                     icon: <ClockCircleOutlined/>,
-                    text: 'Истёк'
+                    text: t("billingStatusExpired") || 'Истёк'
                 };
             default:
                 return {
                     color: '#d9d9d9',
                     icon: <ClockCircleOutlined/>,
-                    text: 'Неизвестно'
+                    text: t("billingStatusUnknown") || 'Неизвестно'
                 };
         }
     };
@@ -496,7 +495,7 @@ export function Billing({refreshUserData}) {
     const handleSavePdf = async () => {
         const element = document.getElementById("payment-modal-content");
         if (!element) {
-            message.error("Не найден контент для сохранения");
+            message.error(t("billingErrorNoContent") || "Не найден контент для сохранения");
             return;
         }
         const canvas = await html2canvas(element, {scale: 2});
@@ -570,29 +569,29 @@ export function Billing({refreshUserData}) {
     // Определяем шаги тура
     const steps = [
         {
-            title: '💳 Добро пожаловать в систему управления подпиской',
-            description: 'Этот интерфейс позволяет управлять вашими тарифами, просматривать историю платежей и продлевать подписку на услуги ИИ-ассистента.',
+            title: t("billingTourWelcomeTitle") || '💳 Добро пожаловать в систему управления подпиской',
+            description: t("billingTourWelcomeDesc") || 'Этот интерфейс позволяет управлять вашими тарифами, просматривать историю платежей и продлевать подписку на услуги ИИ-агента.',
             target: () => billingHeaderRef.current,
         },
         {
-            title: '📊 Выбор периода подписки',
-            description: 'Используйте слайдер для выбора периода подписки. Более длительные периоды включают скидки и более выгодные предложения.',
+            title: t("billingTourPeriodTitle") || '📊 Выбор периода подписки',
+            description: t("billingTourPeriodDesc") || 'Используйте слайдер для выбора периода подписки. Более длительные периоды включают скидки и более выгодные предложения.',
             target: () => paymentSliderRef.current,
         },
         {
-            title: '📋 Информация о платеже',
-            description: 'Здесь отображается детальная информация о выбранном пакете: количество месяцев, сообщений и размер скидки.',
+            title: t("billingTourInfoTitle") || '📋 Информация о платеже',
+            description: t("billingTourInfoDesc") || 'Здесь отображается детальная информация о выбранном пакете: количество месяцев, сообщений и размер скидки.',
             target: () => paymentInfoRef.current,
         },
         {
-            title: '💰 Кнопка оплаты',
-            description: 'Нажмите эту кнопку для перехода к процессу оплаты. Будет предложен выбор криптовалют для платежа.',
+            title: t("billingTourPaymentTitle") || '💰 Кнопка оплаты',
+            description: t("billingTourPaymentDesc") || 'Нажмите эту кнопку для перехода к процессу оплаты. Будет предложен выбор криптовалют для платежа.',
             target: () => paymentButtonRef.current,
         },
         // Условно добавляем шаг с историей платежей только если таблица существует
         ...(billingHistory && billingHistory.length > 0 && billingHistory.some(item => item.Date) ? [{
-            title: '📚 История платежей',
-            description: 'В этой таблице отображается вся история ваших платежей с детализацией по датам, суммам и полученным услугам.',
+            title: t("billingTourHistoryTitle") || '📚 История платежей',
+            description: t("billingTourHistoryDesc") || 'В этой таблице отображается вся история ваших платежей с детализацией по датам, суммам и полученным услугам.',
             target: () => {
                 // Добавляем проверку на существование элемента
                 if (historyTableRef.current) {
@@ -603,8 +602,8 @@ export function Billing({refreshUserData}) {
             },
         }] : []),
         {
-            title: '✅ Готово к использованию!',
-            description: 'Теперь вы знаете, как управлять своей подпиской. Выберите подходящий тариф и начните пользоваться расширенными возможностями!',
+            title: t("billingTourCompleteTitle") || '✅ Готово к использованию!',
+            description: t("billingTourCompleteDesc") || 'Теперь вы знаете, как управлять своей подпиской. Выберите подходящий тариф и начните пользоваться расширенными возможностями!',
             target: () => paymentButtonRef.current,
         },
     ];
@@ -626,7 +625,7 @@ export function Billing({refreshUserData}) {
         return <div className="notifications-loading">
             <Spin size="large" />
             <Text className="loading-text">
-                Загрузка данных...
+                {t("billingLoadingText") || "Загрузка данных..."}
             </Text>
         </div>
     }
@@ -640,9 +639,9 @@ export function Billing({refreshUserData}) {
                     Управление подпиской
                 </div>
                 <div className="section-description">
-                    Управляйте тарифами, просматривайте историю платежей и продлевайте подписку на услуги ассистента
+                    {t("billingManageDesc") || "Управляйте тарифами, просматривайте историю платежей и продлевайте подписку на услуги агента"}
                 </div>
-                <b>Сервис оплаты недоступен</b>
+                <b>{t("billingServiceUnavailable") || "Сервис оплаты недоступен"}</b>
             </div>
         );
     }
@@ -651,16 +650,16 @@ export function Billing({refreshUserData}) {
         <div className="create-model-container">
             <div className="section-title" ref={billingHeaderRef}>
                 <CreditCardOutlined/>
-                Управление подпиской
+                {t("billingManageSubscription") || "Управление подпиской"}
             </div>
             <div className="section-description">
-                Управляйте тарифами, просматривайте историю платежей и продлевайте подписку на услуги ассистента
+                {t("billingManageDesc") || "Управляйте тарифами, просматривайте историю платежей и продлевайте подписку на услуги агента"}
             </div>
 
             <div className="tour-layout">
                 <div className="tour-content">
                     <div className="container">
-                        <h2>Новый платёж</h2>
+                        <h2>{t("billingNewPayment") || "Новый платёж"}</h2>
                         {payment && payment.month !== null && (
                             <>
                                 <div className="bill-slider" ref={paymentSliderRef}>
@@ -677,13 +676,13 @@ export function Billing({refreshUserData}) {
                                 </div>
 
                                 <div className="billing-data" ref={paymentInfoRef}>
-                                    <p>Оплата за <b>{payment.value}</b> {getMonthSuffix(payment.value)}</p>
-                                    <p>Сообщений Ассистента <b>{payment.value * payment.messages}</b></p>
+                                    <p>{t("billingPaymentFor") || "Оплата за"} <b>{payment.value}</b> {getMonthSuffix(payment.value)}</p>
+                                    <p>{t("billingAgentMessages") || "Сообщений Агента"} <b>{payment.value * payment.messages}</b></p>
                                     {payment.value !== 1 && (
-                                        <p>Выгода <b>{calculateDiscount(payment.value)}</b> {payment.currency}</p>
+                                        <p>{t("billingBenefit") || "Выгода"} <b>{calculateDiscount(payment.value)}</b> {payment.currency}</p>
                                     )}
                                     {payment.end && (
-                                        <p>Окончание подписки <b>{addMonthsAndFormat(payment.end, payment.value)}</b></p>
+                                        <p>{t("billingSubscriptionEnd") || "Окончание подписки"} <b>{addMonthsAndFormat(payment.end, payment.value)}</b></p>
                                     )}
                                 </div>
 
@@ -697,14 +696,14 @@ export function Billing({refreshUserData}) {
                                     }}
                                     ref={paymentButtonRef}
                                 >
-                                    Оплатить {getCurrentPrice()} {payment.currency}
+                                    {t("billingPay") || "Оплатить"} {getCurrentPrice()} {payment.currency}
                                 </Button>
                             </>
                         )}
 
                         {billingHistory && billingHistory.length > 0 && billingHistory.some(item => item.Date) && (
                             <div ref={historyTableRef}>
-                                <h2>История платежей</h2>
+                                <h2>{t("billingPaymentHistory") || "История платежей"}</h2>
                                 <Table
                                     dataSource={billingHistory}
                                     columns={columns}
@@ -722,10 +721,10 @@ export function Billing({refreshUserData}) {
                         <div className="tour-controls-header">
                             <PlayCircleOutlined className="tour-controls-icon" />
                             <h3 className="tour-controls-title">
-                                Интерактивный обзор
+                                {t("interactiveTourTitle") || "Интерактивный обзор"}
                             </h3>
                             <p className="tour-controls-subtitle">
-                                Изучите интерфейс управления подпиской пошагово
+                                {t("billingTourSubtitle") || "Изучите интерфейс управления подпиской пошагово"}
                             </p>
                         </div>
 
@@ -736,7 +735,7 @@ export function Billing({refreshUserData}) {
                                 size="large"
                                 onClick={startTour}
                             >
-                                🚀 Начать тур
+                                {t("startTour") || "🚀 Начать тур"}
                             </Button>
                         </div>
 
@@ -744,7 +743,7 @@ export function Billing({refreshUserData}) {
                             <div className="tour-progress">
                                 <div className="tour-progress-step">
                                     <span className="tour-progress-step-text">
-                                        Шаг {current + 1} из {steps.length}
+                                        {t("tourStep", {current: current + 1, total: steps.length}) || `Шаг ${current + 1} из ${steps.length}`}
                                     </span>
                                 </div>
                                 <div className="tour-progress-bar">
@@ -760,12 +759,12 @@ export function Billing({refreshUserData}) {
                         )}
 
                         <div className="tour-info">
-                            <div className="tour-info-title">📋 Что вы изучите:</div>
+                            <div className="tour-info-title">{t("tourWhatYouLearn") || "📋 Что вы изучите:"}</div>
                             <ul className="tour-info-list">
-                                <li>Выбор периода подписки</li>
-                                <li>Расчёт скидок и выгоды</li>
-                                <li>Процесс криптооплаты</li>
-                                <li>Просмотр истории платежей</li>
+                                <li>{t("billingTourLearn1") || "Выбор периода подписки"}</li>
+                                <li>{t("billingTourLearn2") || "Расчёт скидок и выгоды"}</li>
+                                <li>{t("billingTourLearn3") || "Процесс криптооплаты"}</li>
+                                <li>{t("billingTourLearn4") || "Просмотр истории платежей"}</li>
                             </ul>
                         </div>
                     </div>
@@ -777,7 +776,7 @@ export function Billing({refreshUserData}) {
                 title={
                     <Space>
                         <DollarOutlined/>
-                        <Text>Выберите криптовалюту для оплаты</Text>
+                        <Text>{t("billingSelectCrypto") || "Выберите криптовалюту для оплаты"}</Text>
                     </Space>
                 }
                 open={showCurrencyModal}
@@ -785,10 +784,11 @@ export function Billing({refreshUserData}) {
                 footer={null}
                 width={800}
                 centered
+                
             >
                 <div style={{marginBottom: 16}}>
                     <Text type="secondary">
-                        Сумма к оплате: <strong>{getCurrentPrice()} {payment.currency}</strong>
+                        {t("billingAmountToPay") || "Сумма к оплате"}: <strong>{getCurrentPrice()} {payment.currency}</strong>
                     </Text>
                 </div>
 
@@ -796,7 +796,7 @@ export function Billing({refreshUserData}) {
                     <div style={{textAlign: 'center', padding: '40px 0'}}>
                         <Spin size="large"/>
                         <div style={{marginTop: 16}}>
-                            <Text>Загрузка доступных криптовалют...</Text>
+                            <Text>{t("billingLoadingCurrencies") || "Загрузка доступных криптовалют..."}</Text>
                         </div>
                     </div>
                 ) : (
@@ -804,10 +804,10 @@ export function Billing({refreshUserData}) {
                         {!showAllCurrencies && (
                             <div style={{marginBottom: 16}}>
                                 <Title level={4} style={{margin: 0, color: 'var(--text-color)'}}>
-                                    Оплата в USDT
+                                    {t("billingPaymentInUSDT") || "Оплата в USDT"}
                                 </Title>
                                 <Text type="secondary" style={{fontSize: '14px'}}>
-                                    Выберите удобную сеть для оплаты в USDT
+                                    {t("billingSelectNetworkUSDT") || "Выберите удобную сеть для оплаты в USDT"}
                                 </Text>
                             </div>
                         )}
@@ -815,10 +815,10 @@ export function Billing({refreshUserData}) {
                         {showAllCurrencies && (
                             <div style={{marginBottom: 16}}>
                                 <Title level={4} style={{margin: 0, color: 'var(--text-color)'}}>
-                                    Все доступные криптовалюты
+                                    {t("billingAllCurrencies") || "Все доступные криптовалюты"}
                                 </Title>
                                 <Text type="secondary" style={{fontSize: '14px'}}>
-                                    Выберите любую поддерживаемую криптовалюту
+                                    {t("billingSelectAnyCrypto") || "Выберите любую поддерживаемую криптовалюту"}
                                 </Text>
                             </div>
                         )}
@@ -856,12 +856,12 @@ export function Billing({refreshUserData}) {
                                                 </div>
 
                                                 <Text style={{color: 'var(--text-color)'}}>
-                                                    Сеть: {currency.name}
+                                                    {t("billingNetwork") || "Сеть"}: {currency.name}
                                                 </Text>
 
                                                 <div style={{fontSize: '12px'}}>
                                                     <Text type="secondary">
-                                                        Мин. депозит: {currency.minDeposit} {currency.symbol}
+                                                        {t("billingMinDeposit") || "Мин. депозит"}: {currency.minDeposit} {currency.symbol}
                                                     </Text>
                                                 </div>
 
@@ -873,7 +873,7 @@ export function Billing({refreshUserData}) {
                                                     textAlign: 'center'
                                                 }}>
                                                     <Text style={{fontSize: '11px', color: '#666'}}>
-                                                        Сеть: {currency.network}
+                                                        {t("billingNetwork") || "Сеть"}: {currency.network}
                                                     </Text>
                                                 </div>
                                             </Space>
@@ -889,7 +889,7 @@ export function Billing({refreshUserData}) {
                                                 </Title>
 
                                                 <Text type="secondary" style={{fontSize: '13px'}}>
-                                                    Мин. депозит: {currency.minDeposit} USDT
+                                                    {t("billingMinDeposit") || "Мин. депозит"}: {currency.minDeposit} USDT
                                                 </Text>
                                             </div>
                                         )}
@@ -927,7 +927,7 @@ export function Billing({refreshUserData}) {
                 {currencies.length === 0 && !loadingCurrencies && (
                     <div style={{textAlign: 'center', padding: '40px 0'}}>
                         <Text type="secondary">
-                            Нет доступных криптовалют для оплаты
+                            {t("billingNoCurrencies") || "Нет доступных криптовалют для оплаты"}
                         </Text>
                     </div>
                 )}
@@ -939,20 +939,20 @@ export function Billing({refreshUserData}) {
                     <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '95%'}}>
                         <Space>
                             <DollarOutlined/>
-                            <Text>Криптовалютный платеж</Text>
+                            <Text>{t("billingCryptoPayment") || "Криптовалютный платеж"}</Text>
                         </Space>
 
                         {/* Кнопка сохранить в PDF */}
                         <Button
                             style={{color: "black"}}
                             key="save" type="primary" onClick={handleSavePdf}>
-                            Сохранить в PDF
+                            {t("billingSavePDF") || "Сохранить в PDF"}
                         </Button>
 
                         {/* Кнопка закрыть только если платёж подтверждён */}
                         {paymentStatus === 'confirmed' && (
                             <Button key="close" type="default" onClick={handleCloseConfirm}>
-                                Закрыть
+                                {t("billingClose") || "Закрыть"}
                             </Button>
                         )}
                     </div>
@@ -1041,7 +1041,7 @@ export function Billing({refreshUserData}) {
                                 }}>
                                     <div style={{marginBottom: '12px'}}>
                                         <Text strong style={{fontSize: '14px', color: 'var(--text-color)'}}>
-                                            Адрес кошелька для перевода:
+                                            {t("billingWalletAddress") || "Адрес кошелька для перевода"}:
                                         </Text>
                                     </div>
 
@@ -1064,9 +1064,9 @@ export function Billing({refreshUserData}) {
                                             type="primary"
                                             size="small"
                                             icon={<CopyOutlined/>}
-                                            onClick={() => copyToClipboard(paymentData.depositAddress, 'Адрес кошелька')}
+                                            onClick={() => copyToClipboard(paymentData.depositAddress, t("billingWalletAddressShort") || 'Адрес кошелька')}
                                         >
-                                            Копировать адрес
+                                            {t("billingCopyAddress") || "Копировать адрес"}
                                         </Button>
                                     </div>
 
@@ -1093,7 +1093,7 @@ export function Billing({refreshUserData}) {
                                     }}>
                                         <div style={{marginBottom: '8px'}}>
                                             <Text strong style={{fontSize: '14px', color: '#fa8c16'}}>
-                                                Тег депозита (обязательно!):
+                                                {t("billingDepositTagRequired") || "Тег депозита (обязательно!)"}:
                                             </Text>
                                         </div>
 
@@ -1114,9 +1114,9 @@ export function Billing({refreshUserData}) {
                                             <Button
                                                 size="small"
                                                 icon={<CopyOutlined/>}
-                                                onClick={() => copyToClipboard(paymentData.depositTag, 'Тег депозита')}
+                                                onClick={() => copyToClipboard(paymentData.depositTag, t("billingDepositTag") || 'Тег депозита')}
                                             >
-                                                Копировать тег
+                                                {t("billingCopyTag") || "Копировать тег"}
                                             </Button>
                                         </div>
 
@@ -1138,13 +1138,13 @@ export function Billing({refreshUserData}) {
                                 }}>
                                     <div
                                         style={{display: 'flex', justifyContent: 'space-between', marginBottom: '8px'}}>
-                                        <Text style={{fontSize: '13px'}}>Валюта:</Text>
+                                        <Text style={{fontSize: '13px'}}>{t("billingCurrency") || "Валюта"}:</Text>
                                         <Text strong style={{fontSize: '13px'}}>{paymentData.currency}</Text>
                                     </div>
 
                                     <div
                                         style={{display: 'flex', justifyContent: 'space-between', marginBottom: '8px'}}>
-                                        <Text style={{fontSize: '13px'}}>Сеть блокчейна:</Text>
+                                        <Text style={{fontSize: '13px'}}>{t("billingBlockchainNetwork") || "Сеть блокчейна"}:</Text>
                                         <Text strong style={{
                                             fontSize: '13px',
                                             padding: '2px 6px',
@@ -1158,7 +1158,7 @@ export function Billing({refreshUserData}) {
 
                                     <div
                                         style={{display: 'flex', justifyContent: 'space-between', marginBottom: '8px'}}>
-                                        <Text style={{fontSize: '13px'}}>ID платежа:</Text>
+                                        <Text style={{fontSize: '13px'}}>{t("billingPaymentID") || "ID платежа"}:</Text>
                                         <Text style={{fontSize: '12px', fontFamily: 'monospace'}}>
                                             {paymentData.orderId}
                                         </Text>
@@ -1172,7 +1172,7 @@ export function Billing({refreshUserData}) {
                                                 justifyContent: 'space-between',
                                                 marginBottom: '8px'
                                             }}>
-                                                <Text style={{fontSize: '13px'}}>Прогресс поступления:</Text>
+                                                <Text style={{fontSize: '13px'}}>{t("billingProgressReceived") || "Прогресс поступления"}:</Text>
                                                 <Text style={{fontSize: '13px'}}>
                                                     {paymentData.receivedAmount || 0} / {paymentData.amount} {paymentData.currency}
                                                 </Text>
@@ -1196,7 +1196,7 @@ export function Billing({refreshUserData}) {
                                                     display: 'block',
                                                     marginTop: '4px'
                                                 }}>
-                                                    Недостаёт: {(paymentData.amount - paymentData.receivedAmount).toFixed(6)} {paymentData.currency}
+                                                    {t("billingShortage") || "Недостаёт"}: {(paymentData.amount - paymentData.receivedAmount).toFixed(6)} {paymentData.currency}
                                                 </Text>
                                             )}
                                         </div>
@@ -1296,12 +1296,12 @@ export function Billing({refreshUserData}) {
                                                         fontSize: '13px',
                                                         color: getPaymentStatusDisplay(paymentStatus).color
                                                     }}>
-                                                        {paymentStatus === 'confirmed' && 'Подтверждена'}
-                                                        {paymentStatus === 'partial' && 'Частичная'}
-                                                        {paymentStatus === 'pending' && paymentData.receivedAmount > 0 && 'В обработке'}
-                                                        {paymentStatus === 'pending' && paymentData.receivedAmount === 0 && 'Ожидается'}
-                                                        {paymentStatus === 'failed' && 'Неудачна'}
-                                                        {paymentStatus === 'expired' && 'Истекла'}
+                                                        {paymentStatus === 'confirmed' && (t("billingStatusConfirmedShort") || 'Подтверждена')}
+                                                        {paymentStatus === 'partial' && (t("billingStatusPartialShort") || 'Частичная')}
+                                                        {paymentStatus === 'pending' && paymentData.receivedAmount > 0 && (t("billingStatusProcessingShort") || 'В обработке')}
+                                                        {paymentStatus === 'pending' && paymentData.receivedAmount === 0 && (t("billingStatusPendingShort") || 'Ожидается')}
+                                                        {paymentStatus === 'failed' && (t("billingStatusFailedShort") || 'Неудачна')}
+                                                        {paymentStatus === 'expired' && (t("billingStatusExpiredShort") || 'Истекла')}
                                                     </Text>
                                                 </div>
                                             </div>
@@ -1320,7 +1320,7 @@ export function Billing({refreshUserData}) {
                                                         justifyContent: 'space-between',
                                                         marginBottom: '4px'
                                                     }}>
-                                                        <Text style={{fontSize: '12px'}}>Поступило:</Text>
+                                                        <Text style={{fontSize: '12px'}}>{t("billingReceived") || "Поступило"}:</Text>
                                                         <Text strong style={{fontSize: '12px', color: '#faad14'}}>
                                                             {paymentData.currentReceivedAmount || paymentData.receivedAmount} {paymentData.currency}
                                                         </Text>
@@ -1330,10 +1330,10 @@ export function Billing({refreshUserData}) {
                                                         justifyContent: 'space-between',
                                                         marginBottom: '4px'
                                                     }}>
-                                                        <Text style={{fontSize: '12px'}}>Текущие подтверждения:</Text>
+                                                        <Text style={{fontSize: '12px'}}>{t("billingCurrentConfirmations") || "Текущие подтверждения"}:</Text>
                                                         <Text strong style={{fontSize: '12px', color: '#faad14'}}>
                                                             {paymentData.currentConfirmations || paymentData.confirmations || 0} /
-                                                            блоков
+                                                            {t("billingBlocks") || "блоков"}
                                                         </Text>
                                                     </div>
                                                     <div style={{
@@ -1341,7 +1341,7 @@ export function Billing({refreshUserData}) {
                                                         justifyContent: 'space-between',
                                                         marginBottom: '4px'
                                                     }}>
-                                                        <Text style={{fontSize: '12px'}}>Ожидается:</Text>
+                                                        <Text style={{fontSize: '12px'}}>{t("billingExpected") || "Ожидается"}:</Text>
                                                         <Text strong style={{fontSize: '12px', color: '#fa8c16'}}>
                                                             {(paymentData.amount - (paymentData.currentReceivedAmount || paymentData.receivedAmount)).toFixed(6)} {paymentData.currency}
                                                         </Text>
@@ -1356,9 +1356,8 @@ export function Billing({refreshUserData}) {
                                                             color: '#999'
                                                         }}>
                                                             <Text style={{fontSize: '11px', color: '#999'}}>
-                                                                В
-                                                                БД: {paymentData.dbReceivedAmount} {paymentData.currency},
-                                                                подтверждений: {paymentData.dbConfirmations || 0}
+                                                                {t("billingInDB") || "В БД"}: {paymentData.dbReceivedAmount} {paymentData.currency},
+                                                                {t("billingConfirmations") || "подтверждений"}: {paymentData.dbConfirmations || 0}
                                                             </Text>
                                                         </div>
                                                     )}
@@ -1371,7 +1370,7 @@ export function Billing({refreshUserData}) {
                                     {paymentData.txHash && (
                                         <div style={{marginTop: '12px'}}>
                                             <Text style={{fontSize: '13px', display: 'block', marginBottom: '4px'}}>
-                                                Хэш транзакции:
+                                                {t("billingTransactionHash") || "Хэш транзакции"}:
                                             </Text>
                                             <div style={{
                                                 display: 'flex',
@@ -1394,7 +1393,7 @@ export function Billing({refreshUserData}) {
                                                     type="text"
                                                     size="small"
                                                     icon={<CopyOutlined/>}
-                                                    onClick={() => copyToClipboard(paymentData.txHash, 'Хэш транзакции')}
+                                                    onClick={() => copyToClipboard(paymentData.txHash, t("billingTransactionHash") || 'Хэш транзакции')}
                                                     style={{fontSize: '10px', padding: '2px 4px'}}
                                                 />
                                             </div>
@@ -1413,7 +1412,7 @@ export function Billing({refreshUserData}) {
                                         {paymentData.createdAt && (
                                             <div>
                                                 <Text type="secondary" style={{fontSize: '11px', display: 'block'}}>
-                                                    Создан:
+                                                    {t("billingCreatedAt") || "Создан"}:
                                                 </Text>
                                                 <Text style={{fontSize: '11px'}}>
                                                     {new Date(paymentData.createdAt).toLocaleString('ru-RU')}
@@ -1424,7 +1423,7 @@ export function Billing({refreshUserData}) {
                                         {paymentData.updatedAt && (
                                             <div>
                                                 <Text type="secondary" style={{fontSize: '11px', display: 'block'}}>
-                                                    Обновлён:
+                                                    {t("billingUpdatedAt") || "Обновлён"}:
                                                 </Text>
                                                 <Text style={{fontSize: '11px'}}>
                                                     {new Date(paymentData.updatedAt).toLocaleString('ru-RU')}
@@ -1444,11 +1443,11 @@ export function Billing({refreshUserData}) {
                                         }}>
                                             <Text strong
                                                   style={{fontSize: '12px', display: 'block', marginBottom: '4px'}}>
-                                                Комиссии сети:
+                                                {t("billingNetworkFees") || "Комиссии сети"}:
                                             </Text>
                                             {paymentData.networkFee && (
                                                 <div style={{display: 'flex', justifyContent: 'space-between'}}>
-                                                    <Text style={{fontSize: '11px'}}>Сетевая комиссия:</Text>
+                                                    <Text style={{fontSize: '11px'}}>{t("billingNetworkFee") || "Сетевая комиссия"}:</Text>
                                                     <Text style={{fontSize: '11px'}}>
                                                         {paymentData.networkFee} {paymentData.currency}
                                                     </Text>
@@ -1478,7 +1477,7 @@ export function Billing({refreshUserData}) {
                                     }}>
                                         <Space direction="vertical" size="small">
                                             <Text strong style={{fontSize: '13px'}}>
-                                                <ClockCircleOutlined/> Время до истечения платежа
+                                                <ClockCircleOutlined/> {t("billingTimeUntilExpiry") || "Время до истечения платежа"}
                                             </Text>
                                             <div style={{
                                                 fontSize: '20px',
@@ -1510,35 +1509,30 @@ export function Billing({refreshUserData}) {
                                         color: '#1890ff',
                                         fontSize: '13px'
                                     }}>
-                                        Инструкции по переводу:
+                                        {t("billingTransferInstructions") || "Инструкции по переводу"}:
                                     </Text>
 
                                     <div style={{marginBottom: '8px'}}>
                                         <div style={{marginBottom: '4px'}}>
                                             <Text style={{fontSize: '12px', lineHeight: '1.4'}}>
-                                                1. Переведите точную
-                                                сумму <strong>{paymentData.amount} {paymentData.currency}</strong> на
-                                                указанный адрес
+                                                1. {t("billingInstruction1") || "Переведите точную сумму"} <strong>{paymentData.amount} {paymentData.currency}</strong> {t("billingInstruction1b") || "на указанный адрес"}
                                             </Text>
                                         </div>
                                         <div style={{marginBottom: '4px'}}>
                                             <Text style={{fontSize: '12px', lineHeight: '1.4'}}>
-                                                2. Используйте сеть <strong>{paymentData.network}</strong>
+                                                2. {t("billingInstruction2") || "Используйте сеть"} <strong>{paymentData.network}</strong>
                                             </Text>
                                         </div>
                                         {paymentData.depositTag && (
                                             <div style={{marginBottom: '4px'}}>
                                                 <Text style={{fontSize: '12px', lineHeight: '1.4'}}>
-                                                    3. Обязательно укажите тег
-                                                    депозита: <strong>{paymentData.depositTag}</strong>
+                                                    3. {t("billingInstruction3") || "Обязательно укажите тег депозита"}: <strong>{paymentData.depositTag}</strong>
                                                 </Text>
                                             </div>
                                         )}
                                         <div style={{marginBottom: '4px'}}>
                                             <Text style={{fontSize: '12px', lineHeight: '1.4'}}>
-                                                {paymentData.depositTag ? '4' : '3'}. Дождитесь подтверждения транзакции
-                                                в
-                                                блокчейне
+                                                {paymentData.depositTag ? '4' : '3'}. {t("billingInstruction4") || "Дождитесь подтверждения транзакции в блокчейне"}
                                             </Text>
                                         </div>
                                     </div>
@@ -1556,28 +1550,28 @@ export function Billing({refreshUserData}) {
                                             color: '#fa8c16',
                                             fontSize: '12px'
                                         }}>
-                                            Важные предупреждения:
+                                            {t("billingImportantWarnings") || "Важные предупреждения"}:
                                         </Text>
                                         <div style={{marginBottom: '2px'}}>
                                             <Text style={{fontSize: '11px', lineHeight: '1.3', color: '#fa8c16'}}>
-                                                • Переводите только в указанной сети {paymentData.network}
+                                                • {t("billingWarning1") || "Переводите только в указанной сети"} {paymentData.network}
                                             </Text>
                                         </div>
                                         <div style={{marginBottom: '2px'}}>
                                             <Text style={{fontSize: '11px', lineHeight: '1.3', color: '#fa8c16'}}>
-                                                • Сумма должна быть точно {paymentData.amount} {paymentData.currency}
+                                                • {t("billingWarning2") || "Сумма должна быть точно"} {paymentData.amount} {paymentData.currency}
                                             </Text>
                                         </div>
                                         {paymentData.depositTag && (
                                             <div style={{marginBottom: '2px'}}>
                                                 <Text style={{fontSize: '11px', lineHeight: '1.3', color: '#fa8c16'}}>
-                                                    • Не забудьте указать тег депозита {paymentData.depositTag}
+                                                    • {t("billingWarning3") || "Не забудьте указать тег депозита"} {paymentData.depositTag}
                                                 </Text>
                                             </div>
                                         )}
                                         <div style={{marginBottom: '2px'}}>
                                             <Text style={{fontSize: '11px', lineHeight: '1.3', color: '#fa8c16'}}>
-                                                • У вас есть 30 минут на совершение перевода
+                                                • {t("billingWarning4") || "У вас есть 30 минут на совершение перевода"}
                                             </Text>
                                         </div>
                                     </div>
@@ -1589,7 +1583,7 @@ export function Billing({refreshUserData}) {
                     <div style={{textAlign: 'center', padding: '40px 0'}}>
                         <Spin size="large"/>
                         <div style={{marginTop: 16}}>
-                            <Text>Создание платежа...</Text>
+                            <Text>{t("billingCreatingPayment") || "Создание платежа..."}</Text>
                         </div>
                     </div>
                 )}
@@ -1617,7 +1611,7 @@ export function Billing({refreshUserData}) {
 
             <FloatButton
                 icon={<QuestionCircleOutlined />}
-                tooltip="Начать обзор интерфейса"
+                tooltip={t("tourFloatButtonTooltip") || "Начать обзор интерфейса"}
                 onClick={showTourPanel}
                 className="tour-float-button"
             />

@@ -8,7 +8,7 @@ import {FloatingChatDemo} from "./demochat/FloatingChatDemo";
 import {useChatVisibility} from "../ChatVisibilityContext";
 import "./LandingPage.css"
 import ExamplesCarousel from "./ExamplesCarousel";
-import DashboardDemo from "./DashboardDemo";
+import DashboardOverView from "./DashboardOverView";
 import FooterSection from "./FooterSection";
 
 const LandingPage = () => {
@@ -29,7 +29,7 @@ const LandingPage = () => {
                 <AssistFeatures/>
                 <MessengerFeatures/>
                 <ExamplesCarousel />
-                <DashboardDemo />
+                <DashboardOverView />
                 <Documentation/>
 
                 {isChatVisible && <FloatingChatDemo className="chat-window" onMinimize={() => setIsChatVisible(false)} />}

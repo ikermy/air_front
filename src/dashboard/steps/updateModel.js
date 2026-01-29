@@ -1,10 +1,12 @@
 import React, { useState } from "react";
 import {Button, Modal} from "antd";
+import { useTranslation } from "react-i18next";
 import { showErrorNotification, showNotification, showWarningNotification } from "../hotification/showNotification";
 import { validateAndRefreshToken } from "../../utils/easyUtils";
-import { saveModelData } from "./saveModelData";
+import {saveModelData} from "./CreateModelFormElements/modUtils";
 
-export const UpdateModel = ({ setButtonDisabled, modelData, form, isUploadingFiles }) => {
+export const UpdateModel = ({ setButtonDisabled, modelData, form, isUploadingFiles, onModelUpdated, isButtonDisabled, selectedProvider }) => {
+    const { t } = useTranslation();
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     const showModal = () => {
@@ -27,18 +29,33 @@ export const UpdateModel = ({ setButtonDisabled, modelData, form, isUploadingFil
                 token,
                 // modelData,
                 values: currentValues,
-                isUpdate: true // Явно указываем, что это обновление
+                isUpdate: true, // Явно указываем, что это обновление
+                provider: selectedProvider // Передаем провайдер
             });
 
             if (response.status === "ok") {
-                showNotification("Модель обновлена", "Изменения успешно сохранены!");
+                showNotification(
+                    t("serviceModelUpdated") || "Модель обновлена",
+                    t("serviceModelUpdateSuccess") || "Изменения успешно сохранены!"
+                );
                 setButtonDisabled(true);
+
+                // Обновляем modelData в родительском компоненте
+                if (onModelUpdated) {
+                    onModelUpdated();
+                }
             } else {
-                showErrorNotification("Ошибка обновления", "Модель не обновлена!");
+                showErrorNotification(
+                    t("serviceModelUpdateError") || "Ошибка обновления",
+                    t("serviceModelUpdateErrorMessage") || "Модель не обновлена!"
+                );
                 setButtonDisabled(false);
             }
         } else {
-            showWarningNotification("Ошибка изменения модели", "Токен не обновлен!");
+            showWarningNotification(
+                t("serviceModelUpdateTokenError") || "Ошибка изменения модели",
+                t("serviceModelUpdateTokenErrorMessage") || "Токен не обновлен!"
+            );
             setButtonDisabled(false);
         }
     };
@@ -48,25 +65,26 @@ export const UpdateModel = ({ setButtonDisabled, modelData, form, isUploadingFil
             <Button
                 type="primary"
                 onClick={showModal}
-                disabled={!modelData || isUploadingFiles} // Кнопка неактивна если нет модели или загружаются файлы
+                disabled={!modelData || isUploadingFiles || isButtonDisabled} // Кнопка неактивна если нет модели, загружаются файлы или нет изменений
                 className="update-model-btn"
                 size="large"
             >
-                Изменить модель
+                {t("serviceModelChangeButton") || "Изменить модель"}
             </Button>
 
             <Modal
-                title="Подтверждение изменений"
+                title={t("serviceModelUpdateConfirmTitle") || "Подтверждение изменений"}
                 open={isModalOpen}
                 onOk={handleConfirm}
                 onCancel={handleCancel}
-                okText="Подтвердить"
-                cancelText="Отмена"
+                okText={t("serviceModelUpdateConfirmButton") || "Подтвердить"}
+                cancelText={t("cancelButton") || "Отмена"}
                 okButtonProps={{
                     style: { color: 'black' }
                 }}
+                
             >
-                <p>Вы уверены, что хотите сохранить изменения в модели?</p>
+                <p>{t("serviceModelUpdateConfirmMessage") || "Вы уверены, что хотите сохранить изменения в модели?"}</p>
             </Modal>
         </div>
     );

@@ -7,19 +7,21 @@ import {
     showWarningNotification
 } from "../../hotification/showNotification";
 import {FaInstagram, FaTelegramPlane, FaWhatsapp} from "react-icons/fa";
-import {CommentOutlined, CheckCircleFilled, CloseCircleFilled, CalendarOutlined, UserOutlined, MessageOutlined, AppstoreOutlined, UnorderedListOutlined, FilterOutlined, BarChartOutlined, QuestionCircleOutlined, PlayCircleOutlined} from "@ant-design/icons";
+import {CommentOutlined, CheckCircleFilled, CloseCircleFilled, CalendarOutlined, UserOutlined, MessageOutlined, AppstoreOutlined, UnorderedListOutlined, FilterOutlined, BarChartOutlined, QuestionCircleOutlined, PlayCircleOutlined, DeleteOutlined, ExclamationCircleOutlined} from "@ant-design/icons";
 import {TbWorldWww} from "react-icons/tb";
 import {ViewDialog} from "./ViewDialog";
 import {Spin, Card, Typography, Space, Pagination, Row, Col, Empty, Radio, Select, Button, Modal, Tour, FloatButton} from "antd";
+import { showNotification, showErrorNotification } from '../../hotification/showNotification';
+import { DeleteDialogs } from '../../../dialog/dialogUtils';
 import {getTourPanelState, setTourPanelState, getViewModeState, setViewModeState} from "../../../utils/cookieUtils";
 
-const { Text, Title } = Typography;
+const { Title, Text } = Typography;
 const { Option } = Select;
 const LAND_URL = (window.runtimeConfig && window.runtimeConfig.REACT_APP_LAND) || process.env.REACT_APP_LAND;
 
 export function DialogList() {
+    const { t } = useTranslation();
     const [loading, setLoading] = useState(true);
-    const {t} = useTranslation();
     const [dialogs, setDialogs] = useState([]);
     const [viewDialog, setViewDialog] = useState(null);
     const [dialogTarget, setDialogTarget] = useState(0);
@@ -33,6 +35,8 @@ export function DialogList() {
     const [tourVisible, setTourVisible] = useState(false);
     const [current, setCurrent] = useState(0);
     const [tourPanelVisible, setTourPanelVisible] = useState(getTourPanelState('dialoglist')); // Состояние для видимости панели
+    const [selectedDialogs, setSelectedDialogs] = useState([]); // массив выбранных dialogId для удаления
+    const [batchDeleteModalOpen, setBatchDeleteModalOpen] = useState(false);
 
     // Refs для Tour targets
     const dialogHeaderRef = useRef(null);
@@ -46,15 +50,18 @@ export function DialogList() {
         ? dialogs
         : dialogs.filter(dialog => dialog.Type === selectedType);
 
-    // Вычисляем данные для текущей страницы
-    const startIndex = (currentPage - 1) * pageSize;
-    const endIndex = startIndex + pageSize;
-    const currentDialogs = filteredDialogs.slice(startIndex, endIndex);
-
     // Сброс на первую страницу при изменении фильтра
     useEffect(() => {
         setCurrentPage(1);
     }, [selectedType]);
+
+    // Вычисляем данные для текущей страницы
+    // Используем Math.max(1, ...) чтобы гарантировать, что currentPage никогда не превышает максимальное количество страниц
+    const maxPages = Math.ceil(filteredDialogs.length / pageSize);
+    const validCurrentPage = Math.min(currentPage, Math.max(1, maxPages));
+    const startIndex = (validCurrentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    const currentDialogs = filteredDialogs.slice(startIndex, endIndex);
 
     useEffect(() => {
         const fetchUserDialogs = async () => {
@@ -62,7 +69,7 @@ export function DialogList() {
                 const token = await validateAndRefreshToken(localStorage.getItem("authToken"))
                 if (token != null) {
                     setLocalToken(token)
-                    const response = await fetch(`${LAND_URL}/getuserdialogs?token=${encodeURIComponent(token)}`, {
+                    const response = await fetch(`${LAND_URL}/dialog/all?token=${encodeURIComponent(token)}`, {
                         method: "GET",
                         headers: {"Content-Type": "application/json"},
                     });
@@ -196,6 +203,15 @@ export function DialogList() {
         setIsModalOpen(false);
     };
 
+    const handleDialogDeleted = (deletedDialogId) => {
+        // Удаляем диалог из локального состояния
+        setDialogs(prev => prev.filter(d => d.DialogId !== deletedDialogId));
+        // Удаляем из выбранных, если там был
+        setSelectedDialogs(prev => prev.filter(id => id !== deletedDialogId));
+        // Закрываем модальное окно
+        setIsModalOpen(false);
+    };
+
     const handlePageChange = (page) => {
         setCurrentPage(page);
     };
@@ -232,33 +248,33 @@ export function DialogList() {
     // Шаги Tour для DialogList
     const steps = [
         {
-            title: '📊 Добро пожаловать в статистику диалогов',
-            description: 'Здесь вы можете просматривать и анализировать историю всех диалогов пользователей с вашим ассистентом, отслеживать эффективность и успешность взаимодействий.',
+            title: t("dialogsTourWelcome") || '📊 Добро пожаловать в статистику диалогов',
+            description: t("dialogsTourWelcomeDesc") || 'Здесь вы можете просматривать и анализировать историю всех диалогов пользователей с вашим агентом, отслеживать эффективность и успешность взаимодействий.',
             target: () => dialogHeaderRef.current,
         },
         {
-            title: '🔍 Фильтрация диалогов по типу',
-            description: 'Используйте этот фильтр для сортировки диалогов по платформам: Telegram, WhatsApp, Instagram, Web Widget и другие. Это поможет анализировать эффективность каждого канала отдельно.',
+            title: t("dialogsTourFilter") || '🔍 Фильтрация диалогов по типу',
+            description: t("dialogsTourFilterDesc") || 'Используйте этот фильтр для сортировки диалогов по платформам: Telegram, WhatsApp, Instagram, Web Widget и другие. Это поможет анализировать эффективность каждого канала отдельно.',
             target: () => typeFilterRef.current,
         },
         {
-            title: '👁️ Переключение режимов просмотра',
-            description: 'Выбирайте между карточным видом (для детального просмотра) и списочным видом (для быстрого сканирования). Каждый режим оптимизирован для разных задач.',
+            title: t("dialogsTourViewToggle") || '👁️ Переключение режимов просмотра',
+            description: t("dialogsTourViewToggleDesc") || 'Выбирайте между карточным видом (для детального просмотра) и списочным видом (для быстрого сканирования). Каждый режим оптимизирован для разных задач.',
             target: () => viewToggleRef.current,
         },
         {
-            title: '💬 Карточки диалогов',
-            description: 'Каждая карточка содержит информацию о диалоге: тип платформы, дату, пользователя и статусы выполнения целей. Кликните на карточку для просмотра полного диалога.',
+            title: t("dialogsTourCards") || '💬 Карточки диалогов',
+            description: t("dialogsTourCardsDesc") || 'Каждая карточка содержит информацию о диалоге: тип платформы, дату, пользователя и статусы выполнения целей. Кликните на карточку для просмотра полного диалога.',
             target: () => dialogCardsRef.current,
         },
         {
-            title: '📄 Навигация по страницам',
-            description: 'Используйте пагинацию для перемещения между страницами диалогов. Показывается информация о текущем диапазоне и общем количестве диалогов.',
+            title: t("dialogsTourPagination") || '📄 Навигация по страницам',
+            description: t("dialogsTourPaginationDesc") || 'Используйте пагинацию для перемещения между страницами диалогов. Показывается информация о текущем диапазоне и общем количестве диалогов.',
             target: () => paginationRef.current,
         },
         {
-            title: '✅ Готово к анализу!',
-            description: 'Теперь вы готовы эффективно работать со статистикой диалогов. Изучайте взаимодействия пользователей и оптимизируйте работу вашего ассистента!',
+            title: t("dialogsTourReady") || '✅ Готово к анализу!',
+            description: t("dialogsTourReadyDesc") || 'Теперь вы готовы эффективно работать со статистикой диалогов. Изучайте взаимодействия пользователей и оптимизируйте работу вашего агента!',
             target: () => dialogCardsRef.current,
         },
     ];
@@ -270,11 +286,20 @@ export function DialogList() {
         setViewModeState('dialoglist', newViewMode); // Сохраняем в cookies
     };
 
+    const toggleSelectDialog = (e, dialogId) => {
+        e.stopPropagation(); // предотвратить открытие просмотра
+        setSelectedDialogs(prev => {
+            const exists = prev.includes(dialogId);
+            if (exists) return prev.filter(id => id !== dialogId);
+            return [...prev, dialogId];
+        });
+    };
+
     if (loading) {
         return <div className="notifications-loading">
             <Spin size="large" />
             <Text className="loading-text">
-                Загрузка данных...
+                {t("dialogsLoading") || "Загрузка диалогов..."}
             </Text>
         </div>
     }
@@ -283,10 +308,10 @@ export function DialogList() {
         <div className="create-model-container">
             <div className="section-title">
                 <BarChartOutlined />
-                Статистика диалогов
+                {t("dialogsTitle") || "Статистика диалогов"}
             </div>
             <div className="section-description">
-                Просматривайте историю диалогов пользователей с вашим ассистентом и анализируйте их эффективность
+                {t("dialogsDescription") || "Просматривайте историю диалогов пользователей с вашим агентом и анализируйте их эффективность"}
             </div>
 
             <div className="tour-layout">
@@ -295,30 +320,39 @@ export function DialogList() {
                         <div className="dialog-list-header" ref={dialogHeaderRef}>
                             <div className="header-left">
                                 <Title level={3} className="dialog-list-title">
-                                    История диалогов
+                                    {t("dialogsTitle") || "История диалогов"}
                                 </Title>
                                 <Text type="secondary" className="dialog-count">
                                     {selectedType === 'all'
-                                        ? `${t('TotalDialogs')}: ${dialogs.length}`
-                                        : `Показано: ${filteredDialogs.length} из ${dialogs.length}`
+                                        ? `${t('TotalDialogs') || "Всего диалогов"}: ${dialogs.length}`
+                                        : `${t("shown") || "Показано"}: ${filteredDialogs.length} ${t("of") || "из"} ${dialogs.length}`
                                     }
                                 </Text>
                             </div>
 
                             <div className="header-controls">
+                                {/* Batch delete button in header (appears when there are selected dialogs) */}
+                                {selectedDialogs.length > 0 && (
+                                    <div style={{ display: 'flex', alignItems: 'center' }}>
+                                        <Button danger type="primary" icon={<DeleteOutlined />} onClick={() => setBatchDeleteModalOpen(true)}>
+                                            {t("dialogsDeleteSelected") || "Удалить диалоги"}
+                                        </Button>
+                                    </div>
+                                )}
+
                                 {/* Фильтр по типу */}
                                 <div className="type-filter" ref={typeFilterRef}>
                                     <Select
                                         value={selectedType}
                                         onChange={setSelectedType}
                                         style={{ width: 200 }}
-                                        placeholder="Фильтр по типу"
+                                        placeholder={t("dialogsFilterByType") || "Фильтр по типу"}
                                         suffixIcon={<FilterOutlined />}
                                     >
                                         <Option value="all">
                                             <Space>
                                                 <MessageOutlined />
-                                                Все типы
+                                                {t("dialogsFilterAll") || "Все типы"}
                                             </Space>
                                         </Option>
                                         {getUniqueTypes().map(type => (
@@ -340,10 +374,10 @@ export function DialogList() {
                                     ref={viewToggleRef}
                                 >
                                     <Radio.Button value="cards">
-                                        <AppstoreOutlined /> Карточки
+                                        <AppstoreOutlined /> {t("dialogsViewCards") || "Карточки"}
                                     </Radio.Button>
                                     <Radio.Button value="list">
-                                        <UnorderedListOutlined /> Список
+                                        <UnorderedListOutlined /> {t("dialogsViewList") || "Список"}
                                     </Radio.Button>
                                 </Radio.Group>
                             </div>
@@ -364,18 +398,24 @@ export function DialogList() {
                                                         onClick={() => handleDialogClick(dialog)}
                                                         size="small"
                                                     >
-                                                        <div className="dialog-card-header">
-                                                            <div
-                                                                className="dialog-type-icon"
-                                                                style={{ color: typeConfig.color }}
-                                                            >
-                                                                {typeConfig.icon}
+                                                        <div className="dialog-card-header" style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
+                                                            <div style={{display: 'flex', alignItems: 'center', gap: 10}}>
+                                                                <div
+                                                                    className="dialog-type-icon"
+                                                                    style={{ color: typeConfig.color, display: 'flex', alignItems: 'center', position: 'relative', minWidth: 36 }}
+                                                                >
+                                                                    {typeConfig.icon}
+                                                                </div>
+                                                                <div className="dialog-card-title">
+                                                                    <Text strong>{typeConfig.label}</Text>
+                                                                    <Text type="secondary" className="dialog-id">
+                                                                        #{dialog.DialogId}
+                                                                    </Text>
+                                                                </div>
                                                             </div>
-                                                            <div className="dialog-card-title">
-                                                                <Text strong>{typeConfig.label}</Text>
-                                                                <Text type="secondary" className="dialog-id">
-                                                                    #{dialog.DialogId}
-                                                                </Text>
+                                                            {/* Иконка удаления выровнена по правому краю карточки */}
+                                                            <div className="dialog-delete-icon" onClick={(e) => { e.stopPropagation(); toggleSelectDialog(e, dialog.DialogId); }} style={{ color: selectedDialogs.includes(dialog.DialogId) ? '#ff4d4f' : 'rgba(0,0,0,0.45)' }}>
+                                                                <DeleteOutlined />
                                                             </div>
                                                         </div>
 
@@ -415,7 +455,7 @@ export function DialogList() {
                                                         <div className="list-item-left">
                                                             <div
                                                                 className="list-type-icon"
-                                                                style={{ color: typeConfig.color }}
+                                                                style={{ color: typeConfig.color, display: 'flex', alignItems: 'center', position: 'relative', minWidth: 36 }}
                                                             >
                                                                 {typeConfig.icon}
                                                             </div>
@@ -440,7 +480,11 @@ export function DialogList() {
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                        <div className="list-item-right">
+                                                        <div className="list-item-right" style={{display: 'flex', flexDirection: 'column', alignItems: 'flex-end'}}>
+                                                            {/* Иконка удаления — справа сверху */}
+                                                            <div className="list-delete-icon" onClick={(e) => { e.stopPropagation(); toggleSelectDialog(e, dialog.DialogId); }} style={{ color: selectedDialogs.includes(dialog.DialogId) ? '#ff4d4f' : 'rgba(0,0,0,0.45)' }}>
+                                                                <DeleteOutlined />
+                                                            </div>
                                                             <div className="list-statuses">
                                                                 <StatusIndicator value={dialog.Target === 1} type="target" />
                                                                 <StatusIndicator value={dialog.Trigger === 1} type="trigger" />
@@ -455,14 +499,14 @@ export function DialogList() {
 
                                 <div className="dialog-pagination" ref={paginationRef}>
                                     <Pagination
-                                        current={currentPage}
+                                        current={validCurrentPage}
                                         total={filteredDialogs.length}
                                         pageSize={pageSize}
                                         onChange={handlePageChange}
                                         showSizeChanger={false}
                                         showQuickJumper={false}
                                         showTotal={(total, range) =>
-                                            `${range[0]}-${range[1]} из ${total} диалогов`
+                                            `${range[0]}-${range[1]} ${t("of") || "из"} ${total} ${t("dialogsMessages") || "диалогов"}`
                                         }
                                         className="custom-pagination"
                                     />
@@ -476,15 +520,15 @@ export function DialogList() {
                                         <div>
                                             <Text type="secondary">
                                                 {selectedType === 'all'
-                                                    ? t('noDialogsFound')
-                                                    : `Диалогов типа "${getDialogTypeConfig(selectedType).label}" не найдено`
+                                                    ? (t('dialogsNoDialogs') || "Диалоги не найдены")
+                                                    : `${t("dialogsNoDialogsOfType") || "Диалогов типа"} "${getDialogTypeConfig(selectedType).label}" ${t("notFound") || "не найдено"}`
                                                 }
                                             </Text>
                                             <br />
                                             <Text type="secondary">
                                                 {selectedType === 'all'
-                                                    ? "Диалоги появятся здесь после первых обращений к вашему ассистенту"
-                                                    : "Попробуйте выбрать другой тип или сбросить фильтр"
+                                                    ? (t("dialogsNoDialogsDesc") || "Диалоги появятся здесь после первых обращений к вашему агенту")
+                                                    : (t("dialogsTryAnotherType") || "Попробуйте выбрать другой тип или сбросить фильтр")
                                                 }
                                             </Text>
                                             {selectedType !== 'all' && (
@@ -493,7 +537,7 @@ export function DialogList() {
                                                         type="primary"
                                                         onClick={() => setSelectedType('all')}
                                                     >
-                                                        Показать все диалоги
+                                                        {t("dialogsShowAll") || "Показать все диалоги"}
                                                     </Button>
                                                 </div>
                                             )}
@@ -505,29 +549,61 @@ export function DialogList() {
 
                         {isModalOpen && (
                             <Modal
-                                title="Просмотр диалога"
+                                title={t("dialogsViewTitle") || "Просмотр диалога"}
                                 open={isModalOpen}
                                 onCancel={handleCloseModal}
                                 footer={null}
                                 width={900}
                                 centered
-                                destroyOnClose
                                 className="dialog-view-modal"
-                                styles={{
-                                    mask: {
-                                        backdropFilter: 'blur(4px)',
-                                        WebkitBackdropFilter: 'blur(4px)',
-                                    }
-                                }}
                             >
                                 <ViewDialog
                                     token={localToken}
                                     dialogId={viewDialog}
                                     target={dialogTarget}
                                     trigger={dialogTrigger}
+                                    onClose={handleCloseModal}
+                                    onDialogDeleted={handleDialogDeleted}
                                 />
                             </Modal>
                         )}
+
+                        {/* Модальное подтверждение пакетного удаления */}
+                        <Modal
+                            title={<span style={{ color: '#ff4d4f' }}><ExclamationCircleOutlined /> {t("dialogsConfirmDeleteTitle") || "Подтверждение удаления"}</span>}
+                            open={batchDeleteModalOpen}
+                            onCancel={() => setBatchDeleteModalOpen(false)}
+                            okText={t("delete") || "Удалить"}
+                            cancelText={t("cancel") || "Отмена"}
+                            okButtonProps={{ danger: true }}
+                            onOk={async () => {
+                                try {
+                                    const result = await DeleteDialogs(localToken, selectedDialogs);
+                                    if (result && result.status === 'ok') {
+                                        // Показать уведомления по каждому удаленному диалогу
+                                        selectedDialogs.forEach(id => showNotification(`${t("dialog") || "Диалог"} ${id}`, t("dialogsDeleteSuccess") || 'успешно удалён!'));
+                                        // Удаляем из локального состояния
+                                        setDialogs(prev => prev.filter(d => !selectedDialogs.includes(d.DialogId)));
+                                        // Если открыт просмотр удаленного диалога - закроем
+                                        if (selectedDialogs.includes(viewDialog)) {
+                                            setIsModalOpen(false);
+                                        }
+                                        setSelectedDialogs([]);
+                                    } else {
+                                        const err = result && result.error ? result.error : (t("dialogsDeleteErrorDesc") || 'Не удалось удалить диалоги');
+                                        showErrorNotification(t("dialogsDeleteError") || 'Ошибка удаления диалогов', err);
+                                    }
+                                } catch (err) {
+                                    console.error('Ошибка пакетного удаления диалогов:', err);
+                                    showErrorNotification(t("dialogsDeleteError") || 'Ошибка удаления диалогов', err?.message || (t("error") || 'Ошибка при удалении диалогов'));
+                                } finally {
+                                    setBatchDeleteModalOpen(false);
+                                }
+                            }}
+                        >
+                            <p>{t("dialogsConfirmDeleteMessage") || "Вы уверены, что хотите удалить выбранные диалоги?"}</p>
+                            <p style={{ color: '#8c8c8c' }}>{t("dialogsConfirmDeleteNote") || "Это действие нельзя будет отменить."}</p>
+                        </Modal>
                     </div>
                 </div>
 
@@ -537,10 +613,10 @@ export function DialogList() {
                         <div className="tour-controls-header">
                             <PlayCircleOutlined className="tour-controls-icon" />
                             <h3 className="tour-controls-title">
-                                Интерактивный обзор
+                                {t("dialogsTourTitle") || "Интерактивный обзор"}
                             </h3>
                             <p className="tour-controls-subtitle">
-                                Изучите интерфейс статистики диалогов пошагово
+                                {t("dialogsTourSubtitle") || "Изучите интерфейс статистики диалогов пошагово"}
                             </p>
                         </div>
 
@@ -551,7 +627,7 @@ export function DialogList() {
                                 size="large"
                                 onClick={startTour}
                             >
-                                🚀 Начать тур
+                                {t("dialogsTourStart") || "🚀 Начать тур"}
                             </Button>
                         </div>
 
@@ -559,7 +635,7 @@ export function DialogList() {
                             <div className="tour-progress">
                                 <div className="tour-progress-step">
                                     <span className="tour-progress-step-text">
-                                        Шаг {current + 1} из {steps.length}
+                                        {t("notifTourStep") || "Шаг"} {current + 1} {t("notifTourOf") || "из"} {steps.length}
                                     </span>
                                 </div>
                                 <div className="tour-progress-bar">
@@ -575,12 +651,12 @@ export function DialogList() {
                         )}
 
                         <div className="tour-info">
-                            <div className="tour-info-title">📋 Что вы изучите:</div>
+                            <div className="tour-info-title">{t("dialogsTourWhatYouLearn") || "📋 Что вы изучите:"}</div>
                             <ul className="tour-info-list">
-                                <li>Фильтрацию диалогов по типам</li>
-                                <li>Переключение режимов просмотра</li>
-                                <li>Анализ статистики диалогов</li>
-                                <li>Просмотр детальной информации</li>
+                                <li>{t("dialogsTourLearn1") || "Фильтрацию диалогов по типам"}</li>
+                                <li>{t("dialogsTourLearn2") || "Переключение режимов просмотра"}</li>
+                                <li>{t("dialogsTourLearn3") || "Анализ статистики диалогов"}</li>
+                                <li>{t("dialogsTourLearn4") || "Просмотр детальной информации"}</li>
                             </ul>
                         </div>
                     </div>
@@ -608,7 +684,7 @@ export function DialogList() {
 
             <FloatButton
                 icon={<QuestionCircleOutlined />}
-                tooltip="Начать обзор интерфейса"
+                tooltip={t("tourFloatButtonTooltip") || "Начать обзор интерфейса"}
                 onClick={showTourPanel}
                 className="tour-float-button"
             />

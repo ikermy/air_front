@@ -1,0 +1,31 @@
+services:
+  Marusia:
+    image: marusia-sale_slim:latest
+    container_name: Marusia
+    ports:
+      - "8080:80"
+      - "443:443"
+      - "8081:8081"
+    volumes:
+      - marusia_mysqld_run:/run/mysqld
+      - ./host.pem:/etc/ssl/custom/host.pem:ro
+      - ./host-key.pem:/etc/ssl/custom/host-key.pem:ro
+#      - /etc/letsencrypt:/etc/letsencrypt:rw
+#      - ./build:/bot/Marusia/build:ro
+      - marusia_data:/data
+      - marusia_logs:/var/log/Marusia
+      - marusia_mysql_data:/var/lib/mysql
+      - marusia_mysql_logs:/var/log/mysql
+#      - /var/www/s3:/var/www/s3:rw
+#      - /var/www/landing:/var/www/landing:ro
+    restart: always
+    environment:
+      - HOST=192.168.1.8
+      - NGINX_PORT=443
+
+volumes:
+  marusia_data:
+  marusia_logs:
+  marusia_mysql_data:
+  marusia_mysql_logs:
+  marusia_mysqld_run:

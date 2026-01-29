@@ -9,7 +9,7 @@ import {TypingIndicator} from "../../utils/TypingIndicator";
 import {useAutoScroll} from "../../utils/useAutoScroll";
 import {Modal, Spin, Typography} from 'antd';
 
-const DEMO_URL = window.runtimeConfig?.REACT_APP_DEMO || process.env.REACT_APP_DEMO;
+const LAND_URL = (window.runtimeConfig && window.runtimeConfig.REACT_APP_LAND) || process.env.REACT_APP_LAND;
 
 const animationAssistWrite = 20; // мс на символ
 
@@ -38,7 +38,7 @@ export function ChatDemoAssist({token, isTokenLoading, isModalOpen}) {
 
             setUserNameLoading(true);
             const makeRequest = async (isRetry = false) => {
-                const response = await fetch(`${DEMO_URL}/username?token=${encodeURIComponent(token)}`, {
+                const response = await fetch(`${LAND_URL}/demo/username?token=${encodeURIComponent(token)}`, {
                     method: "GET",
                     headers: {"Content-Type": "application/json"},
                 });

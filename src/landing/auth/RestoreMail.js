@@ -5,11 +5,11 @@ import './auth.css';
 import { useNavigate } from "react-router-dom";
 import {UserContext} from "../../index";
 
-const DEMO_URL = window.runtimeConfig?.REACT_APP_DEMO || process.env.REACT_APP_DEMO;
+const LAND_URL = (window.runtimeConfig && window.runtimeConfig.REACT_APP_LAND) || process.env.REACT_APP_LAND;
 
 async function sendRestoreData({userId, mail}) {
     try {
-        const response = await fetch(`${DEMO_URL}/rest`, {
+        const response = await fetch(`${LAND_URL}/rest`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({

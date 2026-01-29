@@ -1,12 +1,10 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useState, useCallback} from 'react';
 import axios from 'axios';
 import {useTranslation} from 'react-i18next';
 import './Transceiver.css';
-import {getWidgetURL, validateAndRefreshWidgetToken} from "./utils";
+import {validateAndRefreshWidgetToken} from "./utils";
 import {IoSend} from "react-icons/io5";
 
-
-// const WIDGET_URL = window.runtimeConfig?.REACT_APP_WIDGET || process.env.REACT_APP_WIDGET;
 
 export function Transceiver({
                                 userName,
@@ -20,13 +18,26 @@ export function Transceiver({
     const [message, setMessage] = useState('');
     const {t} = useTranslation();
 
+    // Безопасная обертка для setPermit
+    const safeSetPermit = useCallback((value) => {
+        if (typeof setPermit === 'function') {
+            try {
+                setPermit(value);
+            } catch (e) {
+                console.error('Ошибка при вызове setPermit:', e);
+            }
+        } else {
+            console.warn('setPermit не является функцией, пропущен вызов. Получено:', setPermit);
+        }
+    }, [setPermit]);
+
     const sendMessage = async () => {
-        const WIDGET_URL = getWidgetURL();
+        const LAND_URL = (window.runtimeConfig && window.runtimeConfig.REACT_APP_LAND) || process.env.REACT_APP_LAND;
 
         if (message.trim() === '') return; // Не отправлять пустое сообщение
 
         try {
-            const response = await axios.post(`${WIDGET_URL}/data`, {
+            const response = await axios.post(`${LAND_URL}/widget/data`, {
                 token: token,
                 name: userName,
                 content: message,
@@ -48,7 +59,7 @@ export function Transceiver({
 
                 if (status === 402) {
                     console.error('Недостаточный баланс!');
-                    setPermit(false);
+                    safeSetPermit(false);
                     return;
                 }
 
@@ -61,8 +72,10 @@ export function Transceiver({
 
                 if (status === 500) {
                     console.error('Ошибка сервера');
-                    setPermit(false);
-                    setIsModalOpen(false);
+                    safeSetPermit(false);
+                    if (typeof setIsModalOpen === 'function') {
+                        setIsModalOpen(false);
+                    }
                     return;
                 }
                 console.error(`Неожиданный ответ сервера: ${status}`);
@@ -91,20 +104,19 @@ export function Transceiver({
 
                     if (newToken === null || token === "no_balance") {
                         console.error("Токен не обновлен!")
-                        setPermit(false)
+                        safeSetPermit(false)
                     }
 
                     setToken(newToken.data.token);
                 } catch (refreshError) {
                     console.error('Ошибка при обновлении токена', refreshError);
-                    setPermit(false)
+                    safeSetPermit(false)
                 } finally {
-                    // Сбрасываем флаг, чтобы эффект сработал только один раз
                     setShouldRefresh(false);
                 }
             })();
         }
-    }, [setToken, shouldRefresh, token, setPermit]);
+    }, [setToken, shouldRefresh, token, safeSetPermit]);
 
     return (
         <div className="tr-input-container">

@@ -1,8 +1,9 @@
 import {validateAndRefreshToken} from "../../../utils/easyUtils";
 
 export class WhatsAuthServive {
-    constructor() {
+    constructor(t) {
         this.socket = null;
+        this.t = t || ((key) => key); // Fallback if t is not provided
         this.callbacks = {
             onQrCode: null,
             onQrSuccess: null,
@@ -28,16 +29,16 @@ export class WhatsAuthServive {
             }
         } catch (error) {
             if (this.callbacks.onError) {
-                this.callbacks.onError(`Ошибка запуска аутентификации: ${error.message}`);
+                this.callbacks.onError(`${this.t("telegramAuthStartError") || "Ошибка запуска аутентификации:"} ${error.message}`);
             }
             throw error;
         }
     }
 
     connectWebSocket(token) {
-        const WHATS_WSS = (window.runtimeConfig && window.runtimeConfig.REACT_APP_WHATS_WSS) || process.env.REACT_APP_WHATS_WSS;
+        const LAND_WSS = (window.runtimeConfig && window.runtimeConfig.REACT_APP_LAND_WSS) || process.env.REACT_APP_LAND_WSS;
 
-        const wsUrl = `${WHATS_WSS}/whats/ws?token=${token}`;
+        const wsUrl = `${LAND_WSS}/ws/whats?token=${token}`;
 
         this.socket = new WebSocket(wsUrl);
 
@@ -70,23 +71,23 @@ export class WhatsAuthServive {
                         }
                         break;
                     default:
-                        console.warn('Неизвестный тип сообщения WebSocket:', data.type);
+                        console.warn(`${this.t("telegramAuthUnknownMessage") || "Неизвестный тип сообщения WebSocket:"} ${data.type}`);
                         if (this.callbacks.onError) {
-                            this.callbacks.onError(data.payload || 'Неизвестная ошибка');
+                            this.callbacks.onError(data.payload || this.t("telegramAuthUnknownError") || "Неизвестная ошибка");
                         }
                 }
             } catch (error) {
-                console.error('Ошибка обработки сообщения WebSocket:', error);
+                console.error(`${this.t("telegramAuthWSError") || "Ошибка WebSocket:"} ${error}`);
                 if (this.callbacks.onError) {
-                    this.callbacks.onError('Ошибка обработки сообщения от сервера');
+                    this.callbacks.onError(this.t("telegramAuthProcessError") || "Ошибка обработки сообщения от сервера");
                 }
             }
         };
 
         this.socket.onerror = (error) => {
-            console.error('Ошибка WebSocket:', error);
+            console.error(`${this.t("telegramAuthWSError") || "Ошибка WebSocket:"} ${error}`);
             if (this.callbacks.onError) {
-                this.callbacks.onError('Ошибка соединения WebSocket');
+                this.callbacks.onError(this.t("telegramAuthWebSocketError") || "Ошибка соединения WebSocket");
             }
         };
 

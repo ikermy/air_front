@@ -1,10 +1,5 @@
 import {useContext, useEffect} from 'react';
 import {UserContext} from "../index";
-import {getWidgetURL} from "./utils";
-
-
-const DEMO_URL = window.runtimeConfig?.REACT_APP_DEMO || process.env.REACT_APP_DEMO;
-// const WIDGET_URL = window.runtimeConfig?.REACT_APP_WIDGET || process.env.REACT_APP_WIDGET;
 
 export function Examinator({ mode, examId, examKey, setToken, setIsTokenLoading }) {
     const respId = useContext(UserContext);
@@ -12,12 +7,12 @@ export function Examinator({ mode, examId, examKey, setToken, setIsTokenLoading 
     useEffect(() => {
         const checkPermission = async () => {
             try {
-                const WIDGET_URL = getWidgetURL();
+                const LAND_URL = (window.runtimeConfig && window.runtimeConfig.REACT_APP_LAND) || process.env.REACT_APP_LAND;
 
                 let response
                 switch (mode) {
                     case "widget":
-                        response = await fetch(`${WIDGET_URL}/exam`, {
+                        response = await fetch(`${LAND_URL}/widget/exam`, {
                             method: 'POST',
                             headers: {'Content-Type': 'application/json'},
                             body: JSON.stringify({
@@ -27,7 +22,7 @@ export function Examinator({ mode, examId, examKey, setToken, setIsTokenLoading 
                         });
                         break
                     case "demo":
-                        response = await fetch(`${DEMO_URL}/exam`, {
+                        response = await fetch(`${LAND_URL}/demo/exam`, {
                             method: 'POST',
                             headers: {'Content-Type': 'application/json'},
                             body: JSON.stringify({

@@ -31,30 +31,21 @@ injectWidgetCSS();
   }
 })();
 
-// Устанавливаем runtime конфигурацию для виджета ГЛОБАЛЬНО
-function getWidgetConfig() {
-  // Standalone виджет использует специальный порт 8083
-  // С расширенными CORS настройками для внешних сайтов
-  console.log('Standalone Widget uses dedicated API: https://info-bot.online:8083');
-  return 'https://info-bot.online:8083';
-}
-
-const WIDGET_URL = getWidgetConfig();
+// Устанавливаем runtime конфигурацию для standalone виджета
+// Виджет работает через Landing API (не через отдельный порт)
+const LAND_URL = 'https://info-bot.online:8081';
 
 // Принудительно устанавливаем конфигурацию в несколько мест
 window.runtimeConfig = window.runtimeConfig || {};
-window.runtimeConfig.REACT_APP_WIDGET = WIDGET_URL;
+window.runtimeConfig.REACT_APP_LAND = LAND_URL;
 
 if (typeof window.process === 'undefined') {
   window.process = { env: {} };
 }
 window.process.env = window.process.env || {};
-window.process.env.REACT_APP_WIDGET = WIDGET_URL;
+window.process.env.REACT_APP_LAND = LAND_URL;
 
-// Создаем глобальную функцию для получения URL виджета
-window.getMarusyaWidgetURL = function() {
-  return getWidgetConfig();
-};
+console.log('Standalone Widget uses Landing API:', LAND_URL);
 
 // Устанавливаем базовый путь для статических файлов виджета
 // Это важно для правильной загрузки aperture.svg и других ресурсов
@@ -76,12 +67,11 @@ if (typeof window !== 'undefined' && !window.WIDGET_STATIC_BASE) {
 
 // Переопределяем process.env для модулей, которые используют его
 if (typeof process !== 'undefined' && process.env) {
-  process.env.REACT_APP_WIDGET = WIDGET_URL;
+  process.env.REACT_APP_LAND = LAND_URL;
 }
 
-console.log('Widget URL configured globally:', WIDGET_URL);
+console.log('Landing API URL configured globally:', LAND_URL);
 console.log('window.runtimeConfig:', window.runtimeConfig);
-console.log('process.env.REACT_APP_WIDGET:', window.process.env.REACT_APP_WIDGET);
 console.log('Full React Widget: Инициализация начата...');
 
 // Создаем API объект для полноценного React виджета

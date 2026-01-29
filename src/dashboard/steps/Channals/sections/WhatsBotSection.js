@@ -3,7 +3,8 @@ import {Alert, Button, Modal, QRCode} from "antd";
 import {ContactsModal} from "../ContactsModal";
 import {showErrorNotification, showNotification} from "../../../hotification/showNotification";
 import {validateAndRefreshToken} from "../../../../utils/easyUtils";
-import {getBotName} from "../getBotName";
+import {getBotName} from "../chUtils";
+import {useTranslation} from "react-i18next";
 
 
 export const WhatsBotSection = ({
@@ -20,19 +21,19 @@ export const WhatsBotSection = ({
                                     handleGetContacts,
                                     originalChannelStates
                                 }) => {
+    const {t} = useTranslation();
     // Состояния для модального окна и контактов
     const [isContactsModalVisible, setIsContactsModalVisible] = useState(false);
     const [currentSelectedIds, setCurrentSelectedIds] = useState([]);
 
-    // Определяем текущие выбранные ID для кнопки и модального окна
-    // Используем исходное состояние если канал только что был развернут
-    const originalState = originalChannelStates[channel.key];
-    const displaySelectedIds = originalState ? originalState.contactsIds || [] : channel.contactsIds || [];
-
     // Извлекаем текущие выбранные контакты (если они есть)
     useEffect(() => {
+        // Определяем текущие выбранные ID для кнопки и модального окна
+        // Используем исходное состояние если канал только что был развернут
+        const originalState = originalChannelStates[channel.key];
+        const displaySelectedIds = originalState ? originalState.contactsIds || [] : channel.contactsIds || [];
         setCurrentSelectedIds(displaySelectedIds);
-    }, [displaySelectedIds]);
+    }, [originalChannelStates, channel.key, channel.contactsIds]);
 
     // Функция для открытия модального окна выбора контактов
     const handleOpenContactsModal = async () => {
@@ -41,7 +42,7 @@ export const WhatsBotSection = ({
             // После успешного получения открываем модальное окно
             setIsContactsModalVisible(true);
         } catch (error) {
-            showErrorNotification('Ошибка', `Не удалось загрузить контакты: ${error.message}`, 'error');
+            showErrorNotification(t("error") || 'Ошибка', `${t("channelContactsError") || "Не удалось загрузить контакты"}: ${error.message}`, 'error');
         }
     };
 
@@ -66,8 +67,8 @@ export const WhatsBotSection = ({
 
         // Показываем уведомление
         showNotification(
-            "Настройки изменены",
-            "После сохранения Ассистент будет взаимодействовать только с выбранными контактами"
+            t("whatsBotSettingsChanged") || "Настройки изменены",
+            t("whatsBotAfterSaveSelected") || "После сохранения Агент будет взаимодействовать только с выбранными контактами"
         );
     };
     // Вспомогательный компонент для отображения состояния при генерации QR-кода
@@ -77,7 +78,7 @@ export const WhatsBotSection = ({
                 <Alert
                     className="channel-alert"
                     description={
-                        "Подготовка QR-кода для авторизации в WhatsApp. Пожалуйста, подождите..."
+                        t("whatsBotQRPreparing") || "Подготовка QR-кода для авторизации в WhatsApp. Пожалуйста, подождите..."
                     }
                     type={"info"}
                 />
@@ -131,22 +132,19 @@ export const WhatsBotSection = ({
                 <div className="padding">
                     <Alert
                         className="channel-alert"
-                        message="WhatsApp UserBot создан"
+                        message={t("whatsBotCreated") || "WhatsApp UserBot создан"}
                         description={
                             botName != null ? (
                                 <>
-                                    Сейчас ваш WhatsApp UserBot <b>{botName}</b> запущен и взаимодействует с Ассистентом.
-                                    Если требуется повторная авторизация, или вы хотите повторно создать канал WhatsApp
-                                    UserBot, вам нужно удалить текущий канал.
+                                    {t("whatsBotRunning") || "Сейчас ваш WhatsApp UserBot"} <b>{botName}</b> {t("whatsBotInteracting") || "запущен и взаимодействует с Агентом."}
+                                    {t("whatsBotReauth") || "Если требуется повторная авторизация, или вы хотите повторно создать канал WhatsApp UserBot, вам нужно удалить текущий канал."}
                                 </>
                             ) : (
                                 <>
-                                    Дополнительные действия не требуются.
-                                    Если требуется повторная авторизация, или вы хотите повторно создать канал WhatsApp
-                                    UserBot, вам нужно удалить текущий канал.
+                                    {t("whatsBotNoAction") || "Дополнительные действия не требуются."}
+                                    {t("whatsBotReauth") || "Если требуется повторная авторизация, или вы хотите повторно создать канал WhatsApp UserBot, вам нужно удалить текущий канал."}
                                     <br/>
-                                    Предупреждение - после запуска этого канала, Ассистент начнет обрабатывать
-                                    новые сообщения примерно через одну минуту
+                                    {t("whatsBotWarning") || "Предупреждение - после запуска этого канала, Агент начнет обрабатывать новые сообщения примерно через одну минуту"}
                                 </>
                             )
                         }
@@ -160,7 +158,7 @@ export const WhatsBotSection = ({
                             onClick={handleOpenContactsModal}
                             disabled={isLoadingContacts || !(channel.isEnabled && !!channel.data)}
                         >
-                            {currentSelectedIds.length > 0 ? 'Изменить выбор контактов' : 'Выбрать контакты'}
+                            {currentSelectedIds.length > 0 ? (t("whatsBotChangeContacts") || 'Изменить выбор контактов') : (t("whatsBotSelectContacts") || 'Выбрать контакты')}
                         </Button>
 
                         {currentSelectedIds.length > 0 && (
@@ -184,12 +182,12 @@ export const WhatsBotSection = ({
 
                                     // Показываем уведомление
                                     showNotification(
-                                        "Настройки изменены",
-                                        "После сохранения Ассистент будет взаимодействовать со всеми вашими контактами"
+                                        t("whatsBotSettingsChanged") || "Настройки изменены",
+                                        t("whatsBotAfterSaveAll") || "После сохранения Агент будет взаимодействовать со всеми вашими контактами"
                                     );
                                 }}
                             >
-                                Слушать всех
+                                {t("whatsBotListenAll") || "Слушать всех"}
                             </Button>
                         )}
                     </div>
@@ -199,13 +197,11 @@ export const WhatsBotSection = ({
                             <>
                                 {channel.contacts ? (
                                     <>
-                                        Сейчас Ассистент работает с выбранными вами контактами или группами.
+                                        {t("whatsBotSelectedContacts") || "Сейчас Агент работает с выбранными вами контактами или группами."}
                                     </>
                                 ) : (
                                     <>
-                                        Сейчас Ассистент работает со всеми вашими существующими и новыми контактами. Так
-                                        же вы можете выбрать отдельные контакты или группы с которыми будет
-                                        взаимодействовать Ассистент
+                                        {t("whatsBotAllContacts") || "Сейчас Агент работает со всеми вашими существующими и новыми контактами. Так же вы можете выбрать отдельные контакты или группы с которыми будет взаимодействовать Агент"}
                                     </>
                                 )}
                             </>
@@ -228,11 +224,10 @@ export const WhatsBotSection = ({
         <div className="padding">
             <Alert
                 className="channel-alert"
-                message="Настройка параметров WhatsApp UserBot"
+                message={t("whatsBotSetup") || "Настройка параметров WhatsApp UserBot"}
                 description={
                     <>
-                        Для того что бы ваш ассистент мог вести себя как реальный
-                        человек в WhatsApp, вам нужно просто отсканировать QR код через приложение WhatsApp на вашем телефоне!&nbsp;
+                        {t("whatsBotSetupDesc") || "Для того что бы ваш агент мог вести себя как реальный человек в WhatsApp, вам нужно просто отсканировать QR код через приложение WhatsApp на вашем телефоне!"}&nbsp;
                     </>
                 }
                 type={channel.data ? "success" : "warning"}
@@ -246,7 +241,7 @@ export const WhatsBotSection = ({
                     // disabled={!channel.data}
                     onClick={handleGetQR}
                 >
-                    Получить QR код авторизации
+                    {t("whatsBotGetQR") || "Получить QR код авторизации"}
                 </Button>
             )}
 
@@ -254,7 +249,7 @@ export const WhatsBotSection = ({
 
             {showQRCode && (
                 <Modal
-                    title="QR-код для авторизации в WhatsApp"
+                    title={t("whatsBotQRTitle") || "QR-код для авторизации в WhatsApp"}
                     open={showQRCode}
                     onCancel={() => {
                         setShowQRCode(false);
@@ -263,20 +258,22 @@ export const WhatsBotSection = ({
                         }
                     }}
                     footer={null}
+                    width={400}
                 >
                     <Alert
                         className="channel-alert"
-                        description="Отсканируйте QR-код через приложение WhatsApp для авторизации"
+                        description={t("whatsBotQRDesc") || "Отсканируйте QR-код через приложение WhatsApp для авторизации"}
                         type="success"
                         style={{marginBottom: 16}}
                     />
-                    <div style={{display: 'flex', justifyContent: 'center'}}>
+                    <div style={{display: 'flex', justifyContent: 'center', marginBottom: 16}}>
                         <QRCode
                             type={'svg'}
                             errorLevel={'Q'}
-                            value={qrCodeUrl}
+                            value={qrCodeUrl || 'loading...'}
                             color="#000000"
                             bgColor="#ffffff"
+                            size={256}
                         />
                     </div>
                 </Modal>

@@ -2,9 +2,11 @@ import {Alert, Input} from "antd";
 import {ApiOutlined} from "@ant-design/icons";
 import React, {useEffect, useState} from "react";
 import {validateAndRefreshToken} from "../../../../utils/easyUtils";
-import {getBotName} from "../getBotName";
+import {getBotName} from "../chUtils";
+import {useTranslation} from "react-i18next";
 
 export const TBotSection = ({channel, selectedChannels, setSelectedChannels}) => {
+    const {t} = useTranslation();
     const [botName, setBotName] = useState(null);
 
     const fetchBotNameFor = async (chName) => {
@@ -50,10 +52,10 @@ export const TBotSection = ({channel, selectedChannels, setSelectedChannels}) =>
             {botName ? (
                 <Alert
                     className="channel-alert"
-                    message="Telegram Bot запущен"
+                    message={t("tbotBotRunning") || "Telegram Bot запущен"}
                     description={
                         <>
-                            Сейчас ваш <b>{botName}</b> бот запущен и взаимодействует с Ассистентом!
+                            {t("tbotBotRunningDesc") || "Сейчас ваш"} <b>{botName}</b> {t("tbotBotRunningDesc2") || "бот запущен и взаимодействует с Агентом!"}
                         </>
                     }
                     type={channel && channel.data ? "success" : "warning"}
@@ -62,11 +64,10 @@ export const TBotSection = ({channel, selectedChannels, setSelectedChannels}) =>
                 <div className="padding">
                     <Alert
                         className="channel-alert"
-                        message="Укажите API Token"
+                        message={t("tbotRequireToken") || "Укажите API Token"}
                         description={
                             <>
-                                Для работы ассистента с вашим ботом необходимо указать bot token, получить который можно в
-                                Telegram
+                                {t("tbotTokenDescription") || "Для работы агента с вашим ботом необходимо указать bot token, получить который можно в Telegram"}
                                 <a href="https://t.me/botfather" target="_blank" rel="noopener noreferrer">&nbsp;BotFather</a>
                             </>
                         }
@@ -74,13 +75,13 @@ export const TBotSection = ({channel, selectedChannels, setSelectedChannels}) =>
                     />
                     <Input
                         prefix={<ApiOutlined/>}
-                        placeholder="Введите API Token"
+                        placeholder={t("tbotTokenPlaceholder") || "Введите API Token"}
                         value={channel ? channel.data : ""}
                         onChange={(e) => {
                             const value = e.target.value;
                             const error =
                                 value.length > 0 && value.length < 40
-                                    ? "API Token должен быть не менее 40 символов!"
+                                    ? t("tbotTokenError") || "API Token должен быть не менее 40 символов!"
                                     : "";
 
                             if (!channel) return;

@@ -1,15 +1,13 @@
 import {useEffect} from 'react';
-import {getWidgetURL} from "./utils";
 
-// const WIDGET_URL = window.runtimeConfig?.REACT_APP_WIDGET || process.env.REACT_APP_WIDGET;
+const LAND_URL = (window.runtimeConfig && window.runtimeConfig.REACT_APP_LAND) || process.env.REACT_APP_LAND;
 
 export function Receiver({addMessage, token, setIsModalOpen, setModelName}) {
     useEffect(() => {
-        const WIDGET_URL = getWidgetURL();
 
         let eventSource;
         const connect = () => {
-            eventSource = new EventSource(`${WIDGET_URL}/events?token=${token}`);
+            eventSource = new EventSource(`${LAND_URL}/widget/events?token=${token}`);
             eventSource.onmessage = (event) => {
                 try {
                     const data = JSON.parse(event.data);

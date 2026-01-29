@@ -2,6 +2,8 @@
     width: 400px;
     padding: 0 16px;
     box-sizing: border-box;
+    position: relative;
+    overflow: visible;
 }
 
 /* Адаптивность для мобильных устройств */
@@ -90,3 +92,38 @@
         box-sizing: border-box;
     }
 }
+
+/* Специфичные стили для модальных окон из форм регистрации */
+.regform-policy-modal,
+.regform-demo-modal,
+.regform-policy-modal-portal,
+.regform-demo-modal-portal {
+    z-index: 30000 !important;
+}
+
+.regform-policy-modal .ant-modal,
+.regform-demo-modal .ant-modal,
+.regform-policy-modal-portal .ant-modal,
+.regform-demo-modal-portal .ant-modal {
+    z-index: 30001 !important;
+}
+
+.regform-policy-modal .ant-modal-mask,
+.regform-demo-modal .ant-modal-mask,
+.regform-policy-modal-portal .ant-modal-mask,
+.regform-demo-modal-portal .ant-modal-mask {
+    z-index: 29999 !important;
+}
+
+.regform-policy-modal .ant-modal-wrap,
+.regform-demo-modal .ant-modal-wrap,
+.regform-policy-modal-portal .ant-modal-wrap,
+.regform-demo-modal-portal .ant-modal-wrap {
+    z-index: 30000 !important;
+}
+
+.regform-policy-modal-portal .ant-modal-content,
+.regform-demo-modal-portal .ant-modal-content {
+    z-index: 30002 !important;
+}
+

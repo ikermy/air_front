@@ -13,7 +13,7 @@ const AssistFeatures = () => {
         {
             icon: "🎯",
             title: "Конструктор моделей",
-            description: "Создавайте персональных ассистентов без кода",
+            description: "Создавайте персональных агентов без кода",
             badge: "NEW"
         },
         {
@@ -58,7 +58,7 @@ const AssistFeatures = () => {
         <div className="assistant-description" id="about-section">
             <div className="description-intro">
                 <h2 className="intro-title">
-                    <span className="highlight">Маруся AI</span> — виртуальный ассистент нового поколения
+                    <span className="highlight">Маруся AI</span> — виртуальный агент нового поколения
                 </h2>
                 <p className="intro-text">
                     Построен на базе GPT-5 с принципами сохранения контекста, мультимодальности

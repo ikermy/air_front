@@ -1,5 +1,6 @@
 services:
   Marusia:
+
     build:
       context: .
       dockerfile: Dockerfile
@@ -9,13 +10,6 @@ services:
       - "8080:80"   # HTTP
       - "443:443"   # HTTPS для React-приложения
       - "8081:8081" # Landing
-      - "8082:8082" # Demo
-      - "8083:8083" # Widget
-      - "8084:8084" # Pay
-      - "8085:8085" # Insta
-      - "8086:8086" # WHATS
-      - "8087:8087" # TGUSER
-      - "8088:8088" # TGBOT
       - "8090:8090" # Analytics
     volumes:
       - ./build:/var/www/html:rw

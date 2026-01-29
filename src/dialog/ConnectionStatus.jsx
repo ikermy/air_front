@@ -1,30 +1,22 @@
 import { useEffect } from 'react';
 import axios from 'axios';
-import {getWidgetURL} from "../widget/utils";
-
 
 const LAND_URL = window.runtimeConfig?.REACT_APP_LAND || process.env.REACT_APP_LAND;
-const DEMO_URL = window.runtimeConfig?.REACT_APP_DEMO || process.env.REACT_APP_DEMO;
-// const DEMO_URL = process.env.REACT_APP_DEMO;
-// const WIDGET_URL = window.runtimeConfig?.REACT_APP_WIDGET || process.env.REACT_APP_WIDGET;
 
 export function ConnectionStatus({ mode, setConnected }) {
     useEffect(() => {
         const checkConnection = async () => {
             try {
-                const WIDGET_URL = getWidgetURL();
-
                 let url;
-
                 switch (mode) {
                     case "work":
                         url = `${LAND_URL}/healthcheck`;
                         break;
                     case "demo":
-                        url = `${DEMO_URL}/healthcheck`;
+                        url = `${LAND_URL}/available/demo`;
                         break;
                     case "widget":
-                        url = `${WIDGET_URL}/available`;
+                        url = `${LAND_URL}/available/widget`;
                         break;
                     default:
                         console.warn('Неизвестный режим');

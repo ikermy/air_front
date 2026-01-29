@@ -1,15 +1,15 @@
 /**
- * Компонент для настройки интеграции с AmoCRM
+ * Компонент для настройки интеграции с amoCRM
  *
  * Функциональность:
  * 1. Ввод базовых данных: Subdomain, Client ID, Client Secret
- * 2. OAuth авторизация через AmoCRM (открывает popup окно)
+ * 2. OAuth авторизация через amoCRM (открывает popup окно)
  * 3. Отображение статуса авторизации и срока действия токена
  *
  * Процесс OAuth авторизации:
  * - Шаг 1: Сохранение конфигурации на сервере
  * - Шаг 2: Получение auth URL от сервера
- * - Шаг 3: Открытие popup окна AmoCRM для авторизации
+ * - Шаг 3: Открытие popup окна amoCRM для авторизации
  * - Шаг 4: Обмен кода авторизации на access/refresh токены
  */
 import React, {useState, useEffect, useRef} from 'react';
@@ -24,15 +24,13 @@ import {
     getAmoCRMCustomFields,
     saveAmoCRMSourceField,
     getAmoCRMCustomFieldsMetadata,
-    createAmoCRMCustomField
-} from '../crmUtils';
-// добавляем импорт методов для воронок
-import {
+    createAmoCRMCustomField,
     getAmoCRMPipelines,
     saveAmoCRMDefaultPipeline,
     getCRMChannelSettings,
     saveCRMChannelSettings
 } from '../crmUtils';
+import {useTranslation} from 'react-i18next';
 
 const {Text} = Typography;
 
@@ -43,6 +41,7 @@ export const AmoCRMSection = ({
                                   oauthRef,
                                   tokenRef
                               }) => {
+    const {t} = useTranslation();
     const [isAuthLoading, setIsAuthLoading] = useState(false);
     const [isAccountInfoModalOpen, setIsAccountInfoModalOpen] = useState(false);
     const [accountInfo, setAccountInfo] = useState(null);
@@ -91,16 +90,26 @@ export const AmoCRMSection = ({
     // Устанавливаем значение по умолчанию для redirectUrl при первом рендере
     useEffect(() => {
         if (!channel.redirectUrl) {
+            // по умолчанию сохраняем базовый URL БЕЗ суффикса
             handleInputChange('redirectUrl', 'https://info-bot.online');
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     const handleInputChange = (field, value) => {
+        let finalValue = value;
+
+        if (field === 'redirectUrl') {
+            // Нормализуем значение: убираем пробелы и возможный суффикс
+            finalValue = (value || '')
+                .trim()
+                .replace(/\/crm\/oauth\/amoCRM\/callback\/?$/, '');
+        }
+
         setSelectedChannels(prevChannels =>
             prevChannels.map(ch =>
                 ch.key === channel.key
-                    ? {...ch, [field]: value}
+                    ? {...ch, [field]: finalValue}
                     : ch
             )
         );
@@ -116,7 +125,7 @@ export const AmoCRMSection = ({
     const isTokenExpired = channel.expiresAt && new Date(channel.expiresAt * 1000) < new Date();
 
     /**
-     * Загрузка кастомных полей AmoCRM
+     * Загрузка кастомных полей amoCRM
      */
     const handleLoadCustomFields = async () => {
         try {
@@ -127,7 +136,7 @@ export const AmoCRMSection = ({
                 return;
             }
 
-            const result = await getAmoCRMCustomFields(token, 'amocrm');
+            const result = await getAmoCRMCustomFields(token);
             if (result.success) {
                 setCustomFields(result.custom_fields || []);
                 // Восстанавливаем выбранное поле из конфигурации
@@ -147,7 +156,7 @@ export const AmoCRMSection = ({
     };
 
     /**
-     * Загрузка метаданных кастомных полей контактов AmoCRM
+     * Загрузка метаданных кастомных полей контактов amoCRM
      */
     const handleLoadMetadataFields = async () => {
         try {
@@ -159,7 +168,7 @@ export const AmoCRMSection = ({
             }
 
             // Загружаем метаданные полей
-            const result = await getAmoCRMCustomFieldsMetadata(token, 'amocrm');
+            const result = await getAmoCRMCustomFieldsMetadata(token);
             if (!result.success) {
                 showErrorNotification('Ошибка загрузки', result.error || 'Не удалось загрузить метаданные полей');
                 return;
@@ -171,7 +180,7 @@ export const AmoCRMSection = ({
             await new Promise(resolve => setTimeout(resolve, 500));
 
             // Загружаем настройки каналов для восстановления сохраненных значений
-            const settingsResult = await getCRMChannelSettings(token, 'amocrm');
+            const settingsResult = await getCRMChannelSettings(token);
             if (settingsResult.success && settingsResult.settings) {
                 const { Telegram, Instagram, Widget } = settingsResult.settings;
 
@@ -229,13 +238,13 @@ export const AmoCRMSection = ({
                 type: 'text'
             };
 
-            const result = await createAmoCRMCustomField(token, fieldData, 'amocrm');
+            const result = await createAmoCRMCustomField(token, fieldData);
             if (result.success) {
                 showNotification('Успешно', result.message || 'Кастомное поле успешно создано');
                 setNewFieldName('');
 
                 // Повторно загружаем метаданные для получения актуального списка с новым полем
-                const metadataResult = await getAmoCRMCustomFieldsMetadata(token, 'amocrm');
+                const metadataResult = await getAmoCRMCustomFieldsMetadata(token);
                 if (metadataResult.success) {
                     setMetadataFields(metadataResult.custom_fields || []);
                 }
@@ -267,7 +276,7 @@ export const AmoCRMSection = ({
                     showErrorNotification('Ошибка авторизации', 'Необходимо войти в систему');
                     return;
                 }
-                const saveResult = await saveAmoCRMSourceField(token, fieldId, 'amocrm');
+                const saveResult = await saveAmoCRMSourceField(token, fieldId);
                 if (saveResult.success) {
                     showNotification('Сохранено', saveResult.message || 'Поле источника перехода сохранено');
                 } else {
@@ -280,7 +289,7 @@ export const AmoCRMSection = ({
     };
 
     /**
-     * Загрузка воронок AmoCRM
+     * Загрузка воронок amoCRM
      */
     const handleLoadPipelines = async () => {
         try {
@@ -290,7 +299,7 @@ export const AmoCRMSection = ({
                 showErrorNotification('Ошибка авторизации', 'Необходимо войти в систему');
                 return;
             }
-            const result = await getAmoCRMPipelines(token, 'amocrm');
+            const result = await getAmoCRMPipelines(token);
             if (result.success) {
                 setPipelines(result.pipelines || []);
 
@@ -319,40 +328,45 @@ export const AmoCRMSection = ({
     };
 
     /**
-     * Реальная OAuth авторизация через AmoCRM
+     * Реальная OAuth авторизация через amoCRM
      */
     const handleRealOAuth = async () => {
-        if (!canAuthorize) {
-            showWarningNotification('Недостаточно данных', 'Заполните все обязательные поля');
-            return;
-        }
-        setIsAuthLoading(true);
         try {
+            setIsAuthLoading(true);
             const token = await validateAndRefreshToken(localStorage.getItem('authToken'));
             if (!token) {
-                showErrorNotification('Ошибка авторизации', 'Необходимо повторно авторизоваться!');
+                showErrorNotification('Ошибка авторизации', 'Необходимо повторно авторизоваться');
                 return;
             }
-            const fullRedirectUrl = `${(channel.redirectUrl || '').trim()}/crm/oauth/amocrm/callback`;
-            const result = await authorizeAmoCRM(token, {
+
+            // Формируем полный redirectUrl на основе базового из состояния (без суффикса)
+            const baseRedirect = (channel.redirectUrl || '')
+                .trim()
+                .replace(/\/crm\/oauth\/amoCRM\/callback\/?$/, '');
+            const fullRedirectUrl = `${baseRedirect}/crm/oauth/amoCRM/callback`;
+
+            const response = await authorizeAmoCRM(token, {
                 name: channel.configName,
                 subdomain: channel.subdomain,
                 clientId: channel.clientId,
                 clientSecret: channel.clientSecret,
-                url: fullRedirectUrl
+                redirectUrl: fullRedirectUrl,
+                configId: channel.id,
             });
-            if (!result.success) {
-                showErrorNotification('Ошибка OAuth', result.error || 'Не удалось авторизовать');
+
+            if (!response.success) {
+                showErrorNotification('Ошибка авторизации', response.error || 'Не удалось авторизовать');
                 return;
             }
+
             const authorized = await isAmoCRMAuthorized(token);
             setSelectedChannels(prev => prev.map(ch => ch.key === channel.key ? {
                 ...ch,
-                expiresAt: result.expires_at || ch.expiresAt || null,
+                expiresAt: response.expires_at || ch.expiresAt || null,
                 updatedAt: new Date().toISOString(),
                 isEnabled: authorized
             } : ch));
-            showNotification('Успешно', 'AmoCRM авторизована через OAuth');
+            showNotification('Успешно', 'amoCRM авторизована через OAuth');
         } catch (e) {
             console.error(e);
             showErrorNotification('Ошибка OAuth', e.message);
@@ -389,7 +403,7 @@ export const AmoCRMSection = ({
                 return;
             }
             // Передаем оба идентификатора: pipeline и статус
-            const saveResult = await saveAmoCRMDefaultPipeline(token, pipelineId, statusId, 'amocrm');
+            const saveResult = await saveAmoCRMDefaultPipeline(token, pipelineId, statusId);
             if (saveResult.success) {
                 showNotification('Сохранено', `Выбрано: ${pipeline.name} → ${status.name}`);
             } else {
@@ -414,7 +428,7 @@ export const AmoCRMSection = ({
                 showErrorNotification('Ошибка авторизации', 'Необходимо войти в систему');
                 return;
             }
-            const result = await getCRMChannelSettings(token, 'amocrm');
+            const result = await getCRMChannelSettings(token);
             if (result.success && result.settings) {
                 setChannelSettings(result.settings);
                 setIsChannelSettingsModalOpen(true);
@@ -440,7 +454,7 @@ export const AmoCRMSection = ({
                 showErrorNotification('Ошибка авторизации', 'Необходимо войти в систему');
                 return;
             }
-            const result = await saveCRMChannelSettings(token, channelSettings, 'amocrm');
+            const result = await saveCRMChannelSettings(token, channelSettings);
             if (result.success) {
                 showNotification('Сохранено', 'Настройки канала успешно сохранены');
             } else {
@@ -461,9 +475,9 @@ export const AmoCRMSection = ({
         setChannelSettings({
             Assist: '🤖 Агент',
             User: '👤 Клиент',
-            Meta: 'Цель в диалоге достигнута',
+            Meta: 'цель в диалоге достигнута',
             Voice: 'голосовое сообщение',
-            File: 'Отправлен файл',
+            File: 'отправлен файл',
             LeadName: 'AI диалог',
             Tags: ['MarusiaAI', 'Новый клиент'],
             CreateNewContact: true,
@@ -524,7 +538,7 @@ export const AmoCRMSection = ({
             }
 
             // Получаем текущие настройки каналов
-            const currentSettings = await getCRMChannelSettings(token, 'amocrm');
+            const currentSettings = await getCRMChannelSettings(token);
             const settings = currentSettings.success && currentSettings.settings
                 ? currentSettings.settings
                 : {
@@ -551,7 +565,7 @@ export const AmoCRMSection = ({
             await new Promise(resolve => setTimeout(resolve, 500));
 
             // Сохраняем настройки
-            const result = await saveCRMChannelSettings(token, settings, 'amocrm');
+            const result = await saveCRMChannelSettings(token, settings);
             if (result.success) {
                 showNotification('Сохранено', 'Настройки полей контактов успешно сохранены');
             } else {
@@ -571,16 +585,16 @@ export const AmoCRMSection = ({
                         <Space>
                             {isTokenExpired ? (
                                 <>
-                                    <Text>Токен истек</Text>
+                                    <Text>{t("amoCRMTokenExpired") || "Токен истек"}</Text>
                                 </>
                             ) : (
                                 <>
-                                    <Text>Авторизовано</Text>
+                                    <Text>{t("amoCRMTokenActive") || "Авторизовано"}</Text>
                                 </>
                             )}
                             {channel.expiresAt && (
                                 <Text type="secondary" style={{fontSize: '12px'}}>
-                                    (до {new Date(channel.expiresAt * 1000).toLocaleString('ru-RU')})
+                                    ({t("amoCRMTokenExpires") || "до"} {new Date(channel.expiresAt * 1000).toLocaleString('ru-RU')})
                                 </Text>
                             )}
                         </Space>
@@ -592,9 +606,9 @@ export const AmoCRMSection = ({
             )}
 
             <div className="input-group-modern" ref={configRef}>
-                <Text className="input-label-modern">Название конфигурации *</Text>
+                <Text className="input-label-modern">{t("amoCRMConfigName") || "Название конфигурации"} *</Text>
                 <Input
-                    placeholder="Введите название (например: My AmoCRM)"
+                    placeholder={t("amoCRMConfigNamePlaceholder") || "Введите название (например: My amoCRM)"}
                     value={channel.configName || ''}
                     onChange={(e) => handleInputChange('configName', e.target.value)}
                     className="channel-input-modern"
@@ -602,40 +616,43 @@ export const AmoCRMSection = ({
             </div>
 
             <div className="input-group-modern">
-                <Text className="input-label-modern">Ссылка для перенаправления *</Text>
+                <Text className="input-label-modern">
+                    {t("amoCRMRedirectUrl") || "Ссылка для перенаправления"} *
+                </Text>
                 <Space.Compact style={{width: '100%'}}>
                     <Input
                         placeholder="https://info-bot.online"
-                        value={channel.redirectUrl || ''}
-                        onChange={(e) => handleInputChange('redirectUrl', e.target.value.trim())}
+                        // в состоянии храним только базовый URL, но на всякий случай ещё раз уберём суффикс
+                        value={(channel.redirectUrl || '').replace(/\/crm\/oauth\/amoCRM\/callback\/?$/, '')}
+                        onChange={(e) => handleInputChange('redirectUrl', e.target.value)}
                         className="channel-input-modern"
                         style={{flex: 1}}
-                        addonAfter="/crm/oauth/amocrm/callback"
+                        addonAfter="/crm/oauth/amoCRM/callback"
                     />
                     <Button
                         onClick={() => handleInputChange('redirectUrl', 'https://info-bot.online')}
                         type="primary"
                     >
-                        По умолчанию
+                        {t("default") || "По умолчанию"}
                     </Button>
                 </Space.Compact>
             </div>
 
             <div className="input-group-modern">
-                <Text className="input-label-modern">Subdomain *</Text>
+                <Text className="input-label-modern">{t("amoCRMSubdomain") || "Subdomain"} *</Text>
                 <Input
-                    placeholder="mycompany (из адреса mycompany.amocrm.ru)"
+                    placeholder={t("amoCRMSubdomainPlaceholder") || "mycompany (из адреса mycompany.amoCRM.ru)"}
                     value={channel.subdomain || ''}
                     onChange={(e) => handleInputChange('subdomain', e.target.value)}
                     className="channel-input-modern"
-                    addonAfter=".amocrm.ru"
+                    addonAfter=".amoCRM.ru"
                 />
             </div>
 
             <div className="input-group-modern">
-                <Text className="input-label-modern">Client ID *</Text>
+                <Text className="input-label-modern">{t("amoCRMClientId") || "Client ID"} *</Text>
                 <Input
-                    placeholder="Введите Client ID из личного кабинета amoCRM"
+                    placeholder={t("amoCRMClientIdPlaceholder") || "Введите Client ID из личного кабинета amoCRM"}
                     value={channel.clientId || ''}
                     onChange={(e) => handleInputChange('clientId', e.target.value)}
                     className="channel-input-modern"
@@ -643,9 +660,9 @@ export const AmoCRMSection = ({
             </div>
 
             <div className="input-group-modern">
-                <Text className="input-label-modern">Client Secret *</Text>
+                <Text className="input-label-modern">{t("amoCRMClientSecret") || "Client Secret"} *</Text>
                 <Input.Password
-                    placeholder="Введите Client Secret из личного кабинета amoCRM"
+                    placeholder={t("amoCRMClientSecretPlaceholder") || "Введите Client Secret из личного кабинета amoCRM"}
                     value={channel.clientSecret || ''}
                     onChange={(e) => handleInputChange('clientSecret', e.target.value)}
                     className="channel-input-modern"
@@ -655,7 +672,7 @@ export const AmoCRMSection = ({
             {/* Кнопки авторизации */}
             <div className="input-group-modern" style={{marginTop: '20px'}} ref={oauthRef}>
                 <Space direction="vertical" style={{width: '100%'}}>
-                    <Tooltip title={!canAuthorize ? "Заполните все обязательные поля" : ""}>
+                    <Tooltip title={!canAuthorize ? (t("amoCRMFillAllFields") || "Заполните все обязательные поля") : ""}>
                         <Button
                             type="primary"
                             icon={<ApiOutlined/>}
@@ -664,12 +681,12 @@ export const AmoCRMSection = ({
                             disabled={!canAuthorize}
                             block
                         >
-                            {isAuthorized ? 'Переавторизовать через OAuth' : 'Авторизовать через OAuth'}
+                            {isAuthorized ? (t("amoCRMReauthorize") || 'Переавторизовать через OAuth') : (t("amoCRMOAuthButton") || 'Авторизовать через OAuth')}
                         </Button>
                     </Tooltip>
 
                     <Tooltip
-                        title={!canAuthorize ? "Сначала заполните все поля и сохраните конфигурацию" : "Проверка доступности и валидности конфигурации"}>
+                        title={!canAuthorize ? (t("amoCRMFillFieldsFirst") || "Сначала заполните все поля и сохраните конфигурацию") : (t("amoCRMTestConnectionHint") || "Проверка доступности и валидности конфигурации")}>
                         <Button
                             type="primary"
                             icon={<CloudServerOutlined/>}
@@ -677,41 +694,41 @@ export const AmoCRMSection = ({
                                 try {
                                     const token = await validateAndRefreshToken(localStorage.getItem('authToken'));
                                     if (!token) {
-                                        showErrorNotification('Ошибка авторизации', 'Необходимо повторно авторизоваться');
+                                        showErrorNotification(t("authError") || 'Ошибка авторизации', t("needReauth") || 'Необходимо повторно авторизоваться');
                                         return;
                                     }
 
-                                    const result = await testAmoCRMConnection(token, 'amocrm');
+                                    const result = await testAmoCRMConnection(token);
                                     if (result.success) {
                                         // Сохраняем информацию об аккаунте и показываем модальное окно
                                         if (result.account) {
                                             setAccountInfo(result.account);
                                             setIsAccountInfoModalOpen(true);
                                         } else {
-                                            showNotification('Тест успешен', result.message);
+                                            showNotification(t("testSuccess") || 'Тест успешен', result.message);
                                         }
                                     } else {
-                                        showErrorNotification('Тест не пройден', result.error || 'Ошибка тестирования соединения');
+                                        showErrorNotification(t("testFailed") || 'Тест не пройден', result.error || (t("testConnectionError") || 'Ошибка тестирования соединения'));
                                     }
                                 } catch (e) {
-                                    showErrorNotification('Ошибка тестирования', e.message);
+                                    showErrorNotification(t("testError") || 'Ошибка тестирования', e.message);
                                 }
                             }}
                             disabled={!isAuthorized}
                             block
                             ref={tokenRef}
                         >
-                            Тестировать соединение
+                            {t("amoCRMTestConnection") || "Тестировать соединение"}
                         </Button>
                     </Tooltip>
 
                     <Text>
-                        Настройки интеграции контента MarusiaAI в AmoCRM
+                        {t("amoCRMIntegrationSettings") || "Настройки интеграции контента MarusiaAI в amoCRM"}
                     </Text>
                     {/* Сетка из 4 кнопок 2x2 с визуальным выделением */}
                     <div style={{display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px'}}>
                         <Tooltip
-                            title={!isAuthorized ? 'Сначала необходимо авторизоваться' : 'Выбрать кастомное поле контактных данных для источников перехода которые не содержат номер телефона клиента, например Telegram, Instagram, Widget и т.д.'}>
+                            title={!isAuthorized ? (t("amoCRMNeedAuth") || 'Сначала необходимо авторизоваться') : (t("amoCRMSetContactFieldHint") || 'Выбрать кастомное поле контактных данных для источников перехода которые не содержат номер телефона клиента, например Telegram, Instagram, Widget и т.д.')}>
                             <Button
                                 type="default"
                                 icon={<SettingOutlined/>}
@@ -720,12 +737,12 @@ export const AmoCRMSection = ({
                                 loading={isLoadingMetadata}
                                 block
                             >
-                                Установить поле контакта
+                                {t("amoCRMSetContactField") || "Установить поле контакта"}
                             </Button>
                         </Tooltip>
 
                         <Tooltip
-                            title={!isAuthorized ? 'Сначала необходимо авторизоваться' : 'Выбрать поле в объекте "Контакт" для указания источника перехода при создании нового контакта AI Агентом'}>
+                            title={!isAuthorized ? (t("amoCRMNeedAuth") || 'Сначала необходимо авторизоваться') : (t("amoCRMSetSourceFieldHint") || 'Выбрать поле в объекте "Контакт" для указания источника перехода при создании нового контакта AI Агентом')}>
                             <Button
                                 type="default"
                                 icon={<ApiOutlined/>}
@@ -734,12 +751,12 @@ export const AmoCRMSection = ({
                                 loading={isLoadingCustomFields}
                                 block
                             >
-                                Установить источник перехода
+                                {t("amoCRMSetSourceField") || "Установить источник перехода"}
                             </Button>
                         </Tooltip>
 
                         <Tooltip
-                            title={!isAuthorized ? 'Сначала необходимо авторизоваться' : 'Выбрать воронку для изменения статуса лида при продолжении диалога существующим пользователем'}>
+                            title={!isAuthorized ? (t("amoCRMNeedAuth") || 'Сначала необходимо авторизоваться') : (t("amoCRMSelectPipelineHint") || 'Выбрать воронку для изменения статуса лида при продолжении диалога существующим пользователем')}>
                             <Button
                                 type="default"
                                 icon={<ApiOutlined/>}
@@ -748,12 +765,12 @@ export const AmoCRMSection = ({
                                 loading={isLoadingPipelines}
                                 block
                             >
-                                Выбрать воронку для лида
+                                {t("amoCRMSelectPipeline") || "Выбрать воронку для лида"}
                             </Button>
                         </Tooltip>
 
                         <Tooltip
-                            title={!isAuthorized ? 'Сначала необходимо авторизоваться' : 'Настройки создаваемых данных в AmoCRM'}>
+                            title={!isAuthorized ? (t("amoCRMNeedAuth") || 'Сначала необходимо авторизоваться') : (t("amoCRMSettingsHint") || 'Настройки создаваемых данных в amoCRM')}>
                             <Button
                                 type="default"
                                 icon={<SettingOutlined/>}
@@ -762,7 +779,7 @@ export const AmoCRMSection = ({
                                 loading={isLoadingChannelSettings}
                                 block
                             >
-                                Настройки AmoCRM
+                                {t("amoCRMSettings") || "Настройки amoCRM"}
                             </Button>
                         </Tooltip>
                     </div>
@@ -775,13 +792,13 @@ export const AmoCRMSection = ({
                     {channel.sourceFieldName && (
                         <div className="input-group-modern" style={{marginTop: '16px'}}>
                             <Alert
-                                message="Поле для источника перехода"
+                                message={t("amoCRMSourceFieldLabel") || "Поле для источника перехода"}
                                 description={
                                     <div>
                                         <Text strong>{channel.sourceFieldName}</Text>
                                         {channel.sourceFieldCode && (
                                             <Text type="secondary" style={{marginLeft: '8px', fontSize: '12px'}}>
-                                                (код: {channel.sourceFieldCode})
+                                                ({t("amoCRMCodeLabel") || "код"}: {channel.sourceFieldCode})
                                             </Text>
                                         )}
                                     </div>
@@ -796,7 +813,7 @@ export const AmoCRMSection = ({
                     {channel.createdAt && (
                         <div className="input-group-modern" style={{marginTop: '16px'}}>
                             <Text type="secondary" style={{fontSize: '12px'}}>
-                                Создано: {new Date(channel.createdAt).toLocaleString('ru-RU')}
+                                {t("crmCreated") || "Создано"}: {new Date(channel.createdAt).toLocaleString('ru-RU')}
                             </Text>
                         </div>
                     )}
@@ -804,7 +821,7 @@ export const AmoCRMSection = ({
                     {channel.updatedAt && (
                         <div className="input-group-modern">
                             <Text type="secondary" style={{fontSize: '12px'}}>
-                                Обновлено: {new Date(channel.updatedAt).toLocaleString('ru-RU')}
+                                {t("crmUpdated") || "Обновлено"}: {new Date(channel.updatedAt).toLocaleString('ru-RU')}
                             </Text>
                         </div>
                     )}
@@ -812,7 +829,7 @@ export const AmoCRMSection = ({
                     {channel.defaultPipelineName && (
                         <div className="input-group-modern" style={{marginTop: '8px'}}>
                             <Alert
-                                message="Воронка по умолчанию"
+                                message={t("amoCRMDefaultPipeline") || "Воронка по умолчанию"}
                                 description={
                                     <div>
                                         <Text strong>{channel.defaultStatusName}</Text>
@@ -827,12 +844,12 @@ export const AmoCRMSection = ({
                 </>
             )}
 
-            {/* Модальное окно с информацией об аккаунте AmoCRM */}
+            {/* Модальное окно с информацией об аккаунте amoCRM */}
             <Modal
                 title={
                     <Space>
                         <CheckCircleOutlined style={{color: '#52c41a'}}/>
-                        <span>Тест подключения успешен</span>
+                        <span>{t("amoCRMTestSuccess") || "Тест подключения успешен"}</span>
                     </Space>
                 }
                 open={isAccountInfoModalOpen}
@@ -847,43 +864,44 @@ export const AmoCRMSection = ({
                         setIsAccountInfoModalOpen(false);
                         setAccountInfo(null);
                     }}>
-                        Закрыть
+                        {t("close") || "Закрыть"}
                     </Button>
                 ]}
                 width={600}
+                
             >
                 {accountInfo && (
                     <>
                         <Alert
-                            message="Подключение к AmoCRM установлено успешно"
+                            message={t("amoCRMConnectionEstablished") || "Подключение к amoCRM установлено успешно"}
                             type="success"
                             showIcon
                             style={{marginBottom: 16}}
                         />
                         <Descriptions bordered column={1} size="small">
-                            <Descriptions.Item label="ID аккаунта">
+                            <Descriptions.Item label={t("amoCRMAccountId") || "ID аккаунта"}>
                                 {accountInfo.id}
                             </Descriptions.Item>
-                            <Descriptions.Item label="Название">
+                            <Descriptions.Item label={t("amoCRMAccountName") || "Название"}>
                                 {accountInfo.name}
                             </Descriptions.Item>
-                            <Descriptions.Item label="Поддомен">
+                            <Descriptions.Item label={t("amoCRMSubdomain") || "Поддомен"}>
                                 <a
-                                    href={`https://${accountInfo.subdomain}.amocrm.ru`}
+                                    href={`https://${accountInfo.subdomain}.amoCRM.ru`}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                 >
-                                    {accountInfo.subdomain}.amocrm.ru
+                                    {accountInfo.subdomain}.amoCRM.ru
                                 </a>
                             </Descriptions.Item>
-                            <Descriptions.Item label="Дата создания">
-                                {accountInfo.created_at ? new Date(accountInfo.created_at * 1000).toLocaleString('ru-RU') : 'Не указана'}
+                            <Descriptions.Item label={t("amoCRMCreatedDate") || "Дата создания"}>
+                                {accountInfo.created_at ? new Date(accountInfo.created_at * 1000).toLocaleString('ru-RU') : (t("amoCRMNotSpecified") || 'Не указана')}
                             </Descriptions.Item>
-                            <Descriptions.Item label="Страна">
-                                {accountInfo.country || 'Не указана'}
+                            <Descriptions.Item label={t("amoCRMCountry") || "Страна"}>
+                                {accountInfo.country || (t("amoCRMNotSpecified") || 'Не указана')}
                             </Descriptions.Item>
-                            <Descriptions.Item label="Валюта">
-                                {accountInfo.currency || 'Не указана'}
+                            <Descriptions.Item label={t("amoCRMCurrency") || "Валюта"}>
+                                {accountInfo.currency || (t("amoCRMNotSpecified") || 'Не указана')}
                             </Descriptions.Item>
                         </Descriptions>
                     </>
@@ -895,7 +913,7 @@ export const AmoCRMSection = ({
                 title={
                     <Space>
                         <ApiOutlined style={{color: 'var(--link-hover-color)'}}/>
-                        <span>Выбрать поле для указания источника перехода</span>
+                        <span>{t("amoCRMSelectSourceFieldTitle") || "Выбрать поле для указания источника перехода"}</span>
                     </Space>
                 }
                 open={isCustomFieldsModalOpen}
@@ -910,7 +928,7 @@ export const AmoCRMSection = ({
                         setIsCustomFieldsModalOpen(false);
                         setCustomFields([]);
                     }}>
-                        Закрыть
+                        {t("close") || "Закрыть"}
                     </Button>
                 ]}
                 width={900}
@@ -918,14 +936,14 @@ export const AmoCRMSection = ({
                 {customFields && customFields.length > 0 ? (
                     <>
                         <Alert
-                            message={`Найдено полей: ${customFields.length}. Выберите поле для сохранения источника перехода клиента.`}
+                            message={`${t("amoCRMFieldsFound") || "Найдено полей:"} ${customFields.length}. ${t("amoCRMSelectFieldForSource") || "Выберите поле для сохранения источника перехода клиента."}`}
                             type="info"
                             showIcon
                             style={{marginBottom: 16}}
                         />
                         {selectedSourceField && (
                             <Alert
-                                message={`Выбрано: ${customFields.find(f => f.id === selectedSourceField)?.name}`}
+                                message={`${t("amoCRMSelected") || "Выбрано:"} ${customFields.find(f => f.id === selectedSourceField)?.name}`}
                                 type="success"
                                 showIcon
                                 style={{marginBottom: 16}}
@@ -1004,7 +1022,7 @@ export const AmoCRMSection = ({
                     </>
                 ) : (
                     <Alert
-                        message="Кастомные поля не найдены"
+                        message={t("amoCRMCustomFieldsNotFound") || "Кастомные поля не найдены"}
                         type="warning"
                         showIcon
                     />
@@ -1016,7 +1034,7 @@ export const AmoCRMSection = ({
                 title={
                     <Space>
                         <ApiOutlined style={{color: 'var(--link-hover-color)'}}/>
-                        <span>Выбрать статус воронки (pipeline)</span>
+                        <span>{t("amoCRMSelectPipelineStatusTitle") || "Выбрать статус воронки (pipeline)"}</span>
                     </Space>
                 }
                 open={isPipelinesModalOpen}
@@ -1031,7 +1049,7 @@ export const AmoCRMSection = ({
                         setIsPipelinesModalOpen(false);
                         setPipelines([]);
                     }}>
-                        Закрыть
+                        {t("close") || "Закрыть"}
                     </Button>
                 ]}
                 width={950}
@@ -1039,14 +1057,14 @@ export const AmoCRMSection = ({
                 {pipelines && pipelines.length > 0 ? (
                     <>
                         <Alert
-                            message={`Найдено воронок: ${pipelines.length}. Выберите конкретный статус (этап).`}
+                            message={`${t("amoCRMPipelinesFound") || "Найдено воронок:"} ${pipelines.length}. ${t("amoCRMSelectConcreteStatus") || "Выберите конкретный статус (этап)."}`}
                             type="info"
                             showIcon
                             style={{marginBottom: 16}}
                         />
                         {selectedStatusId && (
                             <Alert
-                                message={`Выбрано: ${pipelines.find(p => p.id === selectedPipelineId)?.name} → ${pipelines.find(p => p.id === selectedPipelineId)?.statuses.find(s => s.id === selectedStatusId)?.name}`}
+                                message={`${t("amoCRMSelected") || "Выбрано:"} ${pipelines.find(p => p.id === selectedPipelineId)?.name} → ${pipelines.find(p => p.id === selectedPipelineId)?.statuses.find(s => s.id === selectedStatusId)?.name}`}
                                 type="success"
                                 showIcon
                                 style={{marginBottom: 16}}
@@ -1105,7 +1123,7 @@ export const AmoCRMSection = ({
                                             })}
                                         </div>
                                     ) : (
-                                        <Text type="secondary" style={{fontSize: 12}}>Статусы отсутствуют</Text>
+                                        <Text type="secondary" style={{fontSize: 12}}>{t("amoCRMStatusesAbsent") || "Статусы отсутствуют"}</Text>
                                     )}
                                 </Card>
                             ))}
@@ -1113,7 +1131,7 @@ export const AmoCRMSection = ({
                     </>
                 ) : (
                     <Alert
-                        message="Воронки не найдены"
+                        message={t("amoCRMPipelinesNotFound") || "Воронки не найдены"}
                         type="warning"
                         showIcon
                     />
@@ -1125,7 +1143,7 @@ export const AmoCRMSection = ({
                 title={
                     <Space>
                         <SettingOutlined style={{color: 'var(--link-hover-color)'}}/>
-                        <span>Настройки канала AmoCRM</span>
+                        <span>{t("amoCRMChannelSettingsTitle") || "Настройки канала amoCRM"}</span>
                     </Space>
                 }
                 open={isChannelSettingsModalOpen}
@@ -1135,7 +1153,7 @@ export const AmoCRMSection = ({
                         key="default"
                         onClick={loadDefaultChannelSettings}
                     >
-                        Загрузить все по умолчанию
+                        {t("amoCRMLoadAllDefaults") || "Загрузить все по умолчанию"}
                     </Button>,
                     <Button
                         style={{color: 'black'}}
@@ -1144,19 +1162,19 @@ export const AmoCRMSection = ({
                         loading={isSavingChannelSettings}
                         onClick={handleSaveChannelSettings}
                     >
-                        Сохранить настройки
+                        {t("amoCRMSaveSettings") || "Сохранить настройки"}
                     </Button>,
                 ]}
                 width={800}
             >
                 <div style={{maxHeight: '600px', overflowY: 'auto'}}>
                     {/* Общие настройки */}
-                    <Text strong style={{fontSize: '16px'}}>Общие настройки</Text>
+                    <Text strong style={{fontSize: '16px'}}>{t("amoCRMGeneralSettings") || "Общие настройки"}</Text>
                     <div style={{marginTop: '12px', marginBottom: '16px'}}>
-                        <Text className="input-label-modern">Подпись сообщения Агента</Text>
+                        <Text className="input-label-modern">{t("amoCRMAgentSignature") || "Подпись сообщения Агента"}</Text>
                         <Space.Compact style={{width: '100%'}}>
                             <Input
-                                placeholder="Введите значение для Agent"
+                                placeholder={t("amoCRMEnterValueForAgent") || "Введите значение для Agent"}
                                 value={channelSettings.Assist}
                                 onChange={(e) => setChannelSettings({...channelSettings, Assist: e.target.value})}
                                 className="channel-input-modern"
@@ -1165,16 +1183,16 @@ export const AmoCRMSection = ({
                             <Button
                                 onClick={() => setChannelSettings({...channelSettings, Assist: '🤖 Агент'})}
                             >
-                                По умолчанию
+                                {t("default") || "По умолчанию"}
                             </Button>
                         </Space.Compact>
                     </div>
 
                     <div style={{marginTop: '12px', marginBottom: '16px'}}>
-                        <Text className="input-label-modern">Подпись сообщения клиента</Text>
+                        <Text className="input-label-modern">{t("amoCRMUserSignature") || "Подпись сообщения клиента"}</Text>
                         <Space.Compact style={{width: '100%'}}>
                             <Input
-                                placeholder="Введите значение для User"
+                                placeholder={t("amoCRMEnterValueForUser") || "Введите значение для User"}
                                 value={channelSettings.User}
                                 onChange={(e) => setChannelSettings({...channelSettings, User: e.target.value})}
                                 className="channel-input-modern"
@@ -1183,7 +1201,7 @@ export const AmoCRMSection = ({
                             <Button
                                 onClick={() => setChannelSettings({...channelSettings, User: '👤 Клиент'})}
                             >
-                                По умолчанию
+                                {t("default") || "По умолчанию"}
                             </Button>
                         </Space.Compact>
                     </div>
@@ -1192,7 +1210,7 @@ export const AmoCRMSection = ({
                         <Text className="input-label-modern">Meta</Text>
                         <Space.Compact style={{width: '100%'}}>
                             <Input
-                                placeholder="Введите значение для Meta"
+                                placeholder={t("amoCRMEnterValueForMeta") || "Введите значение для Meta"}
                                 value={channelSettings.Meta}
                                 onChange={(e) => setChannelSettings({...channelSettings, Meta: e.target.value})}
                                 className="channel-input-modern"
@@ -1201,10 +1219,10 @@ export const AmoCRMSection = ({
                             <Button
                                 onClick={() => setChannelSettings({
                                     ...channelSettings,
-                                    Meta: 'Цель в диалоге достигнута'
+                                    Meta: 'цель в диалоге достигнута'
                                 })}
                             >
-                                По умолчанию
+                                {t("default") || "По умолчанию"}
                             </Button>
                         </Space.Compact>
                     </div>
@@ -1213,7 +1231,7 @@ export const AmoCRMSection = ({
                         <Text className="input-label-modern">Voice</Text>
                         <Space.Compact style={{width: '100%'}}>
                             <Input
-                                placeholder="Введите значение для Voice"
+                                placeholder={t("amoCRMEnterValueForVoice") || "Введите значение для Voice"}
                                 value={channelSettings.Voice}
                                 onChange={(e) => setChannelSettings({...channelSettings, Voice: e.target.value})}
                                 className="channel-input-modern"
@@ -1222,7 +1240,7 @@ export const AmoCRMSection = ({
                             <Button
                                 onClick={() => setChannelSettings({...channelSettings, Voice: 'голосовое сообщение'})}
                             >
-                                По умолчанию
+                                {t("default") || "По умолчанию"}
                             </Button>
                         </Space.Compact>
                     </div>
@@ -1231,25 +1249,25 @@ export const AmoCRMSection = ({
                         <Text className="input-label-modern">File</Text>
                         <Space.Compact style={{width: '100%'}}>
                             <Input
-                                placeholder="Введите значение для File"
+                                placeholder={t("amoCRMEnterValueForFile") || "Введите значение для File"}
                                 value={channelSettings.File}
                                 onChange={(e) => setChannelSettings({...channelSettings, File: e.target.value})}
                                 className="channel-input-modern"
                                 style={{flex: 1}}
                             />
                             <Button
-                                onClick={() => setChannelSettings({...channelSettings, File: 'Отправлен файл'})}
+                                onClick={() => setChannelSettings({...channelSettings, File: 'отправлен файл'})}
                             >
-                                По умолчанию
+                                {t("default") || "По умолчанию"}
                             </Button>
                         </Space.Compact>
                     </div>
 
                     <div style={{marginTop: '12px', marginBottom: '16px'}}>
-                        <Text className="input-label-modern">Название нового лида</Text>
+                        <Text className="input-label-modern">{t("amoCRMNewLeadName") || "Название нового лида"}</Text>
                         <Space.Compact style={{width: '100%'}}>
                             <Input
-                                placeholder="Введите название лида"
+                                placeholder={t("amoCRMEnterLeadName") || "Введите название лида"}
                                 value={channelSettings.LeadName}
                                 onChange={(e) => setChannelSettings({...channelSettings, LeadName: e.target.value})}
                                 className="channel-input-modern"
@@ -1258,16 +1276,16 @@ export const AmoCRMSection = ({
                             <Button
                                 onClick={() => setChannelSettings({...channelSettings, LeadName: 'AI диалог'})}
                             >
-                                По умолчанию
+                                {t("default") || "По умолчанию"}
                             </Button>
                         </Space.Compact>
                     </div>
 
                     <div style={{marginTop: '12px', marginBottom: '24px'}}>
-                        <Text className="input-label-modern">Теги при создании контакта и лида</Text>
+                        <Text className="input-label-modern">{t("amoCRMTagsOnCreate") || "Теги при создании контакта и лида"}</Text>
                         <Space.Compact style={{width: '100%'}}>
                             <Input
-                                placeholder="Введите теги (через запятую)"
+                                placeholder={t("amoCRMEnterTagsComma") || "Введите теги (через запятую)"}
                                 value={tagInput}
                                 onChange={(e) => setTagInput(e.target.value)}
                                 className="channel-input-modern"
@@ -1286,7 +1304,7 @@ export const AmoCRMSection = ({
                                     setTagInput('');
                                 }}
                             >
-                                Добавить тег
+                                {t("amoCRMAddTag") || "Добавить тег"}
                             </Button>
                         </Space.Compact>
                         {channelSettings.Tags.length > 0 && (
@@ -1311,15 +1329,14 @@ export const AmoCRMSection = ({
                     </div>
 
                     {/* Настройки создания */}
-                    <Text strong style={{fontSize: '16px', marginTop: '32px', display: 'block', marginBottom: '16px'}}>Настройки
-                        создания</Text>
+                    <Text strong style={{fontSize: '16px', marginTop: '32px', display: 'block', marginBottom: '16px'}}>{t("amoCRMCreationSettings") || "Настройки создания"}</Text>
                     <div style={{
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
                         marginBottom: '16px'
                     }}>
-                        <Text className="input-label-modern" style={{marginBottom: 0}}>Создавать новый контакт</Text>
+                        <Text className="input-label-modern" style={{marginBottom: 0}}>{t("amoCRMCreateNewContact") || "Создавать новый контакт"}</Text>
                         <Switch
                             checked={channelSettings.CreateNewContact}
                             onChange={(checked) => setChannelSettings({...channelSettings, CreateNewContact: checked})}
@@ -1332,7 +1349,7 @@ export const AmoCRMSection = ({
                         justifyContent: 'space-between',
                         marginBottom: '16px'
                     }}>
-                        <Text className="input-label-modern" style={{marginBottom: 0}}>Создавать новый лид</Text>
+                        <Text className="input-label-modern" style={{marginBottom: 0}}>{t("amoCRMCreateNewLead") || "Создавать новый лид"}</Text>
                         <Switch
                             checked={channelSettings.CreateNewLead}
                             onChange={(checked) => setChannelSettings({...channelSettings, CreateNewLead: checked})}
@@ -1345,7 +1362,7 @@ export const AmoCRMSection = ({
                         justifyContent: 'space-between',
                         marginBottom: '16px'
                     }}>
-                        <Text className="input-label-modern" style={{marginBottom: 0}}>Сообщения диалога в лид</Text>
+                        <Text className="input-label-modern" style={{marginBottom: 0}}>{t("amoCRMChatMessagesToLead") || "Сообщения диалога в лид"}</Text>
                         <Switch
                             checked={channelSettings.ChatMessages}
                             onChange={(checked) => setChannelSettings({...channelSettings, ChatMessages: checked})}
@@ -1358,8 +1375,7 @@ export const AmoCRMSection = ({
                         justifyContent: 'space-between',
                         marginBottom: '16px'
                     }}>
-                        <Text className="input-label-modern" style={{marginBottom: 0}}>Сообщение о достижении цели в
-                            лид</Text>
+                        <Text className="input-label-modern" style={{marginBottom: 0}}>{t("amoCRMGoalMessageToLead") || "Сообщение о достижении цели в лид"}</Text>
                         <Switch
                             checked={channelSettings.MetaExist}
                             onChange={(checked) => setChannelSettings({...channelSettings, MetaExist: checked})}
@@ -1372,7 +1388,7 @@ export const AmoCRMSection = ({
                         justifyContent: 'space-between',
                         marginBottom: '16px'
                     }}>
-                        <Text className="input-label-modern" style={{marginBottom: 0}}>Создавать контакты без телефона (@Telegram, Instagram, Widget)</Text>
+                        <Text className="input-label-modern" style={{marginBottom: 0}}>{t("amoCRMCreateContactsWithoutPhone") || "Создавать контакты без телефона (@Telegram, Instagram, Widget)"}</Text>
                         <Switch
                             checked={channelSettings.AltContact}
                             onChange={(checked) => setChannelSettings({...channelSettings, AltContact: checked})}
@@ -1386,7 +1402,7 @@ export const AmoCRMSection = ({
                 title={
                     <Space>
                         <SettingOutlined style={{color: 'var(--link-hover-color)'}}/>
-                        <span>Метаданные кастомных полей контактов</span>
+                        <span>{t("amoCRMMetadataTitle") || "Метаданные кастомных полей контактов"}</span>
                     </Space>
                 }
                 open={isMetadataModalOpen}
@@ -1405,9 +1421,15 @@ export const AmoCRMSection = ({
                         type="primary"
                         onClick={() => {
                             handleSaveMetadataChanges();
+                            setIsMetadataModalOpen(false);
+                            setMetadataFields([]);
+                            setNewFieldName('');
+                            setSelectedTelegramField(null);
+                            setSelectedInstagramField(null);
+                            setSelectedWidgetField(null);
                         }}
                     >
-                        Сохранить изменения
+                        {t("amoCRMSaveChanges") || "Сохранить изменения"}
                     </Button>,
                     <Button
                         style={{color: 'black'}}
@@ -1422,7 +1444,7 @@ export const AmoCRMSection = ({
                             setSelectedWidgetField(null);
                         }}
                     >
-                        Закрыть
+                        {t("close") || "Закрыть"}
                     </Button>
                 ]}
                 width={950}
@@ -1430,8 +1452,8 @@ export const AmoCRMSection = ({
                     body: {
                         maxHeight: '70vh',
                         overflowY: 'auto',
-                        scrollbarWidth: 'none', // для Firefox
-                        msOverflowStyle: 'none' // для IE и Edge
+                        scrollbarWidth: 'none',
+                        msOverflowStyle: 'none'
                     }
                 }}
                 className="hide-scrollbar-modal"
@@ -1440,7 +1462,7 @@ export const AmoCRMSection = ({
                 <div style={{marginBottom: 16}}>
                     <Space.Compact style={{width: '100%'}}>
                         <Input
-                            placeholder="Введите название нового кастомного поля (например: Telegram)"
+                            placeholder={t("amoCRMEnterNewFieldName") || "Введите название нового кастомного поля (например: Telegram)"}
                             value={newFieldName}
                             onChange={(e) => setNewFieldName(e.target.value)}
                             onPressEnter={handleCreateNewField}
@@ -1453,7 +1475,7 @@ export const AmoCRMSection = ({
                             loading={isSavingNewField}
                             disabled={!newFieldName.trim()}
                         >
-                            Сохранить
+                            {t("save") || "Сохранить"}
                         </Button>
                     </Space.Compact>
                 </div>
@@ -1465,7 +1487,7 @@ export const AmoCRMSection = ({
                         message={
                             <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
                                 <span>
-                                    <strong>Telegram:</strong> {selectedTelegramField ? selectedTelegramField.name : 'Не выбрано'}
+                                    <strong>Telegram:</strong> {selectedTelegramField ? selectedTelegramField.name : (t("amoCRMNotSelected") || 'Не выбрано')}
                                 </span>
                                 {selectedTelegramField && (
                                     <Button
@@ -1473,7 +1495,7 @@ export const AmoCRMSection = ({
                                         danger
                                         onClick={() => setSelectedTelegramField(null)}
                                     >
-                                        Очистить
+                                        {t("amoCRMClear") || "Очистить"}
                                     </Button>
                                 )}
                             </div>
@@ -1488,7 +1510,7 @@ export const AmoCRMSection = ({
                         message={
                             <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
                                 <span>
-                                    <strong>Instagram:</strong> {selectedInstagramField ? selectedInstagramField.name : 'Не выбрано'}
+                                    <strong>Instagram:</strong> {selectedInstagramField ? selectedInstagramField.name : (t("amoCRMNotSelected") || 'Не выбрано')}
                                 </span>
                                 {selectedInstagramField && (
                                     <Button
@@ -1496,7 +1518,7 @@ export const AmoCRMSection = ({
                                         danger
                                         onClick={() => setSelectedInstagramField(null)}
                                     >
-                                        Очистить
+                                        {t("amoCRMClear") || "Очистить"}
                                     </Button>
                                 )}
                             </div>
@@ -1511,7 +1533,7 @@ export const AmoCRMSection = ({
                         message={
                             <div style={{display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
                                 <span>
-                                    <strong>Widget:</strong> {selectedWidgetField ? selectedWidgetField.name : 'Не выбрано'}
+                                    <strong>Widget:</strong> {selectedWidgetField ? selectedWidgetField.name : (t("amoCRMNotSelected") || 'Не выбрано')}
                                 </span>
                                 {selectedWidgetField && (
                                     <Button
@@ -1519,7 +1541,7 @@ export const AmoCRMSection = ({
                                         danger
                                         onClick={() => setSelectedWidgetField(null)}
                                     >
-                                        Очистить
+                                        {t("amoCRMClear") || "Очистить"}
                                     </Button>
                                 )}
                             </div>
@@ -1533,7 +1555,7 @@ export const AmoCRMSection = ({
                 {metadataFields && metadataFields.length > 0 ? (
                     <>
                         <Alert
-                            message={`Найдено полей: ${metadataFields.length}`}
+                            message={`${t("amoCRMFieldsFoundMeta") || "Найдено полей:"} ${metadataFields.length}`}
                             type="info"
                             showIcon
                             style={{marginBottom: 16}}
@@ -1567,7 +1589,7 @@ export const AmoCRMSection = ({
                     </>
                 ) : (
                     <Alert
-                        message="Метаданные полей не найдены"
+                        message={t("amoCRMMetadataNotFound") || "Метаданные полей не найдены"}
                         type="warning"
                         showIcon
                     />
@@ -1576,7 +1598,7 @@ export const AmoCRMSection = ({
 
             {/* Диалоговое окно выбора типа поля */}
             <Modal
-                title="Выбрать поле для"
+                title={t("amoCRMSelectFieldFor") || "Выбрать поле для"}
                 open={isSelectFieldModalOpen}
                 onCancel={() => {
                     setIsSelectFieldModalOpen(false);
@@ -1587,7 +1609,7 @@ export const AmoCRMSection = ({
             >
                 {currentSelectingField && (
                     <div style={{marginBottom: 16}}>
-                        <Text strong>Поле: </Text>
+                        <Text strong>{t("amoCRMFieldLabel") || "Поле:"} </Text>
                         <Text>{currentSelectingField.name}</Text>
                     </div>
                 )}

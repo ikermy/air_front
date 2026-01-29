@@ -1,12 +1,15 @@
 import {validateAndRefreshToken} from "../../../utils/easyUtils";
 
-export const whatsappGetContact = async (token, onProgress = null) => {
-    const WHATS_WSS = (window.runtimeConfig && window.runtimeConfig.REACT_APP_WHATS_WSS) || process.env.REACT_APP_WHATS_WSS;
+export const whatsappGetContact = async (token, onProgress = null, t = null) => {
+    const LAND_WSS = (window.runtimeConfig && window.runtimeConfig.REACT_APP_LAND_WSS) || process.env.REACT_APP_LAND_WSS;
+
+    // Fallback для функции перевода
+    const translate = t || ((key) => key);
 
     const makeWebSocketRequest = async (authToken) => {
         return new Promise((resolve, reject) => {
             // Токен передается в URL, а не в сообщении
-            const ws = new WebSocket(`${WHATS_WSS}/whats/contacts-ws?token=${authToken}`);
+            const ws = new WebSocket(`${LAND_WSS}/ws/whats/contacts?token=${authToken}`);
             let timeoutId;
             let contacts = [];
             let isCompleted = false;
@@ -15,7 +18,7 @@ export const whatsappGetContact = async (token, onProgress = null) => {
             timeoutId = setTimeout(() => {
                 if (!isCompleted) {
                     ws.close();
-                    reject(new Error('Таймаут соединения WebSocket'));
+                    reject(new Error(translate("tgContactConnectionTimeout") || "Таймаут соединения WebSocket"));
                 }
             }, 30000);
 
@@ -23,7 +26,7 @@ export const whatsappGetContact = async (token, onProgress = null) => {
                 if (onProgress) {
                     onProgress({
                         type: 'status',
-                        message: 'Соединение установлено, получение контактов...',
+                        message: translate("whatsContactConnectionEstablished") || "Соединение установлено, получение контактов...",
                         progress: 0
                     });
                 }
@@ -37,21 +40,21 @@ export const whatsappGetContact = async (token, onProgress = null) => {
                     if (data.type === 'error') {
                         clearTimeout(timeoutId);
                         ws.close();
-                        console.error('Ошибка от сервера WhatsApp:', data.error);
+                        console.error(`${translate("whatsContactErrorServer") || "Ошибка от сервера WhatsApp:"} ${data.error}`);
 
                         let errorMessage = data.error;
 
                         // Специальная обработка ошибок бота
                         if (data.error === 'bot not found') {
-                            errorMessage = 'WhatsApp бот не найден. Необходимо создать и настроить WhatsApp бот';
+                            errorMessage = translate("whatsContactBotNotFound") || "WhatsApp бот не найден. Необходимо создать и настроить WhatsApp бот";
                         } else if (data.error === 'bot stopped') {
-                            errorMessage = 'WhatsApp бот остановлен. Включите бот в настройках канала';
+                            errorMessage = translate("whatsContactBotStopped") || "WhatsApp бот остановлен. Включите бот в настройках канала";
                         }
 
                         if (onProgress) {
                             onProgress({
                                 type: 'error',
-                                message: `Ошибка: ${errorMessage}`,
+                                message: `${translate("error") || "Ошибка"}: ${errorMessage}`,
                                 progress: 0
                             });
                         }
@@ -65,19 +68,19 @@ export const whatsappGetContact = async (token, onProgress = null) => {
                         let progress = 0;
 
                         if (data.stage === 'contacts' && data.status === 'started') {
-                            message = 'Начинается получение контактов...';
+                            message = translate("whatsContactGettingContacts") || "Начинается получение контактов...";
                             progress = 10;
                         } else if (data.stage === 'groups' && data.status === 'started') {
-                            message = 'Начинается получение групп...';
+                            message = translate("whatsContactGettingGroups") || "Начинается получение групп...";
                             progress = 20;
                         } else if (data.stage === 'processing_contacts') {
-                            message = `Обработка контактов (всего: ${data.total})...`;
+                            message = `${translate("whatsContactProcessingContacts") || "Обработка контактов (всего:"} ${data.total})...`;
                             progress = 30;
                         } else if (data.stage === 'processing_groups') {
-                            message = `Обработка групп (всего: ${data.total})...`;
+                            message = `${translate("whatsContactProcessingGroups") || "Обработка групп (всего:"} ${data.total})...`;
                             progress = 50;
                         } else if (data.status === 'completed') {
-                            message = `Загрузка завершена! Контактов: ${data.total_contacts}, Групп: ${data.total_groups}`;
+                            message = `${translate("whatsContactCompletedMessage") || "Загрузка завершена! Контактов:"} ${data.total_contacts}, ${translate("whatsContactGroups") || "Групп:"} ${data.total_groups}`;
                             progress = 100;
 
                             // Завершаем процесс только если мы уже получили финальные данные
@@ -89,7 +92,7 @@ export const whatsappGetContact = async (token, onProgress = null) => {
                                 if (onProgress) {
                                     onProgress({
                                         type: 'complete',
-                                        message: `Загрузка завершена! Получено: ${contacts.length} контактов и групп`,
+                                        message: `${translate("whatsContactFinalMessage") || "Загрузка завершена! Получено:"} ${contacts.length} ${translate("whatsContactAndGroups") || "контактов и групп"}`,
                                         progress: 100
                                     });
                                 }
@@ -217,11 +220,11 @@ export const whatsappGetContact = async (token, onProgress = null) => {
                     if (onProgress) {
                         onProgress({
                             type: 'error',
-                            message: 'Ошибка парсинга ответа сервера',
+                            message: translate("tgContactParseError") || "Ошибка парсинга ответа сервера",
                             progress: 0
                         });
                     }
-                    reject(new Error('Ошибка парсинга ответа WebSocket'));
+                    reject(new Error(translate("tgContactParseWSError") || "Ошибка парсинга ответа WebSocket"));
                 }
             };
 
@@ -232,11 +235,11 @@ export const whatsappGetContact = async (token, onProgress = null) => {
                     if (onProgress) {
                         onProgress({
                             type: 'error',
-                            message: 'Ошибка соединения с сервером',
+                            message: translate("tgContactConnectionError") || "Ошибка соединения с сервером",
                             progress: 0
                         });
                     }
-                    reject(new Error('Ошибка WebSocket соединения'));
+                    reject(new Error(translate("whatsContactConnectionError") || "Ошибка WebSocket соединения"));
                 }
             };
 
@@ -262,16 +265,16 @@ export const whatsappGetContact = async (token, onProgress = null) => {
 
                     if (event.code === 1011) {
                         // Сервер отправляет код 1011 для "bot not found"
-                        errorMessage = 'WhatsApp бот не найден. Необходимо создать и настроить WhatsApp бот';
+                        errorMessage = translate("whatsContactBotNotFound") || "WhatsApp бот не найден. Необходимо создать и настроить WhatsApp бот";
                     } else if (event.code === 1006) {
                         // Сервер отправляет код 1006 для "bot stopped"
-                        errorMessage = 'WhatsApp бот остановлен. Включите бот в настройках канала';
+                        errorMessage = translate("whatsContactBotStopped") || "WhatsApp бот остановлен. Включите бот в настройках канала";
                     } else if (event.code === 1002) {
-                        errorMessage = 'Ошибка протокола WebSocket';
+                        errorMessage = translate("tgContactWSProtocolError") || "Ошибка протокола WebSocket";
                     } else if (event.code === 1003) {
-                        errorMessage = 'Неподдерживаемый тип данных';
+                        errorMessage = translate("tgContactWSUnsupportedData") || "Неподдерживаемый тип данных";
                     } else if (event.code === 1011) {
-                        errorMessage = 'WhatsApp бот не найден. Необходимо создать и настроить WhatsApp бот';
+                        errorMessage = translate("whatsContactBotNotFound") || "WhatsApp бот не найден. Необходимо создать и настроить WhatsApp бот";
                     }
 
                     if (onProgress) {
@@ -281,7 +284,9 @@ export const whatsappGetContact = async (token, onProgress = null) => {
                             progress: 0
                         });
                     }
-                    reject(new Error(errorMessage));
+                    // Используем resolve вместо reject, так как мы находимся в onclose
+                    // и ошибка уже была обработана через onProgress
+                    resolve([]);
                 }
             };
         });
@@ -291,7 +296,7 @@ export const whatsappGetContact = async (token, onProgress = null) => {
         if (onProgress) {
             onProgress({
                 type: 'status',
-                message: 'Подключение к серверу...',
+                message: translate("whatsContactConnectingServer") || "Подключение к серверу...",
                 progress: 0
             });
         }
@@ -306,7 +311,7 @@ export const whatsappGetContact = async (token, onProgress = null) => {
                 if (onProgress) {
                     onProgress({
                         type: 'status',
-                        message: 'Обновление токена авторизации...',
+                        message: translate("whatsContactUpdatingToken") || "Обновление токена авторизации...",
                         progress: 0
                     });
                 }
@@ -316,11 +321,11 @@ export const whatsappGetContact = async (token, onProgress = null) => {
                 if (onProgress) {
                     onProgress({
                         type: 'error',
-                        message: 'Ошибка обновления токена',
+                        message: translate("whatsContactTokenUpdateError") || "Ошибка обновления токена",
                         progress: 0
                     });
                 }
-                throw new Error(`Ошибка обновления токена: ${refreshError.message}`);
+                throw new Error(`${translate("tgContactTokenUpdateError") || "Ошибка обновления токена"}: ${refreshError.message}`);
             }
         }
 

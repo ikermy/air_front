@@ -12,13 +12,15 @@ import {GiConversation} from "react-icons/gi";
 import {GoLog} from "react-icons/go";
 import {GrServices} from "react-icons/gr";
 import {SiCivicrm} from "react-icons/si";
+import {useTranslation} from "react-i18next";
 
 const { Title, Paragraph, Text } = Typography;
 
 const DashboardOverview = ({ userRole = null, onMenuChange = null }) => {
+    const {t} = useTranslation();
     const isDeveloper = userRole === "Developer";
     const isService = userRole === "Service";
-    const showSimpleAuth = process.env.REACT_APP_SHOW_SIMPLE_AUTH === "true";
+    const showSimpleAuth = process.env.REACT_APP_SHOW_SIMPLE_AUTH === "false";
 
     // Функция для обработки клика по карточке
     const handleCardClick = (sectionKey) => {
@@ -31,124 +33,124 @@ const DashboardOverview = ({ userRole = null, onMenuChange = null }) => {
         // Dev Tools - показываем только для разработчиков
         ...(isDeveloper ? [{
             key: 'dev',
-            title: 'Инструменты разработчика',
+            title: t('dashboardOverviewDevTitle') || 'Инструменты разработчика',
             icon: <FaDev />,
-            description: 'Расширенные настройки и диагностика системы',
+            description: t('dashboardOverviewDevDesc') || 'Расширенные настройки и диагностика системы',
             features: [
-                'Системные настройки и конфигурация',
-                'Тестирование интеграций',
-                'Просмотр логов системы',
-                'API управления',
-                'Выбор модели GPT',
+                t('dashboardOverviewDevFeature1') || 'Системные настройки и конфигурация',
+                t('dashboardOverviewDevFeature2') || 'Тестирование интеграций',
+                t('dashboardOverviewDevFeature3') || 'Просмотр логов системы',
+                t('dashboardOverviewDevFeature4') || 'API управления',
+                t('dashboardOverviewDevFeature5') || 'Выбор модели GPT',
             ],
             color: '#ff4d4f'
         }] : [{
             key: 'user',
-            title: 'О пользователе',
+            title: t('dashboardOverviewUserTitle') || 'О пользователе',
             icon: <UserOutlined />,
-            description: 'Информация о пользователе и настройки вашего аккаунта',
+            description: t('dashboardOverviewUserDesc') || 'Информация о пользователе и настройки вашего аккаунта',
             features: [
-                'Просмотр и редактирование профиля пользователя',
-                'Отслеживание баланса и информации о подписке',
-                'Мониторинг использования сообщений и хранилища',
-                'Удаление всех данных пользователя',
+                t('dashboardOverviewUserFeature1') || 'Просмотр и редактирование профиля пользователя',
+                t('dashboardOverviewUserFeature2') || 'Отслеживание баланса и информации о подписке',
+                t('dashboardOverviewUserFeature3') || 'Мониторинг использования сообщений и хранилища',
+                t('dashboardOverviewUserFeature4') || 'Удаление всех данных пользователя',
             ],
             color: '#ff4d4f'
         }]),
 
         ...(isService ? [] : [{
             key: 'models',
-            title: 'Ассистент',
+            title: t('dashboardOverviewModelsTitle') || 'Модель',
             icon: <AndroidOutlined />,
-            description: 'Создание и управление AI-моделями для различных задач',
+            description: t('dashboardOverviewModelsDesc') || 'Создание и управление AI-моделями для различных задач',
             features: [
-                'Загрузка файлов для обучения',
-                'Настройка промптов и инструкций',
-                'Установка целей и триггеров',
-                'Интерпретатор для генерации файлов'
+                t('dashboardOverviewModelsFeature1') || 'Загрузка файлов для обучения',
+                t('dashboardOverviewModelsFeature2') || 'Настройка промптов и инструкций',
+                t('dashboardOverviewModelsFeature3') || 'Установка целей и триггеров',
+                t('dashboardOverviewModelsFeature4') || 'Интерпретатор для генерации файлов'
             ],
             color: '#52c41a'
         }]),
         ...(isService ? [] : [{
             key: 'modules',
-            title: 'Каналы',
+            title: t('dashboardOverviewModulesTitle') || 'Каналы',
             icon: <SubnodeOutlined />,
-            description: 'Подключение мессенджеров и платформ для взаимодействия',
+            description: t('dashboardOverviewModulesDesc') || 'Подключение мессенджеров и платформ для взаимодействия',
             features: [
-                'Telegram Bot и User Bot',
-                'WhatsApp Business API',
-                'Веб-виджет для сайтов',
-                'Instagram Bot',
+                t('dashboardOverviewModulesFeature1') || 'Telegram Bot и User Bot',
+                t('dashboardOverviewModulesFeature2') || 'WhatsApp Business API',
+                t('dashboardOverviewModulesFeature3') || 'Веб-виджет для сайтов',
+                t('dashboardOverviewModulesFeature4') || 'Instagram Bot',
             ],
             color: '#1890ff'
         }]),
         {
             key: 'crm',
-            title: 'CRM Системы',
+            title: t('dashboardOverviewCRMTitle') || 'CRM Системы',
             icon: <SiCivicrm />,
-            description: 'Интеграция с CRM системами для автоматизации работы с клиентами',
+            description: t('dashboardOverviewCRMDesc') || 'Интеграция с CRM системами для автоматизации работы с клиентами',
             features: [
-                'Подключение amoCRM через OAuth',
-                'Автоматическое создание контактов и лидов',
-                'Синхронизация диалогов с CRM',
-                'Настройка воронок и полей',
-                'Управление токенами доступа',
-                'Тестирование соединения'
+                t('dashboardOverviewCRMFeature1') || 'Подключение amoCRM через OAuth',
+                t('dashboardOverviewCRMFeature2') || 'Автоматическое создание контактов и лидов',
+                t('dashboardOverviewCRMFeature3') || 'Синхронизация диалогов с CRM',
+                t('dashboardOverviewCRMFeature4') || 'Настройка воронок и полей',
+                t('dashboardOverviewCRMFeature5') || 'Управление токенами доступа',
+                t('dashboardOverviewCRMFeature6') || 'Тестирование соединения'
             ],
             color: '#9254de'
         },
-        // Поиск лидов - показываем для роли Service и Developer
-        ...((isService || isDeveloper) ? [{
+        {
             key: 'services',
-            title: 'Поиск лидов',
+            title: t('dashboardOverviewServicesTitle') || 'Поиск лидов',
             icon: <GrServices />,
-            description: 'Автоматический поиск и обработка потенциальных клиентов',
+            description: t('dashboardOverviewServicesDesc') || 'Автоматический поиск и обработка потенциальных клиентов',
             features: [
-                'Настройка AI-модели для поиска',
-                'Управление списком контактов',
-                'Расписание рассылок',
-                'Статистика и аналитика результатов',
-                'Настройка ботов и прокси',
-                'События и триггеры'
+                t('dashboardOverviewServicesFeature1') || 'Настройка AI-модели для поиска',
+                t('dashboardOverviewServicesFeature2') || 'Управление списком контактов',
+                t('dashboardOverviewServicesFeature3') || 'Расписание рассылок',
+                t('dashboardOverviewServicesFeature4') || 'Статистика и аналитика результатов',
+                t('dashboardOverviewServicesFeature5') || 'Настройка ботов и прокси',
+                t('dashboardOverviewServicesFeature6') || 'События и триггеры'
             ],
             color: '#13c2c2'
-        }] : []),
+        },
         {
             key: 'notifications',
-            title: 'Уведомления',
+            title: t('dashboardOverviewNotificationsTitle') || 'Уведомления',
             icon: <NotificationOutlined />,
-            description: 'Настройка оповещений о важных событиях системы',
+            description: t('dashboardOverviewNotificationsDesc') || 'Настройка оповещений о важных событиях системы',
             features: [
-                'Email уведомления',
-                'Telegram уведомления',
-                'Webhook уведомления',
-                'Настройка триггеров событий'
+                t('dashboardOverviewNotificationsFeature1') || 'Email уведомления',
+                t('dashboardOverviewNotificationsFeature2') || 'Telegram уведомления',
+                t('dashboardOverviewNotificationsFeature3') || 'Webhook уведомления',
+                t('dashboardOverviewNotificationsFeature4') || 'Instant уведомления',
+                t('dashboardOverviewNotificationsFeature5') || 'Настройка триггеров событий'
             ],
             color: '#faad14'
         },
-        ...(isService ? [] : [{
+        {
             key: 'stat',
-            title: 'Диалоги',
+            title: t('dashboardOverviewStatTitle') || 'Диалоги',
             icon: <GiConversation />,
-            description: 'Просмотр аналитики и метрик работы ассистента',
+            description: t('dashboardOverviewStatDesc') || 'Просмотр аналитики и метрик работы агента',
             features: [
-                'Список всех диалогов',
-                'Детальная история переписки',
-                'Статистика использования',
-                'Экспорт истории диалогов'
+                t('dashboardOverviewStatFeature1') || 'Список всех диалогов',
+                t('dashboardOverviewStatFeature2') || 'Детальная история переписки',
+                t('dashboardOverviewStatFeature3') || 'Статистика использования',
+                t('dashboardOverviewStatFeature4') || 'Экспорт истории диалогов'
             ],
             color: '#722ed1'
-        }]),
+        },
         {
             key: 'logs',
-            title: 'Логи',
+            title: t('dashboardOverviewLogsTitle') || 'Логи',
             icon: <GoLog/>,
-            description: 'Получение логов работы всех используемых сервисов',
+            description: t('dashboardOverviewLogsDesc') || 'Получение логов работы всех используемых сервисов',
             features: [
-                'Получение логов в реальном времени',
-                'Максимально подробная информация',
-                'Полная хронология событий',
-                'Отслеживание ошибок и предупреждений',
+                t('dashboardOverviewLogsFeature1') || 'Получение логов в реальном времени',
+                t('dashboardOverviewLogsFeature2') || 'Максимально подробная информация',
+                t('dashboardOverviewLogsFeature3') || 'Полная хронология событий',
+                t('dashboardOverviewLogsFeature4') || 'Отслеживание ошибок и предупреждений',
             ],
             color: '#ffe539'
         },
@@ -156,14 +158,14 @@ const DashboardOverview = ({ userRole = null, onMenuChange = null }) => {
         // Платежи - показываем только если showSimpleAuth === false
         ...(!showSimpleAuth ? [{
             key: 'bill',
-            title: 'Платежи',
+            title: t('dashboardOverviewBillTitle') || 'Платежи',
             icon: <DollarOutlined />,
-            description: 'Управление подпиской, балансом и платежами',
+            description: t('dashboardOverviewBillDesc') || 'Управление подпиской, балансом и платежами',
             features: [
-                'Различные тарифные планы',
-                'Пополнение баланса',
-                'История всех транзакций',
-                'Настройка автоплатежей'
+                t('dashboardOverviewBillFeature1') || 'Различные тарифные планы',
+                t('dashboardOverviewBillFeature2') || 'Пополнение баланса',
+                t('dashboardOverviewBillFeature3') || 'История всех транзакций',
+                t('dashboardOverviewBillFeature4') || 'Настройка автоплатежей'
             ],
             color: '#eb2f96'
         }] : [])
@@ -173,11 +175,10 @@ const DashboardOverview = ({ userRole = null, onMenuChange = null }) => {
         <div className="dashboard-overview">
             <div className="overview-header">
                 <Title level={2}>
-                    Добро пожаловать в панель управления Маруся AI
+                    {t('dashboardOverviewWelcomeTitle') || 'Добро пожаловать в панель управления Маруся AI'}
                 </Title>
                 <Paragraph className="overview-description">
-                    Здесь вы можете управлять всеми аспектами вашего AI-ассистента.
-                    Выберите любой раздел из меню слева для начала работы.
+                    {t('dashboardOverviewWelcomeDescription') || 'Здесь вы можете управлять всеми аспектами вашего AI-агента. Выберите любой раздел из меню слева для начала работы.'}
                 </Paragraph>
             </div>
 
@@ -211,7 +212,7 @@ const DashboardOverview = ({ userRole = null, onMenuChange = null }) => {
                             </Paragraph>
 
                             <div className="card-features">
-                                <Text strong>Основные возможности:</Text>
+                                <Text strong>{t('dashboardOverviewMainFeatures') || 'Основные возможности:'}</Text>
                                 <ul>
                                     {section.features.map((feature, index) => (
                                         <li key={index}>
@@ -228,16 +229,16 @@ const DashboardOverview = ({ userRole = null, onMenuChange = null }) => {
             <div className="overview-footer">
                 <Card className="quick-start-card">
                     <Title level={3}>
-                        <AndroidOutlined /> Быстрый старт
+                        <AndroidOutlined /> {t('dashboardOverviewQuickStartTitle') || 'Быстрый старт'}
                     </Title>
                     <Paragraph>
-                        Для начала работы выполните следующие шаги:
+                        {t('dashboardOverviewQuickStartDesc') || 'Для начала работы выполните следующие шаги:'}
                     </Paragraph>
                     <ol>
-                        <li><strong>Создайте ассистента</strong> - настройте модель GPT и загрузите необходимые файлы</li>
-                        <li><strong>Подключите каналы</strong> - добавьте Telegram, WhatsApp или другие мессенджеры</li>
-                        <li><strong>Настроите уведомления</strong> - получайте информацию о важных событиях</li>
-                        <li><strong>Отслеживайте статистику</strong> - анализируйте работу вашего ассистента</li>
+                        <li><strong>{t('dashboardOverviewQuickStartStep1Title') || 'Создайте агента'}</strong> - {t('dashboardOverviewQuickStartStep1Desc') || 'настройте модель GPT и загрузите необходимые файлы'}</li>
+                        <li><strong>{t('dashboardOverviewQuickStartStep2Title') || 'Подключите каналы'}</strong> - {t('dashboardOverviewQuickStartStep2Desc') || 'добавьте Telegram, WhatsApp или другие мессенджеры'}</li>
+                        <li><strong>{t('dashboardOverviewQuickStartStep3Title') || 'Настроите уведомления'}</strong> - {t('dashboardOverviewQuickStartStep3Desc') || 'получайте информацию о важных событиях'}</li>
+                        <li><strong>{t('dashboardOverviewQuickStartStep4Title') || 'Отслеживайте статистику'}</strong> - {t('dashboardOverviewQuickStartStep4Desc') || 'анализируйте работу вашего агента'}</li>
                     </ol>
                 </Card>
             </div>

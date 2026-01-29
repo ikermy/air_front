@@ -136,7 +136,7 @@ function TopMenu() {
                            color={isAuthenticated ? "green" : "red"}
                     >
                         <Tooltip
-                            title={!isAuthenticated ? t('TopMenu-login') : t('TopMenu-controlPanel')}
+                            title={!isAuthenticated ? t('login') : t('TopMenu-controlPanel')}
                         >
                             <Avatar
                                 shape="square"

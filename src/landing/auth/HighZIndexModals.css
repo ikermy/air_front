@@ -1,0 +1,83 @@
+/* Максимально высокий z-index для модальных окон из форм регистрации */
+/* Эти стили должны переопределить все остальные z-index */
+
+.regform-policy-modal-portal.ant-modal-wrap,
+.regform-demo-modal-portal.ant-modal-wrap {
+    z-index: 30000 !important;
+}
+
+.regform-policy-modal-portal .ant-modal-mask,
+.regform-demo-modal-portal .ant-modal-mask {
+    z-index: 29999 !important;
+    background-color: rgba(0, 0, 0, 0.45) !important;
+}
+
+.regform-policy-modal-portal .ant-modal,
+.regform-demo-modal-portal .ant-modal {
+    z-index: 30001 !important;
+}
+
+.regform-policy-modal-portal .ant-modal-content,
+.regform-demo-modal-portal .ant-modal-content {
+    z-index: 30002 !important;
+    position: relative;
+    overflow: visible !important;
+}
+
+.regform-policy-modal-portal .ant-modal-header,
+.regform-demo-modal-portal .ant-modal-header {
+    z-index: 1 !important;
+    position: relative;
+}
+
+.regform-policy-modal-portal .ant-modal-body,
+.regform-demo-modal-portal .ant-modal-body {
+    z-index: 1 !important;
+    position: relative;
+}
+
+.regform-policy-modal-portal .ant-modal-footer,
+.regform-demo-modal-portal .ant-modal-footer {
+    z-index: 1 !important;
+    position: relative;
+}
+
+/* Кнопка закрытия должна быть поверх всех элементов модального окна */
+.regform-policy-modal-portal .ant-modal-close,
+.regform-demo-modal-portal .ant-modal-close {
+    z-index: 9999 !important;
+    position: absolute !important;
+    top: 0 !important;
+    right: 0 !important;
+}
+
+.regform-policy-modal-portal .ant-modal-close-x,
+.regform-demo-modal-portal .ant-modal-close-x {
+    z-index: 10000 !important;
+    display: block !important;
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/* Глобальный класс для высокоприоритетных модальных окон */
+.high-z-index-modal {
+    z-index: 30000 !important;
+}
+
+.high-z-index-modal .ant-modal-mask {
+    z-index: 29999 !important;
+}
+
+.high-z-index-modal .ant-modal-wrap {
+    z-index: 30000 !important;
+}
+
+.high-z-index-modal .ant-modal-close {
+    z-index: 9999 !important;
+    position: absolute !important;
+}
+
+.high-z-index-modal .ant-modal-close-x {
+    z-index: 10000 !important;
+}
+

@@ -1,4 +1,4 @@
-import React, {useEffect, useState, useRef, useCallback, useContext} from 'react';
+import React, {useEffect, useState, useRef, useCallback} from 'react';
 import './ChatWindowDemo.css';
 import {useTranslation} from "react-i18next";
 import Modal from "../../Modal";
@@ -24,6 +24,7 @@ export function FloatingChatDemo({ onMinimize }) {
     const effectHasRun = useRef(false);
     const [token, setToken] = useState(null);
     const [isTokenLoading, setIsTokenLoading] = useState(true); // Добавляем состояние загрузки токена
+    const inputRef = useRef(null); // Реф для поля ввода
 
     // Состояния для перетаскивания
     const [isDragging, setIsDragging] = useState(false);
@@ -386,6 +387,14 @@ export function FloatingChatDemo({ onMinimize }) {
         loadQuestionsAndAnswers();
     }, [i18n.language]);
 
+    // Автопрокрутка поля ввода к концу текста при печати
+    useEffect(() => {
+        if (inputRef.current && inputValue) {
+            // Устанавливаем scrollLeft в максимальное значение, чтобы показать конец текста
+            inputRef.current.scrollLeft = inputRef.current.scrollWidth;
+        }
+    }, [inputValue]);
+
     const handleReplay = () => {
         setMessages([]);
         setCurrentIndex(0);
@@ -575,7 +584,13 @@ export function FloatingChatDemo({ onMinimize }) {
 
                     {!showReplayButton && (
                         <div className="input-container">
-                            <input type="text" value={inputValue} readOnly className="input-field"/>
+                            <input
+                                ref={inputRef}
+                                type="text"
+                                value={inputValue}
+                                readOnly
+                                className="input-field"
+                            />
                             {/*<button className="input-container-button">{t('SimpleTransceiver-send')}</button>*/}
                             <button className="input-container-button"><IoSend/></button>
                         </div>
@@ -598,7 +613,7 @@ export function FloatingChatDemo({ onMinimize }) {
                     )}
                 </>
             )}
-            {/*  Состояние выбора модели тестового ассистента  */}
+            {/*  Состояние выбора модели тестового агента  */}
             {stage === 'buttons' && (
                 <div className="button-group">
                     <b>{t('ChatWindowDemo-button-group')}</b>

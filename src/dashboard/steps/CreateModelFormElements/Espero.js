@@ -1,10 +1,12 @@
 import {InputNumber, Modal, Slider, Switch, Typography} from "antd";
 import React, {useEffect, useState} from "react";
 import {SettingOutlined} from "@ant-design/icons";
+import {useTranslation} from "react-i18next";
 import "./Espero.css";
 
 
 export const Espero = ({ value = {}, onChange }) => {
+    const {t} = useTranslation();
     const {Title, Paragraph} = Typography;
 
     const [isModalOpen, setModalOpen] = useState(false);
@@ -111,23 +113,23 @@ export const Espero = ({ value = {}, onChange }) => {
         <div className="espero-container">
             <div className="espero-section-title">
                 <SettingOutlined />
-                Настройки каналов
+                {t("esperoChannelSettings") || "Настройки каналов"}
             </div>
             <div className="section-description">
-                Конфигурация параметров взаимодействия модели с различными каналами связи
+                {t("esperoChannelSettingsDesc") || "Конфигурация параметров взаимодействия модели с различными каналами связи"}
             </div>
 
             <div className="espero-step">
                 <span>
                     {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
-                    Взаимодействие модели с <a onClick={showMeta}>каналами</a>&nbsp;
+                    {t("esperoModelInteraction") || "Взаимодействие модели с"} <a onClick={showMeta}>{t("esperoChannelsLink") || "каналами"}</a>&nbsp;
                 </span>
             </div>
 
             <div className="espero-channel-item">
                 <div className="espero-form-item">
                     <div className="espero-form-label">
-                        Ожидание вопроса секунд
+                        {t("esperoWaitLabel") || "Ожидание вопроса секунд"}
                     </div>
                     <div className="espero-slider-container">
                         <div className="espero-slider-row">
@@ -151,7 +153,7 @@ export const Espero = ({ value = {}, onChange }) => {
 
                 <div className="espero-form-item">
                     <div className="espero-form-label">
-                        Лимит символов в вопросе
+                        {t("esperoLimitLabel") || "Лимит символов в вопросе"}
                     </div>
                     <div className="espero-slider-container">
                         <div className="espero-slider-row">
@@ -177,12 +179,12 @@ export const Espero = ({ value = {}, onChange }) => {
                 <div className="espero-form-item">
                     <div className="espero-switch-container">
                         <div className="espero-switch-label">
-                            Игнорировать вопросы до отправки ответа ассистентом
+                            {t("esperoIgnoreLabel") || "Игнорировать вопросы до отправки ответа агентом"}
                         </div>
                         <Switch
                             checked={esperoValues.ignore}
-                            checkedChildren={<span style={{color: "black"}}>Да</span>}
-                            unCheckedChildren={<span style={{color: "black"}}>Нет</span>}
+                            checkedChildren={<span style={{color: "black"}}>{t("Yes") || "Да"}</span>}
+                            unCheckedChildren={<span style={{color: "black"}}>{t("No") || "Нет"}</span>}
                             onChange={onChangeSwitch}
                         />
                     </div>
@@ -192,7 +194,7 @@ export const Espero = ({ value = {}, onChange }) => {
             {/*</Form.Item>*/}
 
             <Modal
-                title="Взаимодействие модели с каналами"
+                title={t("esperoModalTitle") || "Взаимодействие модели с каналами"}
                 open={isModalOpen}
                 onCancel={handleCancel}
                 footer={null}
@@ -202,8 +204,7 @@ export const Espero = ({ value = {}, onChange }) => {
                     style={{
                         fontSize: '16px',
                     }}>
-                    "Ожидание вопроса секунд" - модель будет ждать следующего вопроса пользователя перед тем как
-                    ответить.
+                    {t("esperoWaitTitle") || "\"Ожидание вопроса секунд\" - модель будет ждать следующего вопроса пользователя перед тем как ответить."}
                 </Title>
                 <Paragraph
                     code={true}
@@ -213,21 +214,13 @@ export const Espero = ({ value = {}, onChange }) => {
                         fontSize: '16px',
                     }}
                 >
-                    Например при ожидании 4 секунды:{'\n'}
-                    {'\t'}Пользователь - "Привет"{'\n'}
-                    {'\t'}Пользователь - "Меня зовут Вова!"{'\n'}
-                    {'\t'}Пользователь - "Как твои дела?"{'\n'}
-                    Ответ Ассистента будет таким:{'\n'}
-                    {'\t'}Ассистент - "Приятно познакомиться Вова, меня зовут Маруся. У меня всё хорошо!"{'\n'}
-                    При этом если бы ожидания не было, то Ассистент ответил бы сразу:{'\n'}
-                    {'\t'}Пользователь - "Привет"{'\n'}
-                    {'\t'}Ассистент - "Привет я Маруся!"
+                    {t("esperoWaitExample") || "Например при ожидании 4 секунды:\n\tПользователь - \"Привет\"\n\tПользователь - \"Меня зовут Вова!\"\n\tПользователь - \"Как твои дела?\"\nОтвет Агента будет таким:\n\tАгент - \"Приятно познакомиться Вова, меня зовут Маруся. У меня всё хорошо!\"\nПри этом если бы ожидания не было, то Агент ответил бы сразу:\n\tПользователь - \"Привет\"\n\tАгент - \"Привет я Маруся!\""}
                 </Paragraph>
                 <Title
                     style={{
                         fontSize: '16px',
                     }}>
-                    "Лимит символов в вопросе" - ограничение количества символов в вопросе пользователя.
+                    {t("esperoLimitTitle") || "\"Лимит символов в вопросе\" - ограничение количества символов в вопросе пользователя."}
                 </Title>
                 <Paragraph
                     code={true}
@@ -237,11 +230,9 @@ export const Espero = ({ value = {}, onChange }) => {
                         fontSize: '16px',
                     }}
                 >
-                    Лимит по умолчанию 1024 символа{'\n'}
-                    Если в сообщении будет большее 1024 символов, то ассистент его проигнорирует{'\n'}
+                    {t("esperoLimitExample") || "Лимит по умолчанию 1024 символа\nЕсли в сообщении будет большее 1024 символов, то агент его проигнорирует"}
                 </Paragraph>
-                Помните что для большинства каналов взаимодействия, есть лимит на количество
-                символов в сообщении. В случае превышении лимита сообщение не будет доставлено!
+                {t("esperoLimitWarning") || "Помните что для большинства каналов взаимодействия, есть лимит на количество символов в сообщении. В случае превышении лимита сообщение не будет доставлено!"}
                 <Paragraph
                     code={true}
                     style={{
@@ -250,19 +241,13 @@ export const Espero = ({ value = {}, onChange }) => {
                         fontSize: '16px',
                     }}
                 >
-                    Лимиты для разных каналов:{'\n'}
-                    {'\t'}Instagram - 2200{'\n'}
-                    {'\t'}Facebook - 3000 ('при превышении часть сообщения будет скрыта'){'\n'}
-                    {'\t'}Telegram - 4096"{'\n'}
-                    {'\t'}WhatsApp - 4096"{'\n'}
+                    {t("esperoLimitChannels") || "Лимиты для разных каналов:\n\tInstagram - 2200\n\tFacebook - 3000 ('при превышении часть сообщения будет скрыта')\n\tTelegram - 4096\"\n\tWhatsApp - 4096\""}
                 </Paragraph>
                 <Title
                     style={{
                         fontSize: '16px',
                     }}>
-                    "Игнорировать вопросы до отправки ответа ассистентом" - пропускать дополнительные вопросы
-                    пользователя
-                    до ответа Ассистента.
+                    {t("esperoIgnoreTitle") || "\"Игнорировать вопросы до отправки ответа агентом\" - пропускать дополнительные вопросы пользователя до ответа Агента."}
                 </Title>
                 <Paragraph
                     code={true}
@@ -272,25 +257,9 @@ export const Espero = ({ value = {}, onChange }) => {
                         fontSize: '16px',
                     }}
                 >
-                    - параметр "да" - Ассистент игнорирует дополнительные вопросы пользователя"{'\n'}
-                    Пример:{'\n'}
-                    {'\t'}Пользователь - "Привет"{'\n'}
-                    {'\t'}Ассистент готовит ответ на вопрос пользователя...{'\n'}
-                    {'\t'}Пользователь до получения ответа задает ещё вопрос - "Меня зовут Вова!"{'\n'}
-                    Ответ Ассистента будет таким:{'\n'}
-                    {'\t'}Ассистент - "Привет! Меня зовут Маруся"{'\n'}
-                    {'\n'}
-                    - параметр "нет" - Ассистент слушает дополнительные вопросы пользователя"{'\n'}
-                    Пример:{'\n'}
-                    {'\t'}Пользователь - "Привет"{'\n'}
-                    {'\t'}Ассистент готовит ответ на вопрос пользователя...{'\n'}
-                    {'\t'}Пользователь до получения ответа задает ещё вопрос - "Меня зовут Вова!"{'\n'}
-                    Ответ Ассистента будет таким:{'\n'}
-                    {'\t'}Ассистент - "Привет!"{'\n'}
-                    {'\t'}Ассистент - "Приятно познакомиться Вова!"{'\n'}
+                    {t("esperoIgnoreExample") || "- параметр \"да\" - Агент игнорирует дополнительные вопросы пользователя\"\nПример:\n\tПользователь - \"Привет\"\n\tАгент готовит ответ на вопрос пользователя...\n\tПользователь до получения ответа задает ещё вопрос - \"Меня зовут Вова!\"\nОтвет Агента будет таким:\n\tАгент - \"Привет! Меня зовут Маруся\"\n\n- параметр \"нет\" - Агент слушает дополнительные вопросы пользователя\"\nПример:\n\tПользователь - \"Привет\"\n\tАгент готовит ответ на вопрос пользователя...\n\tПользователь до получения ответа задает ещё вопрос - \"Меня зовут Вова!\"\nОтвет Агента будет таким:\n\tАгент - \"Привет!\"\n\tАгент - \"Приятно познакомиться Вова!\""}
                 </Paragraph>
-                Рекомендуем не выключать этот параметр без всестороннего тестирования вашей модели - иначе Ассистент
-                может терять контекст разговора!
+                {t("esperoIgnoreWarning") || "Рекомендуем не выключать этот параметр без всестороннего тестирования вашей модели - иначе Агент может терять контекст разговора!"}
             </Modal>
 
         </div>

@@ -1,16 +1,19 @@
 import React, { useState, useRef, useCallback, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import './ViewDialog.css';
-import { ReadDialog } from "../../../dialog/ReadDialog";
 import { useAutoScroll } from "../../../utils/useAutoScroll";
 import { Calendar, Button, Modal, DatePicker, message } from 'antd';
-import {CheckCircleFilled, CloseCircleFilled, DownloadOutlined} from '@ant-design/icons';
+import {CheckCircleFilled, CloseCircleFilled, DownloadOutlined, ExclamationCircleOutlined, DeleteOutlined} from '@ant-design/icons';
 import { MdKeyboardVoice, MdOutlineSupportAgent } from "react-icons/md";
-import MarkdownRenderer from "../../../utils/MarkdownRenderer";
+import MarkdownRenderer from "../../../utils/MarkdownRenderer.tsx";
+import {ReadDialog, DeleteDialog} from "../../../dialog/dialogUtils";
+import { showNotification, showErrorNotification } from '../../hotification/showNotification';
 
 
 const { RangePicker } = DatePicker;
 
-export function ViewDialog({ token, dialogId, target, trigger }) {
+export function ViewDialog({ token, dialogId, target, trigger, onClose, onDialogDeleted }) {
+    const { t } = useTranslation();
     const [messages, setMessages] = useState([]);
     const [loading, setLoading] = useState(true);
     const messagesEndRef = useRef(null);
@@ -20,26 +23,56 @@ export function ViewDialog({ token, dialogId, target, trigger }) {
     const [exportModalVisible, setExportModalVisible] = useState(false);
     const [dateRange, setDateRange] = useState([]);
 
+    // State для модального окна подтверждения удаления
+    const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+
     const handleDialogData = useCallback((dialogData) => {
         setLoading(false);
-        if (!dialogData || dialogData.Data === null) {
-            message.error('Не удалось загрузить данные диалога');
+        if (!dialogData || dialogData.Data === null || (Array.isArray(dialogData.Data) && dialogData.Data.length === 0)) {
+            message.error(t("viewDialogLoadError") || 'Не удалось загрузить данные диалога');
             return;
         }
 
         try {
             const { Model: modelName, Responder: responderName } = dialogData;
-            const parsedMessages = JSON.parse(dialogData.Data).map(msg => JSON.parse(msg));
+
+            // Проверяем, является ли Data уже массивом объектов или строкой JSON
+            let parsedMessages;
+            if (Array.isArray(dialogData.Data)) {
+                // Data уже является массивом объектов
+                parsedMessages = dialogData.Data;
+            } else if (typeof dialogData.Data === 'string') {
+                // Data является строкой JSON, нужно парсить
+                parsedMessages = JSON.parse(dialogData.Data).map(msg =>
+                    typeof msg === 'string' ? JSON.parse(msg) : msg
+                );
+            } else {
+                // Безопасная обработка неожиданного формата данных
+                message.error(t("viewDialogUnexpectedFormat") || 'Неожиданный формат данных диалога');
+                console.error('Unexpected dialogData format:', dialogData);
+                return;
+            }
 
             const formattedMessages = parsedMessages.map(msg => {
-                // Извлекаем текст сообщения из новой структуры
-                const messageText = msg.message?.message || msg.message || '';
-                const files = msg.message?.action?.send_files || [];
+                // Извлекаем текст сообщения
+                // Поддерживаем несколько формтов: msg.message (строка), msg.message.message (объект), или прямо текст в message
+                let messageText = typeof msg.message === 'string'
+                    ? msg.message
+                    : (msg.message?.message || msg.message || '');
 
-                // Обрабатываем файлы
-                const imageFiles = files.filter(file => file.type === 'photo');
-                const videoFiles = files.filter(file => file.type === 'video');
-                const docFiles = files.filter(file => file.type === 'doc');
+                // Обеспечиваем что messageText это строка
+                if (typeof messageText !== 'string') {
+                    messageText = String(messageText);
+                }
+
+                // Получаем файлы из новой структуры (send_files прямо в msg)
+                // Также поддерживаем старую структуру (msg.message?.action?.send_files)
+                const sendFiles = msg.send_files || msg.message?.action?.send_files || [];
+
+                // Обрабатываем файлы по типам
+                const imageFiles = sendFiles.filter(file => file.type === 'photo' || file.type === 'image');
+                const videoFiles = sendFiles.filter(file => file.type === 'video');
+                const docFiles = sendFiles.filter(file => file.type === 'doc' || file.type === 'document');
 
                 return {
                     text: <MarkdownRenderer text={messageText.replace(/\n/g, '<br />')} />,
@@ -58,10 +91,10 @@ export function ViewDialog({ token, dialogId, target, trigger }) {
 
             setMessages(formattedMessages);
         } catch (error) {
-            message.error('Ошибка обработки данных диалога');
+            message.error(t("dialogDataError") || 'Ошибка обработки данных диалога');
             console.error(error);
         }
-    }, []);
+    }, [t]);
 
     // Получаем уникальные даты из сообщений
     const uniqueDates = useMemo(() => {
@@ -159,7 +192,7 @@ export function ViewDialog({ token, dialogId, target, trigger }) {
 
         // Генерируем HTML
         let html = `<!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <title>Экспорт чата</title>
@@ -242,19 +275,31 @@ export function ViewDialog({ token, dialogId, target, trigger }) {
             let filesInfo = '';
             if (msg.files) {
                 if (msg.files.images && msg.files.images.length > 0) {
-                    filesInfo += msg.files.images.map(img =>
-                        `<div class="file-info">📷 Изображение: ${img.file_name || 'image'}</div>`
-                    ).join('');
+                    filesInfo += msg.files.images.map(img => {
+                        const fileName = img.file_name || 'image';
+                        const url = img.url ? `href="${img.url}" target="_blank"` : '';
+                        const caption = img.caption ? `<div class="file-caption">${escapeHtml(img.caption)}</div>` : '';
+                        const link = url ? `<a ${url}>${fileName}</a>` : fileName;
+                        return `<div class="file-info">📷 Изображение: ${link}${caption}</div>`;
+                    }).join('');
                 }
                 if (msg.files.videos && msg.files.videos.length > 0) {
-                    filesInfo += msg.files.videos.map(video =>
-                        `<div class="file-info">🎥 Видео: ${video.file_name || 'video'}</div>`
-                    ).join('');
+                    filesInfo += msg.files.videos.map(video => {
+                        const fileName = video.file_name || 'video';
+                        const url = video.url ? `href="${video.url}" target="_blank"` : '';
+                        const caption = video.caption ? `<div class="file-caption">${escapeHtml(video.caption)}</div>` : '';
+                        const link = url ? `<a ${url}>${fileName}</a>` : fileName;
+                        return `<div class="file-info">🎥 Видео: ${link}${caption}</div>`;
+                    }).join('');
                 }
                 if (msg.files.documents && msg.files.documents.length > 0) {
-                    filesInfo += msg.files.documents.map(doc =>
-                        `<div class="file-info">📄 Документ: ${doc.file_name || 'document'}</div>`
-                    ).join('');
+                    filesInfo += msg.files.documents.map(doc => {
+                        const fileName = doc.file_name || 'document';
+                        const url = doc.url ? `href="${doc.url}" target="_blank"` : '';
+                        const caption = doc.caption ? `<div class="file-caption">${escapeHtml(doc.caption)}</div>` : '';
+                        const link = url ? `<a ${url}>${fileName}</a>` : fileName;
+                        return `<div class="file-info">📄 Документ: ${link}${caption}</div>`;
+                    }).join('');
                 }
             }
 
@@ -288,17 +333,17 @@ export function ViewDialog({ token, dialogId, target, trigger }) {
         URL.revokeObjectURL(url);
 
         setExportModalVisible(false);
-        message.success('Экспорт успешно выполнен');
+        message.success(t("exportSuccess") || 'Экспорт успешно выполнен');
     };
 
     // Функция для рендера блока сообщений
     const renderMessages = () => {
         if (loading) {
-            return <div className="loading-messages">Загрузка сообщений...</div>;
+            return <div className="loading-messages">{t("loadingMessages") || "Загрузка сообщений..."}</div>;
         }
 
         if (messages.length === 0) {
-            return <div className="no-messages">Нет сообщений в диалоге</div>;
+            return <div className="no-messages">{t("noMessages") || "Нет сообщений в диалоге"}</div>;
         }
 
         let currentDate = null;
@@ -409,7 +454,7 @@ export function ViewDialog({ token, dialogId, target, trigger }) {
                 <Calendar
                     fullscreen={false}
                     onSelect={handleDateSelect}
-                    dateCellRender={dateCellRender}
+                    cellRender={dateCellRender}
                 />
 
                 {/* Кнопка экспорта */}
@@ -425,7 +470,7 @@ export function ViewDialog({ token, dialogId, target, trigger }) {
                         }}
                         disabled={messages.length === 0}
                     >
-                        Экспортировать
+                        {t("viewDialogExport") || "Экспортировать"}
                     </Button>
                     <div className="dialog-status-container">
                         <div className={`dialog-status ${target === 1 ? 'status-active' : 'status-inactive'}`}>
@@ -433,16 +478,24 @@ export function ViewDialog({ token, dialogId, target, trigger }) {
                                 <CheckCircleFilled style={{color: '#52c41a'}}/> :
                                 <CloseCircleFilled style={{color: '#f5222d'}}/>
                             }
-                            <span>{target === 1 ? "Цель достигнута" : "Цель не достигнута"}</span>
+                            <span>{target === 1 ? (t("viewDialogTargetAchieved") || "Цель достигнута") : (t("viewDialogTargetNotAchieved") || "Цель не достигнута")}</span>
                         </div>
                         <div className={`dialog-status ${trigger === 1 ? 'status-active' : 'status-inactive'}`}>
                             {trigger === 1 ?
                                 <CheckCircleFilled style={{color: '#52c41a'}}/> :
                                 <CloseCircleFilled style={{color: '#f5222d'}}/>
                             }
-                            <span>{trigger === 1 ? "Триггер сработал" : "Триггер не сработал"}</span>
+                            <span>{trigger === 1 ? (t("viewDialogTriggerActivated") || "Триггер сработал") : (t("viewDialogTriggerNotActivated") || "Триггер не сработал")}</span>
                         </div>
                     </div>
+                </div>
+                {/* Иконка удаления внизу слева календаря */}
+                <div
+                    className="delete-dialog-icon"
+                    title={t("deleteDialog") || "Удалить диалог"}
+                    onClick={() => setIsDeleteModalOpen(true)}
+                >
+                    <DeleteOutlined />
                 </div>
             </div>
             <div className="view-dialogs-chat-window">
@@ -457,12 +510,12 @@ export function ViewDialog({ token, dialogId, target, trigger }) {
 
             {/* Модальное окно для экспорта */}
             <Modal
-                title="Экспорт истории чата"
+                title={t("viewDialogExportTitle") || "Экспорт истории чата"}
                 open={exportModalVisible}
                 onCancel={() => setExportModalVisible(false)}
                 footer={[
                     <Button key="cancel" onClick={() => setExportModalVisible(false)}>
-                        Отмена
+                        {t("cancel") || "Отмена"}
                     </Button>,
                     <Button
                         style={{color: 'black'}}
@@ -470,17 +523,65 @@ export function ViewDialog({ token, dialogId, target, trigger }) {
                         type="primary"
                         onClick={exportToHTML}
                     >
-                        Экспортировать
+                        {t("viewDialogExport") || "Экспортировать"}
                     </Button>
                 ]}
             >
-                <p>Выберите диапазон дат для экспорта сообщений:</p>
+                <p>{t("viewDialogExportPeriod") || "Выберите диапазон дат для экспорта сообщений:"}</p>
                 <RangePicker
                     style={{ width: '100%' }}
                     onChange={setDateRange}
                     format="DD.MM.YYYY"
                     cellRender={cellRender}
                 />
+            </Modal>
+
+            {/* Модальное окно подтверждения удаления диалога */}
+            <Modal
+                title={
+                    <span style={{ color: '#ff4d4f' }}>
+                        <ExclamationCircleOutlined /> {t("dialogsConfirmDeleteTitle") || "Подтверждение удаления"}
+                    </span>
+                }
+                open={isDeleteModalOpen}
+                onCancel={() => {
+                    setIsDeleteModalOpen(false);
+                }}
+                onOk={async () => {
+                    // Вызов удаления
+                    try {
+                        const result = await DeleteDialog(token, dialogId);
+                        if (result && result.status === 'ok') {
+                            showNotification(`${t("dialog") || "Диалог"} ${dialogId}`, t("viewDialogDeleteSuccess") || 'успешно удалён!');
+                            // Очищаем сообщения в компоненте
+                            setMessages([]);
+                            // Уведомляем родительский компонент об удалении
+                            if (typeof onDialogDeleted === 'function') {
+                                onDialogDeleted(dialogId);
+                            }
+                        } else {
+                            const err = result && result.error ? result.error : (t("viewDialogDeleteError") || 'Не удалось удалить диалог');
+                            showErrorNotification(`${t("dialogsDeleteError") || "Ошибка удаления диалога"} ${dialogId}`, err);
+                        }
+                    } catch (err) {
+                        console.error('Ошибка при удалении диалога:', err);
+                        showErrorNotification(`${t("dialogsDeleteError") || "Ошибка удаления диалога"} ${dialogId}`, err?.message || (t("viewDialogDeleteError") || 'Ошибка при удалении диалога'));
+                    } finally {
+                        setIsDeleteModalOpen(false);
+                        // Закрываем родительский ViewDialog (modal) при успешном удалении
+                        // onClose вызывается автоматически через onDialogDeleted в родителе
+                    }
+                }}
+                okText={t("delete") || "Удалить"}
+                cancelText={t("cancel") || "Отмена"}
+                okButtonProps={{ danger: true }}
+            >
+                <p>
+                    {t("viewDialogDeleteConfirm") || "Вы уверены, что хотите удалить диалог"} <strong>{dialogId}</strong>?
+                </p>
+                <p style={{ color: '#8c8c8c' }}>
+                    {t("viewDialogDeleteNote") || "Это действие нельзя будет отменить."}
+                </p>
             </Modal>
         </div>
     );

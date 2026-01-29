@@ -6,6 +6,14 @@
     background-color: var(--bg-color-light);
 }
 
+.user-data-container .ant-row {
+    overflow: visible;
+}
+
+.user-data-container .ant-col {
+    overflow: visible;
+}
+
 .dark .user-data-container {
     background-color: var(--bg-color-dark);
 }
@@ -53,6 +61,11 @@
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
     transition: all 0.3s ease;
     height: 100%;
+    overflow: visible;
+}
+
+.user-data-card .ant-card-body {
+    overflow: visible;
 }
 
 .user-data-card:hover {
@@ -113,7 +126,7 @@
 
 .info-icon {
     font-size: 20px;
-    color: var(--main-color-light);
+    color: var(--icon-bg);
     flex-shrink: 0;
     width: 24px;
     height: 24px;
@@ -143,7 +156,7 @@
 
 .user-balance-icon {
     font-size: 24px;
-    color: var(--main-color-light);
+    color: var(--icon-bg);
     margin-right: 16px;
 }
 
@@ -201,7 +214,7 @@
 
 .usage-icon {
     font-size: 18px;
-    color: var(--main-color-light);
+    color: var(--icon-bg);
 }
 
 /* Элементы уведомлений */
@@ -233,7 +246,7 @@
 
 .notification-icon {
     font-size: 16px;
-    color: var(--main-color-light);
+    color: var(--icon-bg);
     margin-right: 12px;
 }
 
@@ -314,7 +327,7 @@
 
 .channel-icon-small {
     font-size: 20px;
-    color: var(--main-color-light);
+    color: var(--icon-bg);
     margin-bottom: 6px;
 }
 
@@ -610,3 +623,94 @@
 .dark .delete-messages-list::-webkit-scrollbar-thumb:hover {
     background: #777;
 }
+
+/* Wrapper для выбора часового пояса */
+.timezone-select-wrapper {
+    position: relative;
+    z-index: 1;
+}
+
+/* Критически важные стили для ограничения высоты dropdown */
+/* Используем специфичные селекторы для переопределения глобальных стилей из CreateModel.css */
+body .user-data-container .ant-select-dropdown {
+    z-index: 9999 !important;
+    max-height: 256px !important;
+    overflow-y: auto !important;
+}
+
+body .user-data-container .ant-select-dropdown .rc-virtual-list {
+    max-height: 256px !important;
+    height: 256px !important;
+    overflow-y: auto !important;
+}
+
+body .user-data-container .ant-select-dropdown .rc-virtual-list-holder {
+    max-height: 256px !important;
+    height: auto !important;
+    overflow-y: auto !important;
+}
+
+body .user-data-container .ant-select-dropdown .rc-virtual-list-holder-inner {
+    max-height: none !important;
+}
+
+/* Переопределяем глобальные стили для placement */
+body .user-data-container .ant-select-dropdown-placement-bottomLeft .rc-virtual-list,
+body .user-data-container .ant-select-dropdown-placement-bottomRight .rc-virtual-list {
+    max-height: 256px !important;
+    height: 256px !important;
+}
+
+body .user-data-container .ant-select-dropdown .ant-select-item-option {
+    min-height: 32px !important;
+    padding: 5px 12px !important;
+    display: flex !important;
+    align-items: center !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+body .user-data-container .ant-select-dropdown .ant-select-item-option-content {
+    opacity: 1 !important;
+    visibility: visible !important;
+    display: block !important;
+}
+
+/* Супер-специфичные стили для timezone select с использованием data-атрибута */
+.user-data-container .timezone-select-wrapper .timezone-select + div[class*="ant-select-dropdown"] {
+    max-height: 256px !important;
+    overflow-y: auto !important;
+}
+
+.user-data-container .timezone-select-wrapper .timezone-select + div[class*="ant-select-dropdown"] .rc-virtual-list {
+    max-height: 256px !important;
+    height: 256px !important;
+}
+
+.user-data-container .timezone-select-wrapper .timezone-select + div[class*="ant-select-dropdown"] .rc-virtual-list-holder {
+    max-height: 256px !important;
+}
+
+.timezone-select-dropdown .rc-virtual-list {
+    max-height: 256px !important;
+}
+
+.timezone-select-dropdown .rc-virtual-list-holder {
+    max-height: 256px !important;
+}
+
+.timezone-select-dropdown .ant-select-item-option {
+    min-height: 32px !important;
+    padding: 5px 12px !important;
+    display: flex !important;
+    align-items: center !important;
+    opacity: 1 !important;
+    visibility: visible !important;
+}
+
+.timezone-select-dropdown .ant-select-item-option-content {
+    opacity: 1 !important;
+    visibility: visible !important;
+    display: block !important;
+}
+

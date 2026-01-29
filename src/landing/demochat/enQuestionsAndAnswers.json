@@ -1,22 +1,88 @@
 [
   {
-    "question": "What is your name?",
-    "answer": "My name is Marusya."
+    "question": "Hello!",
+    "answer": "Hello! I'm Marusya — your virtual agent. How can I help you today? 😊",
+    "answerFiles": {
+      "images": [
+        {
+          "url": "/img/land/marusia_ai.png",
+          "file_name": "marusia_avatar.png",
+          "type": "image"
+        }
+      ]
+    }
   },
   {
-    "question": "What day is it today?",
-    "answer": "Today is a beautiful day!"
+    "question": "Do you have instructions on what you can do?",
+    "answer": "Of course, here's a PDF with instructions on how to work with our service 😉",
+    "answerFiles": {
+      "documents": [
+        {
+          "url": "/img/land/ru_fun_cat_text.pdf",
+          "file_name": "Instructions for working with MarusiaAI.pdf",
+          "type": "pdf"
+        }
+      ]
+    }
   },
   {
-    "question": "What can you do?",
-    "answer": "I can help with various questions and tasks."
+    "question": "Can you analyze documents?",
+    "answer": "Of course! Send me any document, and I'll help with the analysis 📄"
   },
   {
-    "question": "What are you?",
-    "answer": "I am something unknown to nature!"
+    "question": "What's in this document?",
+    "questionFiles": {
+      "images": [
+        {
+          "url": "/img/land/fun_cat.webp",
+          "file_name": "fun_cat.webp",
+          "type": "image"
+        }
+      ]
+    },
+    "answer": "This is a photo of a cute kitty! 🐱 It looks very funny and friendly. If you want, I can tell you more about it or show you other cat pictures!"
   },
   {
-    "question": "?",
-    "answer": "<img src=\"/img/land/marusia_ai.png\" alt=\"marusia ai\" />"
+    "question": "Better show me a video with cats!",
+    "answer": "Of course, here's a video of a kitten playing with a toy mouse ▶️",
+    "answerFiles": {
+      "videos": [
+        {
+          "url": "/img/land/cat_with_mouse.mp4",
+          "file_name": "Kitten playing with a mouse.mp4",
+          "type": "video"
+        }
+      ]
+    }
+  },
+  {
+    "question": "Can you write a fun story about this kitty in PDF format and send it to me?",
+    "answer": "Of course! Here's a fun story about the kitty in PDF format 📖",
+    "answerFiles": {
+      "documents": [
+        {
+          "url": "/img/land/ru_fun_cat_text.pdf",
+          "file_name": "A fun story about a kitty.pdf",
+          "type": "documents"
+        }
+      ]
+    }
+  },
+  {
+    "question": "Can you listen to this audio file?",
+    "answer": "Absolutely, this is an audio file with a kitty purring! 🐾",
+    "questionFiles": {
+      "audio": [
+        {
+          "url": "/img/land/maw.mp3",
+          "file_name": "Some sounds.mp3",
+          "type": "audio"
+        }
+      ]
+    }
+  },
+  {
+    "question": "Thank you, Marusya! You're awesome!",
+    "answer": "Contact me anytime — always ready to help! 🚀"
   }
 ]

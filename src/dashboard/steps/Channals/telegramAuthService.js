@@ -1,10 +1,10 @@
-// telegramAuthService.js
 import {validateAndRefreshToken} from "../../../utils/easyUtils";
 
 export class TelegramAuthService {
-    constructor() {
+    constructor(t) {
         this.socket = null;
         this.authParams = null;
+        this.t = t || ((key) => key); // Fallback if t is not provided
         this.callbacks = {
             onQrCode: null,
             onPasswordRequest: null,
@@ -37,16 +37,16 @@ export class TelegramAuthService {
             }
         } catch (error) {
             if (this.callbacks.onError) {
-                this.callbacks.onError(`Ошибка запуска аутентификации: ${error.message}`);
+                this.callbacks.onError(`${this.t("telegramAuthStartError") || "Ошибка запуска аутентификации:"} ${error.message}`);
             }
             throw error;
         }
     }
 
     connectWebSocket(token) {
-        const TGUSER_WSS = (window.runtimeConfig && window.runtimeConfig.REACT_APP_TGUSER_WSS) || process.env.REACT_APP_TGUSER_WSS;
+        const LAND_WSS = (window.runtimeConfig && window.runtimeConfig.REACT_APP_LAND_WSS) || process.env.REACT_APP_LAND_WSS;
 
-        const wsUrl = `${TGUSER_WSS}/telegram/ws?token=${token}`;
+        const wsUrl = `${LAND_WSS}/ws/tguser?token=${token}`;
 
         this.socket = new WebSocket(wsUrl);
 
@@ -66,7 +66,7 @@ export class TelegramAuthService {
                                 ...this.authParams
                             }));
                         } else {
-                            this.callbacks.onError('Параметры авторизации не найдены');
+                            this.callbacks.onError(this.t("telegramAuthParamsNotFound") || "Параметры авторизации не найдены");
                         }
                         break;
                     case 'qr_code':
@@ -90,23 +90,23 @@ export class TelegramAuthService {
                         }
                         break;
                     default:
-                        console.warn('Неизвестный тип сообщения WebSocket:', data.type);
+                        console.warn(`${this.t("telegramAuthUnknownMessage") || "Неизвестный тип сообщения WebSocket:"} ${data.type}`);
                         if (this.callbacks.onError) {
-                            this.callbacks.onError(data.payload || 'Неизвестная ошибка');
+                            this.callbacks.onError(data.payload || this.t("telegramAuthUnknownError") || "Неизвестная ошибка");
                         }
                 }
             } catch (error) {
-                console.error('Ошибка обработки сообщения WebSocket:', error);
+                console.error(`${this.t("telegramAuthWSError") || "Ошибка WebSocket:"} ${error}`);
                 if (this.callbacks.onError) {
-                    this.callbacks.onError('Ошибка обработки сообщения от сервера');
+                    this.callbacks.onError(this.t("telegramAuthProcessError") || "Ошибка обработки сообщения от сервера");
                 }
             }
         };
 
         this.socket.onerror = (error) => {
-            console.error('Ошибка WebSocket:', error);
+            console.error(`${this.t("telegramAuthWSError") || "Ошибка WebSocket:"} ${error}`);
             if (this.callbacks.onError) {
-                this.callbacks.onError('Ошибка соединения WebSocket');
+                this.callbacks.onError(this.t("telegramAuthWebSocketError") || "Ошибка соединения WebSocket");
             }
         };
 
@@ -122,7 +122,7 @@ export class TelegramAuthService {
             }));
         } else {
             if (this.callbacks.onError) {
-                this.callbacks.onError('WebSocket соединение не активно');
+                this.callbacks.onError(this.t("telegramAuthWebSocketInactive") || "WebSocket соединение не активно");
             }
         }
     }

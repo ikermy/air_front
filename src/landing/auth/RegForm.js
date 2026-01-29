@@ -1,11 +1,12 @@
 import React, {useContext, useState} from 'react';
 import {LockOutlined, UserOutlined, MailOutlined} from '@ant-design/icons';
-import {Button, Form, Input, Modal, Switch, Typography} from 'antd';
+import {Button, Form, Input, Switch} from 'antd';
 import {UserContext} from "../../index";
 import {encryptPassword} from "../../utils/easyUtils";
 import './auth.css';
 import {useTranslation} from "react-i18next";
 import i18n from "i18next";
+import {PolicyModal, DemoModal} from './PolicyModals';
 
 const LAND_URL = window.runtimeConfig?.REACT_APP_LAND || process.env.REACT_APP_LAND;
 
@@ -319,72 +320,8 @@ export function RegForm({
                 </div>
             )}
 
-            <Modal
-                title="Политика конфиденциальности"
-                open={isReglasOpen}
-                onCancel={handleCancel}
-                footer={null}
-                width={700}
-                zIndex={10001}
-            >
-                <Typography.Paragraph>
-                    🛡 <strong>Краткая политика конфиденциальности</strong>
-                </Typography.Paragraph>
-
-                <Typography.Paragraph>
-                    Мы ценим вашу приватность.
-                </Typography.Paragraph>
-
-                <Typography.Paragraph>
-                    На нашем сайте вы создаёте и используете <strong>свои</strong> модели ИИ-ассистентов.
-                </Typography.Paragraph>
-
-                <Typography.Paragraph>
-                    <strong>Что это значит для вас:</strong>
-                </Typography.Paragraph>
-
-                <ul>
-                    <li>Мы собираем только то, что нужно для работы сервиса (аккаунт, технические данные, данные для доступа к каналам взаимодействия).</li>
-                    <li>Всё, что вы вводите или загружаете, используется <strong>только</strong> для работы вашего ассистента.</li>
-                    <li>Мы <strong>не</strong> используем ваши данные для рекламы, аналитики или обучения чужих моделей.</li>
-                    <li>Мы <strong>не</strong> передаём ваши данные третьим лицам.</li>
-                    <li>Вы можете удалить свои данные и модели в любой момент — мы их безвозвратно уничтожим.</li>
-                </ul>
-
-                <Typography.Paragraph>
-                    💬 <em>В двух словах:</em> ваши данные — ваши. Мы их храним только для того, чтобы ваш ассистент работал, и больше ни для чего.
-                </Typography.Paragraph>
-
-                <Typography.Paragraph>
-                    Ознакомьтесь с <a href="/privacy-policy" target="_blank">полным текстом политики конфиденциальности</a>.
-                </Typography.Paragraph>
-            </Modal>
-
-            <Modal
-                title="Правила демонстрационного доступа"
-                open={isDemoOpen}
-                onCancel={handleCancel}
-                footer={null}
-                width={700}
-                zIndex={10001}
-            >
-                <Typography.Paragraph>
-                    1. <strong>Неограниченные каналы связи</strong> — вы можете взаимодействовать с Ассистентом через любые доступные каналы, включая поддержку <strong>голосовых сообщений</strong>.
-                </Typography.Paragraph>
-
-                <Typography.Paragraph>
-                    2. <strong>Полный функционал создания модели</strong> — доступны все возможности конструктора ассистента, включая:
-                </Typography.Paragraph>
-                <ul>
-                    <li>использование <strong>векторного хранилища</strong>;</li>
-                    <li>подключение <strong>S3-хранилища</strong>;</li>
-                    <li><strong>генерацию файлов</strong>.</li>
-                </ul>
-
-                <Typography.Paragraph>
-                    3. <strong>Лимит сообщений</strong> — в рамках демонстрационного доступа предоставляется <strong>30 сообщений</strong> от ИИ Ассистента.
-                </Typography.Paragraph>
-            </Modal>
+            <PolicyModal isOpen={isReglasOpen} onClose={handleCancel} />
+            <DemoModal isOpen={isDemoOpen} onClose={handleCancel} />
         </div>
     );
 }

@@ -1,8 +1,10 @@
 import React, {useEffect, useRef, useState} from 'react';
 import {PlusOutlined, BellOutlined} from '@ant-design/icons';
 import {Input, Modal, Switch, Tag, theme, Tooltip, Typography} from 'antd';
+import {useTranslation} from "react-i18next";
 
 export const Triggers = ({value = [], onChange, initial}) => {
+    const {t} = useTranslation();
     const {Title, Paragraph} = Typography;
 
     const {token} = theme.useToken();
@@ -85,21 +87,21 @@ export const Triggers = ({value = [], onChange, initial}) => {
         <>
             <div className="section-title">
                 <BellOutlined />
-                Триггеры модели
+                {t("triggersTitle") || "Триггеры"}
             </div>
             <div className="section-description">
-                Настройте автоматические уведомления при появлении ключевых слов в сообщениях пользователей
+                {t("triggersDescription") || "Настройте ключевые слова и фразы для активации специальных реакций агента"}
             </div>
 
             <div className="step">
                     <span>
                         {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
-                        Создать действия при <a onClick={setShow}>срабатывании триггеров</a>&nbsp;
+                        {t("triggersCreate") || "Создать"} <a onClick={setShow}>{t("triggersLink") || "триггеры активации"}</a>&nbsp;
                     </span>
                 <Switch
                     checked={switchChecked}
-                    checkedChildren={<span style={{color: "black"}}>Да</span>}
-                    unCheckedChildren={<span style={{color: "black"}}>Нет</span>}
+                    checkedChildren={<span style={{color: "black"}}>{t("Yes") || "Да"}</span>}
+                    unCheckedChildren={<span style={{color: "black"}}>{t("No") || "Нет"}</span>}
                     onChange={handleSwitchChange}
                 />
             </div>
@@ -170,7 +172,7 @@ export const Triggers = ({value = [], onChange, initial}) => {
                             icon={<PlusOutlined/>}
                             onClick={showInput}
                         >
-                            Добавить триггер
+                            {t("triggersAddNew") || "Добавить триггер"}
                         </Tag>
                     )}
 
@@ -178,7 +180,7 @@ export const Triggers = ({value = [], onChange, initial}) => {
             )}
 
             <Modal
-                title="Срабатывание триггеров"
+                title={t("triggersModalTitle") || "Триггеры активации"}
                 open={isOpen}
                 onCancel={handleCancel}
                 footer={null}
@@ -188,27 +190,119 @@ export const Triggers = ({value = [], onChange, initial}) => {
                     style={{
                         fontSize: '16px',
                     }}>
-                    "Триггеры" - это реакция модели на сообщения от пользователя содержащие указанный текст
+                    {t("triggersModalDescription") || "Триггеры — это ключевые слова или фразы, при обнаружении которых агент может выполнять специальные действия или менять поведение."}
                 </Title>
-                <Paragraph>
-                    После получения сообщения от пользователя содержащем текст "триггера" модель уведомит вас о
-                    срабатывании триггера.
-                </Paragraph>
+
+                <Title
+                    level={4}
+                    style={{
+                        fontSize: '16px',
+                        marginTop: '24px',
+                        marginBottom: '16px'
+                    }}>
+                    {t("triggersModalWhatAre") || "Что такое триггеры?"}
+                </Title>
                 <Paragraph
                     code={true}
                     style={{
                         whiteSpace: 'pre-wrap',
                         display: 'block',
-                        fontSize: '16px',
+                        fontSize: '14px',
+                        padding: '12px',
+                        borderRadius: '6px',
+                        marginBottom: '16px'
                     }}
                 >
-                    Например если триггером является слово «скидка» то при появлении в сообщении пользователя этого
-                    триггера:{'\n'}
-                    {'\t'}Пользователь - "Есть ли скидка при оплате за 3 месяца?"{'\n'}
+                    {t("triggersModalWhatAreContent") || "Триггеры позволяют настроить реакцию агента на определенные слова или фразы пользователя. Когда пользователь упоминает триггерное слово, агент может:\n• Изменить стиль общения\n• Предоставить специальную информацию\n• Активировать определенные функции\n• Переключиться на другой сценарий диалога"}
                 </Paragraph>
-                <Paragraph>
-                    Ассистент уведомит вас об этом. Тип действия при срабатывании триггера, нужно указать в разделе -
-                    "Уведомления"
+
+                <Title
+                    level={4}
+                    style={{
+                        fontSize: '16px',
+                        marginBottom: '16px'
+                    }}>
+                    {t("triggersModalExamples") || "Примеры использования"}
+                </Title>
+                <Paragraph
+                    code={true}
+                    style={{
+                        whiteSpace: 'pre-wrap',
+                        display: 'block',
+                        fontSize: '14px',
+                        padding: '12px',
+                        borderRadius: '6px',
+                        marginBottom: '16px'
+                    }}
+                >
+                    {t("triggersModalExamplesContent") || "📞 Триггер \"цена\" или \"стоимость\":\n→ Агент предоставляет подробную информацию о ценах\n\n🎁 Триггер \"скидка\" или \"акция\":\n→ Агент рассказывает о текущих специальных предложениях\n\n📋 Триггер \"инструкция\" или \"как использовать\":\n→ Агент переходит в режим обучения и детально объясняет функционал\n\n🆘 Триггер \"помощь\" или \"не понимаю\":\n→ Агент упрощает объяснения и предлагает дополнительную поддержку"}
+                </Paragraph>
+
+                <Title
+                    level={4}
+                    style={{
+                        fontSize: '16px',
+                        marginBottom: '16px'
+                    }}>
+                    {t("triggersModalSetup") || "Настройка триггеров"}
+                </Title>
+                <Paragraph
+                    code={true}
+                    style={{
+                        whiteSpace: 'pre-wrap',
+                        display: 'block',
+                        fontSize: '14px',
+                        padding: '12px',
+                        borderRadius: '6px',
+                        marginBottom: '16px'
+                    }}
+                >
+                    {t("triggersModalSetupContent") || "1. Добавьте триггерные слова или фразы в список\n2. В промпте модели опишите, как агент должен реагировать на каждый триггер\n3. Используйте условия в промпте: \"Если пользователь упоминает [триггер], то...\"\n4. Протестируйте работу триггеров в диалоге"}
+                </Paragraph>
+
+                <Title
+                    level={4}
+                    style={{
+                        fontSize: '16px',
+                        marginBottom: '16px'
+                    }}>
+                    {t("triggersModalPromptExample") || "Пример настройки в промпте:"}
+                </Title>
+                <Paragraph
+                    code={true}
+                    style={{
+                        whiteSpace: 'pre-wrap',
+                        display: 'block',
+                        fontSize: '14px',
+                        padding: '12px',
+                        borderRadius: '6px',
+                        marginBottom: '16px'
+                    }}
+                >
+                    <Typography.Text code>
+                        {t("triggersModalPromptExampleContent") || "\"#Триггеры активации\nЕсли пользователь упоминает слова 'цена', 'стоимость' или 'сколько стоит' - предоставь полную информацию о ценах на все тарифы.\nЕсли пользователь говорит 'скидка' или 'акция' - расскажи о текущих специальных предложениях и промокодах.\nЕсли пользователь пишет 'помощь' или 'не понимаю' - упрости объяснения и предложи связаться с оператором.\""}
+                    </Typography.Text>
+                </Paragraph>
+
+                <Title
+                    level={4}
+                    style={{
+                        fontSize: '16px',
+                        marginBottom: '16px'
+                    }}>
+                    {t("triggersModalBenefits") || "Преимущества использования триггеров"}
+                </Title>
+                <Paragraph
+                    code={true}
+                    style={{
+                        whiteSpace: 'pre-wrap',
+                        display: 'block',
+                        fontSize: '14px',
+                        padding: '12px',
+                        borderRadius: '6px'
+                    }}
+                >
+                    {t("triggersModalBenefitsContent") || "✓ Персонализированный опыт пользователя\n✓ Быстрый доступ к важной информации\n✓ Автоматическая адаптация поведения агента\n✓ Улучшение конверсии и вовлеченности\n✓ Гибкое управление сценариями диалога"}
                 </Paragraph>
             </Modal>
         </>

@@ -122,6 +122,13 @@
 .tour-float-button .ant-float-btn-body:hover {
     background: linear-gradient(135deg, #5a6ce8 0%, #6b4497 100%) ;
 }
+.tour-float-button .ant-float-btn-body:hover .anticon {
+    color: white;
+}
+
+.dark .tour-float-button .ant-float-btn-body:hover {
+    background: linear-gradient(45deg, #385309, #87cc00);
+}
 
 /* Tour компонент стили */
 .tour-indicator {
@@ -171,6 +178,12 @@
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) ;
     box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3) ;
 }
+
+.dark .tour-controls.tour-primary {
+    background: linear-gradient(45deg, #385309, #87cc00);
+    box-shadow: 0 8px 32px rgba(133, 198, 88, 0.3);
+}
+
 
 .tour-controls.tour-success {
     background: linear-gradient(135deg, #52c41a 0%, #389e0d 100%) ;

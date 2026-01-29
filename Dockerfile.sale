@@ -1,0 +1,133 @@
+FROM node:18-alpine AS build
+WORKDIR /app
+COPY package*.json ./
+RUN npm install --legacy-peer-deps
+COPY . .
+
+RUN npm run build
+# Собираем standalone виджет
+RUN npm run build:widget
+
+# Промежуточный этап для оптимизации статических файлов
+FROM alpine:3.21 AS optimizer
+RUN apk add --no-cache brotli gzip
+COPY --from=build /app/build /build
+# Сжимаем статические файлы для лучшей производительности
+RUN find /build -type f -name "*.js" -o -name "*.css" -o -name "*.html" -o -name "*.svg" | xargs -P $(nproc) -I{} sh -c 'gzip -9 -k {} && brotli -Z {}' || true
+
+# Используем Debian-based образ для поддержки MariaDB 12 (Bookworm для совместимости с mariadb-12.1)
+FROM nginx:1.26-bookworm AS prod
+
+# Добавляем аргумент для хоста и преобразуем его в ENV в этапе prod
+ARG HOST=89.110.84.234
+ENV HOST=$HOST
+
+# Устанавливаем необходимые пакеты
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        curl \
+        ca-certificates \
+        gnupg \
+        supervisor \
+        netcat-openbsd \
+        gettext-base \
+        procps \
+        psmisc \
+        net-tools \
+        lsb-release \
+        nano && \
+    # Добавляем репозиторий MariaDB через скрипт
+    curl -LsS https://r.mariadb.com/downloads/mariadb_repo_setup | bash -s -- --mariadb-server-version="mariadb-12.1" --os-type=debian --os-version=bookworm && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends \
+        mariadb-server \
+        mariadb-client && \
+    # Очистка
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/* /var/cache/apt/* && \
+    # Удаляем базу, созданную при установке, чтобы init-mariadb.sh провел чистую инициализацию
+    rm -rf /var/lib/mysql/* && \
+    # Создаем симлинки и копируем бинарники для совместимости со slim-образом
+    ln -sf /usr/sbin/mysqld /usr/bin/mysqld && \
+    ln -sf /usr/bin/mariadb /usr/bin/mysql && \
+    ln -sf /usr/bin/mariadb-admin /usr/bin/mysqladmin && \
+    ln -sf /usr/bin/mariadb-dump /usr/bin/mysqldump
+
+# Создадаём директории для хранения данных MariaDB
+# В Debian mysqld socket обычно в /run/mysqld/mysqld.sock
+RUN mkdir -p /var/lib/mysql /docker-entrypoint-initdb.d /run/mysqld /var/log/supervisor /var/log/mysql && \
+    chown -R mysql:mysql /var/lib/mysql /run/mysqld /var/log/mysql && \
+    chmod 777 /run/mysqld
+
+# Создаем директории для приложений и логов
+RUN mkdir -p /data /var/log/Marusia /tmp
+
+# Копируем дамп базы
+COPY _sale/air_sale_full.sql /docker-entrypoint-initdb.d/air_sale_full.sql
+
+# Копируем оптимизированную статику React
+COPY --from=optimizer /build /usr/share/nginx/html
+# Также копируем в /var/www/html для основного HTTPS сервера
+COPY --from=optimizer /build /var/www/html
+# Копируем собранный React виджет в статику Nginx
+COPY --from=build /app/build/widget /var/www/html/widget
+
+# Удаляем стандартную конфигурацию Nginx, чтобы избежать конфликтов
+RUN rm /etc/nginx/conf.d/default.conf
+
+# Создаем отдельную директорию для наших сертификатов
+RUN mkdir -p /etc/ssl/custom
+
+# Создаем директории для MariaDB
+RUN mkdir -p /var/lib/mysql /run/mysqld /var/log/mysql && \
+    chown -R mysql:mysql /var/lib/mysql /run/mysqld /var/log/mysql && \
+    chmod -R 777 /run/mysqld /var/log/mysql
+
+# Копируем конфигурационные файлы
+COPY _sale/nginx.conf.template /etc/nginx/nginx.conf.template
+COPY _sale/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+# Копируем шаблон cfg.env для последующего создания конфигурации
+COPY _sale/cfg.env /etc/cfg.env.template
+COPY _release/create-config.sh /usr/local/bin/create-config.sh
+
+# Копируем docker-entrypoint.sh из _sale с исправленным запуском supervisord
+COPY _sale/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/create-config.sh /usr/local/bin/docker-entrypoint.sh
+
+# Копируем программы
+COPY _sale/Landing /data/Landing
+COPY _sale/WhatsBot /data/WhatsBot
+COPY _sale/TgBot /data/TgBot
+COPY _sale/TgUserBot /data/TgUserBot
+COPY _sale/Widget /data/Widget
+COPY _sale/CRM /data/CRM
+COPY _sale/Operator /data/Operator
+COPY _sale/LeadHunter /data/LeadHunter
+# Копируем сертификат проверки ключа доступа
+COPY _sale/phost.pem /data
+
+# Только для оптимизации slim образа
+COPY _release/host.pem /etc/ssl/custom/host.pem
+COPY _release/host-key.pem /etc/ssl/custom/host-key.pem
+
+# Копируем скрипт инициализации MariaDB
+COPY _sale/init-mariadb.sh /init-mariadb.sh
+
+# Устанавливаем права на исполнение для всех бинарных файлов
+RUN chmod +x /data/Landing /data/WhatsBot /data/TgBot /data/TgUserBot /data/Widget /data/CRM /data/Operator /data/LeadHunter /init-mariadb.sh
+
+# Объявляем volumes
+VOLUME /data
+VOLUME /var/log/Marusia
+VOLUME /var/lib/mysql
+VOLUME /var/log/mysql
+
+# Уменьшаем размер образа и очищаем все логи
+RUN rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /var/log/Marusia/* /var/log/mysql/* 2>/dev/null || true
+
+EXPOSE 80 443
+
+# Используем скрипт-обертку для замены переменных в конфигурации nginx перед запуском
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
+
+CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

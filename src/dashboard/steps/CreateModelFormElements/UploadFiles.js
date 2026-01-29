@@ -1,4 +1,4 @@
-import {Button, Modal, Switch, List, Typography, Popconfirm, Progress} from "antd";
+import {Button, Modal, Switch, List, Typography, Popconfirm, Progress, Tooltip} from "antd";
 import React, {useEffect, useState} from "react";
 import Title from "antd/lib/typography/Title";
 import Paragraph from "antd/lib/typography/Paragraph";
@@ -6,8 +6,10 @@ import Upload from "antd/lib/upload/Upload";
 import {UploadOutlined, FilePdfOutlined, FileOutlined, DeleteOutlined, FileTextOutlined} from "@ant-design/icons";
 import {showWarningNotification, showErrorNotification, showNotification} from "../../hotification/showNotification";
 import {validateAndRefreshToken} from "../../../utils/easyUtils";
+import {useTranslation} from "react-i18next";
 
-export const UploadFiles = ({onChange, toForm, initialFiles, modelData, setButtonDisabled}) => {
+export const UploadFiles = ({onChange, toForm, initialFiles, modelData, setButtonDisabled, provider}) => {
+    const {t} = useTranslation();
     const [isModalOpen, setModalOpen] = useState(false);
     const [switchChecked, setSwitchChecked] = useState(false);
     const [fileList, setFileList] = useState([]);
@@ -86,14 +88,14 @@ export const UploadFiles = ({onChange, toForm, initialFiles, modelData, setButto
 
         // Проверка количества файлов
         if (validFiles.length > maxFiles) {
-            showWarningNotification('Можно загрузить не более 20 файлов');
+            showWarningNotification(t("warning") || 'Предупреждение', t("uploadFilesWarningLimit") || 'Можно загрузить не более 20 файлов');
             validFiles = validFiles.slice(0, maxFiles);
         }
 
         // Проверка размера файлов
         validFiles = validFiles.filter(file => {
             if (file.size > maxSize) {
-                showWarningNotification(`Файл "${file.name}" превышает 50 МБ`);
+                showWarningNotification(t("warning") || 'Предупреждение', t("uploadFilesWarningSize", {name: file.name}) || `Файл "${file.name}" превышает 50 МБ`);
                 return false;
             }
             return true;
@@ -115,7 +117,7 @@ export const UploadFiles = ({onChange, toForm, initialFiles, modelData, setButto
         setButtonDisabled(false)
         setSubmitEnabled(false);
         if (fileList.length === 0) {
-            showWarningNotification('Выберите файлы для загрузки');
+            showWarningNotification(t("warning") || 'Предупреждение', t("uploadFilesWarningSelect") || 'Выберите файлы для загрузки');
             return;
         }
 
@@ -136,13 +138,14 @@ export const UploadFiles = ({onChange, toForm, initialFiles, modelData, setButto
                     formData.append('purpose', 'assistants');
 
                     try {
-                        const response = await fetch(`${LAND_URL}/mod-fileup`, {
+                        const providerParam = provider ? `&provider=${encodeURIComponent(provider)}` : '';
+                        const response = await fetch(`${LAND_URL}/model/upfile?token=${token}${providerParam}`, {
                             method: 'POST',
                             body: formData,
                         });
                         setButtonDisabled(true);
                         if (!response.ok) {
-                            throw new Error(`Ошибка загрузки: ${response.status}`);
+                            throw new Error(t("uploadFilesErrorUploadStatus", {status: response.status}) || `Ошибка загрузки: ${response.status}`);
                         }
 
                         const result = await response.json();
@@ -164,13 +167,13 @@ export const UploadFiles = ({onChange, toForm, initialFiles, modelData, setButto
                     if (isAddingFiles && modelData) {
                         // Добавляем файлы в модель через /mod-fileadd одним запросом
                         try {
-                            const addResponse = await fetch(`${LAND_URL}/mod-fileadd`, {
+                            const providerParam = provider ? `&provider=${encodeURIComponent(provider)}` : '';
+                            const addResponse = await fetch(`${LAND_URL}/model/addfile?token=${token}${providerParam}`, {
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json',
                                 },
                                 body: JSON.stringify({
-                                    token: token,
                                     files: uploadedFilesInfo.map(fileInfo => ({
                                         fileid: fileInfo.id,
                                         filename: fileInfo.name
@@ -179,7 +182,7 @@ export const UploadFiles = ({onChange, toForm, initialFiles, modelData, setButto
                             });
 
                             if (!addResponse.ok) {
-                                throw new Error(`Ошибка добавления файлов: ${addResponse.status}`);
+                                throw new Error(t("uploadFilesErrorAddStatus", {status: addResponse.status}) || `Ошибка добавления файлов: ${addResponse.status}`);
                             }
 
                             const addResult = await addResponse.json();
@@ -199,26 +202,26 @@ export const UploadFiles = ({onChange, toForm, initialFiles, modelData, setButto
                                         toForm.setFieldsValue({fileids: updatedFiles});
                                     }
 
-                                    showNotification("Файлы добавлены в модель:", `${addResult.success_count}`);
+                                    showNotification(t("uploadFilesAddedToModel") || "Файлы добавлены в модель:", `${addResult.success_count}`);
                                 }
 
                                 // Показываем предупреждения о неуспешных файлах, если есть
                                 if (addResult.failed_count > 0) {
-                                    const failedNames = addResult.failed_files?.map(f => f.filename).join(', ') || 'неизвестные файлы';
-                                    showErrorNotification("Не удалось добавить файлы:", failedNames);
+                                    const failedNames = addResult.failed_files?.map(f => f.filename).join(', ') || (t("uploadFilesUnknownFiles") || 'неизвестные файлы');
+                                    showErrorNotification(t("uploadFilesFailedToAdd") || "Не удалось добавить файлы:", failedNames);
                                 }
                             } else {
                                 throw new Error('Неожиданный статус ответа');
                             }
                         } catch (error) {
                             console.error('Ошибка при добавлении файлов в модель:', error);
-                            showErrorNotification('Ошибка добавления файлов', error.message);
+                            showErrorNotification(t("uploadFilesErrorAddingFiles") || 'Ошибка добавления файлов', error.message);
                         }
 
                         setIsAddingFiles(false);
                     } else {
                         // Обычная загрузка файлов для новой модели
-                        showNotification("Успешно загружено файлов:", `${successFiles.length}`);
+                        showNotification(t("uploadFilesSuccessCount") || "Успешно загружено файлов:", `${successFiles.length}`);
 
                         // Сохраняем ID загруженных файлов
                         if (toForm) {
@@ -240,10 +243,10 @@ export const UploadFiles = ({onChange, toForm, initialFiles, modelData, setButto
                 }
 
                 if (failedFiles.length > 0) {
-                    showErrorNotification("Не удалось загрузить файлы:", `${failedFiles.join(', ')}`);
+                    showErrorNotification(t("uploadFilesFailedUpload") || "Не удалось загрузить файлы:", `${failedFiles.join(', ')}`);
                 }
             } else {
-                showErrorNotification("Ошибка загрузки", "Токен не обновлен!");
+                showErrorNotification(t("uploadFilesUploadError") || "Ошибка загрузки", t("uploadFilesErrorToken") || "Токен не обновлен!");
                 setUploaded(true);
                 setButtonDisabled(true)
                 return;
@@ -251,7 +254,7 @@ export const UploadFiles = ({onChange, toForm, initialFiles, modelData, setButto
 
         } catch (error) {
             console.error('Ошибка при загрузке файлов:', error);
-            showErrorNotification('Произошла ошибка при загрузке файлов', error.message);
+            showErrorNotification(t("uploadFilesErrorGeneral") || 'Произошла ошибка при загрузке файлов', error.message);
         } finally {
             setUploaded(true);
         }
@@ -265,7 +268,8 @@ export const UploadFiles = ({onChange, toForm, initialFiles, modelData, setButto
             const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
             if (token != null) {
                 // Отправляем запрос на удаление файла
-                const response = await fetch(`${LAND_URL}/mod-filedel`, {
+                const providerParam = provider ? `&provider=${encodeURIComponent(provider)}` : '';
+                const response = await fetch(`${LAND_URL}/model/delfile?token=${token}${providerParam}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -274,7 +278,7 @@ export const UploadFiles = ({onChange, toForm, initialFiles, modelData, setButto
                 });
 
                 if (!response.ok) {
-                    throw new Error(`Ошибка удаления: ${response.status}`);
+                    throw new Error(t("uploadFilesErrorDeleteStatus", {status: response.status}) || `Ошибка удаления: ${response.status}`);
                 }
 
                 // Удаляем файл из списка существующих файлов
@@ -300,14 +304,14 @@ export const UploadFiles = ({onChange, toForm, initialFiles, modelData, setButto
                     }
                 }
 
-                showNotification("Файл удалён", fileToDelete.name);
+                showNotification(t("uploadFilesFileDeleted") || "Файл удалён", fileToDelete.name);
             } else {
-                showErrorNotification("Ошибка удаления", "Токен не обновлен!");
+                showErrorNotification(t("uploadFilesDeleteError") || "Ошибка удаления", t("uploadFilesErrorToken") || "Токен не обновлен!");
             }
 
         } catch (error) {
             console.error('Ошибка при удалении файла:', error);
-            showErrorNotification('Произошла ошибка при удалении файла', error.message);
+            showErrorNotification(t("uploadFilesErrorDeleteGeneral") || 'Произошла ошибка при удалении файла', error.message);
         }
     };
 
@@ -317,29 +321,35 @@ export const UploadFiles = ({onChange, toForm, initialFiles, modelData, setButto
         <>
             <div className="section-title">
                 <FileTextOutlined />
-                Файлы для дообучения
+                {t("uploadFilesTitle") || "Загрузка файлов"}
             </div>
             <div className="section-description">
-                Загрузите документы для обогащения знаний модели специфической информацией
+                {t("uploadFilesDescription") || "Загрузите документы для обучения агента и расширения его базы знаний"}
             </div>
 
             <div className="step">
                     <span>
                         {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
-                        Загрузка файлов для дообучения <a onClick={showModal}>модели</a>&nbsp;
+                        {t("uploadFilesUse") || "Использовать"} <a onClick={showModal}>{t("uploadFilesLink") || "загрузку файлов"}</a>&nbsp;
                     </span>
-                <Switch
-                    checked={switchChecked}
-                    checkedChildren={<span style={{color: "black"}}>Да</span>}
-                    unCheckedChildren={<span style={{color: "black"}}>Нет</span>}
-                    onChange={handleSwitchChange}
-                />
+                <Tooltip
+                    title={!modelData ? (t("operatorNeedCreateModel") || "Сначала нужно создать модель!") : ""}
+                    placement="top"
+                >
+                    <Switch
+                        checked={switchChecked}
+                        checkedChildren={<span style={{color: "black"}}>{t("Yes") || "Да"}</span>}
+                        unCheckedChildren={<span style={{color: "black"}}>{t("No") || "Нет"}</span>}
+                        onChange={handleSwitchChange}
+                        disabled={!modelData}
+                    />
+                </Tooltip>
             </div>
 
             {switchChecked && (
                 <div className="channel-item">
                     <div style={{display: 'flex', justifyContent: 'space-between', marginBottom: '16px'}}>
-                        <Typography.Text>Использовано файлов: </Typography.Text>
+                        <Typography.Text>{t("uploadFilesUsed") || "Использовано файлов:"} </Typography.Text>
                         <Typography.Text strong>
                             {existingFiles.length + fileList.length} / {maxFiles}
                         </Typography.Text>
@@ -355,23 +365,23 @@ export const UploadFiles = ({onChange, toForm, initialFiles, modelData, setButto
                     />
                     <div style={{marginTop: '16px'}}>
                         <Typography.Text type="secondary">
-                            Доступно: {maxFiles - existingFiles.length - fileList.length} файлов
+                            {t("uploadFilesAvailable") || "Доступно:"} {maxFiles - existingFiles.length - fileList.length} {t("uploadFilesAvailableCount", {count: maxFiles - existingFiles.length - fileList.length}) || "файлов"}
                         </Typography.Text>
                     </div>
 
                     <div className="channel-item-content">
 
                         {!uploaded && existingFiles.length === 0
-                            ? <p>Можно выбрать до 20 файлов, размер одного файла не должен превышать 50 мб</p>
+                            ? <p>{t("uploadFilesMaxInfo") || "Можно выбрать до 20 файлов, размер одного файла не должен превышать 50 мб"}</p>
                             : uploaded && existingFiles.length === 0 && !isAddingFiles
-                                ? <p>Файлы успешно загружены!</p>
+                                ? <p>{t("uploadFilesSuccessUpload") || "Файлы успешно загружены!"}</p>
                                 : null
                         }
 
                         {/* Отображаем список ранее загруженных файлов */}
                         {existingFiles && existingFiles.length > 0 && (
                             <div style={{marginBottom: '12px'}}>
-                                <Typography.Text strong>Ранее загруженные файлы:</Typography.Text>
+                                <Typography.Text strong>{t("uploadFilesPreviouslyUploaded") || "Ранее загруженные файлы:"}</Typography.Text>
                                 <List
                                     size="small"
                                     dataSource={existingFiles}
@@ -393,10 +403,10 @@ export const UploadFiles = ({onChange, toForm, initialFiles, modelData, setButto
                                                 {file.name}
                                             </Typography.Text>
                                             <Popconfirm
-                                                title="Вы уверены, что хотите удалить этот файл?"
+                                                title={t("uploadFilesDeleteConfirm") || "Вы уверены, что хотите удалить этот файл?"}
                                                 onConfirm={() => handleDeleteFile(file)}
-                                                okText="Да"
-                                                cancelText="Нет"
+                                                okText={t("Yes") || "Да"}
+                                                cancelText={t("No") || "Нет"}
                                                 okButtonProps={{style: {color: 'black'}}}
                                             >
                                                 <Button
@@ -417,7 +427,7 @@ export const UploadFiles = ({onChange, toForm, initialFiles, modelData, setButto
                                         onClick={handleAddFiles}
                                         style={{marginTop: '8px'}}
                                     >
-                                        Добавить файлы
+                                        {t("uploadFilesAddFiles") || "Добавить файлы"}
                                     </Button>
                                 )}
                             </div>
@@ -431,7 +441,7 @@ export const UploadFiles = ({onChange, toForm, initialFiles, modelData, setButto
                                 fileList={fileList}
                                 onChange={handleFilesUpload}
                             >
-                                <Button icon={<UploadOutlined/>}>Выбрать файлы</Button>
+                                <Button icon={<UploadOutlined/>}>{t("uploadFilesSelectFiles2") || "Выбрать файлы"}</Button>
                             </Upload>
                         )
                         }
@@ -444,8 +454,8 @@ export const UploadFiles = ({onChange, toForm, initialFiles, modelData, setButto
                             style={{marginLeft: 16, marginTop: 8, color: "black"}}
                         >
                             {isAddingFiles
-                                ? (fileList.length === 1 ? "Добавить файл" : "Добавить файлы")
-                                : (fileList.length === 1 ? "Отправить файл" : "Отправить файлы")
+                                ? (fileList.length === 1 ? (t("uploadFilesAddFile") || "Добавить файл") : (t("uploadFilesAddFilesPlural") || "Добавить файлы"))
+                                : (fileList.length === 1 ? (t("uploadFilesSendFile") || "Отправить файл") : (t("uploadFilesSendFiles") || "Отправить файлы"))
                             }
                         </Button>
                     </div>
@@ -453,7 +463,6 @@ export const UploadFiles = ({onChange, toForm, initialFiles, modelData, setButto
             )}
 
             <Modal
-                // title="Дообучение модели а ваших данных"
                 open={isModalOpen}
                 onCancel={handleCancel}
                 footer={null}
@@ -464,7 +473,7 @@ export const UploadFiles = ({onChange, toForm, initialFiles, modelData, setButto
                         fontSize: '16px',
                         color: 'var(--text-color)',
                     }}>
-                    "Для чего нужно дообучение модели?"
+                    {t("uploadFilesModalWhatIsTitle") || "Для чего нужно дообучение модели?"}
                 </Title>
                 <Paragraph
                     code={true}
@@ -475,34 +484,14 @@ export const UploadFiles = ({onChange, toForm, initialFiles, modelData, setButto
                         color: 'var(--text-color)',
                     }}
                 >
-                    Передача файлов Ассистенту служит очень практичной цели — это позволяет обогатить разговор
-                    конкретной,
-                    проверенной информацией из ваших документов. Вот зачем это может понадобиться:{'\n'}
-                    📚 Контекст из ваших данных
-                    Файлы дают возможность ориентироваться не только на общие знания, но и на специфику вашего контента
-                    — будь то PDF
-                    с технической документацией, Markdown с инструкциями, или текстовая выгрузка из БД.{'\n'}
-                    🔍 Поиск и анализ{'\n'}
-                    Позволит Ассистенту:{'\n'}
-                    - Извлекать ключевую информацию из длинных файлов{'\n'}
-                    - Отвечать на вопросы вроде “что говорит документ по этому поводу”{'\n'}
-                    - Генерировать резюме или выделять главные моменты{'\n'}
-                    - Сравнивать содержимое нескольких файлов, если вы их загрузите{'\n'}
-                    💡 Автоматизация и ускорение работы{'\n'}
-                    Передавая файлы, вы экономите время на объяснения. Вместо того чтобы копировать-вставлять текст
-                    вручную, вы просто загружаете файл, а Ассистент понимает, как с ним работать.{'\n'}
-                    🤖 Примеры применений{'\n'}
-                    - Загрузили .docx с отчётом → Ассистент делает краткое резюме и в своих ответах ссылается на
-                    него{'\n'}
-                    - Передали .py скрипт → Ассистент анализирует что делает код и отвечает на вопросы по нему{'\n'}
-                    - Передали .json файл настроек → Ассистент использует эти параметры в своих рассуждениях{'\n'}
+                    {t("uploadFilesModalWhatIsText") || "Передача файлов Агенту служит очень практичной цели — это позволяет обогатить разговор конкретной, проверенной информацией из ваших документов. Вот зачем это может понадобиться:\n📚 Контекст из ваших данных\nФайлы дают возможность ориентироваться не только на общие знания, но и на специфику вашего контента — будь то PDF с технической документацией, Markdown с инструкциями, или текстовая выгрузка из БД.\n🔍 Поиск и анализ\nПозволит Агенту:\n- Извлекать ключевую информацию из длинных файлов\n- Отвечать на вопросы вроде \"что говорит документ по этому поводу\"\n- Генерировать резюме или выделять главные моменты\n- Сравнивать содержимое нескольких файлов, если вы их загрузите\n💡 Автоматизация и ускорение работы\nПередавая файлы, вы экономите время на объяснения. Вместо того чтобы копировать-вставлять текст вручную, вы просто загружаете файл, а Агент понимает, как с ним работать.\n🤖 Примеры применений\n- Загрузили .docx с отчётом → Агент делает краткое резюме и в своих ответах ссылается на него\n- Передали .py скрипт → Агент анализирует что делает код и отвечает на вопросы по нему\n- Передали .json файл настроек → Агент использует эти параметры в своих рассуждениях"}
                 </Paragraph>
                 <Title
                     style={{
                         fontSize: '16px',
                         color: 'var(--text-color)',
                     }}>
-                    "Какие файлы можно использовать?"
+                    {t("uploadFilesModalFormatsTitle") || "Какие файлы можно использовать?"}
                 </Title>
                 <Paragraph
                     code={true}
@@ -513,26 +502,7 @@ export const UploadFiles = ({onChange, toForm, initialFiles, modelData, setButto
                         color: 'var(--text-color)',
                     }}
                 >
-                    📄 Документы и текстовые файлы{'\n'}
-                    - .txt — обычный текст{'\n'}
-                    - .md — Markdown{'\n'}
-                    - .pdf — PDF{'\n'}
-                    - .doc, .docx — Microsoft Word{'\n'}
-                    - .pptx — Microsoft PowerPoint{'\n'}
-                    - .html — HTML-файлы{'\n'}
-                    💻 Код и скрипты{'\n'}
-                    - .py — Python{'\n'}
-                    - .js — JavaScript{'\n'}
-                    - .ts — TypeScript{'\n'}
-                    - .java — Java{'\n'}
-                    - .cpp, .c, .cs — C++, C, C#{'\n'}
-                    - .rb — Ruby{'\n'}
-                    - .php — PHP{'\n'}
-                    - .sh — Shell скрипты{'\n'}
-                    - .tex — LaTeX{'\n'}
-                    - .css — CSS{'\n'}
-                    🧠 Форматы данных{'\n'}
-                    - .json — JSON
+                    {t("uploadFilesModalFormatsText") || "📄 Документы и текстовые файлы\n- .txt — обычный текст\n- .md — Markdown\n- .pdf — PDF\n- .doc, .docx — Microsoft Word\n- .pptx — Microsoft PowerPoint\n- .html — HTML-файлы\n💻 Код и скрипты\n- .py — Python\n- .js — JavaScript\n- .ts — TypeScript\n- .java — Java\n- .cpp, .c, .cs — C++, C, C#\n- .rb — Ruby\n- .php — PHP\n- .sh — Shell скрипты\n- .tex — LaTeX\n- .css — CSS\n🧠 Форматы данных\n- .json — JSON"}
                 </Paragraph>
             </Modal>
         </>

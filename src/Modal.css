@@ -21,15 +21,23 @@ body.dark {
 
 /* Стили для Ant Design Modal, чтобы он отображался поверх кастомного модала */
 .ant-modal-root {
-    z-index: 10001 !important;
+    z-index: 30000 !important;
 }
 
 .ant-modal-wrap {
-    z-index: 10001 !important;
+    z-index: 30000 !important;
 }
 
 .ant-modal-mask {
-    z-index: 10001 !important;
+    z-index: 29999 !important;
+}
+
+.ant-modal {
+    z-index: 30000 !important;
+}
+
+.ant-modal-content {
+    z-index: 30001 !important;
 }
 
 /* Основные стили модального окна */
@@ -47,10 +55,11 @@ body.dark {
     display: flex;
     justify-content: center;
     align-items: center;
-    z-index: 10000;
+    z-index: 5000;
     padding: 20px;
     box-sizing: border-box;
     animation: modalOverlayFadeIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    isolation: auto;
 }
 
 .modal-content {
@@ -59,8 +68,10 @@ body.dark {
     border-radius: 12px;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
     overflow-y: auto;
+    overflow-x: visible;
     transform: translateY(0);
     animation: modalContentSlideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    isolation: auto;
 }
 
 /* Темная тема */
@@ -195,4 +206,67 @@ body.dark .modal-content::-webkit-scrollbar-thumb:hover {
     .modal-content {
         max-height: calc(100vh - 140px);
     }
+}
+
+/* Global blur modal mask utility */
+.blur-modal-mask {
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+
+/* Ensure mask uses semi-transparent background so blur is visible */
+.ant-modal-mask.blur-modal-mask {
+    backdrop-filter: blur(4px) !important;
+    -webkit-backdrop-filter: blur(4px) !important;
+    background-color: rgba(0,0,0,0.35) !important;
+    z-index: 19999 !important;
+}
+
+/* Fallback: blur everything except Ant modal root when body has this class */
+body.modal-blur-active > *:not(.ant-modal-root) {
+    filter: blur(4px) !important;
+    -webkit-filter: blur(4px) !important;
+}
+
+/* Ensure modal is above mask and interactive */
+.ant-modal-root,
+.ant-modal-wrap,
+.ant-modal {
+    z-index: 20000 !important;
+    pointer-events: auto !important;
+}
+
+/* Specific wrapper for restart modal to ensure it sits above the mask */
+.restart-modal-wrap,
+.restart-modal-wrap .ant-modal {
+    z-index: 20010 !important;
+    pointer-events: auto !important;
+}
+
+/* Ensure restart modal is fixed to viewport and visible */
+.restart-modal-wrap {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    display: flex !important;
+    justify-content: center !important;
+    align-items: flex-start !important; /* keep at top area */
+    padding-top: 10vh !important; /* push down a bit from top */
+}
+
+.restart-modal-wrap .ant-modal {
+    position: fixed !important; /* fix to viewport */
+    top: 10vh !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    margin: 0 !important;
+    width: auto !important;
+}
+
+/* also ensure modal content is visible */
+.restart-modal-wrap .ant-modal-content {
+    visibility: visible !important;
+    opacity: 1 !important;
 }

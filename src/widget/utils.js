@@ -1,19 +1,18 @@
-// const WIDGET_URL = window.runtimeConfig?.REACT_APP_WIDGET || process.env.REACT_APP_WIDGET;
+const LAND_URL = (window.runtimeConfig && window.runtimeConfig.REACT_APP_LAND) || process.env.REACT_APP_LAND;
 
 export const validateAndRefreshWidgetToken = async (token) => {
     if (token === "no_balance") { return token } // Такого не бывает
-    const WIDGET_URL = getWidgetURL();
 
     try {
         // Пытаемся валидировать текущий токен
-        const response = await fetch(`${WIDGET_URL}/tvalidate?token=${encodeURIComponent(token)}`, {
+        const response = await fetch(`${LAND_URL}/widget/validate?token=${encodeURIComponent(token)}`, {
             method: 'GET',
             headers: { 'Content-Type': 'application/json' },
             // credentials: 'include', // Куки будут отправлены
         });
 
         if (response.status === 401) {
-            const newToken = await refreshToken(token);
+            const newToken = await refreshToken({oldtoken: token});
             if (newToken) {
                 return newToken; // Возвращаем новый токен
             } else {
@@ -33,10 +32,8 @@ export const validateAndRefreshWidgetToken = async (token) => {
 };
 
 const refreshToken = async ({oldtoken}) => {
-    const WIDGET_URL = getWidgetURL();
-
     try {
-        const response = await fetch(`${WIDGET_URL}/tref`, {
+        const response = await fetch(`${LAND_URL}/widget/refresh`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ "oldToken": oldtoken }),
@@ -58,7 +55,9 @@ const refreshToken = async ({oldtoken}) => {
 };
 
 export async function fetchUserName({ token, setToken, setUserName}, maxRetries = 3) {
-    const WIDGET_URL = getWidgetURL();
+    // TODO Пауза 250 для теста
+    await new Promise(resolve => setTimeout(resolve, 250));
+
     const newtoken = await validateAndRefreshWidgetToken(token)
     if (newtoken === null) {
         console.error('Ошибка при обновлении токена');
@@ -72,7 +71,7 @@ export async function fetchUserName({ token, setToken, setUserName}, maxRetries 
 
     const makeRequest = async () => {
         try {
-            response = await fetch(`${WIDGET_URL}/username?token=${encodeURIComponent(newtoken)}`, {
+            response = await fetch(`${LAND_URL}/widget/username?token=${encodeURIComponent(newtoken)}`, {
                 method: "GET",
                 headers: {"Content-Type": "application/json"},
             });
@@ -167,13 +166,3 @@ export const formatWhatsBotData = (data, uids) => {
     return JSON.stringify(dataObj);
 };
 
-// Функция для получения URL с приоритетом глобальных переменных
-export function getWidgetURL() {
-    // Приоритет: глобальная функция > window.runtimeConfig > process.env
-    if (typeof window.getMarusyaWidgetURL === 'function') {
-        return window.getMarusyaWidgetURL();
-    }
-
-    return window.runtimeConfig?.REACT_APP_WIDGET ||
-        process.env.REACT_APP_WIDGET;
-}

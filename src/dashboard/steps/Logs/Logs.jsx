@@ -3,6 +3,7 @@ import {Spin, Button, Tour, FloatButton, Typography} from 'antd';
 import {FileTextOutlined, QuestionCircleOutlined, PlayCircleOutlined} from '@ant-design/icons';
 import {validateAndRefreshToken} from "../../../utils/easyUtils";
 import {getTourPanelState, setTourPanelState} from "../../../utils/cookieUtils";
+import {useTranslation} from 'react-i18next';
 import '../Tour.css';
 
 // Функция для определения цвета лог-сообщения на основе ANSI кодов и содержимого
@@ -43,6 +44,7 @@ const cleanAnsiCodes = (text) => {
 };
 
 export function Logs() {
+    const { t } = useTranslation();
     const [messages, setMessages] = useState([]);
     const [isConnected, setIsConnected] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -60,7 +62,7 @@ export function Logs() {
     const controlButtonsRef = useRef(null);
 
     const LAND_WSS = (window.runtimeConfig && window.runtimeConfig.REACT_APP_LAND_WSS) || process.env.REACT_APP_LAND_WSS;
-    const wsUrl = `${LAND_WSS}/ws-log`;
+    const wsUrl = `${LAND_WSS}/ws/log`;
 
     const scrollToBottom = () => {
         if (logsContainerRef.current) {
@@ -116,14 +118,14 @@ export function Logs() {
         setLoading(true);
         setError(null);
         setMessages([]);
-        addMessage('🔄 Подключение к серверу логов...');
+        addMessage(`🔄 ${t("logsConnecting") || "Подключение к серверу логов..."}`);
 
         try {
             // Получаем и валидируем токен
             const validToken = await validateAndRefreshToken(localStorage.getItem("authToken"));
 
             if (!validToken) {
-                setError("Токен не доступен или истек");
+                setError(t("logsTokenError") || "Токен не доступен или истек");
                 setLoading(false);
                 return;
             }
@@ -135,8 +137,8 @@ export function Logs() {
             wsRef.current.onopen = () => {
                 setIsConnected(true);
                 setLoading(false);
-                addMessage('✅ Подключение установлено');
-                addMessage('📄 Начинаем получение логов в режиме реального времени...');
+                addMessage(`✅ ${t("logsConnectionEstablished") || "Подключение установлено"}`);
+                addMessage(`📄 ${t("logsStartReceiving") || "Начинаем получение логов в режиме реального времени..."}`);
             };
 
             wsRef.current.onmessage = (event) => {
@@ -160,15 +162,15 @@ export function Logs() {
 
                 // Более детальная обработка кодов закрытия
                 if (event.code === 1000) {
-                    addMessage('📝 Соединение закрыто пользователем');
+                    addMessage(`📝 ${t("logsClosedByUser") || "Соединение закрыто пользователем"}`);
                 } else if (event.code === 1001) {
-                    addMessage('⚠️ Сервер завершил соединение');
+                    addMessage(`⚠️ ${t("logsClosedByServer") || "Сервер завершил соединение"}`);
                 } else if (event.code === 1006) {
-                    addMessage('❌ Соединение прервано без кода закрытия');
+                    addMessage(`❌ ${t("logsConnectionAborted") || "Соединение прервано без кода закрытия"}`);
                 } else if (event.wasClean) {
-                    addMessage('📝 Соединение закрыто');
+                    addMessage(`📝 ${t("logsConnectionClosed") || "Соединение закрыто"}`);
                 } else {
-                    addMessage(`⚠️ Соединение прервано неожиданно (код: ${event.code})`);
+                    addMessage(`⚠️ ${t("logsConnectionInterrupted") || "Соединение прервано неожиданно (код:"} ${event.code})`);
                 }
 
                 // Очищаем ссылку на WebSocket
@@ -178,8 +180,8 @@ export function Logs() {
             wsRef.current.onerror = (error) => {
                 setIsConnected(false);
                 setLoading(false);
-                setError('Ошибка подключения к серверу');
-                addMessage('❌ Ошибка подключения к WebSocket');
+                setError(t("logsServerError") || 'Ошибка подключения к серверу');
+                addMessage(`❌ ${t("logsConnectionError") || "Ошибка подключения к WebSocket"}`);
                 console.error('WebSocket error:', error);
             };
 
@@ -190,8 +192,8 @@ export function Logs() {
 
         } catch (err) {
             setLoading(false);
-            setError('Ошибка при создании WebSocket соединения');
-            addMessage('❌ Не удалось создать WebSocket соединение');
+            setError(t("logsServerError") || 'Ошибка при создании WebSocket соединения');
+            addMessage(`❌ ${t("logsSocketCreationError") || "Не удалось создать WebSocket соединение"}`);
             console.error('WebSocket creation error:', err);
         }
     };
@@ -225,33 +227,33 @@ export function Logs() {
 
     const steps = [
         {
-            title: '🚀 Добро пожаловать в систему логов',
-            description: 'Этот интерфейс позволяет просматривать системные логи в реальном времени для мониторинга и отладки приложений.',
+            title: t("logsTourWelcome") || '🚀 Добро пожаловать в систему логов',
+            description: t("logsTourWelcomeDesc") || 'Этот интерфейс позволяет просматривать системные логи в реальном времени для мониторинга и отладки приложений.',
             target: () => logsHeaderRef.current,
         },
         {
-            title: '🔌 Подключение к логам',
-            description: 'Нажмите эту кнопку, чтобы установить WebSocket соединение с сервером логов и начать получать данные в реальном времени.',
+            title: t("logsTourConnect") || '🔌 Подключение к логам',
+            description: t("logsTourConnectDesc") || 'Нажмите эту кнопку, чтобы установить WebSocket соединение с сервером логов и начать получать данные в реальном времени.',
             target: () => connectButtonRef.current,
         },
         {
-            title: '📊 Индикатор состояния',
-            description: 'Здесь отображается текущий статус подключения. Зелёный индикатор означает активное соединение.',
+            title: t("logsTourStatus") || '📊 Индикатор состояния',
+            description: t("logsTourStatusDesc") || 'Здесь отображается текущий статус подключения. Зелёный индикатор означает активное соединение.',
             target: () => statusIndicatorRef.current,
         },
         {
-            title: '🔧 Управление подключением',
-            description: 'Используйте эти кнопки для отключения от сервера логов или очистки консоли.',
+            title: t("logsTourControl") || '🔧 Управление подключением',
+            description: t("logsTourControlDesc") || 'Используйте эти кнопки для отключения от сервера логов или очистки консоли.',
             target: () => controlButtonsRef.current,
         },
         {
-            title: '📺 Консоль логов',
-            description: 'Здесь отображаются логи в реальном времени. Сообщения окрашиваются по уровню важности: красный - ошибки, жёлтый - предупреждения, зелёный - отладочная информация.',
+            title: t("logsTourConsole") || '📺 Консоль логов',
+            description: t("logsTourConsoleDesc") || 'Здесь отображаются логи в реальном времени. Сообщения окрашиваются по уровню важности: красный - ошибки, жёлтый - предупреждения, зелёный - отладочная информация.',
             target: () => logsContainerRef.current,
         },
         {
-            title: '✅ Готово!',
-            description: 'Теперь вы знаете, как использовать систему мониторинга логов. Начните с подключения к серверу!',
+            title: t("logsTourReady") || '✅ Готово!',
+            description: t("logsTourReadyDesc") || 'Теперь вы знаете, как использовать систему мониторинга логов. Начните с подключения к серверу!',
             target: () => logsContainerRef.current,
         },
     ];
@@ -261,7 +263,7 @@ export function Logs() {
         return <div className="notifications-loading">
             <Spin size="large" />
             <Text className="loading-text">
-                Загрузка данных...
+                {t("loading") || "Загрузка данных..."}
             </Text>
         </div>
     }
@@ -270,10 +272,10 @@ export function Logs() {
         <div className="create-model-container">
             <div className="section-title logs-header" ref={logsHeaderRef}>
                 <FileTextOutlined/>
-                Системные логи
+                {t("logsTitle") || "Системные логи"}
             </div>
             <div className="section-description">
-                Просматривайте логи системы в режиме реального времени для мониторинга и отладки
+                {t("logsDescription") || "Просматривайте логи системы в режиме реального времени для мониторинга и отладки"}
             </div>
 
             <div className="tour-layout">
@@ -290,7 +292,7 @@ export function Logs() {
                                     disabled={isConnected || loading}
                                     loading={loading}
                                 >
-                                    {isConnected ? 'Подключено' : 'Подключиться к логам'}
+                                    {isConnected ? (t("logsConnected") || 'Подключено') : (t("logsConnect") || 'Подключиться к логам')}
                                 </Button>
 
                                 <div className="control-buttons" style={{display: 'flex', gap: '8px'}} ref={controlButtonsRef}>
@@ -298,19 +300,18 @@ export function Logs() {
                                         onClick={disconnectWebSocket}
                                         disabled={!isConnected && !loading}
                                     >
-                                        Отключиться
+                                        {t("logsDisconnect") || "Отключиться"}
                                     </Button>
 
                                     <Button
                                         onClick={clearConsole}
                                         disabled={messages.length === 0}
                                     >
-                                        Очистить
+                                        {t("logsClear") || "Очистить"}
                                     </Button>
                                 </div>
 
                                 <div className="status-indicator" style={{marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '8px'}} ref={statusIndicatorRef}>
-                                    {/*{loading && <Spin size="small"/>}*/}
                                     <span style={{
                                         fontSize: '12px',
                                         color: isConnected ? '#52c41a' : '#8c8c8c',
@@ -324,7 +325,7 @@ export function Logs() {
                                     borderRadius: '50%',
                                     backgroundColor: isConnected ? '#52c41a' : '#d9d9d9'
                                 }}></span>
-                                        {isConnected ? 'Подключено' : 'Отключено'}
+                                        {isConnected ? (t("logsConnected") || 'Подключено') : (t("logsDisconnectedStatus") || 'Отключено')}
                             </span>
                                 </div>
                             </div>
@@ -356,12 +357,12 @@ export function Logs() {
                                 lineHeight: '1.4'
                             }} ref={logsContainerRef} className="logs-container">
                                 <div style={{marginBottom: '8px', color: '#52c41a', fontWeight: 'bold'}}>
-                                    === Системные логи в режиме реального времени ===
+                                    {t("logsHeader") || "=== Системные логи в режиме реального времени ==="}
                                 </div>
 
                                 {messages.length === 0 && !loading && (
                                     <div style={{color: '#8c8c8c', fontStyle: 'italic'}}>
-                                        Нажмите "Подключиться к логам" для начала получения логов в режиме реального времени...
+                                        {t("logsClickToConnect") || 'Нажмите "Подключиться к логам" для начала получения логов в режиме реального времени...'}
                                     </div>
                                 )}
 
@@ -387,7 +388,7 @@ export function Logs() {
                                 color: '#8c8c8c',
                                 textAlign: 'center'
                             }}>
-                                Системные логи обновляются в режиме реального времени каждые 500мс
+                                {t("logsUpdateFrequency") || "Системные логи обновляются в режиме реального времени каждые 500мс"}
                             </div>
                         </div>
                     </div>
@@ -399,10 +400,10 @@ export function Logs() {
                         <div className="tour-controls-header">
                             <PlayCircleOutlined className="tour-controls-icon" />
                             <h3 className="tour-controls-title">
-                                Интерактивный обзор
+                                {t("logsTourTitle") || "Интерактивный обзор"}
                             </h3>
                             <p className="tour-controls-subtitle">
-                                Изучите интерфейс системы логов пошагово
+                                {t("logsTourSubtitle") || "Изучите интерфейс системы логов пошагово"}
                             </p>
                         </div>
 
@@ -413,7 +414,7 @@ export function Logs() {
                                 size="large"
                                 onClick={startTour}
                             >
-                                🚀 Начать тур
+                                {t("logsTourStart") || "🚀 Начать тур"}
                             </Button>
                         </div>
 
@@ -421,7 +422,7 @@ export function Logs() {
                             <div className="tour-progress">
                                 <div className="tour-progress-step">
                                     <span className="tour-progress-step-text">
-                                        Шаг {current + 1} из {steps.length}
+                                        {t("logsTourStep") || "Шаг"} {current + 1} {t("notifTourOf") || "из"} {steps.length}
                                     </span>
                                 </div>
                                 <div className="tour-progress-bar">
@@ -437,12 +438,12 @@ export function Logs() {
                         )}
 
                         <div className="tour-info">
-                            <div className="tour-info-title">📋 Что вы изучите:</div>
+                            <div className="tour-info-title">{t("logsTourWhatYouLearn") || "📋 Что вы изучите:"}</div>
                             <ul className="tour-info-list">
-                                <li>Подключение к серверу логов</li>
-                                <li>Мониторинг состояния системы</li>
-                                <li>Управление консолью логов</li>
-                                <li>Интерпретация сообщений</li>
+                                <li>{t("logsTourLearn1") || "Подключение к серверу логов"}</li>
+                                <li>{t("logsTourLearn2") || "Мониторинг состояния системы"}</li>
+                                <li>{t("logsTourLearn3") || "Управление консолью логов"}</li>
+                                <li>{t("logsTourLearn4") || "Интерпретация сообщений"}</li>
                             </ul>
                         </div>
                     </div>
@@ -470,7 +471,7 @@ export function Logs() {
 
             <FloatButton
                 icon={<QuestionCircleOutlined />}
-                tooltip="Начать обзор интерфейса"
+                tooltip={t("tourFloatButtonTooltip") || "Начать обзор интерфейса"}
                 onClick={showTourPanel}
                 className="tour-float-button"
             />
