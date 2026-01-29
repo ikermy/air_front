@@ -31,11 +31,7 @@ RUN apt-get update && \
         supervisor \
         netcat-openbsd \
         gettext-base \
-        procps \
-        psmisc \
-        net-tools \
-        lsb-release \
-        nano && \
+        procps && \
     # Добавляем репозиторий MariaDB через скрипт
     curl -LsS https://r.mariadb.com/downloads/mariadb_repo_setup | bash -s -- --mariadb-server-version="mariadb-12.1" --os-type=debian --os-version=bookworm && \
     apt-get update && \
@@ -53,37 +49,22 @@ RUN apt-get update && \
     ln -sf /usr/bin/mariadb-admin /usr/bin/mysqladmin && \
     ln -sf /usr/bin/mariadb-dump /usr/bin/mysqldump
 
-# Создадаём директории для хранения данных MariaDB
-# В Debian mysqld socket обычно в /run/mysqld/mysqld.sock
-RUN mkdir -p /var/lib/mysql /docker-entrypoint-initdb.d /run/mysqld /var/log/supervisor /var/log/mysql && \
+# Создаём все необходимые директории за один раз
+RUN mkdir -p /var/lib/mysql /docker-entrypoint-initdb.d /run/mysqld /var/log/supervisor /var/log/mysql /data /var/log/Marusia /tmp /etc/ssl/custom && \
     chown -R mysql:mysql /var/lib/mysql /run/mysqld /var/log/mysql && \
-    chmod 777 /run/mysqld
-
-# Создаем директории для приложений и логов
-RUN mkdir -p /data /var/log/Marusia /tmp
+    chmod -R 777 /run/mysqld /var/log/mysql
 
 # Копируем дамп базы
 COPY _sale/air_sale_full.sql /docker-entrypoint-initdb.d/air_sale_full.sql
 
-# Копируем оптимизированную статику React
-COPY --from=optimizer /build /usr/share/nginx/html
-# Также копируем в /var/www/html для основного HTTPS сервера
+# Копируем оптимизированную статику React только в /var/www/html
 COPY --from=optimizer /build /var/www/html
 # Копируем собранный React виджет в статику Nginx
 COPY --from=build /app/build/widget /var/www/html/widget
 
-# Удаляем стандартную конфигурацию Nginx, чтобы избежать конфликтов
+# Удаляем стандартную конфигурацию Nginx, копируем конфигурационные файлы и устанавливаем права
 RUN rm /etc/nginx/conf.d/default.conf
 
-# Создаем отдельную директорию для наших сертификатов
-RUN mkdir -p /etc/ssl/custom
-
-# Создаем директории для MariaDB
-RUN mkdir -p /var/lib/mysql /run/mysqld /var/log/mysql && \
-    chown -R mysql:mysql /var/lib/mysql /run/mysqld /var/log/mysql && \
-    chmod -R 777 /run/mysqld /var/log/mysql
-
-# Копируем конфигурационные файлы
 COPY _sale/nginx.conf.template /etc/nginx/nginx.conf.template
 COPY _sale/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 # Копируем шаблон cfg.env для последующего создания конфигурации
@@ -92,7 +73,6 @@ COPY _release/create-config.sh /usr/local/bin/create-config.sh
 
 # Копируем docker-entrypoint.sh из _sale с исправленным запуском supervisord
 COPY _sale/docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
-RUN chmod +x /usr/local/bin/create-config.sh /usr/local/bin/docker-entrypoint.sh
 
 # Копируем программы
 COPY _sale/Landing /data/Landing
@@ -113,8 +93,10 @@ COPY _release/host-key.pem /etc/ssl/custom/host-key.pem
 # Копируем скрипт инициализации MariaDB
 COPY _sale/init-mariadb.sh /init-mariadb.sh
 
-# Устанавливаем права на исполнение для всех бинарных файлов
-RUN chmod +x /data/Landing /data/WhatsBot /data/TgBot /data/TgUserBot /data/Widget /data/CRM /data/Operator /data/LeadHunter /init-mariadb.sh
+# Устанавливаем права на исполнение для всех бинарных файлов и скриптов
+RUN chmod +x /usr/local/bin/create-config.sh /usr/local/bin/docker-entrypoint.sh \
+    /data/Landing /data/WhatsBot /data/TgBot /data/TgUserBot /data/Widget \
+    /data/CRM /data/Operator /data/LeadHunter /init-mariadb.sh
 
 # Объявляем volumes
 VOLUME /data
