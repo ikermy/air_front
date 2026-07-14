@@ -12,10 +12,10 @@ RUN npm install --legacy-peer-deps
 COPY . .
 
 # Build main application
-RUN npm run build
+RUN NODE_OPTIONS=--max-old-space-size=4096 npm run build
 
 # Build standalone widget
-RUN npm run build:widget
+RUN NODE_OPTIONS=--max-old-space-size=4096 npm run build:widget
 
 # Stage 2: Serve with Nginx
 FROM nginx:alpine
