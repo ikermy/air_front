@@ -75,6 +75,40 @@ export async function getKey({userId}) {
 }
 
 /**
+ * Завершение сессии на стороне сервера и клиента
+ */
+export const apiLogout = async () => {
+    try {
+        // Пробуем отправить запрос на логаут на сервер
+        await fetch('/v1/auth/logout', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                // Если есть STA, можем передать его и в заголовке, если сервер того требует
+                'Authorization': `Bearer ${getCookie('accessToken')}`
+            },
+            credentials: 'include'
+        });
+    } catch (e) {
+        console.error('Logout error:', e);
+    } finally {
+        // Максимально полная очистка на стороне клиента
+        deleteCookie("accessToken");
+
+        // Пытаемся удалить LTA куку, если она не HttpOnly
+        deleteCookie("MarusiaRefreshToken");
+
+        if (typeof window !== 'undefined') {
+            localStorage.removeItem("authToken");
+            localStorage.removeItem("accessToken"); // На всякий случай
+
+            // Очистка сессионного хранилища, если там что-то было
+            sessionStorage.clear();
+        }
+    }
+};
+
+/**
  * Принудительное обновление токена через Refresh Token (LTA)
  * Возвращает новый Access Token (STA) или null
  */
@@ -95,12 +129,12 @@ export const refreshToken = async () => {
             }
         }
 
-        // Если рефреш не удался — чистим всё
-        deleteCookie("accessToken");
+        // Если рефреш не удался (например, 401) — чистим всё и выходим
+        await apiLogout();
         return null;
     } catch (error) {
         console.error("Ошибка при обновлении токена:", error);
-        deleteCookie("accessToken");
+        await apiLogout();
         return null;
     }
 };
@@ -177,40 +211,6 @@ export const withTokenRefresh = async (fetchFunction, ...args) => {
     }
 
     return response;
-};
-
-/**
- * Завершение сессии на стороне сервера и клиента
- */
-export const apiLogout = async () => {
-    try {
-        // Пробуем отправить запрос на логаут на сервер
-        await fetch('/v1/auth/logout', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                // Если есть STA, можем передать его и в заголовке, если сервер того требует
-                'Authorization': `Bearer ${getCookie('accessToken')}`
-            },
-            credentials: 'include'
-        });
-    } catch (e) {
-        console.error('Logout error:', e);
-    } finally {
-        // Максимально полная очистка на стороне клиента
-        deleteCookie("accessToken");
-
-        // Пытаемся удалить LTA куку, если она не HttpOnly
-        deleteCookie("MarusiaRefreshToken");
-
-        if (typeof window !== 'undefined') {
-            localStorage.removeItem("authToken");
-            localStorage.removeItem("accessToken"); // На всякий случай
-
-            // Очистка сессионного хранилища, если там что-то было
-            sessionStorage.clear();
-        }
-    }
 };
 
 /**
