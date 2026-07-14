@@ -2568,5 +2568,6 @@
     "typesGPTDesc": "Select a specific provider model to use.",
     "typesGPTTitle": "Language Model Selection",
     "typesGPTModelLabel": "Available Models",
-    "typesGPTModelTip": "The list of available models is updated when the list is opened"
+    "typesGPTModelTip": "The list of available models is updated when the list is opened",
+    "tbotWebhookMode": "Telegram Bot WebHook Mode"
 }

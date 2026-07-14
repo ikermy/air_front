@@ -2568,5 +2568,6 @@
     "typesGPTDesc": "Seleccione un modelo específico del proveedor para usar.",
     "typesGPTTitle": "Selección de modelo de lenguaje",
     "typesGPTModelLabel": "Modelos disponibles",
-    "typesGPTModelTip": "La lista de modelos disponibles se actualiza al abrir la lista"
+    "typesGPTModelTip": "La lista de modelos disponibles se actualiza al abrir la lista",
+    "tbotWebhookMode": "Modo WebHook del Bot de Telegram"
 }

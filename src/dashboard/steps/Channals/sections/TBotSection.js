@@ -11,29 +11,34 @@ export const TBotSection = ({channel, selectedChannels, setSelectedChannels}) =>
     // Парсим channel.data как JSON для получения token и options
     const parseChannelData = useCallback((data) => {
         try {
-            if (!data) return {token: '', options: {delta: false}};
+            if (!data) return {token: '', options: {delta: false, webhook: false}};
             const parsed = typeof data === 'string' ? JSON.parse(data) : data;
             return {
                 token: parsed?.token || '',
                 options: {
-                    delta: parsed?.options?.delta ?? false
+                    delta: parsed?.options?.delta ?? false,
+                    webhook: parsed?.options?.webhook ?? false
                 }
             };
         } catch {
-            return {token: data || '', options: {delta: false}};
+            return {token: data || '', options: {delta: false, webhook: false}};
         }
     }, []);
 
     // Сериализуем token и options обратно в JSON строку
-    const serializeChannelData = useCallback((token, delta) => {
+    const serializeChannelData = useCallback((token, delta, webhook) => {
         const config = {token};
-        if (delta) {
-            config.options = {delta: true};
+        const options = {};
+        if (delta) options.delta = true;
+        if (webhook) options.webhook = true;
+
+        if (Object.keys(options).length > 0) {
+            config.options = options;
         }
         return JSON.stringify(config);
     }, []);
 
-    const parsed = channel ? parseChannelData(channel.data) : {token: '', options: {delta: false}};
+    const parsed = channel ? parseChannelData(channel.data) : {token: '', options: {delta: false, webhook: false}};
 
     const fetchBotNameFor = async (chName) => {
         try {
@@ -81,7 +86,7 @@ export const TBotSection = ({channel, selectedChannels, setSelectedChannels}) =>
         setSelectedChannels(
             selectedChannels.map((ch) =>
                 ch.key === channel.key
-                    ? {...ch, data: serializeChannelData(value, parsed.options.delta), error: error}
+                    ? {...ch, data: serializeChannelData(value, parsed.options.delta, parsed.options.webhook), error: error}
                     : ch
             )
         );
@@ -92,7 +97,18 @@ export const TBotSection = ({channel, selectedChannels, setSelectedChannels}) =>
         setSelectedChannels(
             selectedChannels.map((ch) =>
                 ch.key === channel.key
-                    ? {...ch, data: serializeChannelData(parsed.token, checked)}
+                    ? {...ch, data: serializeChannelData(parsed.token, checked, parsed.options.webhook)}
+                    : ch
+            )
+        );
+    };
+
+    const handleWebhookChange = (checked) => {
+        if (!channel) return;
+        setSelectedChannels(
+            selectedChannels.map((ch) =>
+                ch.key === channel.key
+                    ? {...ch, data: serializeChannelData(parsed.token, parsed.options.delta, checked)}
                     : ch
             )
         );
@@ -136,6 +152,24 @@ export const TBotSection = ({channel, selectedChannels, setSelectedChannels}) =>
                 </div>
             )}
             {channel && channel.error && <div className="ant-form-item-explain-error">{channel.error}</div>}
+
+            {/* Работа бота в режиме WebHook */}
+            <div style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 8,
+                marginTop: 16,
+                paddingLeft: 16,
+                justifyContent: "flex-end"
+            }}>
+                <span>{t("tbotWebhookMode") || "Работа бота в режиме WebHook"}</span>
+                <Switch
+                    checked={parsed.options.webhook}
+                    onChange={handleWebhookChange}
+                    checkedChildren={<span style={{color: "black"}}>{t("Yes") || "Да"}</span>}
+                    unCheckedChildren={<span style={{color: "black"}}>{t("No") || "Нет"}</span>}
+                />
+            </div>
 
             {/* Отображать ответ модели в режиме стриминга */}
             <div style={{
