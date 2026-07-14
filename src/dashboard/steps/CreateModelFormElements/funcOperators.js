@@ -1,10 +1,17 @@
-const LAND_URL = (window.runtimeConfig && window.runtimeConfig.REACT_APP_LAND) || process.env.REACT_APP_LAND;
+import { authFetch } from "../../../utils/easyUtils";
 
-export async function funcOperators(token) {
+/**
+ * Получает список ID Telegram аккаунтов операторов.
+ */
+export const funcOperators = async () => {
+    // Параметр token оставлен для обратной совместимости, authFetch сам управляет токеном
     try {
-        const response = await fetch(`${LAND_URL}/operators?token=${encodeURIComponent(token)}`, {
+        const response = await authFetch(`/v1/operators`, {
             method: "GET",
-            headers: {"Content-Type": "application/json"},
+            headers: {
+                "Content-Type": "application/json"
+            },
+            credentials: "include"
         });
 
         if (!response.ok) {
@@ -19,9 +26,13 @@ export async function funcOperators(token) {
     }
 }
 
-export const saveOperators = async (token, data) => {
+/**
+ * Сохраняет список ID Telegram аккаунтов операторов.
+ */
+export const saveOperators = async (data) => {
+    // Параметр token оставлен для обратной совместимости, но authFetch сам управляет токеном
     try {
-        const response = await fetch(`${LAND_URL}/operators?token=${token}`, {
+        const response = await authFetch(`/v1/operators`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"
@@ -33,14 +44,15 @@ export const saveOperators = async (token, data) => {
         });
 
         if (!response.ok) {
-            console.error("Сервер вернул ошибку:", response.status);
+            console.error("Сервер вернул ошибку при сохранении операторов:", response.status);
             return false
-        } else {
-            return true
         }
 
+        return true;
     } catch (error) {
         console.error("Ошибка при сохранении списка операторов:", error);
         return false
     }
 }
+
+

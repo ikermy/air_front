@@ -1,4 +1,6 @@
-import { validateAndRefreshToken } from "../../../utils/easyUtils";
+import { getCookie } from "../../../utils/cookieUtils";
+import { authFetch } from "../../../utils/easyUtils";
+
 
 /**
  * Менеджер для управления SSE соединением с сервером платежей
@@ -28,15 +30,15 @@ export class PaymentSSEManager {
      * Устанавливает колбэки для различных событий
      */
     setCallbacks({
-        onPaymentUpdate,
-        onStatusUpdate,
-        onTimerUpdate,
-        onPaymentComplete,
-        onError,
-        onConnectionOpen,
-        onConnectionClose,
-        onNotification
-    }) {
+                     onPaymentUpdate,
+                     onStatusUpdate,
+                     onTimerUpdate,
+                     onPaymentComplete,
+                     onError,
+                     onConnectionOpen,
+                     onConnectionClose,
+                     onNotification
+                 }) {
         this.callbacks = {
             onPaymentUpdate: onPaymentUpdate || null,
             onStatusUpdate: onStatusUpdate || null,
@@ -54,12 +56,12 @@ export class PaymentSSEManager {
      */
     async connect(orderId) {
         try {
-            const LAND_URL = (window.runtimeConfig && window.runtimeConfig.REACT_APP_LAND) || process.env.REACT_APP_LAND;
-
-            // Валидируем и обновляем токен перед подключением
-            const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
+            // Получаем токен из куки
+            const token = getCookie("accessToken");
 
             if (!token) {
+                // Если токена нет, инициируем автоматический рефреш через validate (или напрямую)
+                // Но лучше просто выбросить ошибку — withTokenRefresh должен был сработать ранее
                 throw new Error('Не удалось получить действительный токен');
             }
 
@@ -67,7 +69,7 @@ export class PaymentSSEManager {
             this.disconnect();
             this.currentOrderId = orderId;
             this.eventSource = new EventSource(
-                `${LAND_URL}/pay/payment-status-stream?token=${encodeURIComponent(token)}&orderId=${encodeURIComponent(orderId)}`
+                `/v1/pay/payment-status-stream?token=${encodeURIComponent(token)}&orderId=${encodeURIComponent(orderId)}`
             );
 
             this.setupEventListeners();
@@ -184,7 +186,7 @@ export class PaymentSSEManager {
         this.eventSource.addEventListener('partial_payment', (event) => {
             const result = this.handlePaymentUpdate(event, 'partial_payment');
             if (result) {
-                const { paymentData } = result;
+                const {paymentData} = result;
                 this.callbacks.onNotification?.({
                     type: 'success',
                     title: "🟡 Частичное поступление",
@@ -212,7 +214,7 @@ export class PaymentSSEManager {
         this.eventSource.addEventListener('payment_failed', (event) => {
             const result = this.handlePaymentUpdate(event, 'payment_failed');
             if (result) {
-                const { paymentData } = result;
+                const {paymentData} = result;
                 this.callbacks.onNotification?.({
                     type: 'error',
                     title: "Платёж неудачен",
@@ -241,7 +243,7 @@ export class PaymentSSEManager {
         this.eventSource.addEventListener('payment_pending', (event) => {
             const result = this.handlePaymentUpdate(event, 'payment_pending');
             if (result) {
-                const { paymentData } = result;
+                const {paymentData} = result;
                 if (paymentData.currentReceivedAmount > 0) {
                     this.callbacks.onNotification?.({
                         type: 'success',
@@ -256,7 +258,7 @@ export class PaymentSSEManager {
         this.eventSource.addEventListener('payment_update', (event) => {
             const result = this.handlePaymentUpdate(event, 'payment_update');
             if (result) {
-                const { paymentData, currentStatus } = result;
+                const {paymentData, currentStatus} = result;
 
                 // Обрабатываем различные статусы
                 switch (currentStatus) {
@@ -344,7 +346,7 @@ export class PaymentSSEManager {
                 }
             }
 
-            return { paymentData, currentStatus };
+            return {paymentData, currentStatus};
         } catch (error) {
             console.error(`Ошибка обработки события ${eventType}:`, error, event.data);
             return null;
@@ -543,24 +545,14 @@ export class PaymentSSEManager {
         if (!this.currentOrderId) return;
 
         try {
-            const LAND_URL = (window.runtimeConfig && window.runtimeConfig.REACT_APP_LAND) || process.env.REACT_APP_LAND;
-            const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
-
-            if (!token) {
-                console.warn('No token for API status check');
-                return;
-            }
-
-            const response = await fetch(
-                `${LAND_URL}/pay/payment-status?orderId=${encodeURIComponent(this.currentOrderId)}`,
+            const response = await authFetch(
+                `/v1/pay/payment-status?orderId=${encodeURIComponent(this.currentOrderId)}`,
                 {
                     headers: {
-                        'Authorization': `Bearer ${token}`,
                         'Content-Type': 'application/json'
                     }
                 }
             );
-
             if (response.ok) {
                 const paymentData = await response.json();
 

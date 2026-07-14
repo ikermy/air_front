@@ -2,31 +2,61 @@ import React, {useState, useEffect, useRef} from 'react';
 import {useTranslation} from 'react-i18next';
 import './DialogList.css';
 import '../Tour.css';
-import {validateAndRefreshToken} from "../../../utils/easyUtils";
+import {authFetch} from '../../../utils/easyUtils';
+import {DeleteDialogs} from './dialogsUtils';
 import {
     showWarningNotification
 } from "../../hotification/showNotification";
 import {FaInstagram, FaTelegramPlane, FaWhatsapp} from "react-icons/fa";
-import {CommentOutlined, CheckCircleFilled, CloseCircleFilled, CalendarOutlined, UserOutlined, MessageOutlined, AppstoreOutlined, UnorderedListOutlined, FilterOutlined, BarChartOutlined, QuestionCircleOutlined, PlayCircleOutlined, DeleteOutlined, ExclamationCircleOutlined} from "@ant-design/icons";
+import {
+    CommentOutlined,
+    CheckCircleFilled,
+    CloseCircleFilled,
+    CalendarOutlined,
+    UserOutlined,
+    MessageOutlined,
+    AppstoreOutlined,
+    UnorderedListOutlined,
+    FilterOutlined,
+    BarChartOutlined,
+    QuestionCircleOutlined,
+    PlayCircleOutlined,
+    DeleteOutlined,
+    ExclamationCircleOutlined
+} from "@ant-design/icons";
 import {TbWorldWww} from "react-icons/tb";
 import {ViewDialog} from "./ViewDialog";
-import {Spin, Card, Typography, Space, Pagination, Row, Col, Empty, Radio, Select, Button, Modal, Tour, FloatButton} from "antd";
-import { showNotification, showErrorNotification } from '../../hotification/showNotification';
-import { DeleteDialogs } from '../../../dialog/dialogUtils';
+import {
+    Spin,
+    Card,
+    Typography,
+    Space,
+    Pagination,
+    Row,
+    Col,
+    Empty,
+    Radio,
+    Select,
+    Button,
+    Modal,
+    Tour,
+    FloatButton
+} from "antd";
+import {showNotification, showErrorNotification} from '../../hotification/showNotification';
 import {getTourPanelState, setTourPanelState, getViewModeState, setViewModeState} from "../../../utils/cookieUtils";
+import AvitoIcon from "../Channals/AvitoIcon";
 
-const { Title, Text } = Typography;
-const { Option } = Select;
-const LAND_URL = (window.runtimeConfig && window.runtimeConfig.REACT_APP_LAND) || process.env.REACT_APP_LAND;
+
+const {Title, Text} = Typography;
+const {Option} = Select;
 
 export function DialogList() {
-    const { t } = useTranslation();
+    const {t} = useTranslation();
     const [loading, setLoading] = useState(true);
     const [dialogs, setDialogs] = useState([]);
     const [viewDialog, setViewDialog] = useState(null);
     const [dialogTarget, setDialogTarget] = useState(0);
     const [dialogTrigger, setDialogTrigger] = useState(0);
-    const [localToken, setLocalToken] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [currentPage, setCurrentPage] = useState(1);
     const [pageSize] = useState(10);
@@ -64,83 +94,85 @@ export function DialogList() {
     const currentDialogs = filteredDialogs.slice(startIndex, endIndex);
 
     useEffect(() => {
-        const fetchUserDialogs = async () => {
+        const fetchDialogs = async () => {
             try {
-                const token = await validateAndRefreshToken(localStorage.getItem("authToken"))
-                if (token != null) {
-                    setLocalToken(token)
-                    const response = await fetch(`${LAND_URL}/dialog/all?token=${encodeURIComponent(token)}`, {
-                        method: "GET",
-                        headers: {"Content-Type": "application/json"},
-                    });
+                const response = await authFetch(`/v1/dialog/all`, {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                });
 
-                    if (response.ok) {
-                        const data = await response.json();
-                        setDialogs(data);
-                    }
-                } else {
-                    showWarningNotification("Ошибка получения диалогов",
-                        "Токен не обновлен, необходимо повторно авторизоваться!")
+                if (response && response.ok) {
+                    const data = await response.json();
+                    setDialogs(data);
+                } else if (response && response.status === 401) {
+                    showWarningNotification("Ошибка получения диалогов", "Токен не обновлен, необходимо повторно авторизоваться!");
                 }
             } catch (error) {
                 // setError(error.message);
-            }
-            finally {
+            } finally {
                 setLoading(false);
             }
         };
 
-        fetchUserDialogs();
+        fetchDialogs();
     }, []);
 
     const getDialogTypeConfig = (type) => {
         switch (type) {
             case 'TgBot':
                 return {
-                    icon: <FaTelegramPlane />,
+                    icon: <FaTelegramPlane/>,
                     label: 'Telegram Bot',
                     color: '#0088cc'
                 };
             case 'Widget':
                 return {
-                    icon: <CommentOutlined />,
+                    icon: <CommentOutlined/>,
                     label: 'Web Widget',
                     color: '#52c41a'
                 };
             case 'Telegram':
                 return {
-                    icon: <FaTelegramPlane />,
+                    icon: <FaTelegramPlane/>,
                     label: 'Telegram',
                     color: '#0088cc'
                 };
             case 'Web':
                 return {
-                    icon: <TbWorldWww />,
+                    icon: <TbWorldWww/>,
                     label: 'Web',
                     color: '#1890ff'
                 };
             case 'WhatsApp':
                 return {
-                    icon: <FaWhatsapp />,
+                    icon: <FaWhatsapp/>,
                     label: 'WhatsApp',
                     color: '#25d366'
                 };
             case 'Instagram':
                 return {
-                    icon: <FaInstagram />,
+                    icon: <FaInstagram/>,
                     label: 'Instagram',
                     color: '#e4405f'
                 };
+            case 'Avito':
+                return {
+                    icon: <AvitoIcon size={15} />,
+                    label: 'Avito',
+                    color: '#4ea7ff'
+                };
             default:
                 return {
-                    icon: <MessageOutlined />,
+                    icon: <MessageOutlined/>,
                     label: type,
                     color: '#8c8c8c'
                 };
         }
     };
 
-    const StatusIndicator = ({ value, type }) => {
+    const StatusIndicator = ({value, type}) => {
         const statusText = type === 'target'
             ? (value ? t('TargetComplete') : t('TargetNoComplete'))
             : (value ? t('TriggerComplete') : t('TriggerNoComplete'));
@@ -182,9 +214,9 @@ export function DialogList() {
             >
                 <div className="status-icon-wrapper">
                     {isSuccess ? (
-                        <CheckCircleFilled style={{color: style.successColor}} />
+                        <CheckCircleFilled style={{color: style.successColor}}/>
                     ) : (
-                        <CloseCircleFilled style={{color: style.failColor}} />
+                        <CloseCircleFilled style={{color: style.failColor}}/>
                     )}
                 </div>
                 <span className="status-text">{statusText}</span>
@@ -297,7 +329,7 @@ export function DialogList() {
 
     if (loading) {
         return <div className="notifications-loading">
-            <Spin size="large" />
+            <Spin size="large"/>
             <Text className="loading-text">
                 {t("dialogsLoading") || "Загрузка диалогов..."}
             </Text>
@@ -307,7 +339,7 @@ export function DialogList() {
     return (
         <div className="create-model-container">
             <div className="section-title">
-                <BarChartOutlined />
+                <BarChartOutlined/>
                 {t("dialogsTitle") || "Статистика диалогов"}
             </div>
             <div className="section-description">
@@ -333,8 +365,9 @@ export function DialogList() {
                             <div className="header-controls">
                                 {/* Batch delete button in header (appears when there are selected dialogs) */}
                                 {selectedDialogs.length > 0 && (
-                                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                                        <Button danger type="primary" icon={<DeleteOutlined />} onClick={() => setBatchDeleteModalOpen(true)}>
+                                    <div style={{display: 'flex', alignItems: 'center'}}>
+                                        <Button danger type="primary" icon={<DeleteOutlined/>}
+                                                onClick={() => setBatchDeleteModalOpen(true)}>
                                             {t("dialogsDeleteSelected") || "Удалить диалоги"}
                                         </Button>
                                     </div>
@@ -345,13 +378,13 @@ export function DialogList() {
                                     <Select
                                         value={selectedType}
                                         onChange={setSelectedType}
-                                        style={{ width: 200 }}
+                                        style={{width: 200}}
                                         placeholder={t("dialogsFilterByType") || "Фильтр по типу"}
-                                        suffixIcon={<FilterOutlined />}
+                                        suffixIcon={<FilterOutlined/>}
                                     >
                                         <Option value="all">
                                             <Space>
-                                                <MessageOutlined />
+                                                <MessageOutlined/>
                                                 {t("dialogsFilterAll") || "Все типы"}
                                             </Space>
                                         </Option>
@@ -374,10 +407,10 @@ export function DialogList() {
                                     ref={viewToggleRef}
                                 >
                                     <Radio.Button value="cards">
-                                        <AppstoreOutlined /> {t("dialogsViewCards") || "Карточки"}
+                                        <AppstoreOutlined/> {t("dialogsViewCards") || "Карточки"}
                                     </Radio.Button>
                                     <Radio.Button value="list">
-                                        <UnorderedListOutlined /> {t("dialogsViewList") || "Список"}
+                                        <UnorderedListOutlined/> {t("dialogsViewList") || "Список"}
                                     </Radio.Button>
                                 </Radio.Group>
                             </div>
@@ -398,11 +431,25 @@ export function DialogList() {
                                                         onClick={() => handleDialogClick(dialog)}
                                                         size="small"
                                                     >
-                                                        <div className="dialog-card-header" style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between'}}>
-                                                            <div style={{display: 'flex', alignItems: 'center', gap: 10}}>
+                                                        <div className="dialog-card-header" style={{
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'space-between'
+                                                        }}>
+                                                            <div style={{
+                                                                display: 'flex',
+                                                                alignItems: 'center',
+                                                                gap: 10
+                                                            }}>
                                                                 <div
                                                                     className="dialog-type-icon"
-                                                                    style={{ color: typeConfig.color, display: 'flex', alignItems: 'center', position: 'relative', minWidth: 36 }}
+                                                                    style={{
+                                                                        color: typeConfig.color,
+                                                                        display: 'flex',
+                                                                        alignItems: 'center',
+                                                                        position: 'relative',
+                                                                        minWidth: 36
+                                                                    }}
                                                                 >
                                                                     {typeConfig.icon}
                                                                 </div>
@@ -414,25 +461,32 @@ export function DialogList() {
                                                                 </div>
                                                             </div>
                                                             {/* Иконка удаления выровнена по правому краю карточки */}
-                                                            <div className="dialog-delete-icon" onClick={(e) => { e.stopPropagation(); toggleSelectDialog(e, dialog.DialogId); }} style={{ color: selectedDialogs.includes(dialog.DialogId) ? '#ff4d4f' : 'rgba(0,0,0,0.45)' }}>
-                                                                <DeleteOutlined />
+                                                            <div className="dialog-delete-icon" onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                toggleSelectDialog(e, dialog.DialogId);
+                                                            }}
+                                                                 style={{color: selectedDialogs.includes(dialog.DialogId) ? '#ff4d4f' : 'rgba(0,0,0,0.45)'}}>
+                                                                <DeleteOutlined/>
                                                             </div>
                                                         </div>
 
-                                                        <Space direction="vertical" size="small" style={{ width: '100%' }}>
+                                                        <Space direction="vertical" size="small"
+                                                               style={{width: '100%'}}>
                                                             <div className="dialog-info-row">
-                                                                <CalendarOutlined className="info-icon" />
+                                                                <CalendarOutlined className="info-icon"/>
                                                                 <Text type="secondary">{dialog.Date}</Text>
                                                             </div>
 
                                                             <div className="dialog-info-row">
-                                                                <UserOutlined className="info-icon" />
+                                                                <UserOutlined className="info-icon"/>
                                                                 <Text>{dialog.Responder}</Text>
                                                             </div>
 
                                                             <div className="dialog-statuses">
-                                                                <StatusIndicator value={dialog.Target === 1} type="target" />
-                                                                <StatusIndicator value={dialog.Trigger === 1} type="trigger" />
+                                                                <StatusIndicator value={dialog.Target === 1}
+                                                                                 type="target"/>
+                                                                <StatusIndicator value={dialog.Trigger === 1}
+                                                                                 type="trigger"/>
                                                             </div>
                                                         </Space>
                                                     </Card>
@@ -455,7 +509,13 @@ export function DialogList() {
                                                         <div className="list-item-left">
                                                             <div
                                                                 className="list-type-icon"
-                                                                style={{ color: typeConfig.color, display: 'flex', alignItems: 'center', position: 'relative', minWidth: 36 }}
+                                                                style={{
+                                                                    color: typeConfig.color,
+                                                                    display: 'flex',
+                                                                    alignItems: 'center',
+                                                                    position: 'relative',
+                                                                    minWidth: 36
+                                                                }}
                                                             >
                                                                 {typeConfig.icon}
                                                             </div>
@@ -469,25 +529,36 @@ export function DialogList() {
                                                                 <div className="list-item-details">
                                                                     <Space size="large">
                                                                         <Space size="small">
-                                                                            <CalendarOutlined className="list-info-icon" />
+                                                                            <CalendarOutlined
+                                                                                className="list-info-icon"/>
                                                                             <Text type="secondary">{dialog.Date}</Text>
                                                                         </Space>
                                                                         <Space size="small">
-                                                                            <UserOutlined className="list-info-icon" />
+                                                                            <UserOutlined className="list-info-icon"/>
                                                                             <Text>{dialog.Responder}</Text>
                                                                         </Space>
                                                                     </Space>
                                                                 </div>
                                                             </div>
                                                         </div>
-                                                        <div className="list-item-right" style={{display: 'flex', flexDirection: 'column', alignItems: 'flex-end'}}>
+                                                        <div className="list-item-right" style={{
+                                                            display: 'flex',
+                                                            flexDirection: 'column',
+                                                            alignItems: 'flex-end'
+                                                        }}>
                                                             {/* Иконка удаления — справа сверху */}
-                                                            <div className="list-delete-icon" onClick={(e) => { e.stopPropagation(); toggleSelectDialog(e, dialog.DialogId); }} style={{ color: selectedDialogs.includes(dialog.DialogId) ? '#ff4d4f' : 'rgba(0,0,0,0.45)' }}>
-                                                                <DeleteOutlined />
+                                                            <div className="list-delete-icon" onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                toggleSelectDialog(e, dialog.DialogId);
+                                                            }}
+                                                                 style={{color: selectedDialogs.includes(dialog.DialogId) ? '#ff4d4f' : 'rgba(0,0,0,0.45)'}}>
+                                                                <DeleteOutlined/>
                                                             </div>
                                                             <div className="list-statuses">
-                                                                <StatusIndicator value={dialog.Target === 1} type="target" />
-                                                                <StatusIndicator value={dialog.Trigger === 1} type="trigger" />
+                                                                <StatusIndicator value={dialog.Target === 1}
+                                                                                 type="target"/>
+                                                                <StatusIndicator value={dialog.Trigger === 1}
+                                                                                 type="trigger"/>
                                                             </div>
                                                         </div>
                                                     </div>
@@ -524,7 +595,7 @@ export function DialogList() {
                                                     : `${t("dialogsNoDialogsOfType") || "Диалогов типа"} "${getDialogTypeConfig(selectedType).label}" ${t("notFound") || "не найдено"}`
                                                 }
                                             </Text>
-                                            <br />
+                                            <br/>
                                             <Text type="secondary">
                                                 {selectedType === 'all'
                                                     ? (t("dialogsNoDialogsDesc") || "Диалоги появятся здесь после первых обращений к вашему агенту")
@@ -532,7 +603,7 @@ export function DialogList() {
                                                 }
                                             </Text>
                                             {selectedType !== 'all' && (
-                                                <div style={{ marginTop: 12 }}>
+                                                <div style={{marginTop: 12}}>
                                                     <Button
                                                         type="primary"
                                                         onClick={() => setSelectedType('all')}
@@ -558,7 +629,6 @@ export function DialogList() {
                                 className="dialog-view-modal"
                             >
                                 <ViewDialog
-                                    token={localToken}
                                     dialogId={viewDialog}
                                     target={dialogTarget}
                                     trigger={dialogTrigger}
@@ -570,15 +640,16 @@ export function DialogList() {
 
                         {/* Модальное подтверждение пакетного удаления */}
                         <Modal
-                            title={<span style={{ color: '#ff4d4f' }}><ExclamationCircleOutlined /> {t("dialogsConfirmDeleteTitle") || "Подтверждение удаления"}</span>}
+                            title={<span
+                                style={{color: '#ff4d4f'}}><ExclamationCircleOutlined/> {t("dialogsConfirmDeleteTitle") || "Подтверждение удаления"}</span>}
                             open={batchDeleteModalOpen}
                             onCancel={() => setBatchDeleteModalOpen(false)}
                             okText={t("delete") || "Удалить"}
                             cancelText={t("cancel") || "Отмена"}
-                            okButtonProps={{ danger: true }}
+                            okButtonProps={{danger: true}}
                             onOk={async () => {
                                 try {
-                                    const result = await DeleteDialogs(localToken, selectedDialogs);
+                                    const result = await DeleteDialogs(selectedDialogs);
                                     if (result && result.status === 'ok') {
                                         // Показать уведомления по каждому удаленному диалогу
                                         selectedDialogs.forEach(id => showNotification(`${t("dialog") || "Диалог"} ${id}`, t("dialogsDeleteSuccess") || 'успешно удалён!'));
@@ -602,7 +673,7 @@ export function DialogList() {
                             }}
                         >
                             <p>{t("dialogsConfirmDeleteMessage") || "Вы уверены, что хотите удалить выбранные диалоги?"}</p>
-                            <p style={{ color: '#8c8c8c' }}>{t("dialogsConfirmDeleteNote") || "Это действие нельзя будет отменить."}</p>
+                            <p style={{color: '#8c8c8c'}}>{t("dialogsConfirmDeleteNote") || "Это действие нельзя будет отменить."}</p>
                         </Modal>
                     </div>
                 </div>
@@ -611,7 +682,7 @@ export function DialogList() {
                 {tourPanelVisible && (
                     <div className="tour-controls tour-primary">
                         <div className="tour-controls-header">
-                            <PlayCircleOutlined className="tour-controls-icon" />
+                            <PlayCircleOutlined className="tour-controls-icon"/>
                             <h3 className="tour-controls-title">
                                 {t("dialogsTourTitle") || "Интерактивный обзор"}
                             </h3>
@@ -683,7 +754,7 @@ export function DialogList() {
             />
 
             <FloatButton
-                icon={<QuestionCircleOutlined />}
+                icon={<QuestionCircleOutlined/>}
                 tooltip={t("tourFloatButtonTooltip") || "Начать обзор интерфейса"}
                 onClick={showTourPanel}
                 className="tour-float-button"

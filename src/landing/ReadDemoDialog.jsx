@@ -1,13 +1,12 @@
 import { useEffect } from 'react';
 
-const LAND_URL = (window.runtimeConfig && window.runtimeConfig.REACT_APP_LAND) || process.env.REACT_APP_LAND;
 
 export function ReadDemoDialog({ userName, token, onDialogData }) {
     useEffect(() => {
         async function fetchDialogData() {
             try {
                 const params = new URLSearchParams({ token, name: userName });
-                const url = `${LAND_URL}/demo/dialog?${params.toString()}`;
+                const url = `/demo/dialog?${params.toString()}`;
 
                 const response = await fetch(url, {
                     method: 'GET',

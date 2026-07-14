@@ -14,11 +14,14 @@ export const useChatVisibility = () => {
 export const ChatVisibilityProvider = ({ children }) => {
     // Инициализируем состояние видимости из куки: если куки нет, показываем чат
     const [isChatVisible, setIsChatVisibleState] = useState(() => {
-        const savedVisibility = getCookie('chatVisible');
-        if (savedVisibility === null) {
-            return true; // Нет куки -> показываем чат
+        if (typeof window !== 'undefined') {
+            const savedVisibility = getCookie('chatVisible');
+            if (savedVisibility === null) {
+                return true; // Нет куки -> показываем чат
+            }
+            return savedVisibility === 'true';
         }
-        return savedVisibility === 'true';
+        return true;
     });
 
     // При первом показе чата (и отсутствии куки) сохраняем куку автоматически
@@ -37,6 +40,7 @@ export const ChatVisibilityProvider = ({ children }) => {
 
     // Загружаем сохранённую позицию из localStorage
     const [chatPosition, setChatPositionState] = useState(() => {
+        if (typeof window === 'undefined') return null;
         try {
             const savedPosition = localStorage.getItem('chatPosition');
             return savedPosition ? JSON.parse(savedPosition) : null;
@@ -47,6 +51,7 @@ export const ChatVisibilityProvider = ({ children }) => {
 
     // Обёртка для setChatPosition, которая также сохраняет в localStorage
     const setChatPosition = (position) => {
+        if (typeof window === 'undefined') return;
         try {
             setChatPositionState(position);
             if (position) {

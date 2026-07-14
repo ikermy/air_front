@@ -1,7 +1,5 @@
 import React, {useCallback, useEffect, useRef, useState} from "react";
 import {AddChannel} from "./addChanal";
-import {validateAndRefreshToken} from "../../../utils/easyUtils";
-import {getModelData} from "../getModelData";
 import {
     AndroidOutlined,
     CommentOutlined,
@@ -15,6 +13,7 @@ import "./ChannelsModern.css"
 import '../Tour.css';
 import {showErrorNotification, showNotification, showWarningNotification} from "../../hotification/showNotification";
 import {FaInstagram, FaTelegramPlane, FaWhatsapp} from 'react-icons/fa';
+import AvitoIcon from "./AvitoIcon";
 import {TBotSection} from "./sections/TBotSection";
 import {WidgetSection} from "./sections/WidgetSection";
 import {TelegramAuthService} from "./telegramAuthService";
@@ -24,8 +23,16 @@ import {WhatsBotSection} from "./sections/WhatsBotSection";
 import {WhatsAuthServive} from "./whatsAuthServive";
 import {whatsappGetContact} from "./whatsappGetContact";
 import {getTourPanelState, setTourPanelState} from "../../../utils/cookieUtils";
-import {chAvailable, checkSubscription, deleteChannelData, readChannelData, saveChannelData} from "./chUtils";
+import {
+    chAvailable,
+    checkSubscription,
+    deleteChannelData,
+    readChannelData,
+    saveChannelData
+} from "./chUtils";
 import {useTranslation} from "react-i18next";
+import {AvitoSection} from "./sections/AvitoSection";
+import {getModelData} from "../CreateModelFormElements/modUtils";
 
 
 export const Channels = () => {
@@ -57,6 +64,7 @@ export const Channels = () => {
             isExpanded: false,
             isEnabled: false,
             data: '',
+            options: {text: true, call: true},
             contacts: '',
             contactsIds: []
         },
@@ -69,6 +77,16 @@ export const Channels = () => {
             data: '',
             contacts: '',
             contactsIds: []
+        },
+        {
+            key: "avito",
+            label: "Avito",
+            // icon: <AvitoIcon size={10} />,
+            icon: <AvitoIcon/>,
+            isExpanded: false,
+            isEnabled: false,
+            data: '',
+            isConnected: false
         },
         {
             key: "insta",
@@ -99,6 +117,7 @@ export const Channels = () => {
     const [current, setCurrent] = useState(0);
     const [tourPanelVisible, setTourPanelVisible] = useState(getTourPanelState('channels')); // Состояние для видимости панели
 
+
     // Состояние для хранения исходных значений каналов
     const [originalChannelStates, setOriginalChannelStates] = useState({});
 
@@ -111,309 +130,367 @@ export const Channels = () => {
     const channelsListHeaderRef = useRef(null);
     const channelsListRef = useRef(null); // Изменено с channelsGridRef на channelsListRef
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     const fetchChannelData = useCallback(async () => {
         try {
-            const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
-            if (token) {
-                // Получаем данные о модели
-                // Сначала из локального хранилища
-                let modelDataResult
-                const stored = localStorage.getItem("userModel");
-                if (stored === 'true') {
-                    modelDataResult = true
-                } else {
-                    // TODO создать отдельный маршрут для проверки существоаания моделей!
-                    modelDataResult = await getModelData(token)
-                }
-                if (
-                    modelDataResult &&
-                    (typeof modelDataResult !== 'object' || Object.keys(modelDataResult).length > 0)
-                ) {
-                    setModelData(true);
+            // Получаем данные о модели
+            // Сначала из локального хранилища
+            let modelDataResult
+            const stored = localStorage.getItem("userModel");
+            if (stored === 'true') {
+                modelDataResult = true
+            } else {
+                // TODO создать отдельный маршрут для проверки существоаания моделей!
+                modelDataResult = await getModelData()
+            }
+            if (
+                modelDataResult &&
+                (typeof modelDataResult !== 'object' || Object.keys(modelDataResult).length > 0)
+            ) {
+                setModelData(true);
 
-                    // Получаем данные о каналах
-                    const channelsData = await readChannelData(token);
-
-                    if (channelsData) {
-                        // Создаем базовый набор каналов внутри функции, независимо от текущего состояния
-                        const baseChannels = [
-                            {
-                                key: "tbot",
-                                label: "Telegram Bot",
-                                icon: <FaTelegramPlane/>,
-                                isExpanded: false,
-                                isEnabled: false,
-                                data: ''
-                            },
-                            {
-                                key: "widg",
-                                label: "WEB Widget",
-                                icon: <CommentOutlined/>,
-                                isExpanded: false,
-                                isEnabled: false,
-                                data: ''
-                            },
-                            {
-                                key: "tguserbot",
-                                label: "Telegram UserBot",
-                                icon: <FaTelegramPlane/>,
-                                isExpanded: false,
-                                isEnabled: false,
-                                data: '',
-                                contacts: '',
-                                contactsIds: []
-                            },
-                            {
-                                key: "whatsbot",
-                                label: "WhatsApp UserBot",
-                                icon: <FaWhatsapp/>,
-                                isExpanded: false,
-                                isEnabled: false,
-                                data: '',
-                                contacts: '',
-                                contactsIds: []
-                            },
-                            {
-                                key: "insta",
-                                label: "Instagram Bot",
-                                icon: <FaInstagram/>,
-                                isExpanded: false,
-                                isEnabled: false,
-                                data: '',
-                                contacts: '',
-                                contactsIds: []
-                            }
-                        ];
-
-                        const newAvailableChannels = [...baseChannels];
-                        const newSelectedChannels = [];
-
-                        // Обработка Telegram бота
-                        if (channelsData.tgbot && channelsData.tgbot.data) {
-                            const tgChannel = newAvailableChannels.find(ch => ch.key === "tbot");
-                            if (tgChannel) {
-                                const index = newAvailableChannels.indexOf(tgChannel);
-                                if (index > -1) {
-                                    newAvailableChannels.splice(index, 1);
-                                }
-                                try {
-                                    const rawData = channelsData.tgbot.data;
-                                    const parsedData = typeof rawData === 'string' ? JSON.parse(rawData) : rawData;
-                                    const tokenValue = parsedData?.token || '';
-                                    newSelectedChannels.push({
-                                        ...tgChannel,
-                                        data: tokenValue,
-                                        isEnabled: Boolean(channelsData.tgbot.enabled)
-                                    });
-                                } catch (error) {
-                                    console.error("Ошибка обработки данных Telegram Bot:", error);
-                                    // В случае ошибки добавляем канал с пустыми данными
-                                    newSelectedChannels.push({
-                                        ...tgChannel,
-                                        data: '',
-                                        isEnabled: Boolean(channelsData.tgbot.enabled)
-                                    });
-                                }
-                            }
+                // Получаем данные о каналах
+                const channelsData = await readChannelData();
+                if (channelsData) {
+                    // Создаем базовый набор каналов внутри функции, независимо от текущего состояния
+                    const baseChannels = [
+                        {
+                            key: "tbot",
+                            label: "Telegram Bot",
+                            icon: <FaTelegramPlane/>,
+                            isExpanded: false,
+                            isEnabled: false,
+                            data: ''
+                        },
+                        {
+                            key: "widg",
+                            label: "WEB Widget",
+                            icon: <CommentOutlined/>,
+                            isExpanded: false,
+                            isEnabled: false,
+                            data: ''
+                        },
+                        {
+                            key: "tguserbot",
+                            label: "Telegram UserBot",
+                            icon: <FaTelegramPlane/>,
+                            isExpanded: false,
+                            isEnabled: false,
+                            data: '',
+                            options: {text: true, call: true},
+                            contacts: '',
+                            contactsIds: []
+                        },
+                        {
+                            key: "whatsbot",
+                            label: "WhatsApp UserBot",
+                            icon: <FaWhatsapp/>,
+                            isExpanded: false,
+                            isEnabled: false,
+                            data: '',
+                            contacts: '',
+                            contactsIds: []
+                        },
+                        {
+                            key: "avito",
+                            label: "Avito",
+                            icon: <AvitoIcon size={15}/>,
+                            isExpanded: false,
+                            isEnabled: false,
+                            data: '',
+                            isConnected: false
+                        },
+                        {
+                            key: "insta",
+                            label: "Instagram Bot",
+                            icon: <FaInstagram/>,
+                            isExpanded: false,
+                            isEnabled: false,
+                            data: '',
+                            contacts: '',
+                            contactsIds: []
                         }
+                    ];
 
-                        // Обработка виджета
-                        if (channelsData.widget && channelsData.widget.data) {
-                            const widgetChannel = newAvailableChannels.find(ch => ch.key === "widg");
-                            if (widgetChannel) {
-                                const index = newAvailableChannels.indexOf(widgetChannel);
-                                if (index > -1) {
-                                    newAvailableChannels.splice(index, 1);
-                                }
-                                try {
-                                    const widgetData = channelsData.widget.data;
-                                    const scriptData = typeof widgetData === 'object' ? widgetData.script : widgetData;
-                                    newSelectedChannels.push({
-                                        ...widgetChannel,
-                                        data: scriptData || '',
-                                        isEnabled: Boolean(channelsData.widget.enabled)
-                                    });
-                                } catch (error) {
-                                    console.error("Ошибка обработки данных Widget:", error);
-                                    newSelectedChannels.push({
-                                        ...widgetChannel,
-                                        data: '',
-                                        isEnabled: Boolean(channelsData.widget.enabled)
-                                    });
-                                }
+                    const newAvailableChannels = [...baseChannels];
+                    const newSelectedChannels = [];
+
+                    // Обработка Telegram бота
+                    if (channelsData.tgbot && channelsData.tgbot.data) {
+                        const tgChannel = newAvailableChannels.find(ch => ch.key === "tbot");
+                        if (tgChannel) {
+                            const index = newAvailableChannels.indexOf(tgChannel);
+                            if (index > -1) {
+                                newAvailableChannels.splice(index, 1);
                             }
-                        }
-
-                        // Обработка WhatsApp UserBot
-                        if (channelsData.whatsbot && channelsData.whatsbot.data) {
-                            const whatsChannel = newAvailableChannels.find(ch => ch.key === "whatsbot");
-                            if (whatsChannel) {
-                                const index = newAvailableChannels.indexOf(whatsChannel);
-                                if (index > -1) {
-                                    newAvailableChannels.splice(index, 1);
-                                }
-
-                                let uidsArray = [];
-                                let dataWithoutUids = {};
-
-                                try {
-                                    let whatsData;
-
-                                    // Проверяем тип данных - они могут приходить как объект или JSON строка
-                                    if (typeof channelsData.whatsbot.data === 'string') {
-                                        whatsData = JSON.parse(channelsData.whatsbot.data);
-                                    } else {
-                                        whatsData = channelsData.whatsbot.data;
-                                    }
-
-                                    // Извлекаем Uids если они есть
-                                    if (whatsData.Uids) {
-                                        uidsArray = whatsData.Uids.split(' ').filter(id => id.trim() !== '');
-                                        // Создаем копию объекта без поля Uids
-                                        dataWithoutUids = {...whatsData};
-                                        delete dataWithoutUids.Uids;
-                                    } else {
-                                        dataWithoutUids = whatsData;
-                                    }
-
-                                    newSelectedChannels.push({
-                                        ...whatsChannel,
-                                        data: JSON.stringify(dataWithoutUids),
-                                        contacts: uidsArray.length > 0 ? "added" : "",
-                                        contactsIds: uidsArray,
-                                        isEnabled: Boolean(channelsData.whatsbot.enabled)
-                                    });
-                                } catch (error) {
-                                    console.error("Ошибка обработки данных WhatsApp:", error);
-                                    // В случае ошибки сохраняем оригинальные данные
-                                    newSelectedChannels.push({
-                                        ...whatsChannel,
-                                        data: typeof channelsData.whatsbot.data === 'object'
-                                            ? JSON.stringify(channelsData.whatsbot.data)
-                                            : channelsData.whatsbot.data || '{}',
-                                        contacts: '',
-                                        contactsIds: [],
-                                        isEnabled: Boolean(channelsData.whatsbot.enabled)
-                                    });
-                                }
-                            }
-                        }
-
-                        if (channelsData.tguserbot && channelsData.tguserbot.data) {
-                            let uidsArray = [];
-                            let dataWithoutUidsString = '{}';
-
                             try {
-                                // Парсим внешний JSON для получения строки token
-                                const outerData = JSON.parse(channelsData.tguserbot.data);
-                                const tokenDataString = outerData?.token || '';
-                                const uidsRegex = /"uids"\s*:\s*"([^"]*)"/;
-                                const uidsMatch = tokenDataString.match(uidsRegex);
-
-                                if (uidsMatch && uidsMatch[1]) {
-                                    const uidsString = uidsMatch[1];
-                                    uidsArray = uidsString.split(' ').filter(id => id.trim() !== '');
-                                    // Удаляем uids и возможную запятую после них
-                                    dataWithoutUidsString = tokenDataString.replace(/"uids"\s*:\s*"[^"]*"\s*,?/, '');
-                                    // Простая проверка, чтобы не осталось висячей запятой в начале или конце
-                                    dataWithoutUidsString = dataWithoutUidsString.replace(/^,|,$/g, '');
-                                    // Если строка стала пустой или только {}, установим '{}'
-                                    if (dataWithoutUidsString.trim() === '' || dataWithoutUidsString.trim() === '{') {
-                                        dataWithoutUidsString = '{}';
-                                    }
-
-                                } else {
-                                    // Если uids не найдены, используем исходную строку token
-                                    dataWithoutUidsString = tokenDataString;
-                                }
-                            } catch (error) {
-                                console.error("Ошибка обработки данных:", error.message);
-                            }
-
-                            // Находим и обновляем канал
-                            const data = newAvailableChannels.find(ch => ch.key === "tguserbot");
-                            if (data) {
-                                const index = newAvailableChannels.indexOf(data);
-                                if (index > -1) {
-                                    newAvailableChannels.splice(index, 1);
-                                }
-
+                                const rawData = channelsData.tgbot.data;
+                                const parsedData = typeof rawData === 'string' ? JSON.parse(rawData) : rawData;
                                 newSelectedChannels.push({
-                                    ...data,
-                                    data: dataWithoutUidsString,
-                                    contacts: uidsArray.length > 0 ? "added" : "",
-                                    contactsIds: uidsArray,
-                                    isEnabled: Boolean(channelsData.tguserbot.enabled)
+                                    ...tgChannel,
+                                    data: typeof rawData === 'string' ? rawData : JSON.stringify(parsedData),
+                                    isEnabled: Boolean(channelsData.tgbot.enabled)
+                                });
+                            } catch (error) {
+                                console.error("Ошибка обработки данных Telegram Bot:", error);
+                                // В случае ошибки добавляем канал с пустыми данными
+                                newSelectedChannels.push({
+                                    ...tgChannel,
+                                    data: JSON.stringify({token: ''}),
+                                    isEnabled: Boolean(channelsData.tgbot.enabled)
                                 });
                             }
                         }
+                    }
 
-                        // Обработка Instagram Bot НЕВЕРНАЯ ТЕСТОВАЯ РЕАЛИЗАЦИЯ!!!
-                        if (channelsData.insta && channelsData.insta.data) {
-                            const instaChannel = newAvailableChannels.find(ch => ch.key === "insta");
-                            if (instaChannel) {
-                                const index = newAvailableChannels.indexOf(instaChannel);
-                                if (index > -1) {
-                                    newAvailableChannels.splice(index, 1);
-                                }
-
-                                let uidsArray = [];
-                                let dataWithoutUids = {};
-
-                                try {
-                                    let instaData;
-
-                                    // Проверяем тип данных - они могут приходить как объект или JSON строка
-                                    if (typeof channelsData.insta.data === 'string') {
-                                        instaData = JSON.parse(channelsData.insta.data);
-                                    } else {
-                                        instaData = channelsData.insta.data;
-                                    }
-
-                                    // Извлекаем Uids если они есть
-                                    if (instaData.Uids) {
-                                        uidsArray = instaData.Uids.split(' ').filter(id => id.trim() !== '');
-                                        // Создаем копию объекта без поля Uids
-                                        dataWithoutUids = {...instaData};
-                                        delete dataWithoutUids.Uids;
-                                    } else {
-                                        dataWithoutUids = instaData;
-                                    }
-
-                                    newSelectedChannels.push({
-                                        ...instaChannel,
-                                        data: JSON.stringify(dataWithoutUids),
-                                        contacts: uidsArray.length > 0 ? "added" : "",
-                                        contactsIds: uidsArray,
-                                        isEnabled: Boolean(channelsData.insta.enabled)
-                                    });
-                                } catch (error) {
-                                    console.error("Ошибка обработки данных Instagram:", error);
-                                    // В случае ошибки сохраняем оригинальные данные
-                                    newSelectedChannels.push({
-                                        ...instaChannel,
-                                        data: typeof channelsData.insta.data === 'object'
-                                            ? JSON.stringify(channelsData.insta.data)
-                                            : channelsData.insta.data || '{}',
-                                        contacts: '',
-                                        contactsIds: [],
-                                        isEnabled: Boolean(channelsData.insta.enabled)
-                                    });
-                                }
+                    // Обработка виджета
+                    if (channelsData.widget && channelsData.widget.data) {
+                        const widgetChannel = newAvailableChannels.find(ch => ch.key === "widg");
+                        if (widgetChannel) {
+                            const index = newAvailableChannels.indexOf(widgetChannel);
+                            if (index > -1) {
+                                newAvailableChannels.splice(index, 1);
+                            }
+                            try {
+                                const widgetData = channelsData.widget.data;
+                                const scriptData = typeof widgetData === 'object' ? widgetData.script : widgetData;
+                                newSelectedChannels.push({
+                                    ...widgetChannel,
+                                    data: scriptData || '',
+                                    isEnabled: Boolean(channelsData.widget.enabled)
+                                });
+                            } catch (error) {
+                                console.error("Ошибка обработки данных Widget:", error);
+                                newSelectedChannels.push({
+                                    ...widgetChannel,
+                                    data: '',
+                                    isEnabled: Boolean(channelsData.widget.enabled)
+                                });
                             }
                         }
-
-                        setAvailableChannels(newAvailableChannels);
-                        setSelectedChannels(newSelectedChannels);
                     }
+
+                    // Обработка WhatsApp UserBot
+                    if (channelsData.whatsbot && channelsData.whatsbot.data) {
+                        const whatsChannel = newAvailableChannels.find(ch => ch.key === "whatsbot");
+                        if (whatsChannel) {
+                            const index = newAvailableChannels.indexOf(whatsChannel);
+                            if (index > -1) {
+                                newAvailableChannels.splice(index, 1);
+                            }
+
+                            let uidsArray = [];
+                            let dataWithoutUids = {};
+
+                            try {
+                                let whatsData;
+
+                                // Проверяем тип данных - они могут приходить как объект или JSON строка
+                                if (typeof channelsData.whatsbot.data === 'string') {
+                                    whatsData = JSON.parse(channelsData.whatsbot.data);
+                                } else {
+                                    whatsData = channelsData.whatsbot.data;
+                                }
+
+                                // Извлекаем Uids если они есть
+                                if (whatsData.Uids) {
+                                    uidsArray = whatsData.Uids.split(' ').filter(id => id.trim() !== '');
+                                    // Создаем копию объекта без поля Uids
+                                    dataWithoutUids = {...whatsData};
+                                    delete dataWithoutUids.Uids;
+                                } else {
+                                    dataWithoutUids = whatsData;
+                                }
+
+                                newSelectedChannels.push({
+                                    ...whatsChannel,
+                                    data: JSON.stringify(dataWithoutUids),
+                                    contacts: uidsArray.length > 0 ? "added" : "",
+                                    contactsIds: uidsArray,
+                                    isEnabled: Boolean(channelsData.whatsbot.enabled)
+                                });
+                            } catch (error) {
+                                console.error("Ошибка обработки данных WhatsApp:", error);
+                                // В случае ошибки сохраняем оригинальные данные
+                                newSelectedChannels.push({
+                                    ...whatsChannel,
+                                    data: typeof channelsData.whatsbot.data === 'object'
+                                        ? JSON.stringify(channelsData.whatsbot.data)
+                                        : channelsData.whatsbot.data || '{}',
+                                    contacts: '',
+                                    contactsIds: [],
+                                    isEnabled: Boolean(channelsData.whatsbot.enabled)
+                                });
+                            }
+                        }
+                    }
+
+                    if (channelsData.tguserbot && channelsData.tguserbot.data) {
+                        let uidsArray = [];
+                        let tokenDataString = '';
+                        let options = {text: true, call: true};
+
+                        try {
+                            const rawChannelData = channelsData.tguserbot.data;
+                            let outerData = rawChannelData;
+
+                            if (typeof rawChannelData === 'string') {
+                                outerData = JSON.parse(rawChannelData);
+                            }
+
+                            const rawToken = outerData?.token ?? channelsData.tguserbot.token;
+                            tokenDataString = typeof rawToken === 'string'
+                                ? rawToken
+                                : rawToken
+                                    ? JSON.stringify(rawToken)
+                                    : '';
+                            options = {
+                                text: outerData?.options?.text ?? true,
+                                call: outerData?.options?.call ?? true,
+                                ...(outerData?.options || {})
+                            };
+
+                            if (outerData?.options?.uids) {
+                                uidsArray = outerData.options.uids.split(' ').filter(id => id.trim() !== '');
+                            }
+                        } catch (error) {
+                            console.error("Ошибка обработки данных:", error.message, channelsData.tguserbot);
+                        }
+
+                        // Находим и обновляем канал
+                        const data = newAvailableChannels.find(ch => ch.key === "tguserbot");
+                        if (data) {
+                            const index = newAvailableChannels.indexOf(data);
+                            if (index > -1) {
+                                newAvailableChannels.splice(index, 1);
+                            }
+
+                            newSelectedChannels.push({
+                                ...data,
+                                data: JSON.stringify({token: tokenDataString, options}),
+                                phone: channelsData.tguserbot.phone || '',
+                                appId: channelsData.tguserbot.appID || channelsData.tguserbot.appId || '',
+                                appHash: channelsData.tguserbot.appHash || '',
+                                options,
+                                contacts: uidsArray.length > 0 ? "added" : "",
+                                contactsIds: uidsArray,
+                                isEnabled: Boolean(channelsData.tguserbot.enabled)
+                            });
+                        }
+                    }
+
+                    // Обработка Instagram Bot НЕВЕРНАЯ ТЕСТОВАЯ РЕАЛИЗАЦИЯ!!!
+                    if (channelsData.insta && channelsData.insta.data) {
+                        const instaChannel = newAvailableChannels.find(ch => ch.key === "insta");
+                        if (instaChannel) {
+                            const index = newAvailableChannels.indexOf(instaChannel);
+                            if (index > -1) {
+                                newAvailableChannels.splice(index, 1);
+                            }
+
+                            let uidsArray = [];
+                            let dataWithoutUids = {};
+
+                            try {
+                                let instaData;
+
+                                // Проверяем тип данных - они могут приходить как объект или JSON строка
+                                if (typeof channelsData.insta.data === 'string') {
+                                    instaData = JSON.parse(channelsData.insta.data);
+                                } else {
+                                    instaData = channelsData.insta.data;
+                                }
+
+                                // Извлекаем Uids если они есть
+                                if (instaData.Uids) {
+                                    uidsArray = instaData.Uids.split(' ').filter(id => id.trim() !== '');
+                                    // Создаем копию объекта без поля Uids
+                                    dataWithoutUids = {...instaData};
+                                    delete dataWithoutUids.Uids;
+                                } else {
+                                    dataWithoutUids = instaData;
+                                }
+
+                                newSelectedChannels.push({
+                                    ...instaChannel,
+                                    data: JSON.stringify(dataWithoutUids),
+                                    contacts: uidsArray.length > 0 ? "added" : "",
+                                    contactsIds: uidsArray,
+                                    isEnabled: Boolean(channelsData.insta.enabled)
+                                });
+                            } catch (error) {
+                                console.error("Ошибка обработки данных Instagram:", error);
+                                // В случае ошибки сохраняем оригинальные данные
+                                newSelectedChannels.push({
+                                    ...instaChannel,
+                                    data: typeof channelsData.insta.data === 'object'
+                                        ? JSON.stringify(channelsData.insta.data)
+                                        : channelsData.insta.data || '{}',
+                                    contacts: '',
+                                    contactsIds: [],
+                                    isEnabled: Boolean(channelsData.insta.enabled)
+                                });
+                            }
+                        }
+                    }
+
+                    // Обработка Avito Bot
+                    if (channelsData.avito && channelsData.avito.data) {
+                        const avitoChannel = newAvailableChannels.find(ch => ch.key === "avito");
+                        if (avitoChannel) {
+                            const index = newAvailableChannels.indexOf(avitoChannel);
+                            if (index > -1) {
+                                newAvailableChannels.splice(index, 1);
+                            }
+
+                            // Проверяем, был ли канал уже в selectedChannels (чтобы сохранить isExpanded)
+                            const existingChannel = selectedChannels.find(ch => ch.key === "avito");
+
+                            try {
+                                let avitoData;
+
+                                // Проверяем тип данных
+                                if (typeof channelsData.avito.data === 'string') {
+                                    avitoData = JSON.parse(channelsData.avito.data);
+                                } else {
+                                    avitoData = channelsData.avito.data;
+                                }
+
+                                newSelectedChannels.push({
+                                    ...avitoChannel,
+                                    data: JSON.stringify(avitoData),
+                                    isEnabled: Boolean(channelsData.avito.enabled),
+                                    isConnected: true,
+                                    isExpanded: existingChannel ? existingChannel.isExpanded : false
+                                });
+                            } catch (error) {
+                                console.error("Ошибка обработки данных Avito:", error);
+                                newSelectedChannels.push({
+                                    ...avitoChannel,
+                                    data: typeof channelsData.avito.data === 'object'
+                                        ? JSON.stringify(channelsData.avito.data)
+                                        : channelsData.avito.data || '{}',
+                                    isEnabled: Boolean(channelsData.avito.enabled),
+                                    isConnected: false,
+                                    isExpanded: existingChannel ? existingChannel.isExpanded : false
+                                });
+                            }
+                        }
+                    }
+
+                    setAvailableChannels(newAvailableChannels);
+                    setSelectedChannels(newSelectedChannels);
                 }
+            } else {
+                showWarningNotification(t("authError") || "Ошибка авторизации", t("tokenNotFound") || "Токен не найден");
             }
         } catch (error) {
             console.error("Ошибка при загрузке данных каналов:", error);
         } finally {
             setLoading(false); // Гарантируем вызов setLoading(false) в любом случае
         }
-    }, []); // Убираем availableChannels из зависимостей
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []); // Убираем selectedChannels из зависимостей, чтобы предотвратить бесконечный цикл
 
     useEffect(() => {
         const fetchDataAsync = async () => {
@@ -429,13 +506,9 @@ export const Channels = () => {
     useEffect(() => {
         const checkModel = async () => {
             try {
-                const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
-                if (token != null) {
-                    const data = await getModelData(token);
-
-                    if (data != null) {
-                        setModelData(true);
-                    }
+                const data = await getModelData();
+                if (data != null) {
+                    setModelData(true);
                 }
             } catch (error) {
                 console.error("Ошибка получения данных модели:", error);
@@ -466,6 +539,8 @@ export const Channels = () => {
                 return await chAvailable('tguser');
             case "insta":
                 return await chAvailable('insta');
+            case "avito":
+                return await chAvailable('avito');
             default:
                 return false;
         }
@@ -492,32 +567,26 @@ export const Channels = () => {
     const handleConfirmRemove = async () => {
         const removedChannel = selectedChannels.find((channel) => channel.key === channelToRemove);
         if (removedChannel) {
-            const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
+            const channelType = getChanelName(removedChannel.key)
+            const success = await deleteChannelData(channelType);
 
-            if (token) {
-                const channelType = getChanelName(removedChannel.key)
-                const success = await deleteChannelData(token, channelType);
+            if (success) {
+                // Создаем очищенную копию канала для возврата в доступные
+                const clearedChannel = {
+                    ...removedChannel,
+                    data: '',
+                    isEnabled: false,
+                    isExpanded: false,
+                    contacts: '',
+                    contactsIds: []
+                };
 
-                if (success) {
-                    // Создаем очищенную копию канала для возврата в доступные
-                    const clearedChannel = {
-                        ...removedChannel,
-                        data: '',
-                        isEnabled: false,
-                        isExpanded: false,
-                        contacts: '',
-                        contactsIds: []
-                    };
-
-                    // Обновляем состояние UI только если удаление прошло успешно
-                    setAvailableChannels(prev => [...prev, clearedChannel]);
-                    setSelectedChannels(prev => prev.filter((channel) => channel.key !== channelToRemove));
-                    showNotification(t("channelDeleted") || "Канал удален", t("channelDeletedSuccess") || "Канал успешно удален из системы");
-                } else {
-                    showErrorNotification(t("channelDeleteError") || "Ошибка удаления", t("channelDeleteFailed") || "Не удалось удалить канал");
-                }
+                // Обновляем состояние UI только если удаление прошло успешно
+                setAvailableChannels(prev => [...prev, clearedChannel]);
+                setSelectedChannels(prev => prev.filter((channel) => channel.key !== channelToRemove));
+                showNotification(t("channelDeleted") || "Канал удален", t("channelDeletedSuccess") || "Канал успешно удален из системы");
             } else {
-                showWarningNotification(t("authError") || "Ошибка авторизации", t("tokenNotFound") || "Токен не найден");
+                showErrorNotification(t("channelDeleteError") || "Ошибка удаления", t("channelDeleteFailed") || "Не удалось удалить канал");
             }
         }
 
@@ -564,19 +633,8 @@ export const Channels = () => {
                     showNotification(t("channelAuthSuccess") || "Успех", t("channelAuthCompleted") || "Авторизация успешно завершена");
                     setShowQRCode(false);
                     setIsGeneratingQRCode(false);
-                    // Обновляю состояние канала tguserbot локально, для возможности дальнейшей настройки
-                    const channelsData = await readChannelData(localStorage.getItem("authToken"));
-                    // Даже если вылезет ошибка, наверное ничего плохого не случится. Так ведь? :)
-                    setSelectedChannels(prevChannels =>
-                        prevChannels.map(channel =>
-                            channel.key === "tguserbot"
-                                ? {
-                                    ...channel,
-                                    data: channelsData.tguserbot.data,
-                                }
-                                : channel
-                        )
-                    );
+                    // Обновляем все данные каналов через централизованную функцию
+                    await fetchChannelData();
                 },
                 onUpdateToken: () => {
                     showWarningNotification(t("authError") || "Ошибка авторизации", t("tokenNotFound") || "Токен не найден");
@@ -633,19 +691,8 @@ export const Channels = () => {
                     // На всякий случай, скрываю QR-код, хотя он уже не должен быть скрыт
                     setShowQRCode(false);
                     setIsGeneratingQRCode(false);
-                    // Обновляю состояние канала whatsbot локально, для возможности дальнейшей настройки
-                    const channelsData = await readChannelData(localStorage.getItem("authToken"));
-                    // Даже если вылезет ошибка, наверное ничего плохого не случится. Так ведь? :)
-                    setSelectedChannels(prevChannels =>
-                        prevChannels.map(channel =>
-                            channel.key === "whatsbot"
-                                ? {
-                                    ...channel,
-                                    data: channelsData.whatsbot.data,
-                                }
-                                : channel
-                        )
-                    );
+                    // Обновляем все данные каналов через централизованную функцию
+                    await fetchChannelData();
                 },
                 onUpdateToken: () => {
                     showWarningNotification(t("authError") || "Ошибка авторизации", t("tokenNotFound") || "Токен не найден");
@@ -675,7 +722,6 @@ export const Channels = () => {
             setContactsLoadingStatus({ message: 'Инициализация...', progress: 0 });
 
             const response = await telegramGetContact(
-                localStorage.getItem("authToken"),
                 (progressData) => {
                     // Обновляем статус загрузки для отображения пользователю
                     setContactsLoadingStatus({
@@ -751,7 +797,6 @@ export const Channels = () => {
             setContactsLoadingStatus({ message: 'Инициализация...', progress: 0 });
 
             const response = await whatsappGetContact(
-                localStorage.getItem("authToken"),
                 (progressData) => {
                     // Обновляем статус загрузки для отображения пользователю
                     setContactsLoadingStatus({
@@ -810,6 +855,7 @@ export const Channels = () => {
             // toggleExpand("tguserbot");
         }
     };
+
 
     const toggleExpand = (key) => {
         setSelectedChannels(
@@ -876,6 +922,8 @@ export const Channels = () => {
                 return "tgubot"
             case "whatsbot":
                 return "whatsbot"
+            case "avito":
+                return "avito"
             default:
                 return "error"
         }
@@ -883,23 +931,18 @@ export const Channels = () => {
 
     const saveData = async (key) => {
         const channel = selectedChannels.find(ch => ch.key === key);
-        const token = await validateAndRefreshToken(localStorage.getItem("authToken"))
 
-        if (token != null) {
-            const channelType = getChanelName(channel.key)
-            const success = await saveChannelData(channelType, channel.data, channel.contactsIds, channel.isEnabled, token);
+        const channelType = getChanelName(channel.key)
+        const success = await saveChannelData(channelType, channel.data, channel.contactsIds, channel.isEnabled);
 
-            if (success) {
-                if (channel.isEnabled) {
-                    showNotification(t("channelSaveSuccess") || "Канал сохранен и включён", t("channelSaveSuccessMessage") || "Агент работает с этим каналом!");
-                } else {
-                    showNotification(t("channelSaveDisabled") || "Канал сохранен но не включён", t("channelSaveDisabledMessage") || "Агент не работает с этим каналом!");
-                }
+        if (success) {
+            if (channel.isEnabled) {
+                showNotification(t("channelSaveSuccess") || "Канал сохранен и включён", t("channelSaveSuccessMessage") || "Агент работает с этим каналом!");
             } else {
-                showErrorNotification(t("channelSaveError") || "Ошибка сохранения канала", t("channelSaveWarning") || "Агент не сможет взаимодействовать с этим каналом!");
+                showNotification(t("channelSaveDisabled") || "Канал сохранен но не включён", t("channelSaveDisabledMessage") || "Агент не работает с этим каналом!");
             }
         } else {
-            showWarningNotification(t("channelSaveError") || "Ошибка сохранения каналов", t("tokenNotFound") || "Токен не найден")
+            showErrorNotification(t("channelSaveError") || "Ошибка сохранения канала", t("channelSaveWarning") || "Агент не сможет взаимодействовать с этим каналом!");
         }
 
         // Close the expanded view after saving for all channel types
@@ -927,14 +970,31 @@ export const Channels = () => {
             const canToggle = await checkSubscription();
 
             if (canToggle) {
+                const channel = selectedChannels.find(ch => ch.key === key);
+                const newEnabledState = !channel.isEnabled;
+
                 // Только если проверка прошла успешно, меняем состояние
                 setSelectedChannels(
                     selectedChannels.map((ch) =>
                         ch.key === key
-                            ? {...ch, isEnabled: !ch.isEnabled}
+                            ? {...ch, isEnabled: newEnabledState}
                             : ch
                     )
                 );
+
+                // Для канала Avito автоматически сохраняем на сервере
+                if (key === 'avito') {
+                    const channelType = getChanelName(key);
+                    const success = await saveChannelData(channelType, channel.data, channel.contactsIds, newEnabledState);
+
+                    if (success) {
+                        if (newEnabledState) {
+                            showNotification(t("channelEnabled") || "Канал включён", "Avito канал активирован!");
+                        } else {
+                            showNotification(t("channelDisabled") || "Канал выключен", "Avito канал деактивирован!");
+                        }
+                    }
+                }
             } else {
                 // Если проверка не прошла, показываем уведомление
                 showWarningNotification(
@@ -1129,6 +1189,13 @@ export const Channels = () => {
                                                                     originalChannelStates={originalChannelStates}
                                                                 />
                                                             )}
+                                                            {channel.key === "avito" && (
+                                                                <AvitoSection
+                                                                    channel={channel}
+                                                                    selectedChannels={selectedChannels}
+                                                                    setSelectedChannels={setSelectedChannels}
+                                                                />
+                                                            )}
 
                                                             <div className="channel-actions-modern">
                                                                 <div className="channel-actions-left-modern">
@@ -1146,14 +1213,17 @@ export const Channels = () => {
                                                                     >
                                                                         {t("channelsCancelButton") || "Отмена"}
                                                                     </Button>
-                                                                    <Button
-                                                                        type="primary"
-                                                                        onClick={() => saveData(channel.key)}
-                                                                        disabled={!channel.data}
-                                                                        style={{color: "black"}}
-                                                                    >
-                                                                        {t("save") || "Сохранить"}
-                                                                    </Button>
+                                                                    {/* Для Avito не показываем кнопку Сохранить - сохранение автоматическое */}
+                                                                    {channel.key !== 'avito' && (
+                                                                        <Button
+                                                                            type="primary"
+                                                                            onClick={() => saveData(channel.key)}
+                                                                            disabled={!channel.data}
+                                                                            style={{color: "black"}}
+                                                                        >
+                                                                            {t("save") || "Сохранить"}
+                                                                        </Button>
+                                                                    )}
                                                                 </div>
                                                             </div>
                                                         </div>

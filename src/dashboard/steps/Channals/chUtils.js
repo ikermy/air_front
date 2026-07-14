@@ -1,13 +1,11 @@
 // Функция проверки доступности канала
-import {validateAndRefreshToken} from "../../../utils/easyUtils";
 import {formatTgubotData, formatWhatsBotData} from "../../../widget/utils";
+import {getAuthToken, refreshToken, authFetch} from "../../../utils/easyUtils";
 
-
-const LAND_URL = (window.runtimeConfig && window.runtimeConfig.REACT_APP_LAND) || process.env.REACT_APP_LAND;
 
 export async function chAvailable(chType) {
     try {
-        const response = await fetch(`${LAND_URL}/available/${chType}`, {
+        const response = await fetch(`/v1/system/available/${chType}`, {
             method: 'GET',
         });
         return response.ok;
@@ -17,58 +15,56 @@ export async function chAvailable(chType) {
     }
 }
 
-const showSimpleAuth = process.env.REACT_APP_SHOW_SIMPLE_AUTH === "false";
+const showSimpleAuth = false;
 
 export const checkSubscription = async () => {
     if (showSimpleAuth) {
         // Фактическая проверка при взаимодействии осуществляется на сервере, ткчто это безопасно
         return true;
     }
-    const token = await validateAndRefreshToken(localStorage.getItem("authToken"))
-    if (token != null) {
-        try {
-            const response = await fetch(`${LAND_URL}/subscription?token=${encodeURIComponent(token)}`, {
-                method: 'GET',
-                headers: { 'Content-Type': 'application/json' },
-                // credentials: 'include', // Куки будут отправлены
-            });
 
-            if (!response.ok) {
-                // If response is not ok, parse the error message
-                const errorData = await response.json();
-                console.error("SUBSCR_ERROR", errorData.error);
-                return false;
-            }
+    try {
+        const response = await authFetch(`/v1/subscription`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
 
-            return true;
-        } catch (error) {
-            console.error("SUBSCR_EXCEPTION", error);
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            console.error("SUBSCR_ERROR", errorData.error);
             return false;
         }
-    } else {
-        return false
+
+        return true;
+    } catch (error) {
+        console.error("SUBSCR_EXCEPTION", error);
+        return false;
     }
 };
 
 // Функция для удаления канала пользователя
-export async function deleteChannelData(token, channelType) {
+export async function deleteChannelData(channelType) {
     try {
-        const response = await fetch(`${LAND_URL}/channel?token=${token}`, {
+        const response = await authFetch(`/v1/channel`, {
             method: 'DELETE',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-                type: channelType
-            })
+            body: JSON.stringify({ type: channelType })
         });
 
         if (!response.ok) {
-            const errorData = await response.json();
+            const errorData = await response.json().catch(() => ({}));
             throw new Error(errorData.error || 'Ошибка при удалении канала');
         }
 
         const data = await response.json();
+
+        // Очищаем кэш после успешного удаления
+        invalidateChannelDataCache();
+
         return data;
     } catch (error) {
         console.error('Ошибка при удалении канала:', error);
@@ -76,17 +72,14 @@ export async function deleteChannelData(token, channelType) {
     }
 }
 
-export async function getBotName(token, chName) {
-    await new Promise(resolve => setTimeout(resolve, 250));
+export async function getBotName(chName) {
     try {
-        const params = new URLSearchParams({ token, name: chName });
-        const url = `${LAND_URL}/channel/name?${params.toString()}`;
+        const params = new URLSearchParams({ name: chName });
+        const url = `/v1/channel/name?${params.toString()}`;
 
-        const response = await fetch(url, {
+        const response = await authFetch(url, {
             method: 'GET',
-            headers: {
-                'Accept': 'application/json'
-            }
+            headers: { 'Accept': 'application/json' }
         });
 
         if (!response.ok) {
@@ -102,58 +95,98 @@ export async function getBotName(token, chName) {
     }
 }
 
-export const getWidgetCode = async (token) => {
-    return new Promise(async (resolve, reject) => {
-        try {
-            const response = await fetch(`${LAND_URL}/widget/code?token=${token}`, {
-                method: "GET",
-                headers: {"Content-Type": "application/json"},
-            });
-            const data = await response.json();
-            if (response.ok) {
-                resolve(data.widgetCode);
-            } else {
-                reject(data.message || "Failed to fetch widget code");
-            }
-        } catch (error) {
-            reject(error);
-        }
-    });
-};
-
-export const readChannelData = async (token) => {
+export const getWidgetCode = async () => {
     try {
-        // Проверка наличия токена
-        if (!token) {
-            throw new Error('Токен не предоставлен');
-        }
-
-        const response = await fetch(`${LAND_URL}/channel?token=${encodeURIComponent(token)}`, {
+        const response = await authFetch(`/v1/widget/code`, {
             method: "GET",
-            headers: {"Content-Type": "application/json"},
+            headers: {
+                "Content-Type": "application/json",
+            },
         });
 
-        // Проверка ответа
-        if (!response.ok) {
-            if (response.status === 401) {
-                throw new Error('Недействительный токен авторизации');
-            } else if (response.status === 429) {
-                throw new Error('Слишком много запросов, попробуйте позже');
-            } else {
-                const errorData = await response.json();
-                throw new Error(errorData.error || 'Ошибка получения каналов');
-            }
+        const data = await response.json().catch(() => ({}));
+        if (response.ok) {
+            return data.widgetCode;
+        } else {
+            throw new Error(data.message || "Failed to fetch widget code");
+        }
+    } catch (error) {
+        throw error;
+    }
+};
+
+// Кэш для предотвращения дублирования запросов
+let readChannelDataCache = null;
+let readChannelDataCacheTimestamp = 0;
+let readChannelDataPendingRequest = null;
+const CACHE_DURATION = 5000; // 5 секунд
+
+export const readChannelData = async () => {
+    try {
+        // Проверка кэша
+        const now = Date.now();
+        if (readChannelDataCache && (now - readChannelDataCacheTimestamp) < CACHE_DURATION) {
+            console.log('Возвращаем данные из кэша');
+            return readChannelDataCache;
         }
 
-        // Получение данных из ответа
-        return await response.json();
+        // Если уже есть активный запрос, ждём его завершения (дедупликация)
+        if (readChannelDataPendingRequest) {
+            console.log('Ожидаем завершения существующего запроса');
+            return await readChannelDataPendingRequest;
+        }
+
+        // Создаём новый запрос
+        readChannelDataPendingRequest = (async () => {
+            try {
+                const response = await authFetch(`/v1/channel`, {
+                    method: "GET",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                });
+
+                // Проверка ответа
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        throw new Error('Недействительный токен авторизации');
+                    } else if (response.status === 429) {
+                        throw new Error('Слишком много запросов, попробуйте позже');
+                    } else {
+                        const errorData = await response.json().catch(() => ({}));
+                        throw new Error(errorData.error || 'Ошибка получения каналов');
+                    }
+                }
+
+                // Получение данных из ответа
+                const data = await response.json();
+
+                // Сохраняем в кэш
+                readChannelDataCache = data;
+                readChannelDataCacheTimestamp = Date.now();
+
+                return data;
+            } finally {
+                // Очищаем pending request после завершения
+                readChannelDataPendingRequest = null;
+            }
+        })();
+
+        return await readChannelDataPendingRequest;
     } catch (error) {
         console.error('Ошибка при получении каналов:', error);
         throw error;
     }
 }
 
-export const saveChannelData = async (channelType, data, uids, isEnabled, token) => {
+// Функция для очистки кэша (используется после изменения данных каналов)
+export const invalidateChannelDataCache = () => {
+    readChannelDataCache = null;
+    readChannelDataCacheTimestamp = 0;
+    readChannelDataPendingRequest = null;
+};
+
+export const saveChannelData = async (channelType, data, uids, isEnabled) => {
     try {
         var finalData
         switch (channelType) {
@@ -171,10 +204,10 @@ export const saveChannelData = async (channelType, data, uids, isEnabled, token)
                 finalData = data
         }
 
-        const response = await fetch(`${LAND_URL}/channel?token=${token}`, {
+        const response = await authFetch(`/v1/channel`, {
             method: "POST",
             headers: {
-                "Content-Type": "application/json"
+                "Content-Type": "application/json",
             },
             credentials: "include",
             body: JSON.stringify({
@@ -186,10 +219,16 @@ export const saveChannelData = async (channelType, data, uids, isEnabled, token)
 
         if (!response.ok) {
             console.error("Сервер вернул ошибку:", response.status);
-            return false
+            return false;
         }
 
-        const result = await response.json();
+        const result = await response.json().catch(() => ({}));
+
+        // Очищаем кэш после успешного сохранения
+        if (response.ok && result.message === "ok") {
+            invalidateChannelDataCache();
+        }
+
         return response.ok && result.message === "ok";
     } catch (error) {
         console.error("Ошибка при сохранении канала:", error);
@@ -197,65 +236,59 @@ export const saveChannelData = async (channelType, data, uids, isEnabled, token)
     }
 }
 
-export async function restartActiveChannels(token, onMessage) {
+export async function restartActiveChannels(onMessage) {
+    // Получаем актуальный токен
+    let validToken = getAuthToken();
+
+    if (!validToken) {
+        // Пробуем обновить если нет STA
+        validToken = await refreshToken();
+        if (!validToken) {
+            throw new Error('Сессия недействительна и не удалось получить токен');
+        }
+    }
+
     return new Promise((resolve, reject) => {
         try {
-            const LAND_WSS = (window.runtimeConfig && window.runtimeConfig.REACT_APP_LAND_WSS) || process.env.REACT_APP_LAND_WSS;
-            const wsUrl = `${LAND_WSS}/ws/restart`;
-            const wsUrlWithToken = `${wsUrl}?token=${encodeURIComponent(token)}`;
+            const wsUrl = `/v1/ws/restart`;
+            const ws = new WebSocket(wsUrl, [validToken]);
 
-            const ws = new WebSocket(wsUrlWithToken);
-
-            // Обработчик открытия соединения
             ws.onopen = () => {
-                const msg = '🔌 Соединение с сервером установлено';
-                if (onMessage) onMessage(msg);
+                // уведомим caller что соединение установлено
+                if (typeof onMessage === 'function') onMessage('🔌 Соединение с сервером установлено');
             };
 
-            // Обработчик сообщений от сервера
-            ws.onmessage = (event) => {
-                // Отправляем любое сообщение от сервера в callback
-                if (onMessage) onMessage(event.data);
+            ws.onmessage = (ev) => {
+                const msg = typeof ev.data === 'string' ? ev.data : JSON.stringify(ev.data);
+                if (typeof onMessage === 'function') onMessage(msg);
 
-                try {
-                    const data = JSON.parse(event.data);
-                    if (data.status === 'success') {
-                        // Не резолвим здесь, ждём закрытия соединения
-                    } else if (data.error) {
-                        reject(new Error(data.error));
-                        ws.close();
-                    }
-                } catch (e) {
-                    // Если это не JSON, это текстовое сообщение прогресса
-                    // Уже отправлено в callback выше
+                // Если сервер сигнализирует об окончании перезапуска — резолвим промис
+                if (msg && (msg.includes('Перезапуск сервисов завершен') || msg.includes('Перезапуск сервисов завершен успешно') || msg.includes('restart completed') || msg.includes('✅ Перезапуск')) ) {
+                    // даём время на получение последних сообщений и закрываем ws
+                    setTimeout(() => {
+                        try { ws.close(1000, 'completed'); } catch (e) {}
+                    }, 500);
                 }
             };
 
-            // Обработчик закрытия соединения
             ws.onclose = (event) => {
-                // Если соединение закрылось нормально (код 1000), значит операция завершена
+                if (typeof onMessage === 'function') onMessage(`📝 Соединение закрыто (код: ${event.code})`);
+                // Если закрытие нормальное — считаем задачу выполненной
                 if (event.code === 1000) {
-                    const msg = '✅ Перезапуск сервисов завершен успешно';
-                    if (onMessage) onMessage(msg);
-                    resolve({ status: 'ok' });
+                    resolve();
                 } else {
-                    const msg = '❌ Произошла ошибка при перезапуске сервисов';
-                    if (onMessage) onMessage(msg);
-                    reject(new Error('Ошибка при перезапуске сервисов'));
+                    // Для других кодов завершаем так же, но с предупреждением
+                    resolve();
                 }
             };
 
-            // Обработчик ошибок
-            ws.onerror = (error) => {
-                console.error('WebSocket error:', error);
-                const msg = '❌ Ошибка соединения с сервером';
-                if (onMessage) onMessage(msg);
-                reject(new Error('Ошибка соединения с сервером'));
+            ws.onerror = (err) => {
+                console.error('restartActiveChannels ws error:', err);
+                try { ws.close(); } catch (e) {}
+                reject(new Error('Ошибка WebSocket при перезапуске сервисов'));
             };
-
         } catch (error) {
-            console.error('Ошибка перезапуска активных каналов:', error);
             reject(error);
         }
     });
-}
+ }

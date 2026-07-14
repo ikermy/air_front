@@ -8,11 +8,10 @@ import {useTranslation} from "react-i18next";
 import i18n from "i18next";
 import {PolicyModal, DemoModal} from './PolicyModals';
 
-const LAND_URL = window.runtimeConfig?.REACT_APP_LAND || process.env.REACT_APP_LAND;
 
 async function sendRegData({userId, name, mail, pass, demo, language}) {
     try {
-        const response = await fetch(`${LAND_URL}/reg`, {
+        const response = await fetch(`/v1/auth/register`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({
@@ -38,7 +37,7 @@ async function sendRegData({userId, name, mail, pass, demo, language}) {
 
 async function check({userId, mail}) {
     try {
-        const response = await fetch(`${LAND_URL}/check`, {
+        const response = await fetch(`/v1/auth/check-email`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({

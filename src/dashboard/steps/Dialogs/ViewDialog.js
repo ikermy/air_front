@@ -5,6 +5,7 @@ import { useAutoScroll } from "../../../utils/useAutoScroll";
 import { Calendar, Button, Modal, DatePicker, message } from 'antd';
 import {CheckCircleFilled, CloseCircleFilled, DownloadOutlined, ExclamationCircleOutlined, DeleteOutlined} from '@ant-design/icons';
 import { MdKeyboardVoice, MdOutlineSupportAgent } from "react-icons/md";
+import { RiUserVoiceFill, RiChatVoiceAiFill } from "react-icons/ri";
 import MarkdownRenderer from "../../../utils/MarkdownRenderer.tsx";
 import {ReadDialog, DeleteDialog} from "../../../dialog/dialogUtils";
 import { showNotification, showErrorNotification } from '../../hotification/showNotification';
@@ -12,7 +13,7 @@ import { showNotification, showErrorNotification } from '../../hotification/show
 
 const { RangePicker } = DatePicker;
 
-export function ViewDialog({ token, dialogId, target, trigger, onClose, onDialogDeleted }) {
+export function ViewDialog({ dialogId, target, trigger, onClose, onDialogDeleted }) {
     const { t } = useTranslation();
     const [messages, setMessages] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -74,13 +75,18 @@ export function ViewDialog({ token, dialogId, target, trigger, onClose, onDialog
                 const videoFiles = sendFiles.filter(file => file.type === 'video');
                 const docFiles = sendFiles.filter(file => file.type === 'doc' || file.type === 'document');
 
+                // Обработка даты
+                const msgDate = new Date(msg.timestamp);
+                const validTimestamp = !isNaN(msgDate.getTime()) ? msgDate : new Date(); // Фолбэк на текущую дату или null
+
+
                 return {
                     text: <MarkdownRenderer text={messageText.replace(/\n/g, '<br />')} />,
                     originalText: messageText, // Сохраняем оригинальный текст для экспорта
                     name: msg.creator === 2 ? modelName : responderName,
                     creator: msg.creator,
-                    side: msg.creator === 1 || msg.creator === 4 ? 'left' : (msg.creator === 2 || msg.creator === 3 ? 'right' : 'left'),
-                    timestamp: new Date(msg.timestamp),
+                    side: msg.creator === 1 || msg.creator === 4 || msg.creator === 6 ? 'left' : (msg.creator === 2 || msg.creator === 3 || msg.creator === 5 ? 'right' : 'left'),
+                    timestamp: validTimestamp,
                     files: {
                         images: imageFiles,
                         videos: videoFiles,
@@ -100,8 +106,11 @@ export function ViewDialog({ token, dialogId, target, trigger, onClose, onDialog
     const uniqueDates = useMemo(() => {
         const dates = new Set();
         messages.forEach(msg => {
-            const dateString = msg.timestamp.toISOString().split('T')[0];
-            dates.add(dateString);
+            // Проверяем, что timestamp — валидный объект Date
+            if (msg.timestamp instanceof Date && !isNaN(msg.timestamp.getTime())) {
+                const dateString = msg.timestamp.toISOString().split('T')[0];
+                dates.add(dateString);
+            }
         });
         return Array.from(dates).map(dateStr => new Date(dateStr));
     }, [messages]);
@@ -118,6 +127,9 @@ export function ViewDialog({ token, dialogId, target, trigger, onClose, onDialog
 
         // Поиск первого сообщения на выбранную дату
         const firstMsgIndex = messages.findIndex(msg => {
+            if (!(msg.timestamp instanceof Date) || isNaN(msg.timestamp.getTime())) {
+                return false;
+            }
             const msgDateStr = msg.timestamp.toISOString().split('T')[0];
             return msgDateStr === dateStr;
         });
@@ -376,11 +388,22 @@ export function ViewDialog({ token, dialogId, target, trigger, onClose, onDialog
                     return (
                         <React.Fragment key={index}>
                             {dateHeader}
-                            <div
-                                className={`chat-message ${msg.side}`}
-                                ref={el => messageRefs.current[`msg-${index}`] = el}
-                            >
-                                <div className="message-name"> {msg.name} </div>
+                            <div className={`chat-message-row ${msg.side}`}>
+                                <div
+                                    className={`chat-message ${msg.side}`}
+                                    ref={el => messageRefs.current[`msg-${index}`] = el}
+                                >
+                                    <div className={`message-name ${msg.side}`}>
+                                        {/* creator=5 (AI, right): иконка рядом с именем */}
+                                        {msg.creator === 5 && (
+                                            <RiChatVoiceAiFill className="voice-icon voice-icon-ai voice-icon-outside" />
+                                        )}
+                                        {/* creator=6 (User, left): иконка рядом с именем */}
+                                        {msg.creator === 6 && (
+                                            <RiUserVoiceFill className="voice-icon voice-icon-user voice-icon-outside" />
+                                        )}
+                                        <span>{msg.name}</span>
+                                    </div>
 
                                 {/* Контейнер для файлов */}
                                 <div className="message-files">
@@ -391,7 +414,22 @@ export function ViewDialog({ token, dialogId, target, trigger, onClose, onDialog
                                                 src={img.url}
                                                 alt={img.caption || img.file_name}
                                                 className="chat-image"
-                                                onClick={(e) => e.currentTarget.classList.toggle('zoomed')}
+                                                onClick={(e) => {
+                                                    const img = e.currentTarget;
+                                                    const isZoomed = img.classList.contains('zoomed');
+
+                                                    if (isZoomed) {
+                                                        // Закрываем увеличение
+                                                        img.classList.remove('zoomed');
+                                                        document.body.classList.remove('image-zoomed');
+                                                        document.body.style.overflow = '';
+                                                    } else {
+                                                        // Увеличиваем
+                                                        img.classList.add('zoomed');
+                                                        document.body.classList.add('image-zoomed');
+                                                        document.body.style.overflow = 'hidden';
+                                                    }
+                                                }}
                                             />
                                             {img.caption && <div className="file-caption">{img.caption}</div>}
                                         </div>
@@ -438,8 +476,11 @@ export function ViewDialog({ token, dialogId, target, trigger, onClose, onDialog
                                     </div>
                                 )}
 
-                                <div className={`message-timestamp ${msg.side}`}>{messageDate.toLocaleTimeString()}</div>
-                            </div>
+                                <div className={`message-timestamp ${msg.side}`}>
+                                    {messageDate.toLocaleTimeString()}
+                                </div>
+                            </div>{/* конец .chat-message */}
+                            </div>{/* конец .chat-message-row */}
                         </React.Fragment>
                     );
                 })}
@@ -502,7 +543,6 @@ export function ViewDialog({ token, dialogId, target, trigger, onClose, onDialog
                 {renderMessages()}
                 <ReadDialog
                     mode={"work"}
-                    inToken={token}
                     onDialogData={handleDialogData}
                     dialogId={dialogId}
                 />
@@ -550,7 +590,7 @@ export function ViewDialog({ token, dialogId, target, trigger, onClose, onDialog
                 onOk={async () => {
                     // Вызов удаления
                     try {
-                        const result = await DeleteDialog(token, dialogId);
+                        const result = await DeleteDialog(dialogId);
                         if (result && result.status === 'ok') {
                             showNotification(`${t("dialog") || "Диалог"} ${dialogId}`, t("viewDialogDeleteSuccess") || 'успешно удалён!');
                             // Очищаем сообщения в компоненте

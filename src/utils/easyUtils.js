@@ -1,9 +1,13 @@
 import CryptoJS from "crypto-js";
+import { getCookie, setCookie, deleteCookie } from './cookieUtils';
 
-// Для продакшена конфигурация загружается из window.runtimeConfig.
-// Для разработки - из process.env (через .env.development).
-const LAND_URL = (window.runtimeConfig && window.runtimeConfig.REACT_APP_LAND) || process.env.REACT_APP_LAND;
-// const LAND_URL = process.env.REACT_APP_LAND;
+/**
+ * Безопасное получение токена доступа с поддержкой SSR и fallback на localStorage
+ */
+export const getAuthToken = () => {
+    if (typeof window === 'undefined') return null;
+    return getCookie('accessToken') || localStorage.getItem('authToken');
+};
 
 export const getCssVariable = (variable, element = document.body) => {
     // Проверяем, есть ли нужный класс на `element`
@@ -17,11 +21,6 @@ export const getCssVariable = (variable, element = document.body) => {
         return null; // Возвращаем null, если переменная не определена
     }
 };
-
-// export async function encryptPassword(password, encryptionKey) {
-//     const encr = CryptoJS.AES.encrypt(password, encryptionKey).toString()
-//     return encr.toString()
-// }
 
 export async function encryptPassword(password, encryptionKey) {
     // Проверяем валидность входных параметров
@@ -45,18 +44,12 @@ export async function encryptPassword(password, encryptionKey) {
 }
 
 export async function getKey({userId}) {
-    // Проверяем наличие LAND_URL
-    if (!LAND_URL) {
-        console.error('LAND_URL не определен');
-        return {status: "error", message: "LAND_URL не настроен"};
-    }
-
     if (!userId) {
         return {status: "error", message: "userId обязателен"};
     }
 
     try {
-        const response = await fetch(`${LAND_URL}/key`, {
+        const response = await fetch(`/v1/auth/session-key`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({
@@ -81,90 +74,160 @@ export async function getKey({userId}) {
     }
 }
 
-// export async function getKey({userId}) {
-//     try {
-//         const response = await fetch(`${LAND_URL}/key`, {
-//             method: 'POST',
-//             headers: {'Content-Type': 'application/json'},
-//             body: JSON.stringify({
-//                 "a": userId,
-//             })
-//         });
-//
-//         if (!response.ok) {
-//             return {status: "error"}
-//         }
-//
-//         const data = await response.json();
-//
-//         return {status: "ok", key: data.key}
-//     } catch (error) {
-//         console.error("Error: " + JSON.stringify(error))
-//         return {status: "error"}
-//     }
-// }
-
-const refreshToken = async () => {
+/**
+ * Принудительное обновление токена через Refresh Token (LTA)
+ * Возвращает новый Access Token (STA) или null
+ */
+export const refreshToken = async () => {
     try {
-        const response = await fetch(`${LAND_URL}/trefresh`, {
+        const response = await fetch(`/v1/auth/token/refresh`, {
             method: 'GET',
             headers: { 'Content-Type': 'application/json' },
-            credentials: 'include', // Куки будут отправлены
+            credentials: 'include', // Куки будут отправлены (MarusiaRefreshToken)
         });
 
         if (response.ok) {
             const data = await response.json();
             if (data.s) {
-                localStorage.setItem("authToken", data.s);
-                // console.log("Токен успешно обновлен");
-                return data.s; // Возвращаю обновленный токен
+                const maxAge = process.env.REACT_APP_ACCESS_TOKEN_MAX_AGE || 900;
+                setCookie("accessToken", data.s, { maxAge, secure: true, sameSite: 'lax' });
+                return data.s;
             }
-        } else {
-            console.error("Не удалось обновить токен");
-            localStorage.removeItem("authToken");
-            return null
         }
+
+        // Если рефреш не удался — чистим всё
+        deleteCookie("accessToken");
+        return null;
     } catch (error) {
         console.error("Ошибка при обновлении токена:", error);
-        localStorage.removeItem("authToken");
-        return null
+        deleteCookie("accessToken");
+        return null;
     }
 };
 
-export const validateAndRefreshToken = async (token) => {
-    // Fallback: если токен не передан, пробуем взять из localStorage
-    if (!token) {
-        const stored = localStorage.getItem('authToken');
-        if (stored) {
-            token = stored;
-        } else {
-            console.warn('validateAndRefreshToken: токен не передан и отсутствует в localStorage');
-            return null;
-        }
-    }
-    try {
-        const response = await fetch(`${LAND_URL}/tvalidate?token=${encodeURIComponent(token)}`, {
-            method: "GET",
-            headers: {"Content-Type": "application/json"},
-        });
+let isRefreshing = false;
+let refreshSubscribers = [];
 
-        if (response.status === 401) {
-            const newToken = await refreshToken();
-            if (newToken) {
-                localStorage.setItem("authToken", newToken);
-                return newToken;
-            } else {
-                return null;
+function subscribeTokenRefresh(cb) {
+    refreshSubscribers.push(cb);
+}
+
+function onRefreshed(token) {
+    refreshSubscribers.map(cb => cb(token));
+    refreshSubscribers = [];
+}
+
+/**
+ * Универсальная обёртка для fetch-запросов с автоматическим обновлением токена при 4xx ошибках.
+ * Теперь аргумент token необязателен — если он не передан, функция сама получит его.
+ */
+export const withTokenRefresh = async (fetchFunction, ...args) => {
+    // Получаем текущий токен (из аргументов, кук или localStorage)
+    let currentToken = getAuthToken();
+
+    // Если токена нет совсем, пробуем превентивно обновиться (LTA -> STA)
+    if (!currentToken) {
+        if (!isRefreshing) {
+            isRefreshing = true;
+            currentToken = await refreshToken();
+            isRefreshing = false;
+            if (currentToken) {
+                onRefreshed(currentToken);
             }
-        } else if (response.ok) {
-            return token;
         } else {
-            console.error("Неизвестная ошибка при проверке токена");
-            localStorage.removeItem("authToken");
-            return null;
+            // Ждем завершения обновления, которое уже запущено другим запросом
+            currentToken = await new Promise((resolve) => {
+                subscribeTokenRefresh(resolve);
+            });
         }
-    } catch (error) {
-        console.error("Ошибка при проверке токена:", error);
-        return null;
     }
+
+    // Если после всех попыток токена нет, имитируем 401 для совместимости с обработкой ошибок
+    if (!currentToken) {
+        return {
+            status: 401,
+            ok: false,
+            json: async () => ({ error: 'Unauthorized', message: 'Auth token not found' })
+        };
+    }
+
+    // Первая попытка с текущим токеном
+    let response = await fetchFunction(currentToken, ...args);
+
+    // Если получили 401, запускаем механизм очереди и обновления
+    if (response.status === 401) {
+        if (!isRefreshing) {
+            isRefreshing = true;
+            const newToken = await refreshToken();
+            isRefreshing = false;
+
+            if (newToken) {
+                onRefreshed(newToken);
+            } else {
+                refreshSubscribers = [];
+                return response;
+            }
+        }
+
+        return new Promise((resolve) => {
+            subscribeTokenRefresh(async (newToken) => {
+                resolve(await fetchFunction(newToken, ...args));
+            });
+        });
+    }
+
+    return response;
+};
+
+/**
+ * Завершение сессии на стороне сервера и клиента
+ */
+export const apiLogout = async () => {
+    try {
+        // Пробуем отправить запрос на логаут на сервер
+        await fetch('/v1/auth/logout', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                // Если есть STA, можем передать его и в заголовке, если сервер того требует
+                'Authorization': `Bearer ${getCookie('accessToken')}`
+            },
+            credentials: 'include'
+        });
+    } catch (e) {
+        console.error('Logout error:', e);
+    } finally {
+        // Максимально полная очистка на стороне клиента
+        deleteCookie("accessToken");
+
+        // Пытаемся удалить LTA куку, если она не HttpOnly
+        deleteCookie("MarusiaRefreshToken");
+
+        if (typeof window !== 'undefined') {
+            localStorage.removeItem("authToken");
+            localStorage.removeItem("accessToken"); // На всякий случай
+
+            // Очистка сессионного хранилища, если там что-то было
+            sessionStorage.clear();
+        }
+    }
+};
+
+/**
+ * Авторизованный fetch, который сам добавляет заголовок Authorization
+ * и использует withTokenRefresh для автоматического обновления токена.
+ */
+export const authFetch = async (url, options = {}) => {
+    const performRequest = async (authToken) => {
+        const authOptions = {
+            ...options,
+            headers: {
+                ...options.headers,
+                'Authorization': `Bearer ${authToken}`
+            }
+        };
+        return fetch(url, authOptions);
+    };
+
+    return withTokenRefresh(performRequest);
 };

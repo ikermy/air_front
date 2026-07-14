@@ -2,12 +2,8 @@ import { useEffect } from 'react';
 import { instantNotificationService } from '../service/instantNotificationService';
 import { showInstantNotification } from '../dashboard/hotification/showNotification';
 
-export const useInstantNotifications = (token) => {
+export const useInstantNotifications = () => {
     useEffect(() => {
-        if (!token) {
-            return;
-        }
-
         const handleMessage = (message) => {
             showInstantNotification(
                 message.title || 'Уведомление',
@@ -16,11 +12,11 @@ export const useInstantNotifications = (token) => {
         };
 
         instantNotificationService.addListener(handleMessage);
-        instantNotificationService.connect(token);
+        instantNotificationService.connect().then(r => {});
 
         return () => {
             instantNotificationService.removeListener(handleMessage);
             instantNotificationService.disconnect();
         };
-    }, [token]);
+    }, []);
 };

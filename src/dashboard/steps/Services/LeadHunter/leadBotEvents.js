@@ -1,7 +1,10 @@
 // leadBotEvents.js
-import {validateAndRefreshToken} from "../../../../utils/easyUtils";
+import {getAuthToken, refreshToken} from "../../../../utils/easyUtils";
 import {serviceBotEventsWSS} from "./leadUtils";
 
+/**
+ * Service to handle Lead Bot events via WebSocket
+ */
 export class LeadBotEvents {
     constructor() {
         this.socket = null;
@@ -34,20 +37,16 @@ export class LeadBotEvents {
     }
 
     async connect(userId, lastEventId = 0) {
-        try {
-            const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
-            if (!token) {
-                if (this.callbacks.onUpdateToken) {
-                    this.callbacks.onUpdateToken();
-                }
-                return false;
-            }
+        if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+            return;
+        }
 
+        try {
             this.userId = userId;
             this.lastEventId = lastEventId;
             this.intentionalClose = false;
 
-            this.connectWebSocket(token);
+            this.connectWebSocket();
             return true;
         } catch (error) {
             console.error('Ошибка подключения к серверу событий:', error);
@@ -58,9 +57,9 @@ export class LeadBotEvents {
         }
     }
 
-    connectWebSocket(token) {
+    connectWebSocket() {
         try {
-            this.socket = serviceBotEventsWSS(token);
+            this.socket = serviceBotEventsWSS();
 
             this.socket.onopen = () => {
                 console.log('WebSocket соединение к серверу событий установлено');
@@ -209,13 +208,12 @@ export class LeadBotEvents {
 
         this.reconnectTimeout = setTimeout(async () => {
             try {
-                const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
-                if (token && this.userId) {
-                    this.connectWebSocket(token);
+                if (this.userId) {
+                    this.connectWebSocket();
                 }
             } catch (error) {
                 console.error('Ошибка при переподключении:', error);
-                this.attemptReconnect();
+                await this.attemptReconnect();
             }
         }, delay);
     }

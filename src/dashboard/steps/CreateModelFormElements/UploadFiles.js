@@ -5,8 +5,8 @@ import Paragraph from "antd/lib/typography/Paragraph";
 import Upload from "antd/lib/upload/Upload";
 import {UploadOutlined, FilePdfOutlined, FileOutlined, DeleteOutlined, FileTextOutlined} from "@ant-design/icons";
 import {showWarningNotification, showErrorNotification, showNotification} from "../../hotification/showNotification";
-import {validateAndRefreshToken} from "../../../utils/easyUtils";
 import {useTranslation} from "react-i18next";
+import {authFetch} from "../../../utils/easyUtils";
 
 export const UploadFiles = ({onChange, toForm, initialFiles, modelData, setButtonDisabled, provider}) => {
     const {t} = useTranslation();
@@ -127,129 +127,120 @@ export const UploadFiles = ({onChange, toForm, initialFiles, modelData, setButto
         const uploadedFilesInfo = [];
 
         try {
-            const LAND_URL = (window.runtimeConfig && window.runtimeConfig.REACT_APP_LAND) || process.env.REACT_APP_LAND;
-            const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
-            if (token != null) {
-                // Загружаем каждый файл отдельным запросом
-                for (const file of fileList) {
-                    const formData = new FormData();
-                    formData.append('file', file.originFileObj);
-                    formData.append('token', token); // token должен быть доступен в компоненте
-                    formData.append('purpose', 'assistants');
+            // Загружаем каждый файл отдельным запросом, используя authFetch
+            for (const file of fileList) {
+                const formData = new FormData();
+                formData.append('file', file.originFileObj);
+                formData.append('purpose', 'assistants');
 
+                try {
+                    const providerParam = provider ? `?provider=${encodeURIComponent(provider)}` : '';
+                    setButtonDisabled(true);
+                    const response = await authFetch(`/v1/model/upload-file${providerParam}`, {
+                        method: 'POST',
+                        body: formData,
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(t("uploadFilesErrorUploadStatus", {status: response.status}) || `Ошибка загрузки: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    if (result.id) {
+                        uploadedFilesInfo.push({name: file.name, id: result.id});
+                        successFiles.push(file.name);
+                    }
+                } catch (error) {
+                    console.error(`Ошибка при загрузке файла ${file.name}:`, error);
+                    failedFiles.push(file.name);
+                    setButtonDisabled(true);
+                }
+            }
+
+            if (successFiles.length > 0) {
+                // Если это добавление файлов к существующей модели
+                if (isAddingFiles && modelData) {
+                    // Добавляем файлы в модель через /mod-fileadd одним запросом
                     try {
-                        const providerParam = provider ? `&provider=${encodeURIComponent(provider)}` : '';
-                        const response = await fetch(`${LAND_URL}/model/upfile?token=${token}${providerParam}`, {
+                        const params = new URLSearchParams();
+                        if (provider) params.append('provider', provider);
+                        const url = `/v1/model/add-file${params.toString() ? `?${params.toString()}` : ''}`;
+
+                        const payload = {
+                            files: uploadedFilesInfo.map(fileInfo => ({fileid: fileInfo.id, filename: fileInfo.name}))
+                        };
+
+                        const addResponse = await authFetch(url, {
                             method: 'POST',
-                            body: formData,
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify(payload),
                         });
-                        setButtonDisabled(true);
-                        if (!response.ok) {
-                            throw new Error(t("uploadFilesErrorUploadStatus", {status: response.status}) || `Ошибка загрузки: ${response.status}`);
+
+                        if (!addResponse.ok) {
+                            throw new Error(t("uploadFilesErrorAddStatus", {status: addResponse.status}) || `Ошибка добавления файлов: ${addResponse.status}`);
                         }
 
-                        const result = await response.json();
-                        if (result.id) {
-                            uploadedFilesInfo.push({name: file.name, id: result.id});
-                            successFiles.push(file.name);
+                        const addResult = await addResponse.json();
+
+                        if (addResult.status === 'completed') {
+                            // Обновляем список существующих файлов только успешно добавленными
+                            const successfullyAdded = uploadedFilesInfo.filter(fileInfo =>
+                                addResult.success_files && addResult.success_files.includes(fileInfo.name)
+                            );
+
+                            if (successfullyAdded.length > 0) {
+                                const updatedFiles = [...existingFiles, ...successfullyAdded];
+                                setExistingFiles(updatedFiles);
+
+                                // Обновляем данные формы
+                                if (toForm) {
+                                    toForm.setFieldsValue({fileids: updatedFiles});
+                                }
+
+                                showNotification(t("uploadFilesAddedToModel") || "Файлы добавлены в модель:", `${addResult.success_count}`);
+                            }
+
+                            // Показываем предупреждения о неуспешных файлах, если есть
+                            if (addResult.failed_count > 0) {
+                                const failedNames = addResult.failed_files?.map(f => f.filename).join(', ') || (t("uploadFilesUnknownFiles") || 'неизвестные файлы');
+                                showErrorNotification(t("uploadFilesFailedToAdd") || "Не удалось добавить файлы:", failedNames);
+                            }
+                        } else {
+                            throw new Error('Неожиданный статус ответа');
                         }
                     } catch (error) {
-                        console.error(`Ошибка при загрузке файла ${file.name}:`, error);
-                        failedFiles.push(file.name);
-                        setButtonDisabled(true);
-                    }
-                    // Задержка между запросами для предотвращения перегрузки сервера
-                    await new Promise(resolve => setTimeout(resolve, 510));
-                }
-
-                if (successFiles.length > 0) {
-                    // Если это добавление файлов к существующей модели
-                    if (isAddingFiles && modelData) {
-                        // Добавляем файлы в модель через /mod-fileadd одним запросом
-                        try {
-                            const providerParam = provider ? `&provider=${encodeURIComponent(provider)}` : '';
-                            const addResponse = await fetch(`${LAND_URL}/model/addfile?token=${token}${providerParam}`, {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                },
-                                body: JSON.stringify({
-                                    files: uploadedFilesInfo.map(fileInfo => ({
-                                        fileid: fileInfo.id,
-                                        filename: fileInfo.name
-                                    }))
-                                }),
-                            });
-
-                            if (!addResponse.ok) {
-                                throw new Error(t("uploadFilesErrorAddStatus", {status: addResponse.status}) || `Ошибка добавления файлов: ${addResponse.status}`);
-                            }
-
-                            const addResult = await addResponse.json();
-
-                            if (addResult.status === 'completed') {
-                                // Обновляем список существующих файлов только успешно добавленными
-                                const successfullyAdded = uploadedFilesInfo.filter(fileInfo =>
-                                    addResult.success_files && addResult.success_files.includes(fileInfo.name)
-                                );
-
-                                if (successfullyAdded.length > 0) {
-                                    const updatedFiles = [...existingFiles, ...successfullyAdded];
-                                    setExistingFiles(updatedFiles);
-
-                                    // Обновляем данные формы
-                                    if (toForm) {
-                                        toForm.setFieldsValue({fileids: updatedFiles});
-                                    }
-
-                                    showNotification(t("uploadFilesAddedToModel") || "Файлы добавлены в модель:", `${addResult.success_count}`);
-                                }
-
-                                // Показываем предупреждения о неуспешных файлах, если есть
-                                if (addResult.failed_count > 0) {
-                                    const failedNames = addResult.failed_files?.map(f => f.filename).join(', ') || (t("uploadFilesUnknownFiles") || 'неизвестные файлы');
-                                    showErrorNotification(t("uploadFilesFailedToAdd") || "Не удалось добавить файлы:", failedNames);
-                                }
-                            } else {
-                                throw new Error('Неожиданный статус ответа');
-                            }
-                        } catch (error) {
-                            console.error('Ошибка при добавлении файлов в модель:', error);
-                            showErrorNotification(t("uploadFilesErrorAddingFiles") || 'Ошибка добавления файлов', error.message);
-                        }
-
-                        setIsAddingFiles(false);
-                    } else {
-                        // Обычная загрузка файлов для новой модели
-                        showNotification(t("uploadFilesSuccessCount") || "Успешно загружено файлов:", `${successFiles.length}`);
-
-                        // Сохраняем ID загруженных файлов
-                        if (toForm) {
-                            toForm.setFieldsValue({fileids: uploadedFilesInfo});
-                        }
-
-                        // Если функция onChange существует, вызываем её с ID файлов
-                        if (typeof onChange === "function") {
-                            onChange(uploadedFilesInfo);
-                        }
+                        console.error('Ошибка при добавлении файлов в модель:', error);
+                        showErrorNotification(t("uploadFilesErrorAddingFiles") || 'Ошибка добавления файлов', error.message);
                     }
 
-                    // Если все файлы загружены успешно, очищаем список
-                    if (failedFiles.length === 0) {
-                        setFileList([]);
-                        setSubmitEnabled(true);
+                    setIsAddingFiles(false);
+                } else {
+                    // Обычная загрузка файлов для новой модели
+                    showNotification(t("uploadFilesSuccessCount") || "Успешно загружено файлов:", `${successFiles.length}`);
+
+                    // Сохраняем ID загруженных файлов
+                    if (toForm) {
+                        toForm.setFieldsValue({fileids: uploadedFilesInfo});
                     }
-                    setUploaded(true);
+
+                    // Если функция onChange существует, вызываем её с ID файлов
+                    if (typeof onChange === "function") {
+                        onChange(uploadedFilesInfo);
+                    }
                 }
 
-                if (failedFiles.length > 0) {
-                    showErrorNotification(t("uploadFilesFailedUpload") || "Не удалось загрузить файлы:", `${failedFiles.join(', ')}`);
+                // Если все файлы загружены успешно, очищаем список
+                if (failedFiles.length === 0) {
+                    setFileList([]);
+                    setSubmitEnabled(true);
                 }
-            } else {
-                showErrorNotification(t("uploadFilesUploadError") || "Ошибка загрузки", t("uploadFilesErrorToken") || "Токен не обновлен!");
                 setUploaded(true);
-                setButtonDisabled(true)
-                return;
+            }
+
+            if (failedFiles.length > 0) {
+                showErrorNotification(t("uploadFilesFailedUpload") || "Не удалось загрузить файлы:", `${failedFiles.join(', ')}`);
             }
 
         } catch (error) {
@@ -264,50 +255,43 @@ export const UploadFiles = ({onChange, toForm, initialFiles, modelData, setButto
 
     const handleDeleteFile = async (fileToDelete) => {
         try {
-            const LAND_URL = (window.runtimeConfig && window.runtimeConfig.REACT_APP_LAND) || process.env.REACT_APP_LAND;
-            const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
-            if (token != null) {
-                // Отправляем запрос на удаление файла
-                const providerParam = provider ? `&provider=${encodeURIComponent(provider)}` : '';
-                const response = await fetch(`${LAND_URL}/model/delfile?token=${token}${providerParam}`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({file_id: fileToDelete.id, token}),
-                });
+            const params = new URLSearchParams();
+            if (provider) params.append('provider', provider);
+            const url = `/v1/model/delete-file${params.toString() ? `?${params.toString()}` : ''}`;
 
-                if (!response.ok) {
-                    throw new Error(t("uploadFilesErrorDeleteStatus", {status: response.status}) || `Ошибка удаления: ${response.status}`);
-                }
+            const response = await authFetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({file_id: fileToDelete.id}),
+            });
 
-                // Удаляем файл из списка существующих файлов
-                const updatedFiles = existingFiles.filter(file => file.id !== fileToDelete.id);
-                setExistingFiles(updatedFiles);
-
-                // Если файлов больше не осталось, выключаем Switch и обновляем форму
-                if (updatedFiles.length === 0) {
-                    setSwitchChecked(false);
-                    setUploaded(false);
-
-                    // Обновляем данные формы
-                    if (toForm) {
-                        toForm.setFieldsValue({
-                            fileids: [],
-                            search: false
-                        });
-                    }
-                } else {
-                    // Если файлы еще остались, обновляем список в форме
-                    if (toForm) {
-                        toForm.setFieldsValue({fileids: updatedFiles});
-                    }
-                }
-
-                showNotification(t("uploadFilesFileDeleted") || "Файл удалён", fileToDelete.name);
-            } else {
-                showErrorNotification(t("uploadFilesDeleteError") || "Ошибка удаления", t("uploadFilesErrorToken") || "Токен не обновлен!");
+            if (!response.ok) {
+                throw new Error(t("uploadFilesErrorDeleteStatus", {status: response.status}) || `Ошибка удаления: ${response.status}`);
             }
+
+            // Удаляем файл из списка существующих файлов
+            const updatedFiles = existingFiles.filter(file => file.id !== fileToDelete.id);
+            setExistingFiles(updatedFiles);
+
+            // Если файлов больше не осталось, выключаем Switch и обновляем форму
+            if (updatedFiles.length === 0) {
+                setSwitchChecked(false);
+                setUploaded(false);
+
+                // Обновляем данные формы
+                if (toForm) {
+                    toForm.setFieldsValue({fileids: [], search: false});
+                }
+            } else {
+                // Если файлы еще остались, обновляем список в форме
+                if (toForm) {
+                    toForm.setFieldsValue({fileids: updatedFiles});
+                }
+            }
+
+            showNotification(t("uploadFilesFileDeleted") || "Файл удалён", fileToDelete.name);
 
         } catch (error) {
             console.error('Ошибка при удалении файла:', error);
@@ -320,7 +304,7 @@ export const UploadFiles = ({onChange, toForm, initialFiles, modelData, setButto
     return (
         <>
             <div className="section-title">
-                <FileTextOutlined />
+                <FileTextOutlined/>
                 {t("uploadFilesTitle") || "Загрузка файлов"}
             </div>
             <div className="section-description">
@@ -330,7 +314,8 @@ export const UploadFiles = ({onChange, toForm, initialFiles, modelData, setButto
             <div className="step">
                     <span>
                         {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
-                        {t("uploadFilesUse") || "Использовать"} <a onClick={showModal}>{t("uploadFilesLink") || "загрузку файлов"}</a>&nbsp;
+                        {t("uploadFilesUse") || "Использовать"} <a
+                        onClick={showModal}>{t("uploadFilesLink") || "загрузку файлов"}</a>&nbsp;
                     </span>
                 <Tooltip
                     title={!modelData ? (t("operatorNeedCreateModel") || "Сначала нужно создать модель!") : ""}
@@ -372,7 +357,8 @@ export const UploadFiles = ({onChange, toForm, initialFiles, modelData, setButto
                     <div className="channel-item-content">
 
                         {!uploaded && existingFiles.length === 0
-                            ? <p>{t("uploadFilesMaxInfo") || "Можно выбрать до 20 файлов, размер одного файла не должен превышать 50 мб"}</p>
+                            ?
+                            <p>{t("uploadFilesMaxInfo") || "Можно выбрать до 20 файлов, размер одного файла не должен превышать 50 мб"}</p>
                             : uploaded && existingFiles.length === 0 && !isAddingFiles
                                 ? <p>{t("uploadFilesSuccessUpload") || "Файлы успешно загружены!"}</p>
                                 : null
@@ -381,7 +367,8 @@ export const UploadFiles = ({onChange, toForm, initialFiles, modelData, setButto
                         {/* Отображаем список ранее загруженных файлов */}
                         {existingFiles && existingFiles.length > 0 && (
                             <div style={{marginBottom: '12px'}}>
-                                <Typography.Text strong>{t("uploadFilesPreviouslyUploaded") || "Ранее загруженные файлы:"}</Typography.Text>
+                                <Typography.Text
+                                    strong>{t("uploadFilesPreviouslyUploaded") || "Ранее загруженные файлы:"}</Typography.Text>
                                 <List
                                     size="small"
                                     dataSource={existingFiles}
@@ -441,7 +428,8 @@ export const UploadFiles = ({onChange, toForm, initialFiles, modelData, setButto
                                 fileList={fileList}
                                 onChange={handleFilesUpload}
                             >
-                                <Button icon={<UploadOutlined/>}>{t("uploadFilesSelectFiles2") || "Выбрать файлы"}</Button>
+                                <Button
+                                    icon={<UploadOutlined/>}>{t("uploadFilesSelectFiles2") || "Выбрать файлы"}</Button>
                             </Upload>
                         )
                         }
@@ -484,7 +472,21 @@ export const UploadFiles = ({onChange, toForm, initialFiles, modelData, setButto
                         color: 'var(--text-color)',
                     }}
                 >
-                    {t("uploadFilesModalWhatIsText") || "Передача файлов Агенту служит очень практичной цели — это позволяет обогатить разговор конкретной, проверенной информацией из ваших документов. Вот зачем это может понадобиться:\n📚 Контекст из ваших данных\nФайлы дают возможность ориентироваться не только на общие знания, но и на специфику вашего контента — будь то PDF с технической документацией, Markdown с инструкциями, или текстовая выгрузка из БД.\n🔍 Поиск и анализ\nПозволит Агенту:\n- Извлекать ключевую информацию из длинных файлов\n- Отвечать на вопросы вроде \"что говорит документ по этому поводу\"\n- Генерировать резюме или выделять главные моменты\n- Сравнивать содержимое нескольких файлов, если вы их загрузите\n💡 Автоматизация и ускорение работы\nПередавая файлы, вы экономите время на объяснения. Вместо того чтобы копировать-вставлять текст вручную, вы просто загружаете файл, а Агент понимает, как с ним работать.\n🤖 Примеры применений\n- Загрузили .docx с отчётом → Агент делает краткое резюме и в своих ответах ссылается на него\n- Передали .py скрипт → Агент анализирует что делает код и отвечает на вопросы по нему\n- Передали .json файл настроек → Агент использует эти параметры в своих рассуждениях"}
+                    {t("uploadFilesModalWhatIsText") || `Передача файлов Агенту служит очень практичной цели — это позволяет обогатить разговор конкретной, проверенной информацией из ваших документов. Вот зачем это может понадобиться:
+📚 Контекст из ваших данных
+Файлы дают возможность ориентироваться не только на общие знания, но и на специфику вашего контента — будь то PDF с технической документацией, Markdown с инструкциями, или текстовая выгрузка из БД.
+🔍 Поиск и анализ
+Позволит Агенту:
+- Извлекать ключевую информацию из длинных файлов
+- Отвечать на вопросы вроде "что говорит документ по этому поводу"
+- Генерировать резюме или выделять главные моменты
+- Сравнивать содержимое нескольких файлов, если вы их загрузите
+💡 Автоматизация и ускорение работы
+Передавая файлы, вы экономите время на объяснения. Вместо того чтобы копировать-вставлять текст вручную, вы просто загружаете файл, а Агент понимает, как с ним работать.
+🤖 Примеры применений
+- Загрузили .docx с отчётом → Агент делает краткое резюме и в своих ответах ссылается на него
+- Передали .py скрипт → Агент анализирует что делает код и отвечает на вопросы по нему
+- Передали .json файл настроек → Агент использует эти параметры в своих рассуждениях`}
                 </Paragraph>
                 <Title
                     style={{
@@ -502,7 +504,26 @@ export const UploadFiles = ({onChange, toForm, initialFiles, modelData, setButto
                         color: 'var(--text-color)',
                     }}
                 >
-                    {t("uploadFilesModalFormatsText") || "📄 Документы и текстовые файлы\n- .txt — обычный текст\n- .md — Markdown\n- .pdf — PDF\n- .doc, .docx — Microsoft Word\n- .pptx — Microsoft PowerPoint\n- .html — HTML-файлы\n💻 Код и скрипты\n- .py — Python\n- .js — JavaScript\n- .ts — TypeScript\n- .java — Java\n- .cpp, .c, .cs — C++, C, C#\n- .rb — Ruby\n- .php — PHP\n- .sh — Shell скрипты\n- .tex — LaTeX\n- .css — CSS\n🧠 Форматы данных\n- .json — JSON"}
+                    {t("uploadFilesModalFormatsText") || `📄 Документы и текстовые файлы
+- .txt — обычный текст
+- .md — Markdown
+- .pdf — PDF
+- .doc, .docx — Microsoft Word
+- .pptx — Microsoft PowerPoint
+- .html — HTML-файлы
+💻 Код и скрипты
+- .py — Python
+- .js — JavaScript
+- .ts — TypeScript
+- .java — Java
+- .cpp, .c, .cs — C++, C, C#
+- .rb — Ruby
+- .php — PHP
+- .sh — Shell скрипты
+- .tex — LaTeX
+- .css — CSS
+🧠 Форматы данных
+- .json — JSON`}
                 </Paragraph>
             </Modal>
         </>

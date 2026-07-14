@@ -14,10 +14,9 @@ export const DashboardHeader = ({ setSiderCollapsed, siderCollapsed }) => {
     const {logout} = useAuth();
     const navigate = useNavigate();
 
-    const handleExit = () => {
-        localStorage.removeItem("authToken");
-        logout();
-        navigate("/");
+    const handleExit = async () => {
+        await logout();
+        navigate("/", { state: { loggedOut: true } });
     };
 
     // Функция для показа/скрытия меню

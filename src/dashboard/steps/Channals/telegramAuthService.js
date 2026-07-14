@@ -1,4 +1,4 @@
-import {validateAndRefreshToken} from "../../../utils/easyUtils";
+import { getAuthToken } from "../../../utils/easyUtils";
 
 export class TelegramAuthService {
     constructor(t) {
@@ -15,12 +15,12 @@ export class TelegramAuthService {
     }
 
     setCallbacks(callbacks) {
-        this.callbacks = { ...this.callbacks, ...callbacks };
+        this.callbacks = {...this.callbacks, ...callbacks};
     }
 
     async startAuthentication(params) {
         try {
-            const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
+            const token = getAuthToken();
             if (token) {
                 // Сохраняем параметры авторизации для отправки через WebSocket
                 this.authParams = {
@@ -32,7 +32,9 @@ export class TelegramAuthService {
                 this.connectWebSocket(token);
                 return true;
             } else {
-                this.callbacks.onUpdateToken();
+                if (this.callbacks.onUpdateToken) {
+                    this.callbacks.onUpdateToken();
+                }
                 return false;
             }
         } catch (error) {
@@ -44,11 +46,10 @@ export class TelegramAuthService {
     }
 
     connectWebSocket(token) {
-        const LAND_WSS = (window.runtimeConfig && window.runtimeConfig.REACT_APP_LAND_WSS) || process.env.REACT_APP_LAND_WSS;
 
-        const wsUrl = `${LAND_WSS}/ws/tguser?token=${token}`;
+        const wsUrl = `/v1/ws/tguser`;
 
-        this.socket = new WebSocket(wsUrl);
+        this.socket = new WebSocket(wsUrl, [token]);
 
         this.socket.onopen = () => {
         };

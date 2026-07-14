@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from "react";
 import {useTranslation} from 'react-i18next';
-import {validateAndRefreshToken} from "../../../../utils/easyUtils";
 import {readServiceAccessTime, saveServiceAccessTime} from "./leadUtils";
+import { getAuthToken, refreshToken } from "../../../../utils/easyUtils";
 import {
     Card,
     Button,
@@ -42,6 +42,7 @@ export function LeadSchedule() {
     const { t } = useTranslation();
     const [accessTime, setAccessTime] = useState({});
     const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
     const [hasChanges, setHasChanges] = useState(false);
     const [isWorkdaysModalOpen, setIsWorkdaysModalOpen] = useState(false);
     const [isAllDaysModalOpen, setIsAllDaysModalOpen] = useState(false);
@@ -60,16 +61,9 @@ export function LeadSchedule() {
     ];
 
     useEffect(() => {
-        const loadAccessTime = async () => {
-            const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
-            if (!token) {
-                message.error(t('authError') || 'Ошибка аутентификации');
-                setAccessTime({});
-                setLoading(false);
-                return;
-            }
+        const fetchAccessTime = async () => {
             try {
-                const data = await readServiceAccessTime(token);
+                const data = await readServiceAccessTime();
                 setAccessTime(data || {});
             } catch (e) {
                 message.error(t('scheduleLoadError') || 'Ошибка загрузки расписания');
@@ -79,7 +73,7 @@ export function LeadSchedule() {
             }
         };
 
-        loadAccessTime();
+        fetchAccessTime();
     }, [t]);
 
     const handleDayToggle = (day, checked) => {
@@ -166,17 +160,11 @@ export function LeadSchedule() {
         message.success(t('scheduleCleared') || 'Расписание очищено');
     };
 
-    const handleSaveSchedule = async () => {
-        const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
-        if (!token) {
-            message.error(t('authError') || 'Ошибка аутентификации');
-            setAccessTime({});
-            setLoading(false);
-            return;
-        }
+    const handleSave = async () => {
+        setSaving(true);
         try {
-        const resp = await saveServiceAccessTime(token, accessTime);
-            if (resp) {
+            const success = await saveServiceAccessTime(accessTime);
+            if (success) {
                 setHasChanges(false);
                 showNotification(t('scheduleSaveSuccess') || 'Расписание сохранено');
             } else {
@@ -186,6 +174,8 @@ export function LeadSchedule() {
         } catch (e) {
             setHasChanges(true);
             showErrorNotification(t('scheduleSaveError') || 'Ошибка при сохранении расписания');
+        } finally {
+            setSaving(false);
         }
     };
 
@@ -371,8 +361,9 @@ export function LeadSchedule() {
                                 type="primary"
                                 size="large"
                                 icon={<SaveOutlined />}
-                                onClick={handleSaveSchedule}
+                                onClick={handleSave}
                                 disabled={!hasChanges}
+                                loading={saving}
                                 style={{ color: hasChanges ? 'black' : undefined }}
                             >
                                 {t('saveSchedule') || 'Сохранить расписание'}

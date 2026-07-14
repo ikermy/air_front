@@ -1,4 +1,4 @@
-﻿import React, {useEffect, useRef, useState} from "react";
+import React, {useEffect, useRef, useState} from "react";
 import {
     Button,
     FloatButton,
@@ -29,7 +29,6 @@ import {LeadBots} from "./LeadHunter/leadBots";
 import {LeadEvents} from "./LeadHunter/leadEvents";
 import {LeadProxyData} from "./LeadHunter/leadProxyData";
 import {checkServiceInProcess, stopService} from "./LeadHunter/leadUtils";
-import {validateAndRefreshToken} from "../../../utils/easyUtils";
 import {showNotification, showErrorNotification} from "../../hotification/showNotification";
 import {getTourPanelState, setTourPanelState} from "../../../utils/cookieUtils";
 import {LeadStartService} from "./LeadHunter/leadStartService";
@@ -87,16 +86,10 @@ export function LeadHunterService({ onServiceDeleted }) {
     // Проверка статуса сервиса при загрузке компонента
     useEffect(() => {
         const checkStatus = async () => {
+            if (typeof window === 'undefined') return;
             setIsCheckingStatus(true);
             try {
-                const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
-                if (!token) {
-                    message.error(t("authError") || 'Ошибка аутентификации');
-                    setIsCheckingStatus(false);
-                    return;
-                }
-
-                const isRunning = await checkServiceInProcess(token);
+                const isRunning = await checkServiceInProcess();
                 setIsServiceRunning(isRunning);
             } catch (error) {
                 console.error(t("serviceCheckError") || 'Ошибка при проверке статуса сервиса:', error);
@@ -306,14 +299,8 @@ export function LeadHunterService({ onServiceDeleted }) {
     const handleStopConfirm = async () => {
         setIsActionLoading(true); // Блокируем кнопку
         try {
-            const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
-            if (!token) {
-                message.error(t("authError") || 'Ошибка аутентификации');
-                return;
-            }
-
             // Вызов API для остановки сервиса
-            const response = await stopService(token);
+            const response = await stopService();
 
             if (response.success) {
                 // После успешной остановки обновляем состояние
@@ -352,25 +339,19 @@ export function LeadHunterService({ onServiceDeleted }) {
     // Обработчик подтверждения удаления
     const handleDeleteConfirm = async () => {
         try {
-            const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
-            if (!token) {
-                showErrorNotification(
-                    t("error") || 'Ошибка',
-                    t("authError") || 'Ошибка аутентификации'
-                );
+            const response = await DelService("lead-haunter");
+            if (response.ok) {
                 setIsDeleteModalOpen(false);
-                return;
-            }
-
-            await DelService(token, "lead-haunter");
-            setIsDeleteModalOpen(false);
-            showNotification(
-                t("success") || 'Успешно',
-                t("serviceDeleted") || 'Сервис успешно удалён'
-            );
-            // Вызываем callback для возврата к списку сервисов
-            if (onServiceDeleted) {
-                onServiceDeleted();
+                showNotification(
+                    t("success") || 'Успешно',
+                    t("serviceDeleted") || 'Сервис успешно удалён'
+                );
+                // Вызываем callback для возврата к списку сервисов
+                if (onServiceDeleted) {
+                    onServiceDeleted();
+                }
+            } else {
+                throw new Error("Failed to delete service");
             }
         } catch (error) {
             setIsDeleteModalOpen(false);

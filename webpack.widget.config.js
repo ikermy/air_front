@@ -6,7 +6,20 @@ module.exports = {
     entry: './src/widget/widget-entrypoint.js', // Используем полноценную React версию
     output: {
         path: path.resolve(__dirname, 'build/widget'),
-        filename: 'marusya-widget.js'
+        filename: 'marusya-widget.js',
+        chunkFilename: '[id].[contenthash:8].chunk.js', // Имена для динамических чанков
+        publicPath: '/widget/' // Путь для загрузки чанков
+    },
+    optimization: {
+        splitChunks: {
+            chunks: 'async', // Только для динамически загружаемых чанков (lazy)
+            maxAsyncRequests: 30,
+            minSize: 20000,
+            maxSize: 244000,
+        },
+        minimize: true,
+        usedExports: true,
+        sideEffects: true,
     },
     module: {
         rules: [

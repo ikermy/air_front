@@ -1,38 +1,13 @@
-import React, { useState } from 'react';
-import { Card, Button, Badge, Spin, Tooltip } from 'antd';
-import { CheckCircleOutlined, PlusOutlined, RocketOutlined } from '@ant-design/icons';
+import React, { useState, useEffect } from 'react';
+import { Card, Button, Badge, Spin, Tooltip, Alert } from 'antd';
+import { CheckCircleOutlined, PlusOutlined, RocketOutlined, KeyOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import './ModelSelector.css';
-import OpenAILogo from '../../../assets/img/openai-logo.svg';
-import MistralAILogo from '../../../assets/img/mistral-ai-logo.png';
-import GeminiLogo from '../../../assets/img/gemini-logo.png';
+import { fetchProvidersAvailability } from './providersUtils';
+import { showErrorNotification } from '../../hotification/showNotification';
+import { AI_PROVIDERS } from './providersConfig';
 
-const PROVIDERS = [
-    {
-        key: 'openai',
-        name: 'OpenAI',
-        logo: OpenAILogo,
-        color: '#10a37f',
-        description: 'ChatGPT, GPT-4, GPT-5',
-        disabled: false
-    },
-    {
-        key: 'mistral',
-        name: 'MistralAI',
-        logo: MistralAILogo,
-        color: '#f88500',
-        description: 'Voxtral, Magistral, Mistral',
-        disabled: false
-    },
-    {
-        key: 'google',
-        name: 'Gemini',
-        logo: GeminiLogo,
-        color: '#1092ff',
-        description: 'Gemini 3 Pro, Nano Banana',
-        disabled: false
-    }
-];
+const PROVIDERS = AI_PROVIDERS;
 
 export const ModelSelector = ({
     allModelsData,
@@ -41,10 +16,45 @@ export const ModelSelector = ({
     onSelectProvider,
     onSetActive,
     loading,
-    hasUnsavedChanges = false
+    hasUnsavedChanges = false,
+    setSelectedMenu
 }) => {
     const { t } = useTranslation();
     const [activatingProvider, setActivatingProvider] = useState(null);
+    const [availableProviders, setAvailableProviders] = useState(null);
+    const [unavailableProviders, setUnavailableProviders] = useState([]);
+    const [providersLoading, setProvidersLoading] = useState(true);
+
+    useEffect(() => {
+        let cancelled = false;
+
+        const loadProviders = async () => {
+            setProvidersLoading(true);
+
+            const result = await fetchProvidersAvailability();
+
+            if (cancelled) return;
+
+            if (result.success && result.data) {
+                setAvailableProviders(result.data.available || []);
+                setUnavailableProviders(result.data.unavailable || []);
+            } else {
+                setAvailableProviders([]);
+                setUnavailableProviders([]);
+                showErrorNotification(
+                    t("modelProvidersLoadError") || "Ошибка загрузки провайдеров",
+                    result.error || t("modelProvidersLoadErrorDesc") || "Не удалось получить список доступных провайдеров"
+                );
+            }
+            setProvidersLoading(false);
+        };
+
+        void loadProviders();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [t]);
 
     const handleSetActive = async (providerKey) => {
         setActivatingProvider(providerKey);
@@ -57,6 +67,12 @@ export const ModelSelector = ({
         }
     };
 
+    const visibleProviders = availableProviders === null
+        ? PROVIDERS
+        : PROVIDERS.filter(p => availableProviders.includes(p.key));
+
+    const unavailableProviderObjects = PROVIDERS.filter(p => unavailableProviders.includes(p.key));
+
     return (
         <div className="model-selector-container">
             <div className="model-selector-header">
@@ -68,134 +84,136 @@ export const ModelSelector = ({
                 </p>
             </div>
 
-            <div className="model-selector-grid">
-                {PROVIDERS.map((provider) => {
-                    const modelData = allModelsData?.[provider.key];
-                    const isActive = activeProvider === provider.key;
-                    const isSelected = selectedProvider === provider.key;
-                    const hasModel = !!modelData;
-                    const isActivating = activatingProvider === provider.key;
-                    const isDisabled = provider.disabled;
+            <Spin spinning={providersLoading}>
+                <div className="model-selector-grid">
+                    {visibleProviders.map((provider) => {
+                        const modelData = allModelsData?.[provider.key];
+                        const isActive = activeProvider === provider.key;
+                        const isSelected = selectedProvider === provider.key;
+                        const hasModel = !!modelData;
+                        const isActivating = activatingProvider === provider.key;
+                        const isDisabled = provider.disabled;
 
-                    return (
-                        <Card
-                            key={provider.key}
-                            className={`provider-card ${isSelected ? 'selected' : ''} ${isActive ? 'active' : ''} ${isDisabled ? 'disabled' : ''}`}
-                            style={{
-                                borderColor: isSelected ? provider.color : undefined,
-                                opacity: (loading && !isActivating) || isDisabled ? 0.6 : 1
-                            }}
-                            hoverable={!loading && !isDisabled}
-                            onClick={() => !isDisabled && hasModel && !loading && onSelectProvider(provider.key)}
-                        >
-                            <Spin spinning={isActivating} tip={t("modelActivating") || "Активация..."}>
-                                {/*...existing code...*/}
-                                {/*    <Badge.Ribbon*/}
-                                {/*        text="Недоступно"*/}
-                                {/*        color="gray"*/}
-                                {/*        className="disabled-ribbon"*/}
-                                {/*    />*/}
-                                {/*)}*/}
-
-                                {!isDisabled && isSelected && hasUnsavedChanges && (
-                                    <Badge.Ribbon
-                                        text={t("modelUnsaved") || "Не сохранено"}
-                                        color="orange"
-                                        className="unsaved-ribbon"
-                                    />
-                                )}
-
-                                {/*{!isDisabled && isActive && !(isSelected && hasUnsavedChanges) && (*/}
-                                {/*    <Badge.Ribbon*/}
-                                {/*        text="Активная"*/}
-                                {/*        color={provider.color}*/}
-                                {/*        className="active-ribbon"*/}
-                                {/*    />*/}
-                                {/*)}*/}
-
-                                <div className="provider-card-content">
-                                    <div className="provider-logo-container">
-                                        <img
-                                            src={provider.logo}
-                                            alt={provider.name}
-                                            className="provider-logo"
-                                            style={{ filter: (!hasModel || isDisabled) ? 'grayscale(100%) opacity(0.3)' : 'none' }}
+                        return (
+                            <Card
+                                key={provider.key}
+                                className={`provider-card ${provider.key} ${isSelected ? 'selected' : ''} ${isActive ? 'active' : ''} ${isDisabled ? 'disabled' : ''}`}
+                                style={{
+                                    borderColor: isSelected ? provider.color : undefined,
+                                    opacity: (loading && !isActivating) || isDisabled ? 0.6 : 1
+                                }}
+                                hoverable={!loading && !isDisabled}
+                                onClick={() => !isDisabled && hasModel && !loading && onSelectProvider(provider.key)}
+                            >
+                                <Spin spinning={isActivating} tip={t("modelActivating") || "Активация..."}>
+                                    {!isDisabled && isSelected && hasUnsavedChanges && (
+                                        <Badge.Ribbon
+                                            text={t("modelUnsaved") || "Не сохранено"}
+                                            color="orange"
+                                            className="unsaved-ribbon"
                                         />
-                                    </div>
-
-                                    <div className="provider-info">
-                                        <h4 className="provider-name" style={{ color: provider.color }}>
-                                            {provider.name}
-                                        </h4>
-                                        <p className="provider-description">
-                                            {provider.description}
-                                        </p>
-                                    </div>
-
-                                    {hasModel && (
-                                        <div className="provider-model-name">
-                                            <Tooltip title={t("modelNameTooltip") || "Название модели"}>
-                                                <span className="model-name-text">
-                                                    {modelData.name || (t("modelNoName") || "Без названия")}
-                                                </span>
-                                            </Tooltip>
-                                        </div>
                                     )}
 
-                                    <div className="provider-actions">
-                                        {isDisabled ? (
-                                            <Button
-                                                type="default"
-                                                block
-                                                disabled
-                                                style={{ opacity: 0.5 }}
-                                            >
-                                                {t("modelProviderDisabled") || "Провайдер отключен"}
-                                            </Button>
-                                        ) : !hasModel ? (
-                                            <Button
-                                                style={{ color : "var(--text-color)", borderColor: provider.color }}
-                                                type="dashed"
-                                                icon={<PlusOutlined />}
-                                                block
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    !loading && onSelectProvider(provider.key);
-                                                }}
-                                                disabled={loading}
-                                            >
-                                                {t("modelCreateButton") || "Создать модель"}
-                                            </Button>
-                                        ) : isActive ? (
-                                            <Button
-                                                type="primary"
-                                                icon={<CheckCircleOutlined />}
-                                                block
-                                                disabled
-                                                style={{ backgroundColor: provider.color, borderColor: provider.color }}
-                                            >
-                                                {t("modelActiveButton") || "Активная модель"}
-                                            </Button>
-                                        ) : (
-                                            <Button
-                                                type="default"
-                                                block
-                                                onClick={(e) => {
-                                                    e.stopPropagation();
-                                                    handleSetActive(provider.key);
-                                                }}
-                                                disabled={loading || isActivating}
-                                            >
-                                                {t("modelActivateButton") || "Сделать активной"}
-                                            </Button>
+                                    <div className="provider-card-content">
+                                        <div className="provider-logo-container">
+                                            <img
+                                                src={provider.logo}
+                                                alt={provider.name}
+                                                className="provider-logo"
+                                                style={{ filter: (!hasModel || isDisabled) ? 'grayscale(100%) opacity(0.3)' : 'none' }}
+                                            />
+                                        </div>
+
+                                        <div className="provider-info">
+                                            <h4 className="provider-name" style={{ color: provider.color }}>
+                                                {provider.name}
+                                            </h4>
+                                            <p className="provider-description">
+                                                {provider.description}
+                                            </p>
+                                        </div>
+
+                                        {hasModel && (
+                                            <div className="provider-model-name">
+                                                <Tooltip title={t("modelNameTooltip") || "Название модели"}>
+                                                    <span className="model-name-text">
+                                                        {modelData.name || (t("modelNoName") || "Без названия")}
+                                                    </span>
+                                                </Tooltip>
+                                            </div>
                                         )}
+
+                                        <div className="provider-actions">
+                                            {isDisabled ? (
+                                                <Button type="default" block disabled style={{ opacity: 0.5 }}>
+                                                    {t("modelProviderDisabled") || "Провайдер отключен"}
+                                                </Button>
+                                            ) : !hasModel ? (
+                                                <Button
+                                                    style={{ color: "var(--text-color)", borderColor: provider.color }}
+                                                    type="dashed"
+                                                    icon={<PlusOutlined />}
+                                                    block
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        !loading && onSelectProvider(provider.key);
+                                                    }}
+                                                    disabled={loading}
+                                                >
+                                                    {t("modelCreateButton") || "Создать модель"}
+                                                </Button>
+                                            ) : isActive ? (
+                                                <Button
+                                                    type="primary"
+                                                    icon={<CheckCircleOutlined />}
+                                                    block
+                                                    disabled
+                                                    style={{ backgroundColor: provider.color, borderColor: provider.color }}
+                                                >
+                                                    {t("modelActiveButton") || "Активная модель"}
+                                                </Button>
+                                            ) : (
+                                                <Button
+                                                    type="default"
+                                                    block
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleSetActive(provider.key);
+                                                    }}
+                                                    disabled={loading || isActivating}
+                                                >
+                                                    {t("modelActivateButton") || "Сделать активной"}
+                                                </Button>
+                                            )}
+                                        </div>
                                     </div>
-                                </div>
-                            </Spin>
-                        </Card>
-                    );
-                })}
-            </div>
+                                </Spin>
+                            </Card>
+                        );
+                    })}
+                </div>
+
+                {unavailableProviderObjects.length > 0 && (
+                    <div className="unavailable-providers-section">
+                        <Alert
+                            type="warning"
+                            icon={<KeyOutlined />}
+                            showIcon
+                            message={
+                                <span>
+                                    {t("modelUnavailableProviders") || "Провайдеры без API-ключа"}&nbsp;—&nbsp;
+                                    <strong>{unavailableProviderObjects.map(p => p.name).join(', ')}</strong>.&nbsp;
+                                    {t("modelSetApiKeyHint") || "Для их использования необходимо"}&nbsp;
+                                    {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
+                                    <a onClick={() => setSelectedMenu('user')} style={{ cursor: 'pointer' }}>
+                                        {t("modelSetApiKeyLink") || "установить API Key"}
+                                    </a>
+                                </span>
+                            }
+                        />
+                    </div>
+                )}
+            </Spin>
         </div>
     );
 };

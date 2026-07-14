@@ -1,5 +1,4 @@
-import React, {useEffect, useState, useRef} from "react";
-import {validateAndRefreshToken} from "../../../utils/easyUtils";
+import React, {useEffect, useState, useRef, useCallback} from "react";
 import {showErrorNotification, showNotification} from "../../hotification/showNotification";
 import {Button, Slider, Table, Modal, Card, Row, Col, Typography, Space, Spin, message, Progress, QRCode, Tour, FloatButton} from "antd";
 import {
@@ -66,10 +65,9 @@ export function Billing({refreshUserData}) {
     const paymentButtonRef = useRef(null);
     const historyTableRef = useRef(null);
 
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         try {
-            const token = await validateAndRefreshToken(localStorage.getItem("authToken"))
-            const data = await getUserTariff(token)
+            const data = await getUserTariff()
 
             if (data.status === "error") {
                 showErrorNotification(t("billingErrorPaymentData") || "Ошибка получения данных оплаты",
@@ -93,28 +91,18 @@ export function Billing({refreshUserData}) {
         } finally {
             setLoading(false);
         }
-    };
+    }, [t]);
 
     useEffect(() => {
-        const initializeComponent = async () => {
-            try {
-                // Сначала проверяем доступность сервиса оплаты
-                await checkPayAvailability();
-                setIsPaymentServiceAvailable(true);
-                await fetchData();
-            } catch (error) {
-                console.error('Ошибка инициализации компонента:', error);
-                setIsPaymentServiceAvailable(false);
-                showErrorNotification(t("billingErrorPaymentSystem") || "Ошибка системы оплаты", error.message);
-                setLoading(false);
-            }
+        const fetchTariff = async () => {
+            await fetchData();
         };
 
-        initializeComponent();
-    }, []);
+        fetchTariff();
+    }, [fetchData]);
 
     useEffect(() => {
-        const loadCurrencies = async () => {
+        const fetchCurrenciesData = async () => {
             try {
                 await fetchCurrencies(setLoadingCurrencies, setCurrencies);
             } catch (error) {
@@ -123,8 +111,8 @@ export function Billing({refreshUserData}) {
             }
         };
 
-        loadCurrencies();
-    }, []);
+        fetchCurrenciesData();
+    }, [t]);
 
     const onChangePaymentSlider = (newValue) => {
         const newValues = {...payment, value: newValue};
@@ -229,8 +217,7 @@ export function Billing({refreshUserData}) {
                 currency,
                 network,
                 getCurrentPrice,
-                checkPayAvailability,
-                validateAndRefreshToken
+                checkPayAvailability
             );
 
             // Обрабатываем ответ от /create-payment

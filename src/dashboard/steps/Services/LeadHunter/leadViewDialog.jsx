@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Modal, Button, Spin, message } from 'antd';
 import { MessageOutlined, DownloadOutlined } from '@ant-design/icons';
-import { validateAndRefreshToken } from '../../../../utils/easyUtils';
 import { readServiceContactDialogData } from './leadUtils';
 import { showErrorNotification } from '../../../hotification/showNotification';
 import MarkdownRenderer from '../../../../utils/MarkdownRenderer';
@@ -18,15 +17,8 @@ export function LeadViewDialog({ contact, visible, onClose }) {
         setHistoryLoading(true);
         setHistoryMessages([]);
 
-        const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
-        if (!token) {
-            message.error('Ошибка аутентификации');
-            setHistoryLoading(false);
-            return;
-        }
-
         try {
-            const data = await readServiceContactDialogData(token, contact.Contact);
+            const data = await readServiceContactDialogData(contact.Contact);
 
             console.log('LeadViewDialog: raw dialog data:', data);
 

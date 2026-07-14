@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button, Modal } from 'antd';
 import { restartContainer } from '../utils/restartContainer';
-import { showNotification, showErrorNotification, showWarningNotification } from '../dashboard/hotification/showNotification';
+import { showNotification, showErrorNotification } from '../dashboard/hotification/showNotification';
 
 const RestartServerButton = () => {
     const [isModalVisible, setIsModalVisible] = useState(false);
@@ -18,19 +18,15 @@ const RestartServerButton = () => {
     const handleConfirmRestart = async () => {
         try {
             setIsRestarting(true);
-            const token = localStorage.getItem("authToken");
 
-            if (!token) {
-                showWarningNotification("Ошибка авторизации", "Необходимо авторизоваться");
-                setIsModalVisible(false);
-                setIsRestarting(false);
-                return;
+            const response = await restartContainer();
+
+            if (!response.ok) {
+                throw new Error(`Ошибка сервера: ${response.status}`);
             }
 
-            await restartContainer(token);
-
-            setIsModalVisible(false);
             setIsRestarting(false);
+            setIsModalVisible(false);
 
             showNotification(
                 "Перезапуск сервера",

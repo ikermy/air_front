@@ -1,0 +1,90 @@
+/* Универсальные стили для страниц OAuth callback */
+
+.oauth-callback-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px;
+}
+
+.oauth-callback-container .ant-result {
+  background: white;
+  border-radius: 12px;
+  padding: 40px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+  max-width: 500px;
+  width: 100%;
+}
+
+.oauth-callback-container .ant-result-icon {
+  margin-bottom: 24px;
+}
+
+.oauth-callback-container .ant-result-icon svg {
+  font-size: 72px;
+}
+
+.oauth-callback-container .ant-result-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #262626;
+  margin-bottom: 12px;
+}
+
+.oauth-callback-container .ant-result-subtitle {
+  font-size: 14px;
+  color: #595959;
+  margin-bottom: 24px;
+}
+
+.oauth-callback-container .ant-result-extra {
+  margin-top: 24px;
+}
+
+.oauth-callback-container .ant-spin {
+  color: #1890ff;
+}
+
+/* Анимация появления */
+.oauth-callback-container .ant-result {
+  animation: fadeInUp 0.5s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Успешное состояние */
+.oauth-callback-container .ant-result-success .ant-result-icon > .anticon {
+  color: #52c41a !important;
+}
+
+/* Ошибка */
+.oauth-callback-container .ant-result-error .ant-result-icon > .anticon {
+  color: #ff4d4f !important;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .oauth-callback-container .ant-result {
+    padding: 24px;
+  }
+
+  .oauth-callback-container .ant-result-title {
+    font-size: 20px;
+  }
+
+  .oauth-callback-container .ant-result-icon svg {
+    font-size: 56px;
+  }
+}
+

@@ -4,7 +4,7 @@ import {MdOutlinePersonSearch} from "react-icons/md";
 import {checkServiceAvailable} from "../Services/LeadHunter/leadUtils";
 import {useTranslation} from "react-i18next";
 
-export const LeadHaunter = ({initial, value, onChange, token}) => {
+export const LeadHaunter = ({initial, value, onChange}) => {
     const {Title, Paragraph} = Typography;
     const {t} = useTranslation();
     const [isInfoOpen, setIsInfoOpen] = useState(false);
@@ -30,24 +30,20 @@ export const LeadHaunter = ({initial, value, onChange, token}) => {
 
     // Проверка доступности сервиса LeadHaunter
     const checkServiceAvailability = useCallback(async () => {
-        if (!token) {
-            setIsServiceAvailable(false);
-            return;
-        }
         try {
-            const available = await checkServiceAvailable(token);
+            const available = await checkServiceAvailable();
             setIsServiceAvailable(available);
         } catch (e) {
             console.error('Ошибка проверки доступности сервиса LeadHaunter:', e);
             setIsServiceAvailable(false);
         }
-    }, [token]);
+    }, []);
 
-    // Проверка доступности сервиса с задержкой 500 мс
+    // Проверка доступности сервиса с задержкой 250 мс
     useEffect(() => {
         const timer = setTimeout(() => {
             checkServiceAvailability();
-        }, 500);
+        }, 250);
         return () => clearTimeout(timer);
     }, [checkServiceAvailability]);
 
@@ -158,4 +154,3 @@ export const LeadHaunter = ({initial, value, onChange, token}) => {
         </>
     );
 };
-

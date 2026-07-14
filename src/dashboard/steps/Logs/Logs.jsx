@@ -1,7 +1,7 @@
 import React, {useState, useEffect, useRef} from 'react';
 import {Spin, Button, Tour, FloatButton, Typography} from 'antd';
 import {FileTextOutlined, QuestionCircleOutlined, PlayCircleOutlined} from '@ant-design/icons';
-import {validateAndRefreshToken} from "../../../utils/easyUtils";
+import {getAuthToken, refreshToken} from "../../../utils/easyUtils";
 import {getTourPanelState, setTourPanelState} from "../../../utils/cookieUtils";
 import {useTranslation} from 'react-i18next';
 import '../Tour.css';
@@ -44,7 +44,7 @@ const cleanAnsiCodes = (text) => {
 };
 
 export function Logs() {
-    const { t } = useTranslation();
+    const {t} = useTranslation();
     const [messages, setMessages] = useState([]);
     const [isConnected, setIsConnected] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -60,10 +60,7 @@ export function Logs() {
     const connectButtonRef = useRef(null);
     const statusIndicatorRef = useRef(null);
     const controlButtonsRef = useRef(null);
-
-    const LAND_WSS = (window.runtimeConfig && window.runtimeConfig.REACT_APP_LAND_WSS) || process.env.REACT_APP_LAND_WSS;
-    const wsUrl = `${LAND_WSS}/ws/log`;
-
+    const wsUrl = `/v1/ws/log`;
     const scrollToBottom = () => {
         if (logsContainerRef.current) {
             logsContainerRef.current.scrollTop = logsContainerRef.current.scrollHeight;
@@ -121,18 +118,24 @@ export function Logs() {
         addMessage(`🔄 ${t("logsConnecting") || "Подключение к серверу логов..."}`);
 
         try {
-            // Получаем и валидируем токен
-            const validToken = await validateAndRefreshToken(localStorage.getItem("authToken"));
+            // Получаем актуальный токен
+            let validToken = getAuthToken();
 
             if (!validToken) {
-                setError(t("logsTokenError") || "Токен не доступен или истек");
-                setLoading(false);
-                return;
+                // Пытаемся обновить токен если STA отсутствует
+                const newToken = await refreshToken();
+                if (newToken) {
+                    validToken = newToken;
+                } else {
+                    setError(t("logsTokenError") || "Токен не доступен или истек");
+                    setLoading(false);
+                    return;
+                }
             }
 
-            // Добавляем токен как параметр запроса к WebSocket URL
-            const wsUrlWithToken = `${wsUrl}?token=${encodeURIComponent(validToken)}`;
-            wsRef.current = new WebSocket(wsUrlWithToken);
+            // Открываем WebSocket с использованием токена как subprotocol
+            const wsUrlWithToken = `${wsUrl}`;
+            wsRef.current = new WebSocket(wsUrlWithToken, [validToken]);
 
             wsRef.current.onopen = () => {
                 setIsConnected(true);
@@ -261,7 +264,7 @@ export function Logs() {
     const {Text} = Typography;
     if (loading) {
         return <div className="notifications-loading">
-            <Spin size="large" />
+            <Spin size="large"/>
             <Text className="loading-text">
                 {t("loading") || "Загрузка данных..."}
             </Text>
@@ -295,7 +298,8 @@ export function Logs() {
                                     {isConnected ? (t("logsConnected") || 'Подключено') : (t("logsConnect") || 'Подключиться к логам')}
                                 </Button>
 
-                                <div className="control-buttons" style={{display: 'flex', gap: '8px'}} ref={controlButtonsRef}>
+                                <div className="control-buttons" style={{display: 'flex', gap: '8px'}}
+                                     ref={controlButtonsRef}>
                                     <Button
                                         onClick={disconnectWebSocket}
                                         disabled={!isConnected && !loading}
@@ -311,7 +315,9 @@ export function Logs() {
                                     </Button>
                                 </div>
 
-                                <div className="status-indicator" style={{marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '8px'}} ref={statusIndicatorRef}>
+                                <div className="status-indicator"
+                                     style={{marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '8px'}}
+                                     ref={statusIndicatorRef}>
                                     <span style={{
                                         fontSize: '12px',
                                         color: isConnected ? '#52c41a' : '#8c8c8c',
@@ -398,7 +404,7 @@ export function Logs() {
                 {tourPanelVisible && (
                     <div className="tour-controls tour-primary">
                         <div className="tour-controls-header">
-                            <PlayCircleOutlined className="tour-controls-icon" />
+                            <PlayCircleOutlined className="tour-controls-icon"/>
                             <h3 className="tour-controls-title">
                                 {t("logsTourTitle") || "Интерактивный обзор"}
                             </h3>
@@ -470,7 +476,7 @@ export function Logs() {
             />
 
             <FloatButton
-                icon={<QuestionCircleOutlined />}
+                icon={<QuestionCircleOutlined/>}
                 tooltip={t("tourFloatButtonTooltip") || "Начать обзор интерфейса"}
                 onClick={showTourPanel}
                 className="tour-float-button"

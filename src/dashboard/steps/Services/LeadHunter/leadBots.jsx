@@ -1,6 +1,5 @@
 import {useEffect, useState, useRef, forwardRef, useImperativeHandle} from "react";
 import {useTranslation} from 'react-i18next';
-import {validateAndRefreshToken} from "../../../../utils/easyUtils";
 import {message, Spin, Button, Table, Badge, Switch, Modal, Form, Input, QRCode, Alert, Card, InputNumber, Tooltip} from "antd";
 import {ApiOutlined, PlusOutlined, DeleteOutlined, ExclamationCircleOutlined, EditOutlined, QrcodeOutlined, SaveOutlined, SettingOutlined, InfoCircleOutlined} from "@ant-design/icons";
 import {FaTelegram, FaWhatsapp} from "react-icons/fa";
@@ -78,13 +77,7 @@ export const LeadBots = forwardRef((props, ref) => {
         }
         isBotsLoadingRef.current = true;
         try {
-            const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
-            if (!token) {
-                message.error(t("botAuthError") || 'Ошибка аутентификации');
-                setBots(null);
-                return;
-            }
-            const data = await readServiceAllBotInfo(token);
+            const data = await readServiceAllBotInfo();
             if (data.bots && Array.isArray(data.bots) && data.bots.length > 0) {
                 setBots(data.bots);
                 console.log('[fetchBotsInfo] Ботов загружено:', data.bots.length);
@@ -160,15 +153,9 @@ export const LeadBots = forwardRef((props, ref) => {
     };
 
     const handleToggleBot = async (bot, checked) => {
-        const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
-        if (!token) {
-            message.error(t("botAuthError") || 'Ошибка аутентификации');
-            return;
-        }
-
         try {
             // Вызываем функцию активации/деактивации бота
-            await setServiceBotActive(token, bot.BotId, checked, getBotPlatform(bot));
+            await setServiceBotActive(bot.BotId, checked, getBotPlatform(bot));
 
             // Обновляем состояние ботов
             setBots((prevBots) =>
@@ -182,15 +169,9 @@ export const LeadBots = forwardRef((props, ref) => {
     };
 
     const handleEditBot = async (bot) => {
-        const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
-        if (!token) {
-            message.error(t("botAuthError") || 'Ошибка аутентификации');
-            return;
-        }
-
         try {
             const botPlatform = getBotPlatform(bot);
-            const data = await serviceBotAuthData(token, bot.BotId, botPlatform);
+            const data = await serviceBotAuthData(bot.BotId, botPlatform);
             if (!data) {
                 showErrorNotification(t("error") || 'Ошибка', t("botLoadError") || 'Данные бота не найдены');
                 return;
@@ -497,15 +478,9 @@ export const LeadBots = forwardRef((props, ref) => {
             return;
         }
 
-        const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
-        if (!token) {
-            message.error(t("botAuthError") || 'Ошибка аутентификации');
-            return;
-        }
-
         try {
             // Вызываем функцию удаления бота
-            await serviceDeleteBot(token, selectedBot.BotId, getBotPlatform(selectedBot));
+            await serviceDeleteBot(selectedBot.BotId, getBotPlatform(selectedBot));
 
             // Обновляем состояние ботов
             setBots((prevBots) => prevBots.filter((b) => b.BotId !== selectedBot.BotId));
@@ -544,12 +519,6 @@ export const LeadBots = forwardRef((props, ref) => {
         try {
             const values = await settingsForm.validateFields();
 
-            const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
-            if (!token) {
-                message.error('Ошибка аутентификации');
-                return;
-            }
-
             // Формируем объект настроек в нужном формате
             const settings = {
                 ProfileViewMin: values.ProfileViewMin,
@@ -561,7 +530,7 @@ export const LeadBots = forwardRef((props, ref) => {
             };
 
             // Вызываем API для сохранения настроек
-            const success = await saveServiceSetting(token, settings);
+            const success = await saveServiceSetting(settings);
 
             if (success) {
                 setBotSettings(values);

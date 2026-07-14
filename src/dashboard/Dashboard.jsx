@@ -8,16 +8,15 @@ import {
     UserOutlined,
     WalletOutlined,
     CalendarOutlined,
-    MessageOutlined,
     CrownOutlined,
-    CommentOutlined
+    CommentOutlined, DatabaseOutlined
 } from "@ant-design/icons";
 import "./dash.css";
-import {useNavigate} from "react-router-dom";
+import {useNavigate, useLocation} from "react-router-dom";
 import {getUserDetails} from "./getUserDetails";
 import {dashboardContent} from "./dashboardContent";
-import {validateAndRefreshToken} from "../utils/easyUtils";
 import {useTranslation} from "react-i18next";
+import {showWarningNotification} from "./hotification/showNotification";
 import {FaDev, FaHouseUser, FaTelegramPlane, FaWhatsapp, FaInstagram} from "react-icons/fa";
 import {GoLog} from "react-icons/go";
 import {GiConversation} from "react-icons/gi";
@@ -28,16 +27,17 @@ import {getOrSetUserId} from "../utils/getOrSetUserId";
 import {GrServices} from "react-icons/gr";
 import {useInstantNotifications} from "../hooks/useInstantNotifications";
 import {SiCivicrm} from "react-icons/si";
+import AvitoIcon from "./steps/Channals/AvitoIcon";
 
-const { Sider, Content} = Layout;
-const { Text } = Typography;
+const {Sider, Content} = Layout;
+const {Text} = Typography;
 
 export function Dashboard({handleError}) {
     const [userId] = useState(getOrSetUserId()); // Получаем userId должен быть сохранён в localStorage
     const [siderCollapsed, setSiderCollapsed] = useState(false);
 
     // Подключаем WebSocket для получения мгновенных уведомлений
-    useInstantNotifications(localStorage.getItem("authToken"));
+    useInstantNotifications();
 
     // Обработчик изменения размера экрана
     useEffect(() => {
@@ -58,13 +58,43 @@ export function Dashboard({handleError}) {
 
     useEffect(() => {
         // При заходе на dashboard
-        trackVisitor(userId, { minIntervalMs: 60000, event: 'main' });
+        trackVisitor(userId, {minIntervalMs: 60000, event: 'main'});
     }, [userId]);
 
     const {t} = useTranslation();
+    const location = useLocation();
     const [userData, setUserData] = useState(null);
     const [selectedMenu, setSelectedMenu] = useState("start");
-    const showSimpleAuth = process.env.REACT_APP_SHOW_SIMPLE_AUTH === "false";
+
+    // Показываем предупреждение о 2FA и MasterKey если пришли с соответствующими флагами
+    useEffect(() => {
+        if (location.state?.warn2FA) {
+            showWarningNotification(
+                t('AuthForm-TotpWarningTitle') || '⚠️ Защитите аккаунт',
+                <span>
+                    {t('AuthForm-TotpWarningDesc') || 'Двухфакторная аутентификация не включена. '}
+                    {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
+                    <a onClick={() => setSelectedMenu('user')} style={{cursor: 'pointer'}}>
+                        {t('AuthForm-TotpWarningLink') || 'Включить 2FA'}
+                    </a>
+                </span>
+            );
+        }
+        if (location.state?.warnMasterKey) {
+            showWarningNotification(
+                t('AuthForm-MasterKeyWarningTitle') || '🔑 Ключ шифрования не создан',
+                <span>
+                    {t('AuthForm-MasterKeyWarningDesc') || 'Ключ шифрования данных не настроен. '}
+                    {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
+                    <a onClick={() => setSelectedMenu('user')} style={{cursor: 'pointer'}}>
+                        {t('AuthForm-MasterKeyWarningLink') || 'Создать ключ'}
+                    </a>
+                </span>
+            );
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+    const showSimpleAuth = false;
 
     // Формируем menuItems с учётом роли пользователя
     // const userServiceItem = {key: "services", icon: <GrServices />, label: t('menuServices') || "Сервисы"};
@@ -73,8 +103,8 @@ export function Dashboard({handleError}) {
         {key: "models", icon: <AndroidOutlined/>, label: t('menuAgent') || "Модель"},
         {key: "modules", icon: <SubnodeOutlined/>, label: t('menuChannels') || "Каналы"},
         {key: "notifications", icon: <NotificationOutlined/>, label: t('menuNotifications') || "Уведомления"},
-        {key: "crm", icon: <SiCivicrm />, label: t('menuCRM') || "CRM"},
-        {key: "services", icon: <GrServices />, label: t('menuServices') || "Сервисы"},
+        {key: "crm", icon: <SiCivicrm/>, label: t('menuCRM') || "CRM"},
+        {key: "services", icon: <GrServices/>, label: t('menuServices') || "Сервисы"},
         {key: "stat", icon: <GiConversation/>, label: t('menuDialogs') || "Диалоги"},
         {key: "logs", icon: <GoLog/>, label: t('menuLogs') || "Логи"},
         // Добавляем пункт "Платежи" только если showSimpleAuth === false
@@ -110,9 +140,9 @@ export function Dashboard({handleError}) {
 
     // const devMenuItem = {key: "dev", icon: <FaDev/>, label: t('menuDevTools') || "Dev Tools"};
     const devMenuItem = {key: "dev", icon: <FaDev/>, label: "Dev Tools"};
-    const userMenuItem = {key: "user", icon: <FaHouseUser />, label: t('menuUserProfile') || "О пользователе"};
+    const userMenuItem = {key: "user", icon: <FaHouseUser/>, label: t('menuUserProfile') || "О пользователе"};
 
-    const menuItems = userData && !showSimpleAuth &&(userData.RoleName === "Demo" || userData.RoleName === "User" || userData.RoleName === "Service")
+    const menuItems = userData && !showSimpleAuth && (userData.RoleName === "Demo" || userData.RoleName === "User" || userData.RoleName === "Service")
         ? [userMenuItem, ...baseMenuItems]
         : userData && userData.RoleName === "Developer"
             ? [devMenuItem, ...baseMenuItems]
@@ -127,8 +157,7 @@ export function Dashboard({handleError}) {
     // Функция для обновления данных пользователя
     const refreshUserData = useCallback(async () => {
         try {
-            const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
-            const data = await getUserDetails(token);
+            const data = await getUserDetails();
 
             if (data.status === "error") {
                 handleError();
@@ -167,28 +196,36 @@ export function Dashboard({handleError}) {
     // Функция для получения цвета роли
     const getRoleColor = (role) => {
         switch (role) {
-            case 'Developer': return 'purple';
-            case 'Demo': return 'red';
-            case 'Service': return 'gold';
-            case 'User': return 'blue';
-            default: return 'white';
+            case 'Developer':
+                return 'purple';
+            case 'Demo':
+                return 'red';
+            case 'Service':
+                return 'gold';
+            case 'User':
+                return 'blue';
+            default:
+                return 'white';
         }
     };
 
     // Функция для получения иконки роли
     const getRoleIcon = (role) => {
         switch (role) {
-            case 'Developer': return <FaDev />;
-            case 'Demo': return <PiUserCircleDashedThin />;
-            case 'Service': return <CrownOutlined />;
-            default: return <UserOutlined />;
+            case 'Developer':
+                return <FaDev/>;
+            case 'Demo':
+                return <PiUserCircleDashedThin/>;
+            case 'Service':
+                return <CrownOutlined/>;
+            default:
+                return <UserOutlined/>;
         }
     };
 
     return (
         <>
-            <DashboardHeader setSiderCollapsed={setSiderCollapsed} siderCollapsed={siderCollapsed} />
-
+            <DashboardHeader setSiderCollapsed={setSiderCollapsed} siderCollapsed={siderCollapsed}/>
 
             <Layout style={{minHeight: "100vh"}}>
                 <Sider collapsed={siderCollapsed}>
@@ -198,9 +235,9 @@ export function Dashboard({handleError}) {
                             <Card
                                 className="unified-user-card"
                                 size="small"
-                                styles={{ body: { padding: '12px' } }}
+                                styles={{body: {padding: '12px'}}}
                             >
-                                <Space direction="vertical" size={6} style={{ width: '100%' }}>
+                                <Space direction="vertical" size={6} style={{width: '100%'}}>
                                     {/* Профиль */}
                                     <div style={{
                                         display: 'flex',
@@ -221,17 +258,22 @@ export function Dashboard({handleError}) {
                                             alignItems: 'center',
                                             justifyContent: 'center'
                                         }}>
-                                            <UserOutlined style={{ fontSize: 20, color: '#fff' }} />
+                                            <UserOutlined style={{fontSize: 20, color: '#fff'}}/>
                                         </div>
-                                        <div style={{ flex: 1, minWidth: 0 }}>
-                                            <Text strong style={{ fontSize: 13, display: 'block', lineHeight: 1.3, color: '#fff' }}>
+                                        <div style={{flex: 1, minWidth: 0}}>
+                                            <Text strong style={{
+                                                fontSize: 13,
+                                                display: 'block',
+                                                lineHeight: 1.3,
+                                                color: '#fff'
+                                            }}>
                                                 {userData.Name}
                                             </Text>
                                             <Tag
                                                 size="small"
                                                 color={getRoleColor(userData.RoleName)}
                                                 icon={getRoleIcon(userData.RoleName)}
-                                                style={{ margin: '3px 0 0 0', fontSize: 10 }}
+                                                style={{margin: '3px 0 0 0', fontSize: 10}}
                                             >
                                                 {t(userData.RoleName.toLowerCase())}
                                             </Tag>
@@ -249,9 +291,18 @@ export function Dashboard({handleError}) {
                                             borderRadius: '8px',
                                             border: '1px solid rgba(16, 185, 129, 0.7)'
                                         }}>
-                                            <WalletOutlined style={{ fontSize: 16, color: '#34D399' }} />
-                                            <Text style={{ fontSize: 11, color: 'rgba(255, 255, 255, 0.9)', fontWeight: 500 }}>{t('dashboardBalance') || "Баланс"}:</Text>
-                                            <Text strong style={{ fontSize: 13, marginLeft: 'auto', color: '#fff', fontWeight: 700 }}>
+                                            <WalletOutlined style={{fontSize: 16, color: '#34D399'}}/>
+                                            <Text style={{
+                                                fontSize: 11,
+                                                color: 'rgba(255, 255, 255, 0.9)',
+                                                fontWeight: 500
+                                            }}>{t('dashboardBalance') || "Баланс"}:</Text>
+                                            <Text strong style={{
+                                                fontSize: 13,
+                                                marginLeft: 'auto',
+                                                color: '#fff',
+                                                fontWeight: 700
+                                            }}>
                                                 {userData.Balance} {userData.CurrencyName}
                                             </Text>
                                         </div>
@@ -272,11 +323,23 @@ export function Dashboard({handleError}) {
                                                 ? '1px solid rgba(59, 130, 246, 1)'
                                                 : '1px solid rgba(107, 114, 128, 1)'
                                         }}>
-                                            <CalendarOutlined style={{ fontSize: 16, color: userData.EndDate ? '#60A5FA' : '#9CA3AF' }} />
-                                            <Text style={{ fontSize: 11, color: 'rgba(255, 255, 255, 0.9)', fontWeight: 500 }}>
+                                            <CalendarOutlined style={{
+                                                fontSize: 16,
+                                                color: userData.EndDate ? '#60A5FA' : '#9CA3AF'
+                                            }}/>
+                                            <Text style={{
+                                                fontSize: 11,
+                                                color: 'rgba(255, 255, 255, 0.9)',
+                                                fontWeight: 500
+                                            }}>
                                                 {userData.EndDate ? (t('dashboardUntil') || "До") : (t('dashboardSubscription') || "Подписка")}
                                             </Text>
-                                            <Text strong style={{ fontSize: 12, marginLeft: 'auto', color: '#fff', fontWeight: 700 }}>
+                                            <Text strong style={{
+                                                fontSize: 12,
+                                                marginLeft: 'auto',
+                                                color: '#fff',
+                                                fontWeight: 700
+                                            }}>
                                                 {userData.EndDate || (t('dashboardAbsent') || "отсутствует")}
                                             </Text>
                                         </div>
@@ -296,15 +359,16 @@ export function Dashboard({handleError}) {
                                                 gap: 4,
                                                 marginBottom: 6
                                             }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                                                    <MessageOutlined style={{ fontSize: 14, color: '#FCD34D' }} />
-                                                    <Text strong style={{ fontSize: 12, color: '#fff', marginLeft: 'auto' }}>
-                                                        {userData.MessagesUsed || 0}/{userData.MessageLimit || 0}
+                                                <div style={{display: 'flex', alignItems: 'center', gap: 6}}>
+                                                    <DatabaseOutlined style={{fontSize: 14, color: '#FCD34D'}}/>
+                                                    <Text strong
+                                                          style={{fontSize: 12, color: '#fff', marginLeft: 'auto'}}>
+                                                        {userData.StorageUsed || 0}/{userData.StorageLimit || 0}
                                                     </Text>
                                                 </div>
 
                                                 <Progress
-                                                    percent={userData.MessageLimit ? Math.round((userData.MessagesUsed / userData.MessageLimit) * 100) : 0}
+                                                    percent={userData.StorageLimit ? Math.round((userData.StorageUsed / userData.StorageLimit) * 100) : 0}
                                                     size="small"
                                                     showInfo={false}
                                                     strokeColor={{
@@ -313,161 +377,185 @@ export function Dashboard({handleError}) {
                                                         '90%': '#F87171'
                                                     }}
                                                     trailColor="rgba(255, 255, 255, 0.2)"
-                                                    style={{ width: '100%' }}
+                                                    style={{width: '100%'}}
                                                 />
                                             </div>
-
-                                            <Text style={{ fontSize: 10, color: 'rgba(255, 255, 255, 0.8)', display: 'block', textAlign: 'center', whiteSpace: 'nowrap' }}>
-                                                {t('dashboardOverLimit') || "Сверх лимита"}: {userData.MessageCost || 0} {userData.CurrencyName}
-                                            </Text>
-
                                         </div>
                                     )}
 
                                     {/* Каналы */}
                                     {(userData.Telegram_bot === 1 || userData.Telegram_user === 1 || userData.WhatsApp === 1 || userData.Widget === 1 || userData.Instagram === 1) && (
-                                            <div style={{
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'space-around',
-                                                marginTop: 4,
-                                                gap: 2,
-                                                flexWrap: 'wrap'
-                                            }}>
-                                                {/* Telegram Bot */}
-                                                {userData.Telegram_bot === 1 && (
+                                        <div style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'space-around',
+                                            marginTop: 4,
+                                            gap: 2,
+                                            flexWrap: 'wrap'
+                                        }}>
+                                            {/* Telegram Bot */}
+                                            {userData.Telegram_bot === 1 && (
+                                                <div style={{
+                                                    display: 'flex',
+                                                    flexDirection: 'column',
+                                                    alignItems: 'center'
+                                                }}>
                                                     <div style={{
+                                                        width: 28,
+                                                        height: 28,
+                                                        borderRadius: '6px',
+                                                        background: 'linear-gradient(135deg, #3B82F6, #2563EB)',
                                                         display: 'flex',
-                                                        flexDirection: 'column',
-                                                        alignItems: 'center'
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        border: '2px solid rgba(37, 99, 235, 0.5)',
+                                                        boxShadow: '0 3px 8px rgba(37, 99, 235, 0.3)',
+                                                        transition: 'all 0.3s ease'
                                                     }}>
-                                                        <div style={{
-                                                            width: 28,
-                                                            height: 28,
-                                                            borderRadius: '6px',
-                                                            background: 'linear-gradient(135deg, #3B82F6, #2563EB)',
-                                                            display: 'flex',
-                                                            alignItems: 'center',
-                                                            justifyContent: 'center',
-                                                            border: '2px solid rgba(37, 99, 235, 0.5)',
-                                                            boxShadow: '0 3px 8px rgba(37, 99, 235, 0.3)',
-                                                            transition: 'all 0.3s ease'
-                                                        }}>
-                                                            <FaTelegramPlane style={{
-                                                                fontSize: 14,
-                                                                color: '#fff'
-                                                            }} />
-                                                        </div>
+                                                        <FaTelegramPlane style={{
+                                                            fontSize: 14,
+                                                            color: '#fff'
+                                                        }}/>
                                                     </div>
-                                                )}
+                                                </div>
+                                            )}
 
-                                                {/* Telegram User */}
-                                                {userData.Telegram_user === 1 && (
+                                            {/* Telegram User */}
+                                            {userData.Telegram_user === 1 && (
+                                                <div style={{
+                                                    display: 'flex',
+                                                    flexDirection: 'column',
+                                                    alignItems: 'center'
+                                                }}>
                                                     <div style={{
+                                                        width: 28,
+                                                        height: 28,
+                                                        borderRadius: '6px',
+                                                        background: 'linear-gradient(135deg, #0EA5E9, #0284C7)',
                                                         display: 'flex',
-                                                        flexDirection: 'column',
-                                                        alignItems: 'center'
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        border: '2px solid rgba(2, 132, 199, 0.5)',
+                                                        boxShadow: '0 3px 8px rgba(2, 132, 199, 0.3)',
+                                                        transition: 'all 0.3s ease'
                                                     }}>
-                                                        <div style={{
-                                                            width: 28,
-                                                            height: 28,
-                                                            borderRadius: '6px',
-                                                            background: 'linear-gradient(135deg, #0EA5E9, #0284C7)',
-                                                            display: 'flex',
-                                                            alignItems: 'center',
-                                                            justifyContent: 'center',
-                                                            border: '2px solid rgba(2, 132, 199, 0.5)',
-                                                            boxShadow: '0 3px 8px rgba(2, 132, 199, 0.3)',
-                                                            transition: 'all 0.3s ease'
-                                                        }}>
-                                                            <FaTelegramPlane style={{
-                                                                fontSize: 14,
-                                                                color: '#fff'
-                                                            }} />
-                                                        </div>
+                                                        <FaTelegramPlane style={{
+                                                            fontSize: 14,
+                                                            color: '#fff'
+                                                        }}/>
                                                     </div>
-                                                )}
+                                                </div>
+                                            )}
 
-                                                {/* WhatsApp */}
-                                                {userData.WhatsApp === 1 && (
+                                            {/* WhatsApp */}
+                                            {userData.WhatsApp === 1 && (
+                                                <div style={{
+                                                    display: 'flex',
+                                                    flexDirection: 'column',
+                                                    alignItems: 'center'
+                                                }}>
                                                     <div style={{
+                                                        width: 28,
+                                                        height: 28,
+                                                        borderRadius: '6px',
+                                                        background: 'linear-gradient(135deg, #10B981, #059669)',
                                                         display: 'flex',
-                                                        flexDirection: 'column',
-                                                        alignItems: 'center'
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        border: '2px solid rgba(5, 150, 105, 0.5)',
+                                                        boxShadow: '0 3px 8px rgba(5, 150, 105, 0.3)',
+                                                        transition: 'all 0.3s ease'
                                                     }}>
-                                                        <div style={{
-                                                            width: 28,
-                                                            height: 28,
-                                                            borderRadius: '6px',
-                                                            background: 'linear-gradient(135deg, #10B981, #059669)',
-                                                            display: 'flex',
-                                                            alignItems: 'center',
-                                                            justifyContent: 'center',
-                                                            border: '2px solid rgba(5, 150, 105, 0.5)',
-                                                            boxShadow: '0 3px 8px rgba(5, 150, 105, 0.3)',
-                                                            transition: 'all 0.3s ease'
-                                                        }}>
-                                                            <FaWhatsapp style={{
-                                                                fontSize: 14,
-                                                                color: '#fff'
-                                                            }} />
-                                                        </div>
+                                                        <FaWhatsapp style={{
+                                                            fontSize: 14,
+                                                            color: '#fff'
+                                                        }}/>
                                                     </div>
-                                                )}
+                                                </div>
+                                            )}
 
-                                                {/* Widget */}
-                                                {userData.Widget === 1 && (
+                                            {/* Widget */}
+                                            {userData.Widget === 1 && (
+                                                <div style={{
+                                                    display: 'flex',
+                                                    flexDirection: 'column',
+                                                    alignItems: 'center'
+                                                }}>
                                                     <div style={{
+                                                        width: 28,
+                                                        height: 28,
+                                                        borderRadius: '6px',
+                                                        background: 'linear-gradient(135deg, #8B5CF6, #7C3AED)',
                                                         display: 'flex',
-                                                        flexDirection: 'column',
-                                                        alignItems: 'center'
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        border: '2px solid rgba(124, 58, 237, 0.5)',
+                                                        boxShadow: '0 3px 8px rgba(124, 58, 237, 0.3)',
+                                                        transition: 'all 0.3s ease'
                                                     }}>
-                                                        <div style={{
-                                                            width: 28,
-                                                            height: 28,
-                                                            borderRadius: '6px',
-                                                            background: 'linear-gradient(135deg, #8B5CF6, #7C3AED)',
-                                                            display: 'flex',
-                                                            alignItems: 'center',
-                                                            justifyContent: 'center',
-                                                            border: '2px solid rgba(124, 58, 237, 0.5)',
-                                                            boxShadow: '0 3px 8px rgba(124, 58, 237, 0.3)',
-                                                            transition: 'all 0.3s ease'
-                                                        }}>
-                                                            <CommentOutlined style={{
-                                                                fontSize: 14,
-                                                                color: '#fff'
-                                                            }} />
-                                                        </div>
+                                                        <CommentOutlined style={{
+                                                            fontSize: 14,
+                                                            color: '#fff'
+                                                        }}/>
                                                     </div>
-                                                )}
+                                                </div>
+                                            )}
 
-                                                {/* Instagram */}
-                                                {userData.Instagram === 1 && (
+                                            {/* Instagram */}
+                                            {userData.Instagram === 1 && (
+                                                <div style={{
+                                                    display: 'flex',
+                                                    flexDirection: 'column',
+                                                    alignItems: 'center'
+                                                }}>
                                                     <div style={{
+                                                        width: 28,
+                                                        height: 28,
+                                                        borderRadius: '6px',
+                                                        background: 'linear-gradient(135deg, #EC4899, #DB2777)',
                                                         display: 'flex',
-                                                        flexDirection: 'column',
-                                                        alignItems: 'center'
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        border: '2px solid rgba(219, 39, 119, 0.5)',
+                                                        boxShadow: '0 3px 8px rgba(219, 39, 119, 0.3)',
+                                                        transition: 'all 0.3s ease'
                                                     }}>
-                                                        <div style={{
-                                                            width: 28,
-                                                            height: 28,
-                                                            borderRadius: '6px',
-                                                            background: 'linear-gradient(135deg, #EC4899, #DB2777)',
-                                                            display: 'flex',
-                                                            alignItems: 'center',
-                                                            justifyContent: 'center',
-                                                            border: '2px solid rgba(219, 39, 119, 0.5)',
-                                                            boxShadow: '0 3px 8px rgba(219, 39, 119, 0.3)',
-                                                            transition: 'all 0.3s ease'
-                                                        }}>
-                                                            <FaInstagram style={{
-                                                                fontSize: 14,
-                                                                color: '#fff'
-                                                            }} />
-                                                        </div>
+                                                        <FaInstagram style={{
+                                                            fontSize: 14,
+                                                            color: '#fff'
+                                                        }}/>
                                                     </div>
-                                                )}
+                                                </div>
+                                            )}
+
+                                            {/* Avito */}
+                                            {userData.Avito === 1 && (
+                                                <div style={{
+                                                    display: 'flex',
+                                                    flexDirection: 'column',
+                                                    alignItems: 'center'
+                                                }}>
+                                                    <div style={{
+                                                        width: 28,
+                                                        height: 28,
+                                                        borderRadius: '6px',
+                                                        background: 'linear-gradient(135deg, #3B82F6, #2563EB)',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        border: '2px solid rgba(37, 99, 235, 0.5)',
+                                                        boxShadow: '0 3px 8px rgba(37, 99, 235, 0.3)',
+                                                        transition: 'all 0.3s ease'
+                                                    }}>
+                                                        <AvitoIcon style={{
+                                                            fontSize: 14,
+                                                            color: '#fff'
+                                                        }}
+                                                                   size={15}
+                                                        />
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
                                     )}
                                 </Space>
@@ -499,4 +587,6 @@ export function Dashboard({handleError}) {
 }
 
 export default Dashboard;
+
+
 

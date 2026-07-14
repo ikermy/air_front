@@ -1,15 +1,13 @@
-import {validateAndRefreshToken} from "../../../utils/easyUtils";
+import {getAuthToken, refreshToken} from "../../../utils/easyUtils";
 
-export const telegramGetContact = async (token, onProgress = null, t = null) => {
-    const LAND_WSS = (window.runtimeConfig && window.runtimeConfig.REACT_APP_LAND_WSS) || process.env.REACT_APP_LAND_WSS;
-
+export const telegramGetContact = async (onProgress = null, t = null) => {
     // Fallback для функции перевода
     const translate = t || ((key) => key);
 
     const makeWebSocketRequest = async (authToken) => {
         return new Promise((resolve, reject) => {
             // Токен передается в URL, а не в сообщении
-            const ws = new WebSocket(`${LAND_WSS}/ws/tguser/contacts?token=${authToken}`);
+            const ws = new WebSocket(`/v1/ws/tguser/contacts`, [authToken]);
             let timeoutId;
             let contacts = {
                 humans: [],
@@ -38,7 +36,7 @@ export const telegramGetContact = async (token, onProgress = null, t = null) => 
                 try {
                     const data = JSON.parse(event.data);
 
-                    switch(data.type) {
+                    switch (data.type) {
                         case 'status':
                             if (onProgress) {
                                 onProgress({
@@ -189,31 +187,22 @@ export const telegramGetContact = async (token, onProgress = null, t = null) => 
                 progress: 0
             });
         }
-        return await makeWebSocketRequest(token);
-    } catch (error) {
-        console.error(`${translate("tgContactErrorServerFetch") || "Ошибка получения контактов:"} ${error}`);
-        if (error.message.includes('401') || error.message.includes('Unauthorized') || error.message.includes('авторизации')) {
-            try {
-                if (onProgress) {
-                    onProgress({
-                        type: 'status',
-                        message: translate("tgContactUpdatingToken") || "Обновление токена авторизации...",
-                        progress: 0
-                    });
-                }
-                const newToken = await validateAndRefreshToken(token);
-                return await makeWebSocketRequest(newToken);
-            } catch (refreshError) {
-                if (onProgress) {
-                    onProgress({
-                        type: 'error',
-                        message: translate("tgContactTokenUpdateError") || "Ошибка обновления токена",
-                        progress: 0
-                    });
-                }
-                throw new Error(`${translate("tgContactTokenUpdateError") || "Ошибка обновления токена"}: ${refreshError.message}`);
+
+        // Получаем актуальный токен для WebSocket.
+        let currentToken = getAuthToken();
+
+        if (!currentToken) {
+            const newToken = await refreshToken();
+            if (newToken) {
+                currentToken = newToken;
+            } else {
+                throw new Error(translate("tgContactErrorNoToken") || "Ошибка авторизации: токен не найден");
             }
         }
+
+        return await makeWebSocketRequest(currentToken);
+    } catch (error) {
+        console.error(`${translate("tgContactErrorServerFetch") || "Ошибка получения контактов:"} ${error}`);
         if (onProgress) {
             onProgress({
                 type: 'error',

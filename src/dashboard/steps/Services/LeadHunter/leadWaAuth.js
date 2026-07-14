@@ -1,5 +1,5 @@
 // leadWaAuth.js
-import {validateAndRefreshToken} from "../../../../utils/easyUtils";
+import {getAuthToken, refreshToken} from "../../../../utils/easyUtils";
 import {serviceWaAuthWSS} from "./leadUtils";
 
 export class LeadWaAuth {
@@ -23,28 +23,20 @@ export class LeadWaAuth {
 
     async startAuthentication(params) {
         try {
-            const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
-            if (token) {
-                // Сбрасываем флаг при новой попытке авторизации
-                this.successHandled = false;
+            // Сбрасываем флаг при новой попытке авторизации
+            this.successHandled = false;
 
-                // Сохраняем параметры авторизации для отправки через WebSocket
-                // Для WhatsApp не требуется пароль
-                this.authParams = {
-                    type: 'auth_data',
-                    alias: params.alias,
-                    phone: params.phone,
-                    bot_id: parseInt(params.botId)
-                };
+            // Сохраняем параметры авторизации для отправки через WebSocket
+            // Для WhatsApp не требуется пароль
+            this.authParams = {
+                type: 'auth_data',
+                alias: params.alias,
+                phone: params.phone,
+                bot_id: parseInt(params.botId)
+            };
 
-                this.connectWebSocket(token);
-                return true;
-            } else {
-                if (this.callbacks.onUpdateToken) {
-                    this.callbacks.onUpdateToken();
-                }
-                return false;
-            }
+            this.connectWebSocket();
+            return true;
         } catch (error) {
             if (this.callbacks.onError) {
                 this.callbacks.onError(`Ошибка запуска аутентификации: ${error.message}`);
@@ -53,10 +45,10 @@ export class LeadWaAuth {
         }
     }
 
-    connectWebSocket(token) {
+    connectWebSocket() {
         try {
             // serviceWaAuthWSS возвращает WebSocket напрямую, не Promise
-            this.socket = serviceWaAuthWSS(token);
+            this.socket = serviceWaAuthWSS();
             this.intentionalClose = false; // Сбрасываем флаг при новом подключении
 
             this.socket.onopen = () => {
@@ -166,13 +158,8 @@ export class LeadWaAuth {
 
     async updateBotAlias(botId, alias) {
         try {
-            const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
-            if (!token) {
-                throw new Error('Токен недействителен');
-            }
-
             if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
-                this.connectWebSocket(token);
+                this.connectWebSocket();
                 await new Promise((resolve, reject) => {
                     if (!this.socket) return reject(new Error('Не удалось открыть WebSocket'));
                     if (this.socket.readyState === WebSocket.OPEN) return resolve();
@@ -216,4 +203,3 @@ export class LeadWaAuth {
         this.successHandled = false; // Сбрасываем флаг при закрытии соединения
     }
 }
-

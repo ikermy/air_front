@@ -1,76 +1,65 @@
 import {Modal, Switch} from "antd";
-import React, {useEffect, useState, useRef} from "react";
+import React, {useEffect, useState} from "react";
 import Title from "antd/lib/typography/Title";
 import Paragraph from "antd/lib/typography/Paragraph";
-import {CodeOutlined} from "@ant-design/icons";
+import {CodeOutlined, GlobalOutlined} from "@ant-design/icons";
 import {useTranslation} from "react-i18next";
 
-export const Openai_Interpreter = ({onChange, toForm, initialFiles, s3FilesEnabled = false}) => {
+export const Openai_Interpreter = ({onChange, toForm, initialFiles, initialWebSearch}) => {
     const {t} = useTranslation();
     const [isModalOpen, setModalOpen] = useState(false);
     const [switchChecked, setSwitchChecked] = useState(false);
-    const [currentS3Status, setCurrentS3Status] = useState(s3FilesEnabled);
-    const prevS3FilesEnabled = useRef(s3FilesEnabled);
+    const [webSearchChecked, setWebSearchChecked] = useState(false);
 
     // Инициализация при загрузке компонента
     useEffect(() => {
-        // Синхронизируем локальное состояние S3 с пропсом
-        setCurrentS3Status(s3FilesEnabled);
-        prevS3FilesEnabled.current = s3FilesEnabled;
-
+        // Инициализация interpreter
         if (typeof initialFiles === 'boolean') {
-            const shouldEnable = initialFiles && s3FilesEnabled;
-            setSwitchChecked(shouldEnable);
-
-            // Помещаем данные в форму, если они еще не там
+            setSwitchChecked(initialFiles);
             if (toForm) {
-                toForm.setFieldsValue({ interp: shouldEnable });
+                toForm.setFieldsValue({ interpreter: initialFiles });
             }
         } else if (initialFiles) {
-            // Если это не булево значение, но есть данные - включаем только если S3 активен
-            const shouldEnable = s3FilesEnabled;
-            setSwitchChecked(shouldEnable);
-
+            setSwitchChecked(true);
             if (toForm) {
-                toForm.setFieldsValue({ interp: shouldEnable });
-            }
-        }
-    }, [initialFiles, toForm, s3FilesEnabled]);
-
-    // Автоматическое отключение переключателя при отключении S3
-    useEffect(() => {
-        // Проверяем, что S3 был включен и теперь выключен
-        if (prevS3FilesEnabled.current && !s3FilesEnabled) {
-            // Отключаем генерацию файлов
-            if (switchChecked) {
-                setSwitchChecked(false);
-                if (toForm) {
-                    toForm.setFieldsValue({ interp: false });
-
-                    // Вызываем onChange для синхронизации с родительским компонентом
-                    if (typeof onChange === "function") {
-                        const allValues = toForm.getFieldsValue();
-                        onChange(allValues);
-                    }
-                }
+                toForm.setFieldsValue({ interpreter: true });
             }
         }
 
-        // Обновляем предыдущее значение
-        prevS3FilesEnabled.current = s3FilesEnabled;
-    }, [s3FilesEnabled, switchChecked, toForm, onChange]);
+        // Инициализация web_search
+        if (typeof initialWebSearch === 'boolean') {
+            setWebSearchChecked(initialWebSearch);
+            if (toForm) {
+                toForm.setFieldsValue({ web_search: initialWebSearch });
+            }
+        }
+    }, [initialFiles, initialWebSearch, toForm]);
 
     const handleSwitchChange = (checked) => {
         setSwitchChecked(checked);
 
         // Сохраняем значение в форму
         if (toForm) {
-            toForm.setFieldsValue({ interp: checked });
+            toForm.setFieldsValue({ interpreter: checked });
         }
 
         // Если функция onChange существует, вызываем её
         if (typeof onChange === "function") {
             onChange(checked);
+        }
+    };
+
+    const handleWebSearchChange = (checked) => {
+        setWebSearchChecked(checked);
+
+        // Сохраняем значение в форму и триггерим onValuesChange
+        if (toForm) {
+            toForm.setFieldsValue({ web_search: checked });
+            // Получаем все значения формы и вручную вызываем onChange если он есть
+            const allValues = toForm.getFieldsValue();
+            if (typeof onChange === "function") {
+                onChange(allValues);
+            }
         }
     };
 
@@ -86,28 +75,42 @@ export const Openai_Interpreter = ({onChange, toForm, initialFiles, s3FilesEnabl
         <>
             <div className="section-title">
                 <CodeOutlined />
-                {t("fileGenerationTitle") || "Генерация файлов"}
+                {t("codeInterpreterTitle") || "Интерпретатор кода"}
             </div>
             <div className="section-description">
-                {t("fileGenerationDesc") || "Позволяет агенту создавать файлы, графики и выполнять код для решения задач"}
-                {!currentS3Status && (
-                    <div style={{color: 'var(--warning-color)', marginTop: '8px', fontSize: '13px'}}>
-                        ⚠️ {t("fileGenerationS3Warning") || "Для использования этой функции необходимо включить S3 хранилище файлов"}
-                    </div>
-                )}
+                {t("codeInterpreterDesc") || "Позволяет агенту писать и запускать Python скрипты для решения различных задач"}
             </div>
 
             <div className="step">
                 <span>
                     {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
-                    {t("fileGenerationEnable") || "Включение режима"} <a onClick={showModal}>{t("fileGenerationCreateFiles") || "создания файлов"}</a>&nbsp;
+                    {t("fileGenerationEnable") || "Включение режима"} <a onClick={showModal}>{t("fileGenerationCreateFiles") || "интерпретатор кода"}</a>&nbsp;
                 </span>
                 <Switch
-                    checked={switchChecked && currentS3Status}
-                    disabled={!currentS3Status}
+                    checked={switchChecked}
                     checkedChildren={<span style={{color: "black"}}>{t("Yes") || "Да"}</span>}
                     unCheckedChildren={<span style={{color: "black"}}>{t("No") || "Нет"}</span>}
                     onChange={handleSwitchChange}
+                />
+            </div>
+
+            <div className="section-title" style={{marginTop: '24px'}}>
+                <GlobalOutlined />
+                {t("webSearchTitle") || "Веб-поиск"}
+            </div>
+            <div className="section-description">
+                {t("webSearchDesc") || "Позволяет агенту искать актуальную информацию в интернете для более точных и свежих ответов"}
+            </div>
+
+            <div className="step">
+                <span>
+                    {t("webSearchEnable") || "Включение веб-поиска"}&nbsp;
+                </span>
+                <Switch
+                    checked={webSearchChecked}
+                    checkedChildren={<span style={{color: "black"}}>{t("Yes") || "Да"}</span>}
+                    unCheckedChildren={<span style={{color: "black"}}>{t("No") || "Нет"}</span>}
+                    onChange={handleWebSearchChange}
                 />
             </div>
 
@@ -122,7 +125,7 @@ export const Openai_Interpreter = ({onChange, toForm, initialFiles, s3FilesEnabl
                         fontSize: '16px',
                         color: 'var(--text-color)',
                     }}>
-                    {t("interpreterModalTitle") || "Что такое генерация файлов (Code Interpreter)?"}
+                    {t("interpreterModalTitle") || "Что такое Code Interpreter?"}
                 </Title>
                 <Paragraph
                     code={true}

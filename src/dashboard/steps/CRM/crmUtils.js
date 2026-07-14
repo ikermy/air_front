@@ -1,4 +1,5 @@
-const LAND_URL = (window.runtimeConfig && window.runtimeConfig.REACT_APP_LAND) || process.env.REACT_APP_LAND;
+import { authFetch } from '../../../utils/easyUtils';
+
 
 /**
  * Проверка доступности сервиса CRM (публичный endpoint)
@@ -7,7 +8,7 @@ const LAND_URL = (window.runtimeConfig && window.runtimeConfig.REACT_APP_LAND) |
  */
 export async function healthCheck() {
     try {
-        const response = await fetch(`${LAND_URL}/crm/health`, {
+        const response = await fetch(`/v1/crm/health`, {
             method: "GET",
             headers: {"Content-Type": "application/json"},
         });
@@ -25,9 +26,7 @@ export async function healthCheck() {
             // Если нет JSON, но статус 200 - всё равно считаем успешным
         }
 
-        const result = { ok: true, status: response.status, data };
-
-        return result;
+        return { ok: true, status: response.status, data };
     } catch (error) {
         console.error('Ошибка при проверке health:', error);
         return { ok: false, error: error.message };
@@ -38,17 +37,15 @@ export async function healthCheck() {
  * Получение конфигурации CRM текущего пользователя
  * UserID извлекается из токена на Gateway и передается через X-User-ID
  * Gateway: /crm/api/configs/:crm_type → CRM: /configs/:crm_type
- * @param {string} token - JWT токен авторизации
  * @param {string} crmType - Тип CRM (например, "amocrm")
  * @returns {Promise<{success: boolean, config?: Object, error?: string}>}
  */
-export async function getCRMConfig(token, crmType = 'amocrm') {
+export async function getCRMConfig(crmType = 'amocrm') {
     try {
-        const response = await fetch(`${LAND_URL}/crm/api/configs/${crmType}`, {
+        const response = await authFetch(`/v1/crm/api/configs/${crmType}`, {
             method: "GET",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`
             }
         });
 
@@ -91,22 +88,18 @@ export async function getCRMConfig(token, crmType = 'amocrm') {
 /**
  * Включение/выключение CRM конфигурации
  * Gateway: /crm/api/configs/:crm_type/active → CRM: /configs/:crm_type/active
- * @param {string} token - JWT токен авторизации
  * @param {string} crmType - Тип CRM (например, "amocrm")
  * @param {boolean} isActive - Новое состояние активности
  * @returns {Promise<{success: boolean, message?: string, isActive?: boolean, error?: string}>}
  */
-export async function toggleCRMActive(token, crmType = 'amocrm', isActive) {
+export async function toggleCRMActive(crmType = 'amocrm', isActive) {
     try {
-        const response = await fetch(`${LAND_URL}/crm/api/configs/${crmType}/active`, {
+        const response = await authFetch(`/v1/crm/api/configs/${crmType}/active`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`
             },
-            body: JSON.stringify({
-                is_active: isActive
-            })
+            body: JSON.stringify({ is_active: isActive })
         });
 
         // Обработка различных статусов ответа
@@ -166,17 +159,15 @@ export async function toggleCRMActive(token, crmType = 'amocrm', isActive) {
 /**
  * Удаление CRM-конфигурации по типу
  * Gateway: /crm/api/configs/:crm_type → CRM: /configs/:crm_type
- * @param {string} token - JWT токен авторизации
  * @param {string} crmType - Тип CRM (например, "amocrm")
  * @returns {Promise<{success: boolean, error?: string, details?: string}>}
  */
-export async function deleteCRMConfig(token, crmType = 'amocrm') {
+export async function deleteCRMConfig(crmType = 'amocrm') {
     try {
-        const response = await fetch(`${LAND_URL}/crm/api/configs/${crmType}`, {
+        const response = await authFetch(`/v1/crm/api/configs/${crmType}`, {
             method: "DELETE",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`
             }
         });
 
@@ -207,7 +198,6 @@ export async function deleteCRMConfig(token, crmType = 'amocrm') {
 /**
  * Сохранение конфигурации amocrm (Шаг 1 OAuth)
  * Gateway: /crm/api/configs/amocrm → CRM: /configs/amocrm
- * @param {string} token - JWT токен авторизации
  * @param {Object} configData - Данные конфигурации
  * @param {string} configData.name - Название конфигурации
  * @param {string} configData.subdomain - Поддомен amocrm
@@ -215,13 +205,12 @@ export async function deleteCRMConfig(token, crmType = 'amocrm') {
  * @param {string} configData.clientSecret - Секретный ключ
  * @returns {Promise<{success: boolean, config?: Object, error?: string}>}
  */
-export async function saveAmoCRMConfig(token, configData) {
+export async function saveAmoCRMConfig(configData) {
     try {
-        const response = await fetch(`${LAND_URL}/crm/api/configs/amocrm`, {
+        const response = await authFetch(`/v1/crm/api/configs/amocrm`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`
             },
             body: JSON.stringify({
                 name: configData.name || 'amocrm',
@@ -253,19 +242,16 @@ export async function saveAmoCRMConfig(token, configData) {
 /**
  * Получение URL для авторизации amocrm (Шаг 2 OAuth)
  * Gateway: /crm/api/oauth/amocrm/auth → CRM: /oauth/amocrm/auth
- * @param {string} token - JWT токен авторизации
  * @param {string} redirectUrl - URL для callback (опционально)
  * @returns {Promise<{success: boolean, auth_url?: string, state?: string, error?: string}>}
  */
-export async function getAmoCRMAuthURL(token, redirectUrl = null) {
+export async function getAmoCRMAuthURL(redirectUrl = null) {
     try {
         const body = redirectUrl ? { redirect_url: redirectUrl } : {};
-
-        const response = await fetch(`${LAND_URL}/crm/api/oauth/amocrm/auth`, {
+        const response = await authFetch(`/v1/crm/api/oauth/amocrm/auth`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`
             },
             body: JSON.stringify(body)
         });
@@ -293,23 +279,18 @@ export async function getAmoCRMAuthURL(token, redirectUrl = null) {
 /**
  * Обмен кода авторизации на токены (Шаг 4 OAuth)
  * Gateway: /crm/api/oauth/amocrm/exchange → CRM: /oauth/amocrm/exchange
- * @param {string} token - JWT токен авторизации
  * @param {string} code - Код авторизации
  * @param {string} state - State для проверки
  * @returns {Promise<{success: boolean, expires_at?: number, error?: string}>}
  */
-export async function exchangeAmoCRMCode(token, code, state) {
+export async function exchangeAmoCRMCode(code, state) {
     try {
-        const response = await fetch(`${LAND_URL}/crm/api/oauth/amocrm/exchange`, {
+        const response = await authFetch(`/v1/crm/api/oauth/amocrm/exchange`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
-                "Authorization": `Bearer ${token}`
             },
-            body: JSON.stringify({
-                code: code,
-                state: state
-            })
+            body: JSON.stringify({ code: code, state: state })
         });
 
         if (!response.ok) {
@@ -334,17 +315,15 @@ export async function exchangeAmoCRMCode(token, code, state) {
 /**
  * Тест соединения с amocrm
  * Gateway: /crm/api/configs/amocrm/test → CRM: /configs/amocrm/test
- * @param {string} token - JWT токен авторизации
  * @param {string} crmType - Тип CRM (по умолчанию 'amocrm')
  * @returns {Promise<{success: boolean, message?: string, error?: string, details?: any}>}
  */
-export async function testAmoCRMConnection(token, crmType = 'amocrm') {
+export async function testAmoCRMConnection(crmType = 'amocrm') {
     try {
-        const response = await fetch(`${LAND_URL}/crm/api/configs/${crmType}/test`, {
+        const response = await authFetch(`/v1/crm/api/configs/amocrm/test`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
             }
         });
 
@@ -372,19 +351,18 @@ export async function testAmoCRMConnection(token, crmType = 'amocrm') {
 /**
  * Получение списка кастомных полей контактов amocrm
  * Gateway: /crm/api/contacts/amocrm/custom-fields → CRM: /contacts/amocrm/custom-fields
- * @param {string} token - JWT токен авторизации
  * @param {string} crmType - Тип CRM (по умолчанию 'amocrm')
  * @returns {Promise<{success: boolean, custom_fields?: Array<{id: number, name: string, code: string, field_type: string}>, error?: string}>}
  */
-export async function getAmoCRMCustomFields(token, crmType = 'amocrm') {
+export async function getAmoCRMCustomFields(crmType = 'amocrm') {
     try {
-        const response = await fetch(`${LAND_URL}/crm/api/contacts/${crmType}/custom-fields`, {
+        const response = await authFetch(`/v1/crm/api/contacts/amocrm/custom-fields`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
             }
         });
+
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
             console.error(`Ошибка при получении кастомных полей: ${response.status}`, errorData);
@@ -417,17 +395,15 @@ export async function getAmoCRMCustomFields(token, crmType = 'amocrm') {
 /**
  * Получение списка воронок (pipelines) amocrm с их статусами
  * Gateway: /crm/api/pipelines/:crm_type → CRM: /pipelines/:crm_type
- * @param {string} token - JWT токен авторизации
  * @param {string} crmType - Тип CRM (по умолчанию 'amocrm')
  * @returns {Promise<{success: boolean, pipelines?: Array<{id:number,name:string,statuses:Array<{id:number,name:string,color?:string,sort?:number,type?:number,is_editable?:boolean}>}>, default_pipeline_id?: number|null, error?: string}>}
  */
-export async function getAmoCRMPipelines(token, crmType = 'amocrm') {
+export async function getAmoCRMPipelines(crmType = 'amocrm') {
     try {
-        const response = await fetch(`${LAND_URL}/crm/api/pipelines/${crmType}`, {
+        const response = await authFetch(`/v1/crm/api/pipelines/${crmType}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
             }
         });
 
@@ -560,11 +536,11 @@ export async function openAmoCRMAuthWindow(authURL, state) {
 
 /**
  * Получить конфиг amocrm (raw) – уже есть getCRMConfig, но эта обёртка возвращает boolean.
- * @param {string} token
+ * @param {string} crmType - Тип CRM (например, "amocrm")
  * @returns {Promise<boolean>}
  */
-export async function isAmoCRMAuthorized(token) {
-    const res = await getCRMConfig(token, 'amocrm');
+export async function isAmoCRMAuthorized(crmType = 'amocrm') {
+    const res = await getCRMConfig(crmType);
     return !!(res.success && res.config && res.config.isActive);
 }
 
@@ -572,17 +548,14 @@ export async function isAmoCRMAuthorized(token) {
 /**
  * Полный OAuth процесс (сохранить конфиг -> получить auth URL -> popup -> exchange code)
  * Возвращает access_token / expires_at если сервер их отдает.
- * @param {string} token
  * @param {{name:string, subdomain:string, clientId:string, clientSecret:string}} configData
  */
-export async function authorizeAmoCRM(token, configData) {
+export async function authorizeAmoCRM(configData) {
     // Шаг 1: save config
-    const save = await saveAmoCRMConfig(token, configData);
+    const save = await saveAmoCRMConfig(configData);
     if (!save.success) return { success: false, error: `Шаг 1: ${save.error}` };
     // Шаг 2: auth URL
-    // добавляю задержку в 500 мс чтобы избежать блокировки запросов на сервере
-    await new Promise(resolve => setTimeout(resolve, 500));
-    const urlRes = await getAmoCRMAuthURL(token);
+    const urlRes = await getAmoCRMAuthURL();
     if (!urlRes.success) return { success: false, error: `Шаг 2: ${urlRes.error}` };
     // Шаг 3: popup
     const popupRes = await openAmoCRMAuthWindow(urlRes.auth_url, urlRes.state);
@@ -598,7 +571,7 @@ export async function authorizeAmoCRM(token, configData) {
     }
 
     // Шаг 4: exchange (только если есть код авторизации)
-    const exch = await exchangeAmoCRMCode(token, popupRes.code, popupRes.state);
+    const exch = await exchangeAmoCRMCode(popupRes.code, popupRes.state);
     if (!exch.success) return { success: false, error: `Шаг 4: ${exch.error}` };
     return { success: true, expires_at: exch.expires_at, message: exch.message };
 }
@@ -606,18 +579,16 @@ export async function authorizeAmoCRM(token, configData) {
 /**
  * Сохранение поля источника перехода amocrm
  * Gateway: /crm/api/configs/:crm_type/marusia-source-field → CRM: /configs/:crm_type/marusia-source-field
- * @param {string} token - JWT токен авторизации
  * @param {number} fieldId - ID поля источника перехода
  * @param {string} crmType - Тип CRM (например, "amocrm")
  * @returns {Promise<{success: boolean, error?: string, message?: string}>}
  */
-export async function saveAmoCRMSourceField(token, fieldId, crmType = 'amocrm') {
+export async function saveAmoCRMSourceField(fieldId, crmType = 'amocrm') {
     try {
-        const response = await fetch(`${LAND_URL}/crm/api/configs/${crmType}/marusia-source-field`, {
+        const response = await authFetch(`/v1/crm/api/configs/${crmType}/marusia-source-field`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify({ field_id: fieldId })
         });
@@ -644,19 +615,17 @@ export async function saveAmoCRMSourceField(token, fieldId, crmType = 'amocrm') 
  * Установка настроек лида по умолчанию (pipeline + статус) для amocrm конфигурации
  * Gateway: /crm/api/configs/:crm_type/default-pipeline → CRM: /configs/:crm_type/default-pipeline
  * Сервер ожидает: { pipeline_id: number, status_id: number }
- * @param {string} token - JWT токен авторизации
  * @param {number} pipelineId - ID выбранной воронки
  * @param {number} statusId - ID выбранного статуса воронки
  * @param {string} crmType - Тип CRM (по умолчанию 'amocrm')
  * @returns {Promise<{success: boolean, message?: string, error?: string}>}
  */
-export async function saveAmoCRMDefaultPipeline(token, pipelineId, statusId, crmType = 'amocrm') {
+export async function saveAmoCRMDefaultPipeline(pipelineId, statusId, crmType = 'amocrm') {
     try {
-        const response = await fetch(`${LAND_URL}/crm/api/configs/${crmType}/default-lead-settings`, {
+        const response = await authFetch(`/v1/crm/api/configs/${crmType}/default-pipeline`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify({ pipeline_id: pipelineId, status_id: statusId })
         });
@@ -684,7 +653,6 @@ export async function saveAmoCRMDefaultPipeline(token, pipelineId, statusId, crm
 /**
  * Получение настроек каналов CRM (channels) для текущей конфигурации
  * Gateway: /crm/api/configs/:crm_type/channels → CRM: /configs/:crm_type/channels (GET)
- * @param {string} token - JWT токен авторизации
  * @param {string} crmType - Тип CRM (по умолчанию 'amocrm')
  * @returns {Promise<{success: boolean, settings?: {
  *   Assist?: string,
@@ -704,16 +672,15 @@ export async function saveAmoCRMDefaultPipeline(token, pipelineId, statusId, crm
  *   AltContact?: boolean
  * }, error?: string}>}
  */
-export async function getCRMChannelSettings(token, crmType = 'amocrm') {
-    if (!token) return { success: false, error: 'Токен не передан' };
+export async function getCRMChannelSettings(crmType = 'amocrm') {
     try {
-        const response = await fetch(`${LAND_URL}/crm/api/configs/${crmType}/channels`, {
+        const response = await authFetch(`/v1/crm/api/configs/${crmType}/channels`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
             }
         });
+
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
             return {
@@ -721,6 +688,7 @@ export async function getCRMChannelSettings(token, crmType = 'amocrm') {
                 error: errorData.error || errorData.message || `HTTP ${response.status}`
             };
         }
+
         const result = await response.json().catch(() => ({}));
         return {
             success: !!result.success,
@@ -752,13 +720,11 @@ export async function getCRMChannelSettings(token, crmType = 'amocrm') {
  *   Widget: number,
  *   AltContact: boolean
  * }
- * @param {string} token - JWT токен авторизации
  * @param {Object} settings - Настройки каналов
  * @param {string} crmType - Тип CRM (по умолчанию 'amocrm')
  * @returns {Promise<{success: boolean, message?: string, error?: string}>}
  */
-export async function saveCRMChannelSettings(token, settings, crmType = 'amocrm') {
-    if (!token) return { success: false, error: 'Токен не передан' };
+export async function saveCRMChannelSettings(settings, crmType = 'amocrm') {
     if (!settings || typeof settings !== 'object') return { success: false, error: 'Некорректные настройки' };
     // Нормализуем Tags
     const normalized = {
@@ -776,17 +742,17 @@ export async function saveCRMChannelSettings(token, settings, crmType = 'amocrm'
         Telegram: settings.Telegram || 0,
         Instagram: settings.Instagram || 0,
         Widget: settings.Widget || 0,
-        AltContact: !!settings.AltContact
+    AltContact: !!settings.AltContact
     };
     try {
-        const response = await fetch(`${LAND_URL}/crm/api/configs/${crmType}/channels`, {
+        const response = await authFetch(`/v1/crm/api/configs/${crmType}/channels`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify(normalized)
         });
+
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
             return {
@@ -794,6 +760,7 @@ export async function saveCRMChannelSettings(token, settings, crmType = 'amocrm'
                 error: errorData.error || errorData.message || `HTTP ${response.status}`
             };
         }
+
         const result = await response.json().catch(() => ({}));
         return {
             success: !!result.success,
@@ -807,7 +774,6 @@ export async function saveCRMChannelSettings(token, settings, crmType = 'amocrm'
 /**
  * Получение метаданных всех кастомных полей контактов amocrm
  * Gateway: /crm/api/configs/:crm_type/custom-fields → CRM: /configs/:crm_type/custom-fields
- * @param {string} token - JWT токен авторизации
  * @param {string} crmType - Тип CRM (по умолчанию 'amocrm')
  * @returns {Promise<{success: boolean, custom_fields?: Array<{
  *   id: number,
@@ -825,13 +791,12 @@ export async function saveCRMChannelSettings(token, settings, crmType = 'amocrm'
  *   enums?: Array<{value: string, sort: number}>
  * }>, entity_type?: string, error?: string}>}
  */
-export async function getAmoCRMCustomFieldsMetadata(token, crmType = 'amocrm') {
+export async function getAmoCRMCustomFieldsMetadata(crmType = 'amocrm') {
     try {
-        const response = await fetch(`${LAND_URL}/crm/api/configs/${crmType}/custom-fields`, {
+        const response = await authFetch(`/v1/crm/api/configs/${crmType}/custom-fields`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
             }
         });
 
@@ -868,7 +833,6 @@ export async function getAmoCRMCustomFieldsMetadata(token, crmType = 'amocrm') {
 /**
  * Создание нового кастомного поля контактов amocrm
  * Gateway: /crm/api/configs/:crm_type/custom-fields → CRM: /configs/:crm_type/custom-fields
- * @param {string} token - JWT токен авторизации
  * @param {Object} fieldData - Данные для создания поля
  * @param {string} fieldData.name - Название поля (обязательно)
  * @param {string} fieldData.type - Тип поля (обязательно, например: 'text', 'select', 'multiselect')
@@ -877,13 +841,12 @@ export async function getAmoCRMCustomFieldsMetadata(token, crmType = 'amocrm') {
  * @param {string} crmType - Тип CRM (по умолчанию 'amocrm')
  * @returns {Promise<{success: boolean, custom_field?: Object, message?: string, entity_type?: string, error?: string}>}
  */
-export async function createAmoCRMCustomField(token, fieldData, crmType = 'amocrm') {
+export async function createAmoCRMCustomField(fieldData, crmType = 'amocrm') {
     try {
-        const response = await fetch(`${LAND_URL}/crm/api/configs/${crmType}/custom-fields`, {
+        const response = await authFetch(`/v1/crm/api/configs/${crmType}/custom-fields`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
             },
             body: JSON.stringify({
                 name: fieldData.name,

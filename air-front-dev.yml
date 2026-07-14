@@ -1,0 +1,20 @@
+services:
+  airfront:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: airfront
+    container_name: airfront
+    ports: []
+    restart: always
+    environment:
+      # - HOST=info-bot.online
+      - HOST=localhost
+    networks:
+      - app_internal
+      - air_shared
+networks:
+  app_internal:
+    external: true
+  air_shared:
+    external: true

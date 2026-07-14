@@ -4,9 +4,6 @@ import './auth.css';
 import {CheckOutlined, LoadingOutlined, CloseCircleOutlined} from '@ant-design/icons';
 import {useAuth} from "../../AuthContext";
 
-// const LAND_URL = process.env.REACT_APP_LAND;
-const LAND_URL = window.runtimeConfig?.REACT_APP_LAND || process.env.REACT_APP_LAND;
-
 function EmailConfirm() {
     const [status, setStatus] = useState("loading");
     const [searchParams] = useSearchParams();
@@ -19,7 +16,7 @@ function EmailConfirm() {
             if (key) {
 
                 try {
-                    const response = await fetch(`${LAND_URL}/confirm?key=${key}`, {
+                    const response = await fetch(`/v1/auth/email/confirm?key=${key}`, {
                         method: "GET",
                         headers: {
                             "Accept": "application/json"

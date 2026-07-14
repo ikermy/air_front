@@ -1,6 +1,5 @@
-import {useEffect, useState} from "react";
+﻿import {useEffect, useState} from "react";
 import {useTranslation} from 'react-i18next';
-import {validateAndRefreshToken} from "../../../../utils/easyUtils";
 import {Button, Form, Input, message, Spin, Modal, Alert, Typography, Select, Tooltip} from "antd";
 import {RobotOutlined, ExclamationCircleOutlined} from "@ant-design/icons";
 import {
@@ -12,45 +11,10 @@ import {
 import "../../../steps.css";
 import "../../CreateModel.css";
 import {showErrorNotification, showNotification} from "../../../hotification/showNotification";
-import OpenAILogo from "../../../../assets/img/openai-logo.svg";
-import MistralAILogo from "../../../../assets/img/mistral-ai-logo.png";
-import GeminiLogo from "../../../../assets/img/gemini-logo.png";
+import {getProviderInfo} from "../../CreateModelFormElements/providersConfig";
 
 const { TextArea } = Input;
 
-// Функция для получения данных провайдера
-const getProviderInfo = (providerName, t) => {
-    const providers = {
-        'openai': {
-            name: 'OpenAI',
-            logo: OpenAILogo,
-            color: '#10a37f',
-        },
-        'mistral': {
-            name: 'MistralAI',
-            logo: MistralAILogo,
-            color: '#f88500',
-        },
-        'mistralai': {
-            name: 'MistralAI',
-            logo: MistralAILogo,
-            color: '#f88500',
-        },
-        'google': {
-            name: 'Gemini',
-            logo: GeminiLogo,
-            color: '#1092ff',
-        }
-    };
-
-    // Удаляем пробелы и приводим к нижнему регистру для поиска
-    const key = providerName?.toLowerCase().replace(/\s+/g, '');
-    return providers[key] || {
-        name: providerName || (t?.("serviceModelUnknownProvider") || 'Неизвестный провайдер'),
-        logo: null,
-        color: '#666',
-    };
-};
 
 export function ServiceModelData({ isServiceRunning: isServiceRunningProp }) {
     const { t } = useTranslation();
@@ -65,28 +29,18 @@ export function ServiceModelData({ isServiceRunning: isServiceRunningProp }) {
     const [selectedModelId, setSelectedModelId] = useState(null);
     const { Text } = Typography;
 
-    // Используем проп или false по умолчанию
     const isServiceRunning = isServiceRunningProp || false;
 
     useEffect(() => {
         const loadModelData = async () => {
-            const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
-            if (!token) {
-                message.error(t("authError") || 'Ошибка аутентификации');
-                setModelData(null);
-                setLoading(false);
-                return;
-            }
             try {
-                const data = await readServiceModelData(token);
+                const data = await readServiceModelData();
 
                 if (data && Object.keys(data).length > 0) {
                     setModelData(data);
 
-                    // Получаем hunting models чтобы узнать model_id текущей модели
-                    const huntingData = await serviceCheckHuntingModels(token);
+                    const huntingData = await serviceCheckHuntingModels();
                     if (huntingData && Array.isArray(huntingData) && huntingData.length > 0) {
-                        // Ищем модель по имени провайдера и названию модели
                         const currentModel = huntingData.find(
                             m => m.provider.toLowerCase() === data.provider.toLowerCase() &&
                                  m.model_name === data.name
@@ -103,14 +57,11 @@ export function ServiceModelData({ isServiceRunning: isServiceRunningProp }) {
                     });
                 } else {
 
-                    // Если modelData пустая, проверяем hunting models
-                    const huntingData = await serviceCheckHuntingModels(token);
+                    const huntingData = await serviceCheckHuntingModels();
                     if (huntingData && Array.isArray(huntingData) && huntingData.length > 0) {
                         setHuntingModels(huntingData);
-                        // Если только одна модель, автоматически выбираем её
                         if (huntingData.length === 1) {
                             setSelectedModelId(huntingData[0].model_id);
-                            // Кнопка остается неактивной до заполнения обязательных полей
                             setButtonDisabled(true);
                         }
                     } else {
@@ -129,29 +80,23 @@ export function ServiceModelData({ isServiceRunning: isServiceRunningProp }) {
         loadModelData();
     }, [form, t]);
 
-    // Обработчик изменений формы
     const handleValuesChange = (changedValues, allValues) => {
         if (modelData) {
-            // Для существующей модели - проверяем изменения
             const hasChanges = Object.keys(allValues).some((key) => {
                 return modelData[key] !== allValues[key];
             });
             setButtonDisabled(!hasChanges);
         } else {
-            // Для новой модели - проверяем наличие обязательных полей
             const hasSelectedModel = selectedModelId !== null;
             const hasStartMsg = allValues.start_msg && allValues.start_msg.trim().length > 0;
             const hasTgGroup = allValues.tg_group && allValues.tg_group.trim().length > 0;
 
-            // Кнопка активна только если выбрана модель и заполнены все обязательные поля
             setButtonDisabled(!(hasSelectedModel && hasStartMsg && hasTgGroup));
         }
     };
 
-    // Обработчик выбора модели из списка hunting models
     const handleModelSelect = (modelId) => {
         setSelectedModelId(modelId);
-        // Проверяем заполнены ли обязательные поля формы
         const formValues = form.getFieldsValue();
         const hasStartMsg = formValues.start_msg && formValues.start_msg.trim().length > 0;
         const hasTgGroup = formValues.tg_group && formValues.tg_group.trim().length > 0;
@@ -159,13 +104,6 @@ export function ServiceModelData({ isServiceRunning: isServiceRunningProp }) {
     };
 
     const onFinish = async (values) => {
-        // Собираю данные формы и отправляю на сервер для создания/обновления модели
-        const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
-        if (!token) {
-            message.error(t("authError") || 'Ошибка аутентификации');
-            return;
-        }
-
         if (!selectedModelId) {
             showErrorNotification(t("error") || "Ошибка", t("serviceModelNotSelected") || "Не выбрана модель для создания/обновления сервиса");
             return;
@@ -175,17 +113,15 @@ export function ServiceModelData({ isServiceRunning: isServiceRunningProp }) {
         const tg = values.tg_group || "";
 
         try {
-            // Всегда используем selectedModelId
-            const success = await createServiceModelData(token, start, tg, selectedModelId);
+            const success = await createServiceModelData(start, tg, selectedModelId);
 
             if (success) {
                 showNotification(modelData ? (t("serviceModelUpdated") || "Модель обновлена") : (t("serviceModelCreated") || "Модель создана"));
 
-                // Обновляем данные модели в UI
-                const newData = await readServiceModelData(token);
+                const newData = await readServiceModelData();
                 setModelData(newData);
 
-                setHuntingModels(null); // Очищаем список hunting models
+                setHuntingModels(null);
                 form.setFieldsValue({
                     start_msg: newData.start_msg || start,
                     tg_group: newData.tg_group || tg,
@@ -196,7 +132,7 @@ export function ServiceModelData({ isServiceRunning: isServiceRunningProp }) {
             }
         } catch (err) {
             console.error(t("serviceModelSaveError") || 'Ошибка при создании/обновлении модели', err);
-            showErrorNotification(t("serviceModelSaveError") || "Ошибка при сохранении модели");
+            showErrorNotification(t("serviceModelSaveError") || "Ошибка при создании/обновлении модели");
         }
     };
 
@@ -210,15 +146,8 @@ export function ServiceModelData({ isServiceRunning: isServiceRunningProp }) {
             return;
         }
         setDeleteLoading(true);
-        const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
-        if (!token) {
-            setDeleteLoading(false);
-            console.error(t("authError") || 'Ошибка аутентификации');
-            showErrorNotification(t("serviceModelDeleteError") || "Ошибка удаления модели");
-            return;
-        }
         try {
-            const response = await deleteServiceModelData(token);
+            const response = await deleteServiceModelData();
             if (!response) {
                 setDeleteLoading(false);
                 console.error(t("serviceModelDeleteError") || "Ошибка при удалении модели:", response?.status);
@@ -233,11 +162,9 @@ export function ServiceModelData({ isServiceRunning: isServiceRunningProp }) {
             setSelectedModelId(null);
 
 
-            // Загружаем доступные модели после удаления
-            const huntingData = await serviceCheckHuntingModels(token);
+            const huntingData = await serviceCheckHuntingModels();
             if (huntingData && Array.isArray(huntingData) && huntingData.length > 0) {
                 setHuntingModels(huntingData);
-                // Если только одна модель, автоматически выбираем её
                 if (huntingData.length === 1) {
                     setSelectedModelId(huntingData[0].model_id);
                 }
@@ -288,11 +215,10 @@ export function ServiceModelData({ isServiceRunning: isServiceRunningProp }) {
                 }
             </div>
 
-            {/* Блок выбора модели из hunting models */}
             {!modelData && huntingModels && huntingModels.length > 0 && (
                 <div className="form-section model-name-section" style={{marginBottom: '24px'}}>
                     <div className="section-title">
-                        🎯 {t("serviceModelSelectionTitle") || "Выбор модели для сервиса"}
+                        📝 {t("serviceModelSelectionTitle") || "Выбор модели для сервиса"}
                     </div>
                     <div className="section-description">
                         {huntingModels.length === 1
@@ -316,10 +242,10 @@ export function ServiceModelData({ isServiceRunning: isServiceRunningProp }) {
                             huntingModels.map((model) => (
                                 <Select.Option key={model.model_id} value={model.model_id}>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                {getProviderInfo(model.provider, t).logo && (
+                                                {getProviderInfo(model.provider).logo && (
                                                     <img
-                                                        src={getProviderInfo(model.provider, t).logo}
-                                                        alt={getProviderInfo(model.provider, t).name}
+                                                        src={getProviderInfo(model.provider).logo}
+                                                        alt={getProviderInfo(model.provider).name}
                                                         style={{
                                                             width: '20px',
                                                             height: '20px',
@@ -330,10 +256,10 @@ export function ServiceModelData({ isServiceRunning: isServiceRunningProp }) {
                                                 )}
                                                 <span style={{
                                                     fontWeight: '500',
-                                                    color: getProviderInfo(model.provider, t).color,
+                                                    color: getProviderInfo(model.provider).color,
                                                     marginRight: '8px'
                                                 }}>
-                                                    {getProviderInfo(model.provider, t).name}
+                                                    {getProviderInfo(model.provider).name}
                                                 </span>
                                                 <span style={{
                                                     fontSize: '14px',
@@ -354,20 +280,20 @@ export function ServiceModelData({ isServiceRunning: isServiceRunningProp }) {
             {modelData && modelData.provider && (
                 <div className="form-section model-name-section" style={{marginBottom: '24px'}}>
                     <div className="section-title">
-                        🤖 {t("serviceModelProviderTitle") || "Провайдер AI"}
+                        🖋 {t("serviceModelProviderTitle") || "Провайдер AI"}
                     </div>
                     <div style={{
                         display: 'flex',
                         alignItems: 'center',
                         padding: '12px 16px',
                         borderRadius: '8px',
-                        border: `2px solid ${getProviderInfo(modelData.provider, t).color}`,
+                        border: `2px solid ${getProviderInfo(modelData.provider).color}`,
                         gap: '12px'
                     }}>
-                        {getProviderInfo(modelData.provider, t).logo && (
+                        {getProviderInfo(modelData.provider).logo && (
                             <img
-                                src={getProviderInfo(modelData.provider, t).logo}
-                                alt={getProviderInfo(modelData.provider, t).name}
+                                src={getProviderInfo(modelData.provider).logo}
+                                alt={getProviderInfo(modelData.provider).name}
                                 style={{
                                     width: '40px',
                                     height: '40px',
@@ -379,11 +305,11 @@ export function ServiceModelData({ isServiceRunning: isServiceRunningProp }) {
                             <div style={{
                                 fontSize: '18px',
                                 fontWeight: '600',
-                                color: getProviderInfo(modelData.provider, t).color,
+                                color: getProviderInfo(modelData.provider).color,
                                 marginBottom: '8px',
                                 lineHeight: '1.2'
                             }}>
-                                {getProviderInfo(modelData.provider, t).name}
+                                {getProviderInfo(modelData.provider).name}
                             </div>
                             {modelData.name && (
                                 <div style={{
@@ -407,7 +333,6 @@ export function ServiceModelData({ isServiceRunning: isServiceRunningProp }) {
                 </div>
             )}
 
-            {/* Показываем форму только если есть modelData или выбрана hunting model */}
             {(modelData || selectedModelId) && (
                 <Form
                     form={form}
@@ -417,7 +342,6 @@ export function ServiceModelData({ isServiceRunning: isServiceRunningProp }) {
                     layout="vertical"
                 >
 
-                    {/* Секция стартового сообщения */}
                 <div className="form-section model-name-section">
                     <div className="section-title">
                         🚀 {t("serviceModelStartTitle") || "Стартовое сообщение"}
@@ -448,13 +372,12 @@ export function ServiceModelData({ isServiceRunning: isServiceRunningProp }) {
                     </Form.Item>
                 </div>
 
-                {/* Секция Telegram группы */}
                 <div className="form-section model-name-section">
                     <div className="section-title">
-                        📱 {t("serviceModelGroupTitle") || "Целевая группа Telegram"}
+                        📦 {t("serviceModelGroupTitle") || "Целевая группа Telegram"}
                     </div>
                     <div className="section-description">
-                        {t("serviceModelGroupDesc") || "Имя публичной группы (t.me/...) в Telegram для для пересылки лидов соответствующих условиям модели."}
+                        {t("serviceModelGroupDesc") || "Имя публичной группы (t.me/...) в Telegram для пересылки лидов соответствующим условиям модели."}
                     </div>
 
                     <Form.Item
@@ -482,7 +405,6 @@ export function ServiceModelData({ isServiceRunning: isServiceRunningProp }) {
                     </Form.Item>
                 </div>
 
-                {/* Кнопки действий */}
                 <div className="create-model-buttons">
                     <Button
                         type="primary"
@@ -514,7 +436,6 @@ export function ServiceModelData({ isServiceRunning: isServiceRunningProp }) {
             </Form>
             )}
 
-            {/* Модальное окно подтверждения удаления */}
             <Modal
                 title={
                     <span style={{ color: '#ff4d4f' }}>

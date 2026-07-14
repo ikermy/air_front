@@ -20,7 +20,7 @@ const DashboardOverview = ({ userRole = null, onMenuChange = null }) => {
     const {t} = useTranslation();
     const isDeveloper = userRole === "Developer";
     const isService = userRole === "Service";
-    const showSimpleAuth = process.env.REACT_APP_SHOW_SIMPLE_AUTH === "false";
+    const showSimpleAuth = false;
 
     // Функция для обработки клика по карточке
     const handleCardClick = (sectionKey) => {
@@ -78,9 +78,10 @@ const DashboardOverview = ({ userRole = null, onMenuChange = null }) => {
             description: t('dashboardOverviewModulesDesc') || 'Подключение мессенджеров и платформ для взаимодействия',
             features: [
                 t('dashboardOverviewModulesFeature1') || 'Telegram Bot и User Bot',
-                t('dashboardOverviewModulesFeature2') || 'WhatsApp Business API',
+                'WhatsApp Business API',
                 t('dashboardOverviewModulesFeature3') || 'Веб-виджет для сайтов',
-                t('dashboardOverviewModulesFeature4') || 'Instagram Bot',
+                'Instagram Bot',
+                'Avito Bot'
             ],
             color: '#1890ff'
         }]),

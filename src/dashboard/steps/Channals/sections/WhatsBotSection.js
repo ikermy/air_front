@@ -2,7 +2,6 @@ import React, {useState, useEffect} from "react";
 import {Alert, Button, Modal, QRCode} from "antd";
 import {ContactsModal} from "../ContactsModal";
 import {showErrorNotification, showNotification} from "../../../hotification/showNotification";
-import {validateAndRefreshToken} from "../../../../utils/easyUtils";
 import {getBotName} from "../chUtils";
 import {useTranslation} from "react-i18next";
 
@@ -89,11 +88,8 @@ export const WhatsBotSection = ({
     const [botName, setBotName] = useState(null);
 
     const fetchBotNameFor = async (chName) => {
-        const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
-        if (!token) return null;
-
         try {
-            const res = await getBotName(token, chName);
+            const res = await getBotName(chName);
             if (res && typeof res === "object") {
                 return res.name ?? null;
             }
@@ -281,3 +277,4 @@ export const WhatsBotSection = ({
         </div>
     );
 };
+

@@ -32,12 +32,10 @@ export function Transceiver({
     }, [setPermit]);
 
     const sendMessage = async () => {
-        const LAND_URL = (window.runtimeConfig && window.runtimeConfig.REACT_APP_LAND) || process.env.REACT_APP_LAND;
-
         if (message.trim() === '') return; // Не отправлять пустое сообщение
 
         try {
-            const response = await axios.post(`${LAND_URL}/widget/data`, {
+            const response = await axios.post(`/widget/data`, {
                 token: token,
                 name: userName,
                 content: message,

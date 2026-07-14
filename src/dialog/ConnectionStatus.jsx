@@ -1,7 +1,6 @@
 import { useEffect } from 'react';
 import axios from 'axios';
 
-const LAND_URL = window.runtimeConfig?.REACT_APP_LAND || process.env.REACT_APP_LAND;
 
 export function ConnectionStatus({ mode, setConnected }) {
     useEffect(() => {
@@ -10,13 +9,13 @@ export function ConnectionStatus({ mode, setConnected }) {
                 let url;
                 switch (mode) {
                     case "work":
-                        url = `${LAND_URL}/healthcheck`;
+                        url = `/healthcheck`;
                         break;
                     case "demo":
-                        url = `${LAND_URL}/available/demo`;
+                        url = `/system/available/demo`;
                         break;
                     case "widget":
-                        url = `${LAND_URL}/available/widget`;
+                        url = `/system/available/widget`;
                         break;
                     default:
                         console.warn('Неизвестный режим');

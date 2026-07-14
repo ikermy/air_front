@@ -1,4 +1,6 @@
 export function getOrSetUserId() {
+    if (typeof window === 'undefined') return 0;
+
     // Пытаемся прочитать UserId из localStorage
     let userId = localStorage.getItem('userId');
 

@@ -1,12 +1,11 @@
 import {useEffect, useState, forwardRef, useImperativeHandle} from "react";
 import {useTranslation} from 'react-i18next';
-import {validateAndRefreshToken} from "../../../../utils/easyUtils";
 import {readProxyData, setServiceProxyActive, addServiceProxy, editServiceProxy, deleteServiceProxy, deleteAllServiceProxy} from "./leadUtils";
-import "../../../steps.css";
-import "../../CreateModel.css";
-import {message, Spin, Table, Badge, Switch, Button, Modal, Form, Input, Upload, Tag, Tooltip} from 'antd';
+import { getAuthToken } from "../../../../utils/easyUtils";
+import {Spin, Table, Badge, Switch, Button, Modal, Form, Input, Upload, Tag, Tooltip, message} from 'antd';
 import {CloudServerOutlined, PlusOutlined, EditOutlined, DeleteOutlined, ExclamationCircleOutlined, UploadOutlined} from "@ant-design/icons";
 import {showErrorNotification, showNotification} from "../../../hotification/showNotification";
+import { Title, Text, Paragraph } from "antd/lib/typography";
 
 export const LeadProxyData = forwardRef((props, ref) => {
     const { t } = useTranslation();
@@ -26,15 +25,9 @@ export const LeadProxyData = forwardRef((props, ref) => {
     const [isUploadLoading, setIsUploadLoading] = useState(false);
 
     const loadProxyData = async () => {
-        const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
-        if (!token) {
-            message.error(t("authError") || 'Ошибка аутентификации');
-            setProxyList(null);
-            setLoading(false);
-            return;
-        }
+        setLoading(true);
         try {
-            const data = await readProxyData(token);
+            const data = await readProxyData();
 
             if (data && Array.isArray(data) && data.length > 0) {
                 setProxyList(data);
@@ -186,19 +179,9 @@ export const LeadProxyData = forwardRef((props, ref) => {
 
     // Функция подтверждения загрузки прокси
     const handleConfirmUploadProxies = async () => {
-        const validProxies = previewProxies.filter(p => p.isValid);
-
+        const validProxies = previewProxies.filter(p => !p.error);
         if (validProxies.length === 0) {
-            message.warning(t("proxyNoValidProxies") || 'Нет валидных прокси для добавления');
             setIsPreviewModalOpen(false);
-            return;
-        }
-
-        setIsUploadLoading(true);
-        const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
-        if (!token) {
-            message.error(t("authError") || 'Ошибка аутентификации');
-            setIsUploadLoading(false);
             return;
         }
 
@@ -222,14 +205,12 @@ export const LeadProxyData = forwardRef((props, ref) => {
                         proxyAddr = hostPart;
                     }
 
-                    await addServiceProxy(token, proxyAddr, username, password);
+                    await addServiceProxy(proxyAddr, username, password);
                     successCount++;
                 } catch (error) {
                     console.error(`Ошибка добавления прокси ${proxy.addr}:`, error);
                     failureCount++;
                 }
-                // Небольшая задержка для избежания перегрузки API
-                await new Promise(resolve => setTimeout(resolve, 100));
             }
 
             // Показываем результат
@@ -275,21 +256,15 @@ export const LeadProxyData = forwardRef((props, ref) => {
                 return;
             }
 
-            const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
-            if (!token) {
-                message.error(t("authError") || 'Ошибка аутентификации');
-                return;
-            }
-
             // Вызов API для добавления прокси
-            await addServiceProxy(token, values.addr, values.usr || null, values.pass || null);
+            await addServiceProxy(values.addr, values.usr || null, values.pass || null);
 
             showNotification(t("success") || 'Успешно', t("proxyAddSuccess") || 'Прокси добавлен');
             setIsAddModalOpen(false);
             form.resetFields();
 
             // Обновить список прокси после добавления
-            const data = await readProxyData(token);
+            const data = await readProxyData();
             if (data && Array.isArray(data) && data.length > 0) {
                 setProxyList(data);
             } else {
@@ -332,14 +307,8 @@ export const LeadProxyData = forwardRef((props, ref) => {
                 return;
             }
 
-            const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
-            if (!token) {
-                message.error(t("authError") || 'Ошибка аутентификации');
-                return;
-            }
-
             // Вызов API для обновления прокси
-            await editServiceProxy(token, selectedProxy.id, values.addr, values.usr || null, values.pass || null);
+            await editServiceProxy(selectedProxy.id, values.addr, values.usr || null, values.pass || null);
 
             showNotification(t("success") || 'Успешно', t("proxyUpdateSuccess") || 'Прокси обновлен');
             setIsEditModalOpen(false);
@@ -347,7 +316,7 @@ export const LeadProxyData = forwardRef((props, ref) => {
             form.resetFields();
 
             // Обновить список прокси после изменения
-            const data = await readProxyData(token);
+            const data = await readProxyData();
             if (data && Array.isArray(data) && data.length > 0) {
                 setProxyList(data);
             } else {
@@ -370,15 +339,9 @@ export const LeadProxyData = forwardRef((props, ref) => {
             return;
         }
 
-        const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
-        if (!token) {
-            message.error(t("authError") || 'Ошибка аутентификации');
-            return;
-        }
-
         try {
             // Вызов API для удаления прокси
-            await deleteServiceProxy(token, selectedProxy.id);
+            await deleteServiceProxy(selectedProxy.id);
 
             // Обновляем состояние прокси
             setProxyList((prevProxies) => prevProxies.filter((p) => p.id !== selectedProxy.id));
@@ -401,20 +364,9 @@ export const LeadProxyData = forwardRef((props, ref) => {
     };
 
     const handleDeleteAllConfirm = async () => {
-        const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
-        if (!token) {
-            message.error(t("authError") || 'Ошибка аутентификации');
-            setIsDeleteAllModalOpen(false);
-            return;
-        }
-
-        setLoading(true);
-
         try {
-            // Удаляем все прокси на сервере
-            const result = await deleteAllServiceProxy(token);
-
-            if (result) {
+            const success = await deleteAllServiceProxy();
+            if (success) {
                 // Очищаем список прокси после успешного удаления
                 setProxyList([]);
                 showNotification(t("success") || 'Успешно', t("proxyDeleteAllSuccess") || 'Все прокси удалены');
@@ -425,30 +377,22 @@ export const LeadProxyData = forwardRef((props, ref) => {
             console.error(t("proxyDeleteAllError") || 'Ошибка при удалении всех прокси:', error);
             showErrorNotification(t("error") || 'Ошибка', t("proxyDeleteAllError") || 'Ошибка удаления всех прокси');
         } finally {
-            setLoading(false);
             setIsDeleteAllModalOpen(false);
         }
     };
 
-    const handleToggleProxy = async (proxy, checked) => {
-        const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
-        if (!token) {
-            message.error('Ошибка аутентификации');
-            return;
-        }
-
+    const handleToggleProxy = async (proxyId, currentActive) => {
         try {
-            // Вызов API для активации/деактивации прокси
-            await setServiceProxyActive(token, proxy.id, checked);
+            const success = await setServiceProxyActive(proxyId, !currentActive);
 
             // Обновляем состояние прокси
             setProxyList((prevProxies) =>
-                prevProxies.map((p) => (p.id === proxy.id ? { ...p, active: checked ? 1 : 0 } : p))
+                prevProxies.map((p) => (p.id === proxyId ? { ...p, active: !currentActive ? 1 : 0 } : p))
             );
 
-            showNotification(t("success") || 'Успешно', `${t("proxy") || "Прокси"} ${proxy.addr} ${t("success") || "успешно"} ${checked ? (t("proxyStatusOn") || 'активирован') : (t("proxyStatusOff") || 'деактивирован')}`);
+            showNotification(t("success") || 'Успешно', `${t("proxy") || "Прокси"} ${proxyId} ${t("success") || "успешно"} ${currentActive ? (t("proxyStatusOn") || 'активирован') : (t("proxyStatusOff") || 'деактивирован')}`);
         } catch (error) {
-            showErrorNotification(t("error") || 'Ошибка', `${t("error") || "Ошибка при"} ${checked ? t("proxyStatusOn") : t("proxyStatusOff") || `${checked ? 'активации' : 'деактивации'}`} ${t("proxy") || "прокси"}: ${error.message}`);
+            showErrorNotification(t("error") || 'Ошибка', `${t("error") || "Ошибка при"} ${currentActive ? t("proxyStatusOn") : t("proxyStatusOff") || `${currentActive ? 'активации' : 'деактивации'}`} ${t("proxy") || "прокси"}: ${error.message}`);
         }
     };
 

@@ -39,6 +39,10 @@
     margin-bottom: 20px ;
 }
 
+.tour-start-button .ant-btn {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+}
+
 .tour-controls .tour-start-button .ant-btn {
     background: rgba(255, 255, 255, 0.2) ;
     border-color: rgba(255, 255, 255, 0.3) ;

@@ -5,8 +5,7 @@ import { AddCRM } from './AddCRM';
 import { AmoCRMSection } from './sections/AmoCRMSection';
 import {healthCheck, getCRMConfig, toggleCRMActive, deleteCRMConfig} from './crmUtils';
 import {showErrorNotification, showNotification, showWarningNotification} from '../../hotification/showNotification';
-import {validateAndRefreshToken} from '../../../utils/easyUtils';
-import {getTourPanelState, setTourPanelState} from '../../../utils/cookieUtils';
+import { getTourPanelState, setTourPanelState } from '../../../utils/cookieUtils';
 import { useTranslation } from 'react-i18next';
 import '../Channals/Chanels.css';
 import '../Channals/ChannelsModern.css';
@@ -54,12 +53,7 @@ export function CreateCRM() {
     useEffect(() => {
         const loadCRMConfigs = async () => {
             try {
-                const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
-                if (!token) {
-                    console.log('Нет токена авторизации');
-                    return;
-                }
-                const configResult = await getCRMConfig(token, 'amoCRM');
+                const configResult = await getCRMConfig('amoCRM');
                 if (configResult.success && configResult.config) {
                     const { config } = configResult;
                     // Обрезаем суффикс /crm/oauth/amoCRM/callback из redirectUrl
@@ -135,9 +129,9 @@ export function CreateCRM() {
     };
 
     const handleToggleSwitch = async (key) => {
-        const crm = selectedCRMs.find(c => c.key === key);
-        // Проверяем наличие реальной конфигурации (загруженной с сервера)
-        const hasConfig = crm && crm.originalConfig;
+         const crm = selectedCRMs.find(c => c.key === key);
+         // Проверяем наличие реальной конфигурации (загруженной с сервера)
+         const hasConfig = crm && crm.originalConfig;
 
         if (!hasConfig) {
             showWarningNotification(
@@ -150,15 +144,8 @@ export function CreateCRM() {
         const newEnabledState = !crm.isEnabled;
 
         try {
-            const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
-
-            if (!token) {
-                showWarningNotification("Ошибка авторизации", "Необходимо повторно авторизоваться!");
-                return;
-            }
-
             // Вызываем API для изменения статуса на сервере
-            const result = await toggleCRMActive(token, 'amoCRM', newEnabledState);
+            const result = await toggleCRMActive( 'amoCRM', newEnabledState);
 
             if (result.success) {
                 // Обновляем состояние локально только при успешном ответе
@@ -193,16 +180,9 @@ export function CreateCRM() {
         const removedCRM = selectedCRMs.find(crm => crm.key === crmToRemove);
 
         if (removedCRM) {
-            // Получаем токен
-            const token = await validateAndRefreshToken(localStorage.getItem('authToken'));
-            if (!token) {
-                showWarningNotification('Ошибка авторизации', 'Необходимо повторно авторизоваться!');
-                return;
-            }
-
             // Удаляем конфиг на сервере по типу CRM (key == crmType)
             const crmType = removedCRM.key; // для amoCRM это 'amoCRM'
-            const result = await deleteCRMConfig(token, crmType);
+            const result = await deleteCRMConfig(crmType);
 
             if (!result.success) {
                 showErrorNotification('Ошибка удаления', result.error || 'Не удалось удалить конфигурацию CRM');
@@ -539,6 +519,8 @@ export function CreateCRM() {
         </>
     );
 }
+
+
 
 
 

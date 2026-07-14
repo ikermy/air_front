@@ -7,6 +7,7 @@ import {showWarningNotification, showErrorNotification, showNotification} from "
 import { uploadEmbedding, listUserDocuments, deleteDocument } from "./embUtils";
 import {useTranslation} from "react-i18next";
 
+
 // Типы и интерфейсы, ранее в embUtils.ts
 export interface DocumentMetadata {
   source?: string;
@@ -40,13 +41,17 @@ interface EmbeddingProps {
   toForm?: any;
   initialDocuments?: Document[];
   modelData?: any;
+  provider?: string;
+  onEmbeddingChange?: () => void; // Callback для автоматического обновления модели
 }
 
 export const Embedding: React.FC<EmbeddingProps> = ({
   onChange,
   toForm,
   initialDocuments = [],
-  modelData
+  modelData,
+  provider,
+  onEmbeddingChange
 }) => {
   const {t} = useTranslation();
   const [isModalOpen, setModalOpen] = useState(false);
@@ -68,13 +73,8 @@ export const Embedding: React.FC<EmbeddingProps> = ({
   const fetchDocuments = useCallback(async () => {
     try {
       setLoadingDocs(true);
-      const token = localStorage.getItem("authToken");
-      if (!token) {
-        showErrorNotification(t("error") || "Ошибка", t("tokenNotFound") || "Токен не найден");
-        return;
-      }
 
-      const response: ListDocumentsResponse = await listUserDocuments(token);
+      const response: ListDocumentsResponse = await listUserDocuments(provider);
       if (response.success && response.documents) {
         setExistingDocuments(response.documents);
 
@@ -112,7 +112,7 @@ export const Embedding: React.FC<EmbeddingProps> = ({
     } finally {
       setLoadingDocs(false);
     }
-  }, [toForm, t]);
+  }, [toForm, t, provider]);
 
   // Инициализация при загрузке компонента
   useEffect(() => {
@@ -193,7 +193,7 @@ export const Embedding: React.FC<EmbeddingProps> = ({
   };
 
   // Валидация текста
-  const validateText = (): boolean => {
+  const validateText = useCallback((): boolean => {
     if (!textContent.trim()) {
       showWarningNotification(t("warning") || "Предупреждение", t("embeddingPleaseEnterText") || "Пожалуйста, введите текст");
       return false;
@@ -213,10 +213,10 @@ export const Embedding: React.FC<EmbeddingProps> = ({
     }
 
     return true;
-  };
+  }, [textContent, docName, t]);
 
   // Загрузка эмбеддинга
-  const handleSubmitText = async () => {
+  const handleSubmitText = useCallback(async () => {
     if (!validateText()) {
       return;
     }
@@ -225,12 +225,6 @@ export const Embedding: React.FC<EmbeddingProps> = ({
       setLoading(true);
       setSubmitEnabled(false);
 
-      const token = localStorage.getItem("authToken");
-      if (!token) {
-        showErrorNotification(t("error") || "Ошибка", t("tokenNotFound") || "Токен не найден");
-        return;
-      }
-
       const metadata: DocumentMetadata = {
         source: "text_input",
         createdAt: new Date().toISOString(),
@@ -238,7 +232,7 @@ export const Embedding: React.FC<EmbeddingProps> = ({
       };
 
       const response: UploadEmbeddingResponse = await uploadEmbedding(
-        token,
+        provider,
         docName,
         textContent,
         metadata
@@ -262,6 +256,11 @@ export const Embedding: React.FC<EmbeddingProps> = ({
           const updatedDocs = [...existingDocuments, { id: response.doc_id, name: docName, content: textContent, metadata }];
           onChange(updatedDocs);
         }
+
+        // Вызываем callback для автоматического обновления модели
+        if (typeof onEmbeddingChange === "function") {
+          onEmbeddingChange();
+        }
       }
     } catch (error) {
       console.error("Ошибка при загрузке эмбеддинга:", error);
@@ -273,18 +272,12 @@ export const Embedding: React.FC<EmbeddingProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [validateText, textContent, docName, provider, onChange, onEmbeddingChange, existingDocuments, fetchDocuments, t]);
 
   // Удаление документа
-  const handleDeleteDocument = async (docToDelete: Document) => {
+  const handleDeleteDocument = useCallback(async (docToDelete: Document) => {
     try {
-      const token = localStorage.getItem("authToken");
-      if (!token) {
-        showErrorNotification(t("error") || "Ошибка", t("tokenNotFound") || "Токен не найден");
-        return;
-      }
-
-      await deleteDocument(token, docToDelete.id);
+      await deleteDocument(docToDelete.id, provider);
 
       const updatedDocs = existingDocuments.filter(doc => doc.id !== docToDelete.id);
       setExistingDocuments(updatedDocs);
@@ -313,6 +306,11 @@ export const Embedding: React.FC<EmbeddingProps> = ({
       if (typeof onChange === "function") {
         onChange(updatedDocs);
       }
+
+      // Вызываем callback для автоматического обновления модели
+      if (typeof onEmbeddingChange === "function") {
+        onEmbeddingChange();
+      }
     } catch (error) {
       console.error("Ошибка при удалении документа:", error);
       showErrorNotification(
@@ -320,7 +318,7 @@ export const Embedding: React.FC<EmbeddingProps> = ({
         error instanceof Error ? error.message : t("embeddingDeleteFailed") || "Не удалось удалить документ"
       );
     }
-  };
+  }, [provider, existingDocuments, toForm, onChange, onEmbeddingChange, t]);
 
   // Копирование ID документа в буфер обмена
   const handleCopyId = async (id: string) => {
@@ -344,6 +342,12 @@ export const Embedding: React.FC<EmbeddingProps> = ({
   const characterCount = textContent.length;
   const characterPercent = Math.round((characterCount / maxCharacters) * 100);
   const characterStatus = characterCount > maxCharacters ? "exception" : characterCount > maxCharacters * 0.8 ? "active" : "normal";
+
+  // Если provider не передан, ничего не рендерим
+  if (!provider) {
+    console.error('Embedding: provider is required');
+    return null;
+  }
 
   return (
     <>

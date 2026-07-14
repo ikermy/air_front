@@ -3,9 +3,7 @@
  * Функции для загрузки, получения и удаления документов с эмбеддингами
  */
 
-import { validateAndRefreshToken } from "../../../utils/easyUtils";
-
-const LAND_URL = process.env.REACT_APP_LAND;
+import { authFetch } from "../../../utils/easyUtils";
 
 
 /**
@@ -21,6 +19,7 @@ export interface DocumentMetadata {
  * Интерфейс для запроса загрузки эмбеддинга
  */
 export interface UploadEmbeddingRequest {
+  provider: string;
   doc_name: string;
   content: string;
   metadata?: DocumentMetadata;
@@ -69,34 +68,30 @@ export interface DeleteDocumentResponse {
  * Загрузка документа с эмбеддингом
  * POST /embedding/upload
  *
- * @param token - Токен аутентификации
+ * @param provider - Провайдер (openai, google и т.д.)
  * @param docName - Имя документа
  * @param content - Содержимое документа
  * @param metadata - Опциональные метаданные документа
  * @returns Promise<UploadEmbeddingResponse>
  */
 export const uploadEmbedding = async (
-  token: string,
+  provider: string,
   docName: string,
   content: string,
   metadata?: DocumentMetadata
 ): Promise<UploadEmbeddingResponse> => {
   try {
-    const validToken = await validateAndRefreshToken(token);
-    if (!validToken) {
-      throw new Error("Token validation failed");
-    }
-
     const request: UploadEmbeddingRequest = {
+      provider: provider,
       doc_name: docName,
       content: content,
       ...(metadata && { metadata }),
     };
 
-    const response = await fetch(`${LAND_URL}/embedding/upload?token=${validToken}`, {
-      method: "POST",
+    const response = await authFetch(`/v1/embedding/upload`, {
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify(request),
     });
@@ -125,23 +120,18 @@ export const uploadEmbedding = async (
  * Получение списка всех документов пользователя
  * GET /embedding/list
  *
- * @param token - Токен аутентификации
+ * @param provider - Провайдер (openai, google и т.д.)
  * @returns Promise<ListDocumentsResponse>
  */
 export const listUserDocuments = async (
-  token: string
+  provider: string
 ): Promise<ListDocumentsResponse> => {
   try {
-    const validToken = await validateAndRefreshToken(token);
-    if (!validToken) {
-      throw new Error("Token validation failed");
-    }
-
-    const response = await fetch(`${LAND_URL}/embedding/list?token=${validToken}`, {
-      method: "GET",
+    const response = await authFetch(`/v1/embedding/list?provider=${encodeURIComponent(provider)}`, {
+      method: 'GET',
       headers: {
-        "Content-Type": "application/json",
-      },
+        'Content-Type': 'application/json'
+      }
     });
 
     if (!response.ok) {
@@ -166,12 +156,10 @@ export const listUserDocuments = async (
  * Получение списка документов с фильтрацией и пагинацией (расширенная версия)
  * GET /embedding/list
  *
- * @param token - Токен аутентификации
  * @param options - Опции фильтрации и пагинации
  * @returns Promise<ListDocumentsResponse>
  */
 export const listUserDocumentsWithOptions = async (
-  token: string,
   options?: {
     skip?: number;
     limit?: number;
@@ -179,24 +167,16 @@ export const listUserDocumentsWithOptions = async (
   }
 ): Promise<ListDocumentsResponse> => {
   try {
-    const validToken = await validateAndRefreshToken(token);
-    if (!validToken) {
-      throw new Error("Token validation failed");
-    }
-
     const params = new URLSearchParams();
-    params.append("token", validToken);
-    if (options?.skip !== undefined) params.append("skip", options.skip.toString());
-    if (options?.limit !== undefined) params.append("limit", options.limit.toString());
-    if (options?.search) params.append("search", options.search);
+    if (options?.skip !== undefined) params.append('skip', options.skip.toString());
+    if (options?.limit !== undefined) params.append('limit', options.limit.toString());
+    if (options?.search) params.append('search', options.search);
 
-    const url = `${LAND_URL}/embedding/list?${params.toString()}`;
-
-    const response = await fetch(url, {
-      method: "GET",
+    const response = await authFetch(`/v1/embedding/list?${params.toString()}`, {
+      method: 'GET',
       headers: {
-        "Content-Type": "application/json",
-      },
+        'Content-Type': 'application/json'
+      }
     });
 
     if (!response.ok) {
@@ -221,33 +201,26 @@ export const listUserDocumentsWithOptions = async (
  * Удаление документа по ID
  * DELETE /embedding/:id
  *
- * @param token - Токен аутентификации
  * @param documentId - ID документа для удаления
+ * @param provider - Провайдер (openai, google и т.д.)
  * @returns Promise<DeleteDocumentResponse>
  */
 export const deleteDocument = async (
-  token: string,
-  documentId: string
+  documentId: string,
+  provider: string
 ): Promise<DeleteDocumentResponse> => {
   try {
     if (!documentId || documentId.trim() === "") {
       throw new Error("Document ID is required");
     }
 
-    const validToken = await validateAndRefreshToken(token);
-    if (!validToken) {
-      throw new Error("Token validation failed");
-    }
-
-    const response = await fetch(
-      `${LAND_URL}/embedding/${encodeURIComponent(documentId)}?token=${validToken}`,
-      {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
+    const url = `/v1/embedding/${encodeURIComponent(documentId)}?provider=${encodeURIComponent(provider)}`;
+    const response = await authFetch(url, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json'
       }
-    );
+    });
 
     if (!response.ok) {
       let errorMessage = `HTTP Error: ${response.status}`;
@@ -270,13 +243,13 @@ export const deleteDocument = async (
 /**
  * Вспомогательная функция для загрузки документа из файла
  *
- * @param token - Токен аутентификации
+ * @param provider - Провайдер (openai, google и т.д.)
  * @param file - Файл для загрузки
  * @param metadata - Опциональные метаданные
  * @returns Promise<UploadEmbeddingResponse>
  */
 export const uploadDocumentFromFile = async (
-  token: string,
+  provider: string,
   file: File,
   metadata?: DocumentMetadata
 ): Promise<UploadEmbeddingResponse> => {
@@ -284,7 +257,7 @@ export const uploadDocumentFromFile = async (
     const content = await file.text();
     const docName = file.name;
 
-    return await uploadEmbedding(token, docName, content, metadata);
+    return await uploadEmbedding(provider, docName, content, metadata);
   } catch (error) {
     console.error("Error uploading document from file:", error);
     throw error;
@@ -294,12 +267,12 @@ export const uploadDocumentFromFile = async (
 /**
  * Вспомогательная функция для загрузки нескольких документов
  *
- * @param token - Токен аутентификации
+ * @param provider - Провайдер (openai, google и т.д.)
  * @param documents - Массив документов для загрузки
  * @returns Promise<UploadEmbeddingResponse[]>
  */
 export const uploadMultipleEmbeddings = async (
-  token: string,
+  provider: string,
   documents: Array<{
     docName: string;
     content: string;
@@ -309,7 +282,7 @@ export const uploadMultipleEmbeddings = async (
   try {
     const results = await Promise.all(
       documents.map((doc) =>
-        uploadEmbedding(token, doc.docName, doc.content, doc.metadata)
+        uploadEmbedding(provider, doc.docName, doc.content, doc.metadata)
       )
     );
     return results;
@@ -322,17 +295,17 @@ export const uploadMultipleEmbeddings = async (
 /**
  * Вспомогательная функция для удаления нескольких документов
  *
- * @param token - Токен аутентификации
  * @param documentIds - Массив ID документов для удаления
+ * @param provider - Провайдер (openai, google и т.д.)
  * @returns Promise<DeleteDocumentResponse[]>
  */
 export const deleteMultipleDocuments = async (
-  token: string,
-  documentIds: string[]
+  documentIds: string[],
+  provider: string
 ): Promise<DeleteDocumentResponse[]> => {
   try {
     const results = await Promise.all(
-      documentIds.map((id) => deleteDocument(token, id))
+      documentIds.map((id) => deleteDocument(id, provider))
     );
     return results;
   } catch (error) {

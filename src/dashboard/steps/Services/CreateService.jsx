@@ -1,9 +1,8 @@
-﻿import {GrServices} from "react-icons/gr";
+import {GrServices} from "react-icons/gr";
 import React, {useState} from "react";
 import {Button, Dropdown, Typography, Empty} from 'antd';
 import {PlusOutlined, DownOutlined} from '@ant-design/icons';
 import {useTranslation} from 'react-i18next';
-import {validateAndRefreshToken} from "../../../utils/easyUtils";
 import {showNotification, showErrorNotification} from "../../hotification/showNotification";
 import {AvailableServicesList, AddService as AddServiceAPI} from "./serviceUtils";
 import {checkServiceAvailable} from "./LeadHunter/leadUtils.js";
@@ -66,21 +65,25 @@ export function CreateService() {
     useEffect(() => {
         const checkAvailableServices = async () => {
             try {
-                const token = localStorage.getItem("authToken");
-                const response = await AvailableServicesList(token);
+                const response = await AvailableServicesList();
+                if (!response.ok) return;
 
-                // Получаем массив сервисов из ответа
-                const services = response.services || response;
+                const services = await response.json();
 
                 // Если lead-haunter доступен, автоматически добавляем его
                 if (Array.isArray(services) && services.includes('lead-haunter')) {
                     // Проверяем доступность сервиса перед добавлением
-                    const isAvailable = await checkServiceAvailable(token);
+                    const isAvailable = await checkServiceAvailable();
                     if (isAvailable) {
-                        await AddServiceAPI(token, "lead-haunter");
-                        setIsServiceAdded(true);
-                        // Удаляем только leadhunter из списка доступных
-                        setAvailableServices(prev => prev.filter(s => s.key !== 'leadhunter'));
+                        const addResp = await AddServiceAPI( "lead-haunter");
+                        if (addResp.ok) {
+                            setIsServiceAdded(true);
+                            setAvailableServices(prev => prev.filter(s => s.key !== 'leadhunter'));
+                            showNotification(
+                                t("success") || 'Успешно',
+                                t("serviceAdded") || 'Сервис успешно добавлен'
+                            );
+                        }
                     }
                 }
                 // Если lead-haunter НЕ найден на сервере, НЕ удаляем его из списка
@@ -116,15 +119,7 @@ export function CreateService() {
     const handleServiceSelect = async (key) => {
         if (key === "leadhunter") {
             try {
-                const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
-                if (!token) {
-                    showErrorNotification(
-                        t("notifVerificationError") || 'Ошибка',
-                        t("authError") || 'Ошибка аутентификации'
-                    );
-                    return;
-                }
-                const isAvailable = await checkServiceAvailable(token);
+                const isAvailable = await checkServiceAvailable();
                 if (!isAvailable) {
                     showErrorNotification(
                         t("notifVerificationError") || 'Ошибка',
@@ -132,13 +127,15 @@ export function CreateService() {
                     );
                     return;
                 }
-                await AddServiceAPI(token, "lead-haunter");
-                setIsServiceAdded(true);
-                setAvailableServices(prev => prev.filter(s => s.key !== 'leadhunter')); // Удаляем только leadhunter из доступных
-                showNotification(
-                    t("success") || 'Успешно',
-                    t("serviceAdded") || 'Сервис успешно добавлен'
-                );
+                const addResp = await AddServiceAPI("lead-haunter");
+                if (addResp.ok) {
+                    setIsServiceAdded(true);
+                    setAvailableServices(prev => prev.filter(s => s.key !== 'leadhunter'));
+                    showNotification(
+                        t("success") || 'Успешно',
+                        t("serviceAdded") || 'Сервис успешно добавлен'
+                    );
+                }
             } catch (error) {
                 showErrorNotification(
                     t("error") || 'Ошибка',

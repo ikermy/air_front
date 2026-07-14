@@ -2,12 +2,11 @@ import {Modal, Switch, Typography, Button, Input, List, Popconfirm, message, Inp
 import React, {useCallback, useEffect, useState} from "react";
 import {MdOutlineSupportAgent} from "react-icons/md";
 import {funcOperators, saveOperators} from "./funcOperators";
-import {validateAndRefreshToken} from "../../../utils/easyUtils";
 import {showErrorNotification, showNotification} from "../../hotification/showNotification";
 import {chAvailable} from "../Channals/chUtils";
 import {useTranslation} from "react-i18next";
 
-export const Operator = ({initial, value, onChange, token}) => {
+export const Operator = ({initial, value, onChange}) => {
     const {t} = useTranslation();
     const {Title, Paragraph} = Typography;
     const [isTargetOpen, setIsTargetOpen] = useState(false);
@@ -56,27 +55,22 @@ export const Operator = ({initial, value, onChange, token}) => {
 
     const handleSaveOperators = async () => {
         setSaving(true);
-        const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
-        if (token != null) {
-            try {
-                const result = await saveOperators(token, editableOperators);
-                if (result) {
-                    setOperators([...editableOperators]);
-                    showNotification(t("operatorsSaved") || "Операторы успешно сохранены");
-                    setIsOperatorsModalOpen(false);
-                    setNewOperatorId('');
-                } else {
-                    setIsOperatorsModalOpen(false);
-                    showErrorNotification(t("operatorsSaveError") || "Ошибка при сохранении операторов");
-                }
-            } catch (error) {
+        try {
+            const result = await saveOperators(editableOperators);
+            if (result) {
+                setOperators([...editableOperators]);
+                showNotification(t("operatorsSaved") || "Операторы успешно сохранены");
+                setIsOperatorsModalOpen(false);
+                setNewOperatorId('');
+            } else {
                 setIsOperatorsModalOpen(false);
                 showErrorNotification(t("operatorsSaveError") || "Ошибка при сохранении операторов");
-            } finally {
-                setSaving(false);
             }
-        } else {
-            message.error(t("authError") || 'Ошибка аутентификации. Пожалуйста, войдите снова.');
+        } catch (error) {
+            setIsOperatorsModalOpen(false);
+            showErrorNotification(t("operatorsSaveError") || "Ошибка при сохранении операторов");
+        } finally {
+            setSaving(false);
         }
     };
 
@@ -99,28 +93,19 @@ export const Operator = ({initial, value, onChange, token}) => {
 
     // Проверка доступности сервиса операторов
     const checkServiceAvailability = useCallback(async () => {
-        if (!token) {
-            setIsServiceAvailable(false);
-            return;
-        }
         try {
-            const available= await chAvailable('oper');
+            const available = await chAvailable('oper');
             setIsServiceAvailable(available);
         } catch (e) {
             console.error(t("operatorServiceCheckError") || 'Ошибка проверки доступности сервиса операторов:', e);
             setIsServiceAvailable(false);
         }
-    }, [token, t]);
+    }, [t]);
 
     // Единая функция загрузки операторов
     const loadOperators = useCallback(async () => {
-        if (!token) {
-            console.error(t("authError") || 'Ошибка аутентификации. Пожалуйста, войдите снова.');
-            setOperators([]);
-            return [];
-        }
         try {
-            const data = await funcOperators(token);
+            const data = await funcOperators();
             setOperators(data || []);
             return data || [];
         } catch (e) {
@@ -128,14 +113,14 @@ export const Operator = ({initial, value, onChange, token}) => {
             setOperators([]);
             return [];
         }
-    }, [token, t]);
+    }, [t]);
 
     // Проверка доступности сервиса и загрузка операторов с задержкой 500 мс
     useEffect(() => {
         const timer = setTimeout(() => {
             checkServiceAvailability();
             loadOperators();
-        }, 500);
+        }, 250);
         return () => clearTimeout(timer);
     }, [checkServiceAvailability, loadOperators]);
 
@@ -152,7 +137,8 @@ export const Operator = ({initial, value, onChange, token}) => {
             <div className="step">
                     <span>
                         {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
-                        {t("operatorUseMode") || "Использовать операторский"} <a onClick={showTarget}>{t("operatorModeLink") || "режим"}</a>&nbsp;
+                        {t("operatorUseMode") || "Использовать операторский"} <a
+                        onClick={showTarget}>{t("operatorModeLink") || "режим"}</a>&nbsp;
                     </span>
                 <Switch
                     checked={currentValue}
@@ -218,7 +204,7 @@ export const Operator = ({initial, value, onChange, token}) => {
                 <div style={{marginBottom: '16px'}}>
                     <Input.Group compact>
                         <InputNumber
-                            style={{ width: 'calc(100% - 100px)' }}
+                            style={{width: 'calc(100% - 100px)'}}
                             placeholder={t("operatorEnterTelegramId") || "Введите Telegram ID оператора"}
                             value={newOperatorId}
                             onChange={(val) => setNewOperatorId(val ?? '')}
@@ -306,7 +292,8 @@ export const Operator = ({initial, value, onChange, token}) => {
                 </Paragraph>
 
                 <Paragraph style={{marginBottom: '16px'}}>
-                    <Typography.Text strong>TelegramID</Typography.Text> {t("operatorGetIdBot") || "можно узнать с помощью бота"}{' '}
+                    <Typography.Text
+                        strong>TelegramID</Typography.Text> {t("operatorGetIdBot") || "можно узнать с помощью бота"}{' '}
                     <a href="https://t.me/MarusiaAiOperatorBot" target="_blank" rel="noopener noreferrer">
                         @MarusiaAiOperatorBot
                     </a>{' '}
@@ -327,7 +314,8 @@ export const Operator = ({initial, value, onChange, token}) => {
                 </Paragraph>
 
                 <Paragraph style={{marginBottom: '16px'}}>
-                    <Typography.Text strong>{t("operatorSetupNote") || "Для корректной работы операторского режима"}</Typography.Text> {t("operatorSetupExample") || "нужно верно указать это в настройках модели, например так:"}
+                    <Typography.Text
+                        strong>{t("operatorSetupNote") || "Для корректной работы операторского режима"}</Typography.Text> {t("operatorSetupExample") || "нужно верно указать это в настройках модели, например так:"}
                 </Paragraph>
 
                 <Paragraph

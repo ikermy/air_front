@@ -1,21 +1,40 @@
-import React, {useCallback, useEffect} from 'react';
+import React, {useCallback, useEffect, Suspense, lazy} from 'react';
 import {BrowserRouter, Routes, Route, useNavigate, Navigate} from 'react-router-dom';
 import { useTheme } from "./ThemeContext";
 import './App.css';
-import EmailConfirm from "./landing/auth/EmailConfirm"
-import Home from "./Home";
-import ResetPassword from "./landing/auth/ResetPassword";
 import {AuthProvider, useAuth} from "./AuthContext";
 import {ChatVisibilityProvider} from "./ChatVisibilityContext";
-import Dashboard from "./dashboard/Dashboard";
 import {handleError} from "./landing/auth/notificationHandlers";
-import {message} from "antd";
+import {message, Spin} from "antd";
 import {useNotificationInit} from "./dashboard/hotification/showNotification";
-import SimpleAuthForm from "./dashboard/steps/Dev-tolls/SimpleAuthForm";
-import PrivacyPolicy from "./landing/PrivacyPolicy";
 import { useAppPreloader } from "./utils/useAppPreloader";
 
-const showSimpleAuth = process.env.REACT_APP_SHOW_SIMPLE_AUTH === "false";
+// Lazy loading для маршрутов
+const Home = lazy(() => import("./Home"));
+const EmailConfirm = lazy(() => import("./landing/auth/EmailConfirm"));
+const ResetPassword = lazy(() => import("./landing/auth/ResetPassword"));
+const Dashboard = lazy(() => import("./dashboard/Dashboard"));
+const SimpleAuthForm = lazy(() => import("./dashboard/steps/Dev-tolls/SimpleAuthForm"));
+const PrivacyPolicy = lazy(() => import("./landing/PrivacyPolicy"));
+const GoogleOAuthSuccess = lazy(() => import("./dashboard/steps/OAuth/GoogleOAuthSuccess"));
+const GoogleOAuthError = lazy(() => import("./dashboard/steps/OAuth/GoogleOAuthError"));
+const AvitoOAuthSuccess = lazy(() => import("./dashboard/steps/OAuth/AvitoOAuthSuccess"));
+const AvitoOAuthError = lazy(() => import("./dashboard/steps/OAuth/AvitoOAuthError"));
+
+// SaleMode
+const showSimpleAuth = false;
+
+// Компонент загрузки
+const LoadingFallback = () => (
+    <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        height: '100vh'
+    }}>
+        <Spin size="large" tip="Загрузка..." />
+    </div>
+);
 
 const ProtectedRoute = ({ children }) => {
     const { isAuthenticated } = useAuth();
@@ -51,30 +70,36 @@ function App() {
                     <div className={`App ${theme}`}>
                         {contextHolder}
                         {notificationContextHolder}
-                        <Routes>
-                            {showSimpleAuth && (
-                                <Route path="/" element={<SimpleAuthForm />} />
-                            )}
+                        <Suspense fallback={<LoadingFallback />}>
+                            <Routes>
+                                {showSimpleAuth && (
+                                    <Route path="/" element={<SimpleAuthForm />} />
+                                )}
 
-                            <Route path="/" element={<Home />} />
-                            <Route path="/confirm" element={<EmailConfirm />} />
-                            <Route path="/reset" element={<ResetPassword />} />
+                                <Route path="/" element={<Home />} />
+                                <Route path="/confirm" element={<EmailConfirm />} />
+                                <Route path="/reset" element={<ResetPassword />} />
 
-                            <Route
-                                path="/dashboard"
-                                element={
-                                    <ProtectedRoute>
-                                        <Dashboard
-                                            handleError={stableHandleError}
-                                        />
-                                    </ProtectedRoute>
-                                }
-                            />
-                            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                                <Route
+                                    path="/dashboard"
+                                    element={
+                                        <ProtectedRoute>
+                                            <Dashboard
+                                                handleError={stableHandleError}
+                                            />
+                                        </ProtectedRoute>
+                                    }
+                                />
+                                <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                                <Route path="/auth/google/success" element={<GoogleOAuthSuccess />} />
+                                <Route path="/auth/google/error" element={<GoogleOAuthError />} />
+                                <Route path="/auth/avito/success" element={<AvitoOAuthSuccess />} />
+                                <Route path="/auth/avito/error" element={<AvitoOAuthError />} />
 
-                            {/* catch-all: перенаправляем всё неизвестное на корень */}
-                            <Route path="*" element={<Navigate to="/" replace />} />
-                        </Routes>
+                                {/* catch-all: перенаправляем всё неизвестное на корень */}
+                                <Route path="*" element={<Navigate to="/" replace />} />
+                            </Routes>
+                        </Suspense>
                     </div>
                 </BrowserRouter>
             </ChatVisibilityProvider>

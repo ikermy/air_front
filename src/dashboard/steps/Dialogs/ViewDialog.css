@@ -18,6 +18,7 @@
     min-width: 0; /* Убираем фиксированный min-width */
     flex: 1;
     overflow-y: auto;
+    overflow-x: hidden; /* Не допускаем горизонтальный скролл */
     display: flex;
     flex-direction: column;
     scrollbar-width: thin; /* Уменьшенная ширина прокрутки (для Firefox) */
@@ -72,6 +73,7 @@ body.dark .widget-input-container input {
     animation: fadeIn 0.3s ease;
     word-break: break-word;
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    min-width: 0;
 }
 
 .dark .chat-message {
@@ -96,21 +98,64 @@ body.dark .widget-input-container input {
     color: white;
 }
 
+/* Обёртка строки сообщения — пузырь */
+.chat-message-row {
+    display: flex;
+    align-items: flex-start;
+    width: 100%;
+}
+
+.chat-message-row.left {
+    justify-content: flex-start;
+}
+
+.chat-message-row.right {
+    justify-content: flex-end;
+}
+
+/* Иконки отображаются внутри пузыря в строке с именем */
+.voice-icon-outside {
+    font-size: 14px;
+    opacity: 0.7;
+    flex-shrink: 0;
+}
+
+/* Иконка AI (creator=5, side=right) */
+.voice-icon-ai.voice-icon-outside {
+    color: var(--message-name-color);
+}
+
+/* Иконка User (creator=6, side=left) */
+.voice-icon-user.voice-icon-outside {
+    color: var(--message-name-color);
+}
+
 .message-name {
     font-weight: lighter;
     font-size: x-small;
     color: var(--message-name-color);
     margin-bottom: 5px;
     display: flex;
+    align-items: center;
+    gap: 4px;
 }
 
 .message-name.left {
     justify-content: flex-start;
-    /*text-align: right;*/
+    flex-direction: row;
 }
 
 .message-name.right {
     justify-content: flex-end;
+    flex-direction: row-reverse;
+}
+
+.message-name.left {
+    text-align: left;
+}
+
+.message-name.right {
+    text-align: right;
 }
 
 .message-files {
@@ -140,7 +185,6 @@ body.dark .widget-input-container input {
     font-size: x-small;
     color: var(--message-name-color);
     margin-top: 5px;
-    text-align: right;
 }
 
 .message-timestamp.left {
@@ -151,6 +195,16 @@ body.dark .widget-input-container input {
 .message-timestamp.right {
     align-self: flex-end;
     text-align: right;
+}
+
+.voice-icon {
+    font-size: 13px;
+    opacity: 0.75;
+    flex-shrink: 0;
+}
+
+.voice-icon-user {
+    color: var(--message-name-color);
 }
 
 .error-message {
@@ -299,8 +353,50 @@ body.dark .widget-input-container input {
     margin-bottom: 0;
 }
 
+.chat-image {
+    max-width: 100%;
+    height: auto;
+    border-radius: 5px;
+    cursor: zoom-in;
+    display: block;
+    transition: transform 0.2s ease;
+}
+
+.chat-image:hover {
+    transform: scale(1.02);
+}
+
+.chat-image.zoomed {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10000;
+    max-width: 90vw;
+    max-height: 90vh;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
+    cursor: zoom-out;
+    background: rgba(0, 0, 0, 0.9);
+}
+
+/* Затемнение фона для увеличенного изображения */
+body.image-zoomed::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.8);
+    z-index: 9999;
+}
+
 .chat-video {
     max-width: 100%;
+    height: auto;
     border-radius: 5px;
 }
 

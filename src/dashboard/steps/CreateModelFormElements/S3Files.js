@@ -2,7 +2,7 @@ import {Button, List, Typography, Progress, Spin, Switch, Modal, Popconfirm, Upl
 import React, {useEffect, useState, useCallback} from "react";
 import {FileOutlined, FilePdfOutlined, CloudOutlined, DeleteOutlined, UploadOutlined} from "@ant-design/icons";
 import {showErrorNotification, showNotification, showWarningNotification} from "../../hotification/showNotification";
-import {validateAndRefreshToken} from "../../../utils/easyUtils";
+import {authFetch} from "../../../utils/easyUtils";
 import Title from "antd/lib/typography/Title";
 import Paragraph from "antd/lib/typography/Paragraph";
 import {useTranslation} from "react-i18next";
@@ -30,18 +30,11 @@ export const S3Files = ({ onChange, initialS3Enabled, value }) => {
     const fetchS3Files = useCallback(async () => {
         setLoading(true);
         try {
-            const LAND_URL = (window.runtimeConfig && window.runtimeConfig.REACT_APP_LAND) || process.env.REACT_APP_LAND;
-            const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
-
-            if (!token) {
-                showErrorNotification(t("error") || "Ошибка", t("tokenInvalid") || "Токен не действителен");
-                return;
-            }
-            // небольшая задержка для предотвращения allow rate limit
-            await new Promise(resolve => setTimeout(resolve, 500));
-            const response = await fetch(`${LAND_URL}/s3/files?token=${encodeURIComponent(token)}`, {
+            const response = await authFetch(`/v1/s3/files`, {
                 method: "GET",
-                headers: {"Content-Type": "application/json"},
+                headers: {
+                    "Content-Type": "application/json",
+                },
             });
 
             if (!response.ok) {
@@ -123,22 +116,12 @@ export const S3Files = ({ onChange, initialS3Enabled, value }) => {
     const handleDeleteFile = async (fileName) => {
         setLoading(true);
         try {
-            const LAND_URL = (window.runtimeConfig && window.runtimeConfig.REACT_APP_LAND) || process.env.REACT_APP_LAND;
-            const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
-
-            if (!token) {
-                showErrorNotification(t("error") || "Ошибка", t("tokenInvalid") || "Токен не действителен");
-                return;
-            }
-
-            const response = await fetch(`${LAND_URL}/s3/delete?token=${token}`, {
+            const response = await authFetch(`/v1/s3/delete`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({
-                    file_name: fileName
-                }),
+                body: JSON.stringify({ file_name: fileName }),
             });
 
             if (!response.ok) {
@@ -158,9 +141,7 @@ export const S3Files = ({ onChange, initialS3Enabled, value }) => {
 
             showNotification(t("s3FileDeleted") || "Файл удален", t("s3FileDeletedDesc", {fileName}) || `Файл "${fileName}" успешно удален`);
 
-            // Небольшая пауха перед обновлением списка в 500 мс
-            await new Promise(resolve => setTimeout(resolve, 500));
-            // Обновляем список файлов
+             // Обновляем список файлов
             fetchS3Files();
 
         } catch (error) {
@@ -206,22 +187,13 @@ export const S3Files = ({ onChange, initialS3Enabled, value }) => {
 
         setLoading(true);
         try {
-            const LAND_URL = (window.runtimeConfig && window.runtimeConfig.REACT_APP_LAND) || process.env.REACT_APP_LAND;
-            const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
-
-            if (!token) {
-                showErrorNotification(t("error") || "Ошибка", t("tokenInvalid") || "Токен не действителен");
-                return;
-            }
-
             // Формируем FormData для отправки файлов
             const formData = new FormData();
-
             fileList.forEach(file => {
                 formData.append('files', file.originFileObj);
             });
 
-            const response = await fetch(`${LAND_URL}/s3/upload?token=${token}`, {
+            const response = await authFetch(`/v1/s3/upload`, {
                 method: 'POST',
                 body: formData,
             });
@@ -253,8 +225,7 @@ export const S3Files = ({ onChange, initialS3Enabled, value }) => {
 
             // Очищаем список выбранных файлов и обновляем список файлов
             setFileList([]);
-            // Небольшая пауза перед обновлением списка в 500 мс
-            await new Promise(resolve => setTimeout(resolve, 500));
+
             fetchS3Files();
 
         } catch (error) {

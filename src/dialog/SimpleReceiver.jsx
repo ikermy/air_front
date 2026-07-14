@@ -1,7 +1,5 @@
 import { useEffect, useRef } from 'react';
 
-const LAND_URL = (window.runtimeConfig && window.runtimeConfig.REACT_APP_LAND) || process.env.REACT_APP_LAND;
-
 export function SimpleReceiver({ addMessage, token, setIsModalOpen, setModelName }) {
     const esRef = useRef(null);
     const reconnectTimerRef = useRef(null);
@@ -18,7 +16,7 @@ export function SimpleReceiver({ addMessage, token, setIsModalOpen, setModelName
                 esRef.current = null;
             }
 
-            const url = `${LAND_URL}/demo/events?token=${encodeURIComponent(token || '')}`;
+            const url = `/demo/events?token=${encodeURIComponent(token || '')}`;
 
             let eventSource;
             try {

@@ -5,7 +5,12 @@ import { getCssVariable } from './utils/easyUtils';
 const ThemeContext = createContext();
 
 export const ThemeProvider = ({ children }) => {
-    const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
+    const [theme, setTheme] = useState(() => {
+        if (typeof window !== 'undefined') {
+            return localStorage.getItem('theme') || 'light';
+        }
+        return 'light';
+    });
     const [antTheme, setAntTheme] = useState({
         token: {
             colorPrimary: null,
@@ -23,8 +28,10 @@ export const ThemeProvider = ({ children }) => {
     });
 
     useEffect(() => {
-        localStorage.setItem('theme', theme);
-        document.body.className = theme;
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('theme', theme);
+            document.body.className = theme;
+        }
 
         // Задержка для применения стилей
         setTimeout(() => {

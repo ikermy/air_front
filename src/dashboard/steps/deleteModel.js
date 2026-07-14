@@ -1,19 +1,19 @@
-import React, { useState, useRef, useEffect } from "react";
-import { Button, Modal, Input, Alert, Divider, Spin, Progress, Typography } from "antd";
+import React, {useState, useRef, useEffect} from "react";
+import {Button, Modal, Input, Alert, Divider, Spin, Progress, Typography} from "antd";
 import {
     ExclamationCircleOutlined,
     DeleteOutlined,
     CheckCircleOutlined
 } from "@ant-design/icons";
-import { useTranslation } from "react-i18next";
-import { validateAndRefreshToken } from "../../utils/easyUtils";
-import { showErrorNotification, showNotification, showWarningNotification } from "../hotification/showNotification";
+import {useTranslation} from "react-i18next";
+import {getAuthToken} from "../../utils/easyUtils";
+// Токен читается напрямую из localStorage. Обновление токена не делаем здесь.
+import {showErrorNotification, showNotification, showWarningNotification} from "../hotification/showNotification";
 
-const LAND_WSS = (window.runtimeConfig && window.runtimeConfig.REACT_APP_LAND_WSS) || process.env.REACT_APP_LAND_WSS;
-const { Text, Title } = Typography;
+const {Text, Title} = Typography;
 
-export const DeleteModel = ({ onModelDeleted, selectedProvider }) => {
-    const { t } = useTranslation();
+export const DeleteModel = ({onModelDeleted, selectedProvider}) => {
+    const {t} = useTranslation();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [deleteConfirmation, setDeleteConfirmation] = useState('');
     const [deleteLoading, setDeleteLoading] = useState(false);
@@ -55,22 +55,22 @@ export const DeleteModel = ({ onModelDeleted, selectedProvider }) => {
             setDeleteMessages([]);
             setDeleteComplete(false);
 
-            const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
-
+            // Просто берём токен
+            const token = getAuthToken();
             if (!token) {
                 showWarningNotification(
                     t("serviceModelDeleteTokenError") || "Ошибка удаления модели",
-                    t("serviceModelDeleteTokenErrorMessage") || "Токен не обновлен!"
+                    t("serviceModelDeleteTokenErrorMessage") || "Токен не найден, необходимо повторно авторизоваться"
                 );
                 setDeleteLoading(false);
                 setDeleteProgressVisible(false);
                 return;
             }
 
-            const wsUrl = `${LAND_WSS}/ws/delete-model`;
-            const providerParam = selectedProvider ? `&provider=${selectedProvider}` : '';
-            const wsUrlWithToken = `${wsUrl}?token=${encodeURIComponent(token)}${providerParam}`;
-            wsRef.current = new WebSocket(wsUrlWithToken);
+            const wsUrl = `/v1/ws/delete-model`;
+            const providerParam = selectedProvider ? `?provider=${selectedProvider}` : '';
+            const wsUrlWithToken = `${wsUrl}${providerParam}`;
+            wsRef.current = new WebSocket(wsUrlWithToken, [token]);
 
             // Обработчик открытия соединения
             wsRef.current.onopen = () => {
@@ -166,8 +166,8 @@ export const DeleteModel = ({ onModelDeleted, selectedProvider }) => {
             {/* Модальное окно подтверждения удаления */}
             <Modal
                 title={
-                    <span style={{ color: '#ff4d4f' }}>
-                        <ExclamationCircleOutlined /> {t("serviceModelDeleteModalTitle") || "Подтверждение удаления модели"}
+                    <span style={{color: '#ff4d4f'}}>
+                        <ExclamationCircleOutlined/> {t("serviceModelDeleteModalTitle") || "Подтверждение удаления модели"}
                     </span>
                 }
                 open={isModalOpen}
@@ -176,11 +176,11 @@ export const DeleteModel = ({ onModelDeleted, selectedProvider }) => {
                 confirmLoading={deleteLoading}
                 okText={t("serviceModelDeleteButton") || "Удалить модель"}
                 cancelText={t("cancelButton") || "Отмена"}
-                okButtonProps={{ danger: true }}
+                okButtonProps={{danger: true}}
                 width={600}
-                
+
             >
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div style={{display: 'flex', flexDirection: 'column', gap: '16px'}}>
                     <Alert
                         message={t("serviceModelDeleteModalWarning") || "Внимание! Это действие необратимо!"}
                         type="error"
@@ -188,10 +188,10 @@ export const DeleteModel = ({ onModelDeleted, selectedProvider }) => {
                     />
 
                     <div>
-                        <Text strong style={{ color: '#ff4d4f' }}>
+                        <Text strong style={{color: '#ff4d4f'}}>
                             {t("serviceModelDeleteModalText1") || "Модель агента будет удалена безвозвратно без возможности восстановления."}
                         </Text>
-                        <br />
+                        <br/>
                         <Text type="secondary">
                             {t("serviceModelDeleteModalText2") || "Вся конфигурация модели, настройки и связанные данные будут потеряны."}
                         </Text>
@@ -200,7 +200,7 @@ export const DeleteModel = ({ onModelDeleted, selectedProvider }) => {
                     <div>
                         <Text strong>
                             {t("serviceModelDeleteModalConfirmText") || "Для окончательного подтверждения удаления модели введите"}{' '}
-                            <Text code style={{ backgroundColor: '#ff4d4f', color: 'white', padding: '2px 4px' }}>
+                            <Text code style={{backgroundColor: '#ff4d4f', color: 'white', padding: '2px 4px'}}>
                                 {t("serviceModelDeleteModalCodeText") || "yes"}
                             </Text>
                         </Text>
@@ -208,7 +208,7 @@ export const DeleteModel = ({ onModelDeleted, selectedProvider }) => {
                             value={deleteConfirmation}
                             onChange={(e) => setDeleteConfirmation(e.target.value)}
                             placeholder={t("serviceModelDeleteModalInputPlaceholder") || "Введите 'yes' для окончательного подтверждения"}
-                            style={{ marginTop: 8 }}
+                            style={{marginTop: 8}}
                             size="large"
                         />
                     </div>
@@ -218,8 +218,8 @@ export const DeleteModel = ({ onModelDeleted, selectedProvider }) => {
             {/* Модальное окно прогресса удаления */}
             <Modal
                 title={
-                    <span style={{ color: '#ff4d4f' }}>
-                        <DeleteOutlined /> {t("serviceModelDeleteProgressTitle") || "Удаление модели агента"}
+                    <span style={{color: '#ff4d4f'}}>
+                        <DeleteOutlined/> {t("serviceModelDeleteProgressTitle") || "Удаление модели агента"}
                     </span>
                 }
                 open={deleteProgressVisible}
@@ -228,14 +228,14 @@ export const DeleteModel = ({ onModelDeleted, selectedProvider }) => {
                 centered
                 width={700}
                 maskClosable={false}
-                
+
                 className="delete-progress-modal"
             >
                 <div className="delete-progress-container">
                     {!deleteComplete && (
                         <div className="delete-progress-header">
-                            <Spin size="large" />
-                            <Title level={4} style={{ margin: '16px 0', color: '#ff4d4f' }}>
+                            <Spin size="large"/>
+                            <Title level={4} style={{margin: '16px 0', color: '#ff4d4f'}}>
                                 {t("serviceModelDeleteProgressMessage") || "Выполняется удаление модели..."}
                             </Title>
                             <Text type="secondary">
@@ -246,8 +246,8 @@ export const DeleteModel = ({ onModelDeleted, selectedProvider }) => {
 
                     {deleteComplete && (
                         <div className="delete-complete-header">
-                            <CheckCircleOutlined style={{ fontSize: '48px', color: '#52c41a' }} />
-                            <Title level={4} style={{ margin: '16px 0', color: '#52c41a' }}>
+                            <CheckCircleOutlined style={{fontSize: '48px', color: '#52c41a'}}/>
+                            <Title level={4} style={{margin: '16px 0', color: '#52c41a'}}>
                                 {t("serviceModelDeleteCompleteTitle") || "Удаление модели завершено успешно!"}
                             </Title>
                             <Text type="secondary">
@@ -256,10 +256,10 @@ export const DeleteModel = ({ onModelDeleted, selectedProvider }) => {
                         </div>
                     )}
 
-                    <Divider />
+                    <Divider/>
 
                     <div className="delete-messages-container">
-                        <Text strong style={{ marginBottom: '12px', display: 'block' }}>
+                        <Text strong style={{marginBottom: '12px', display: 'block'}}>
                             {t("serviceModelDeleteLogTitle") || "Журнал операций:"}
                         </Text>
 
@@ -275,7 +275,8 @@ export const DeleteModel = ({ onModelDeleted, selectedProvider }) => {
 
                             {deleteMessages.length === 0 && !deleteComplete && (
                                 <div className="delete-message-item">
-                                    <Text type="secondary">{t("serviceModelDeleteLogWaiting") || "Ожидание сообщений от сервера..."}</Text>
+                                    <Text
+                                        type="secondary">{t("serviceModelDeleteLogWaiting") || "Ожидание сообщений от сервера..."}</Text>
                                 </div>
                             )}
                         </div>

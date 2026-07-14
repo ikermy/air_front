@@ -1,4 +1,4 @@
-import {validateAndRefreshToken} from "../../../utils/easyUtils";
+import {getAuthToken} from "../../../utils/easyUtils";
 
 export class WhatsAuthServive {
     constructor(t) {
@@ -14,12 +14,13 @@ export class WhatsAuthServive {
     }
 
     setCallbacks(callbacks) {
-        this.callbacks = { ...this.callbacks, ...callbacks };
+        this.callbacks = {...this.callbacks, ...callbacks};
     }
 
     async startAuthentication() {
+        if (typeof window === 'undefined') return false;
         try {
-            const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
+            const token = getAuthToken();
             if (token) {
                 this.connectWebSocket(token);
                 return true;
@@ -36,11 +37,10 @@ export class WhatsAuthServive {
     }
 
     connectWebSocket(token) {
-        const LAND_WSS = (window.runtimeConfig && window.runtimeConfig.REACT_APP_LAND_WSS) || process.env.REACT_APP_LAND_WSS;
+        if (typeof window === 'undefined') return;
+        const wsUrl = `/v1/ws/whats`;
 
-        const wsUrl = `${LAND_WSS}/ws/whats?token=${token}`;
-
-        this.socket = new WebSocket(wsUrl);
+        this.socket = new WebSocket(wsUrl, [token]);
 
         this.socket.onopen = () => {
         };

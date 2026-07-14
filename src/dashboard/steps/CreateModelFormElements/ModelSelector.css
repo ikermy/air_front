@@ -125,6 +125,11 @@
     transition: all 0.3s ease;
 }
 
+/* Инверсия для OpenAI логотипа в тёмной теме */
+.dark .provider-card.openai .provider-logo {
+    filter: invert(1) !important;
+}
+
 .provider-card:hover .provider-logo {
     transform: scale(1.1);
 }
@@ -193,5 +198,13 @@
 
 .dark .provider-card:hover {
     background: #262626;
+}
+
+.unavailable-providers-section {
+    margin-top: 20px;
+}
+
+.unavailable-providers-section .ant-alert {
+    border-radius: var(--border-radius);
 }
 

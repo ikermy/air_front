@@ -4,6 +4,7 @@
 // Лёгкий кеш с TTL, использующий sessionStorage
 const cacheWithTTL = {
   get(key) {
+    if (typeof window === 'undefined') return null;
     try {
       const raw = sessionStorage.getItem(key);
       if (!raw) return null;
@@ -16,6 +17,7 @@ const cacheWithTTL = {
     } catch { return null; }
   },
   set(key, value, ttlMs = 1000 * 60 * 60) {
+    if (typeof window === 'undefined') return;
     try {
       sessionStorage.setItem(key, JSON.stringify({ value, expires: Date.now() + ttlMs }));
     } catch {}
@@ -96,9 +98,9 @@ const fetchWithTimeout = (url, opts = {}, timeout = 5000) => {
 };
 
 const getNetworkInfo = async () => {
-  const ANAL_URL = window.runtimeConfig?.REACT_APP_ANAL || process.env.REACT_APP_ANAL;
+  const LAND_URL = window.location.origin;
   try {
-    const res = await fetchWithTimeout(`${ANAL_URL}/get-ip`, {}, 4000);
+    const res = await fetchWithTimeout(`/get-ip`, {}, 4000);
     const { ip } = await res.json();
     return {
       ip,
@@ -145,6 +147,7 @@ const getUTMParams = () => {
 };
 
 const getSessionInfo = () => {
+  if (typeof window === 'undefined') return { sessionId: null, sessionStartTs: null };
   try {
     const key = 'sessionId_v1';
     let id = sessionStorage.getItem(key);
@@ -167,6 +170,7 @@ const sha256Hex = async (str) => {
 
 // Обновлённый rate-limit: ключ на событие
 const rateLimitOk = (minIntervalMs = 1000 * 60, key = 'default') => {
+  if (typeof window === 'undefined') return true;
   try {
     const k = `lastTrackTs:${key}`;
     const last = Number(localStorage.getItem(k) || 0);
@@ -179,7 +183,6 @@ const rateLimitOk = (minIntervalMs = 1000 * 60, key = 'default') => {
 const shouldSample = (rate = 1.0) => Math.random() < rate;
 
 export const trackVisitor = async (userId, opts = {}) => {
-  const ANAL_URL = window.runtimeConfig?.REACT_APP_ANAL || process.env.REACT_APP_ANAL;
   const {
     sampleRate = 1.0,
     minIntervalMs = 1000 * 60,
@@ -232,7 +235,7 @@ export const trackVisitor = async (userId, opts = {}) => {
     const hash = await sha256Hex(bodyForHash);
 
     const hashKey = `lastTrackHash:${event}`;
-    const lastHash = localStorage.getItem(hashKey);
+    const lastHash = typeof window !== 'undefined' ? localStorage.getItem(hashKey) : null;
     if (!useBeaconOnly && lastHash === hash) {
       // данные не изменились — пропускаем, и здесь ещё не делали /get-ip
       return;
@@ -249,8 +252,8 @@ export const trackVisitor = async (userId, opts = {}) => {
     };
 
     const body = JSON.stringify(profile);
-    if (navigator.sendBeacon) {
-      const ok = navigator.sendBeacon(`${ANAL_URL}/track-visitor`, new Blob([body], { type: 'application/json' }));
+    if (typeof window !== 'undefined' && navigator.sendBeacon) {
+      const ok = navigator.sendBeacon(`/track-visitor`, new Blob([body], { type: 'application/json' }));
       if (ok) {
         try { localStorage.setItem(hashKey, hash); } catch (e) {}
         return;
@@ -258,12 +261,14 @@ export const trackVisitor = async (userId, opts = {}) => {
     }
 
     if (!useBeaconOnly) {
-      await fetchWithTimeout(`${ANAL_URL}/track-visitor`, {
+      await fetchWithTimeout(`/track-visitor`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body
       }, 5000);
-      try { localStorage.setItem(hashKey, hash); } catch (e) {}
+      if (typeof window !== 'undefined') {
+        try { localStorage.setItem(hashKey, hash); } catch (e) {}
+      }
     }
   } catch (e) {
     if (process.env.NODE_ENV === 'development') console.error('trackVisitor error', e);

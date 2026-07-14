@@ -48,9 +48,11 @@ function LanguageSwitcher() {
 
     // Загружаем язык из localStorage при загрузке компонента
     useEffect(() => {
-        const savedLanguage = localStorage.getItem('language');
-        if (savedLanguage) {
-            i18n.changeLanguage(savedLanguage);
+        if (typeof window !== 'undefined') {
+            const savedLanguage = localStorage.getItem('language');
+            if (savedLanguage) {
+                i18n.changeLanguage(savedLanguage);
+            }
         }
     }, [i18n]);
 
@@ -70,7 +72,9 @@ function LanguageSwitcher() {
 
     const changeLanguage = (lng) => {
         i18n.changeLanguage(lng);
-        localStorage.setItem('language', lng);
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('language', lng);
+        }
         setMenuOpen(false);
     };
 

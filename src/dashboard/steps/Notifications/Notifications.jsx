@@ -1,13 +1,18 @@
 import {AddChannel} from "../Channals/addChanal";
 import React, {useEffect, useState, useRef} from "react";
 import {useTranslation} from 'react-i18next';
-import {validateAndRefreshToken} from "../../../utils/easyUtils";
-import {getModelData} from "../getModelData";
-import {MailOutlined, AndroidOutlined, BellOutlined, QuestionCircleOutlined, PlayCircleOutlined, ThunderboltOutlined, CheckCircleOutlined} from "@ant-design/icons";
+import {
+    MailOutlined,
+    AndroidOutlined,
+    BellOutlined,
+    QuestionCircleOutlined,
+    PlayCircleOutlined,
+    ThunderboltOutlined,
+    CheckCircleOutlined
+} from "@ant-design/icons";
 import {FaPlay, FaStop, FaTelegramPlane} from 'react-icons/fa';
 import {Alert, Button, Input, Modal, Spin, Switch, Card, Typography, Tour, FloatButton} from "antd";
 import {showErrorNotification, showNotification, showWarningNotification} from "../../hotification/showNotification";
-import {generateRandomThreeDigitNumber} from "../../../widget/utils";
 import {FiTarget} from "react-icons/fi";
 import './Notifications.css';
 import '../Tour.css';
@@ -21,8 +26,9 @@ import {
     sendVerifCode
 } from "./notificationUtils";
 import {restartActiveChannels, chAvailable} from "../Channals/chUtils";
+import {getModelData} from "../CreateModelFormElements/modUtils";
 
-const { Text, Title } = Typography;
+const {Text, Title} = Typography;
 
 const INITIAL_AVAILABLE_CHANNELS = [
     {
@@ -151,13 +157,10 @@ export const Notifications = () => {
         setIsModalVisible(false);
 
         try {
-            const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
-            if (token) {
-                const result = deleteNotifChanel(token, channelToMove.label)
+            const result = deleteNotifChanel(channelToMove.label)
 
-                if (result) {
-                    showNotification(t("notifChannelDeleted") || "Канал для уведомлений удален", t("notifChannelDeletedDesc") || "Агент больше не будет присылать уведомления в этот канал!");
-                }
+            if (result) {
+                showNotification(t("notifChannelDeleted") || "Канал для уведомлений удален", t("notifChannelDeletedDesc") || "Агент больше не будет присылать уведомления в этот канал!");
             }
         } catch (error) {
             console.error("Ошибка при получении email:", error);
@@ -172,56 +175,48 @@ export const Notifications = () => {
 
     const saveData = async (key) => {
         const channel = selectedChannels.find(ch => ch.key === key);
-        const token = await validateAndRefreshToken(localStorage.getItem("authToken"))
 
-        if (token != null) {
-            // Создаем объект со всеми полями
-            let channelType = "";
-            if (channel.key === "email") {
-                channelType = "email";
-            } else if (channel.key === "telega") {
-                channelType = "telega";
-            } else if (channel.key === "instant") {
-                channelType = "instant";
-            }
-
-            const result = await saveNotificationsData(channelType, channel.data, null, channel.isEnabled, token);
-
-            if (result.success) {
-                if (channel.isEnabled) {
-                    showNotification(t("notifChannelSaved") || "Канал для уведомлений сохранен", t("notifChannelSavedEnabled") || "Агент будет присылать уведомления в этот канал!");
-                } else {
-                    showNotification(t("notifChannelSavedDisabled") || "Канал для уведомлений сохранен но не активирован", t("notifChannelSavedDisabledDesc") || "Агент не будет присылать уведомления в этот канал!");
-                }
-
-                // Проверяем, есть ли активные сервисы для перезапуска
-                if ((channelType !== "instant") && (channelType !== "telega") && (channelType !== "email")) {
-                    if (result.active_channels) {
-                        setIsRestartServicesModalOpen(true);
-                    }
-                }
-            } else {
-                showErrorNotification(t("notifChannelSaveError") || "Ошибка сохранения канала для уведомлений", t("notifChannelSaveErrorDesc") || "Вы не будете получать уведомления агента из этого канала!");
-            }
-        } else {
-            showWarningNotification(t("notifTokenError") || "Ошибка сохранения канала уведомлений", t("notifTokenErrorDesc") || "Токен не обновлен, необходимо повторно авторизоваться!")
+        // Создаем объект со всеми полями
+        let channelType = "";
+        if (channel.key === "email") {
+            channelType = "email";
+        } else if (channel.key === "telega") {
+            channelType = "telega";
+        } else if (channel.key === "instant") {
+            channelType = "instant";
         }
 
-        toggleExpand(key);
+        const result = await saveNotificationsData(channelType, channel.data, null, channel.isEnabled);
+
+        if (result.success) {
+            if (channel.isEnabled) {
+                showNotification(t("notifChannelSaved") || "Канал для уведомлений сохранен", t("notifChannelSavedEnabled") || "Агент будет присылать уведомления в этот канал!");
+            } else {
+                showNotification(t("notifChannelSavedDisabled") || "Канал для уведомлений сохранен но не активирован", t("notifChannelSavedDisabledDesc") || "Агент не будет присылать уведомления в этот канал!");
+            }
+
+            // Проверяем, есть ли активные сервисы для перезапуска
+            if ((channelType !== "instant") && (channelType !== "telega") && (channelType !== "email")) {
+                if (result.active_channels) {
+                    setIsRestartServicesModalOpen(true);
+                }
+            }
+        } else {
+            showErrorNotification(t("notifChannelSaveError") || "Ошибка сохранения канала для уведомлений", t("notifChannelSaveErrorDesc") || "Вы не будете получать уведомления агента из этого канала!");
+        }
+
+        await toggleExpand(key);
     };
 
     const fetchUserEmail = async () => {
         try {
-            const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
-            if (token) {
-                const userData = await getMail(token);
+            const userData = await getMail();
 
-                setSelectedChannels(prev =>
-                    prev.map(ch =>
-                        ch.key === "email" ? {...ch, data: userData.email} : ch
-                    )
-                );
-            }
+            setSelectedChannels(prev =>
+                prev.map(ch =>
+                    ch.key === "email" ? {...ch, data: userData.email} : ch
+                )
+            );
         } catch (error) {
             console.error("Ошибка при получении email:", error);
             showErrorNotification(t("error") || "Ошибка", t("notifEmailError") || "Не удалось получить email пользователя");
@@ -229,111 +224,106 @@ export const Notifications = () => {
     };
 
     useEffect(() => {
-        const fetchChannelData = async () => {
+        const fetchNotifications = async () => {
             try {
-                const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
-                if (token) {
-                    // Получаем данные о модели
-                    // Сначала из локального хранилища
-                    let modelDataResult
-                    if (localStorage.getItem("userModel")) {
-                        modelDataResult = true
-                    } else {
-                        modelDataResult = await getModelData(token)
-                    }
-                    if (modelDataResult) {
-                        setModelData(true);
+                // Получаем данные о модели
+                // Сначала из локального хранилища
+                let modelDataResult
+                if (localStorage.getItem("userModel")) {
+                    modelDataResult = true
+                } else {
+                    modelDataResult = await getModelData()
+                }
+                if (modelDataResult) {
+                    setModelData(true);
 
-                        // Получаем данные о каналах
-                        const channelsData = await readNotificationsData(token);
-                        if (channelsData) {
-                            const newAvailableChannels = [...INITIAL_AVAILABLE_CHANNELS]; // Используем константу вместо availableChannels
-                            const newSelectedChannels = [];
+                    // Получаем данные о каналах
+                    const channelsData = await readNotificationsData();
+                    if (channelsData) {
+                        const newAvailableChannels = [...INITIAL_AVAILABLE_CHANNELS]; // Используем константу вместо availableChannels
+                        const newSelectedChannels = [];
 
-                            // Остальной код остается без изменений...
-                            // Обработка Telegram бота
-                            if (channelsData.telega) {
-                                const telega = newAvailableChannels.find(ch => ch.key === "telega");
-                                if (telega) {
-                                    const index = newAvailableChannels.indexOf(telega);
-                                    if (index > -1) {
-                                        newAvailableChannels.splice(index, 1);
-                                    }
-                                    const hasValidData = channelsData.telega.data && true && channelsData.telega.data !== '';
-                                    newSelectedChannels.push({
-                                        ...telega,
-                                        data: channelsData.telega.data || '',
-                                        isEnabled: hasValidData ? Boolean(channelsData.telega.enabled) : false
-                                    });
+                        // Обработка Telegram бота
+                        if (channelsData.telega) {
+                            const telega = newAvailableChannels.find(ch => ch.key === "telega");
+                            if (telega) {
+                                const index = newAvailableChannels.indexOf(telega);
+                                if (index > -1) {
+                                    newAvailableChannels.splice(index, 1);
                                 }
-                                setVerificationStatus('success')
+                                const hasValidData = channelsData.telega.data && true && channelsData.telega.data !== '';
+                                newSelectedChannels.push({
+                                    ...telega,
+                                    data: channelsData.telega.data || '',
+                                    isEnabled: hasValidData ? Boolean(channelsData.telega.enabled) : false
+                                });
                             }
-
-                            // Обработка email
-                            if (channelsData.email.enabled !=null) {
-                                const widgetChannel = newAvailableChannels.find(ch => ch.key === "email");
-                                if (widgetChannel) {
-                                    const index = newAvailableChannels.indexOf(widgetChannel);
-                                    if (index > -1) {
-                                        newAvailableChannels.splice(index, 1);
-                                    }
-                                    const hasValidData = channelsData.email.data && true && channelsData.email.data !== '';
-                                    newSelectedChannels.push({
-                                        ...widgetChannel,
-                                        data: channelsData.email.data || '',
-                                        isEnabled: hasValidData ? Boolean(channelsData.email.enabled) : false
-                                    });
-                                }
-                            }
-
-                            // Обработка Instant
-                            if (channelsData.instant && channelsData.instant.enabled != null) {
-                                const instantChannel = newAvailableChannels.find(ch => ch.key === "instant");
-                                if (instantChannel) {
-                                    const index = newAvailableChannels.indexOf(instantChannel);
-                                    if (index > -1) {
-                                        newAvailableChannels.splice(index, 1);
-                                    }
-                                    newSelectedChannels.push({
-                                        ...instantChannel,
-                                        data: 'enabled',
-                                        isEnabled: Boolean(channelsData.instant.enabled)
-                                    });
-                                }
-                            }
-
-                            // Обработка LeadEvents
-                            if (channelsData.events) {
-                                setStartDialog(Boolean(channelsData.events.start))
-                                setEndDialog(Boolean(channelsData.events.end))
-                                setTargetDialog(Boolean(channelsData.events.target))
-                            }
-
-                            // Установка имени бота
-                            if (channelsData.BotName) {
-                                setBotName(channelsData.BotName);
-                            }
-
-                            setAvailableChannels(newAvailableChannels);
-                            setSelectedChannels(newSelectedChannels);
+                            setVerificationStatus('success')
                         }
+
+                        // Обработка email
+                        if (channelsData.email.enabled != null) {
+                            const widgetChannel = newAvailableChannels.find(ch => ch.key === "email");
+                            if (widgetChannel) {
+                                const index = newAvailableChannels.indexOf(widgetChannel);
+                                if (index > -1) {
+                                    newAvailableChannels.splice(index, 1);
+                                }
+                                const hasValidData = channelsData.email.data && true && channelsData.email.data !== '';
+                                newSelectedChannels.push({
+                                    ...widgetChannel,
+                                    data: channelsData.email.data || '',
+                                    isEnabled: hasValidData ? Boolean(channelsData.email.enabled) : false
+                                });
+                            }
+                        }
+
+                        // Обработка Instant
+                        if (channelsData.instant && channelsData.instant.enabled != null) {
+                            const instantChannel = newAvailableChannels.find(ch => ch.key === "instant");
+                            if (instantChannel) {
+                                const index = newAvailableChannels.indexOf(instantChannel);
+                                if (index > -1) {
+                                    newAvailableChannels.splice(index, 1);
+                                }
+                                newSelectedChannels.push({
+                                    ...instantChannel,
+                                    data: 'enabled',
+                                    isEnabled: Boolean(channelsData.instant.enabled)
+                                });
+                            }
+                        }
+
+                        // Обработка LeadEvents
+                        if (channelsData.events) {
+                            setStartDialog(Boolean(channelsData.events.start))
+                            setEndDialog(Boolean(channelsData.events.end))
+                            setTargetDialog(Boolean(channelsData.events.target))
+                        }
+
+                        // Установка имени бота
+                        if (channelsData.BotName) {
+                            setBotName(channelsData.BotName);
+                        }
+
+                        setAvailableChannels(newAvailableChannels);
+                        setSelectedChannels(newSelectedChannels);
                     }
                 }
             } catch (error) {
                 console.error("Ошибка при загрузке данных каналов:", error);
-            }
-            finally {
+            } finally {
                 setLoading(false);
             }
         };
 
-        fetchChannelData();
+        fetchNotifications();
     }, []);
 
     if (loading) {
         return (
             <div className="notifications-loading">
-                <Spin size="large" />
+                <Spin size="large"/>
                 <Text className="loading-text">
                     {t("loading") || "Загрузка данных..."}
                 </Text>
@@ -363,26 +353,23 @@ export const Notifications = () => {
         );
     };
 
+    const generateRandomThreeDigitNumber = () => {
+        return Math.floor(100 + Math.random() * 900);
+    };
+
     const sendVerificationCode = async (telegramId) => {
         setIsVerifying(true);
-        const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
-        if (token) {
-            const pin = generateRandomThreeDigitNumber();
-            setPin(String(pin));
+        const pin = generateRandomThreeDigitNumber();
+        setPin(String(pin));
 
-            const result = await sendVerifCode(token, telegramId, pin);
-            if (result) {
-                setTimeout(() => {
-                    setIsCodeSent(true);
-                    setIsVerifying(false);
-                    showNotification(t("notifCodeSent") || "Код подтверждения отправлен",
-                        t("notifCodeSentDesc") || "Проверьте сообщения в Telegram и введите код из сообщения");
-                }, 1000);
-            } else {
+        const result = await sendVerifCode(telegramId, pin);
+        if (result) {
+            setTimeout(() => {
+                setIsCodeSent(true);
                 setIsVerifying(false);
-                showErrorNotification(t("notifCodeSendError") || "Ошибка отправки кода",
-                    t("notifCodeSendErrorDesc") || "Не удалось отправить код подтверждения. Проверьте ID Telegram.");
-            }
+                showNotification(t("notifCodeSent") || "Код подтверждения отправлен",
+                    t("notifCodeSentDesc") || "Проверьте сообщения в Telegram и введите код из сообщения");
+            }, 1000);
         } else {
             setIsVerifying(false);
             showErrorNotification(t("notifCodeSendError") || "Ошибка отправки кода",
@@ -409,27 +396,20 @@ export const Notifications = () => {
     };
 
     const saveNotification = async (overrides = {}) => {
-        const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
-        if (token) {
-            const s = overrides.start ?? startDialog;
-            const e = overrides.end ?? endDialog;
-            const targetValue = overrides.target ?? targetDialog;
-            const res = await saveNotifEvent(token, s, e, targetValue)
-            if (res.success) {
-                showNotification(t("notifEventsSaved") || "События уведомлений успешно сохранены",
-                    t("notifEventsSavedDesc") || "Вы будете получать уведомления при наступлении выбранных событий");
+        const s = overrides.start ?? startDialog;
+        const e = overrides.end ?? endDialog;
+        const targetValue = overrides.target ?? targetDialog;
+        const res = await saveNotifEvent(s, e, targetValue)
+        if (res.success) {
+            showNotification(t("notifEventsSaved") || "События уведомлений успешно сохранены",
+                t("notifEventsSavedDesc") || "Вы будете получать уведомления при наступлении выбранных событий");
 
-                // Проверяем, есть ли активные сервисы для перезапуска
-                if (res.active_channels) {
-                    setIsRestartServicesModalOpen(true);
-                }
-            }
-            else {
-                showWarningNotification(t("notifEventsSaveError") || "Ошибка сохранения событий уведомлений", t("notifEventsSaveErrorRetry") || "Повторите попытку")
+            // Проверяем, есть ли активные сервисы для перезапуска
+            if (res.active_channels) {
+                setIsRestartServicesModalOpen(true);
             }
         } else {
-            showErrorNotification(t("notifEventsSaveError") || "Ошибка сохранения событий уведомлений",
-                t("notifEventsSaveErrorDesc") || "Внутренняя ошибка сервера. Повторите попытку позже.")
+            showWarningNotification(t("notifEventsSaveError") || "Ошибка сохранения событий уведомлений", t("notifEventsSaveErrorRetry") || "Повторите попытку")
         }
     };
 
@@ -484,7 +464,7 @@ export const Notifications = () => {
     return (
         <div className="create-model-container">
             <div className="section-title" ref={notificationsHeaderRef}>
-                <BellOutlined />
+                <BellOutlined/>
                 {t("notifModelTitle") || "Уведомления модели"}
             </div>
             <div className="section-description">
@@ -496,7 +476,7 @@ export const Notifications = () => {
                     <div className="notifications-modern">
                         {!modelData ? (
                             <div className="no-model-state">
-                                <AndroidOutlined className="no-model-icon" />
+                                <AndroidOutlined className="no-model-icon"/>
                                 <Title level={3} className="no-model-title">
                                     {t("notifNoModel") || "Модель агента не создана"}
                                 </Title>
@@ -545,8 +525,10 @@ export const Notifications = () => {
                                                             checked={channel.isEnabled}
                                                             onChange={() => toggleSwitch(channel.key)}
                                                             disabled={channel.key === "instant" ? false : (!channel.data || false || channel.data === '')}
-                                                            checkedChildren={<span style={{color: "black"}}>{t("notifEnabled") || "Включен"}</span>}
-                                                            unCheckedChildren={<span style={{color: "black"}}>{t("notifDisabled") || "Выключен"}</span>}
+                                                            checkedChildren={<span
+                                                                style={{color: "black"}}>{t("notifEnabled") || "Включен"}</span>}
+                                                            unCheckedChildren={<span
+                                                                style={{color: "black"}}>{t("notifDisabled") || "Выключен"}</span>}
                                                         />
                                                     </div>
                                                 )}
@@ -563,10 +545,13 @@ export const Notifications = () => {
                                                                 description={
                                                                     <>
                                                                         {t("notifEmailDesc") || "При регистрации вы указали этот адрес электронной почты:"}
-                                                                        <Text strong style={{color: 'var(--link-color)', marginLeft: 8}}>
+                                                                        <Text strong style={{
+                                                                            color: 'var(--link-color)',
+                                                                            marginLeft: 8
+                                                                        }}>
                                                                             {channel.data}
                                                                         </Text>
-                                                                        <br />
+                                                                        <br/>
                                                                         {t("notifEmailCritical") || "Критические уведомления всегда будут приходить на этот email"}
                                                                     </>
                                                                 }
@@ -688,7 +673,7 @@ export const Notifications = () => {
                                                                 description={
                                                                     <>
                                                                         {t("notifInstantDesc") || "Уведомления будут отображаться в панели управления в режиме реального времени. Вы увидите все важные события работы вашего агента прямо в интерфейсе."}
-                                                                        <br />
+                                                                        <br/>
                                                                         <Text type="secondary">
                                                                             {t("notifInstantNoSetup") || "Этот канал не требует дополнительной настройки - просто включите его."}
                                                                         </Text>
@@ -725,8 +710,8 @@ export const Notifications = () => {
                                                                     channel.key === "instant"
                                                                         ? false
                                                                         : channel.key === "telega"
-                                                                        ? (!channel.data || verificationStatus !== 'success')
-                                                                        : !channel.data
+                                                                            ? (!channel.data || verificationStatus !== 'success')
+                                                                            : !channel.data
                                                                 }
                                                             >
                                                                 {t("save") || "Сохранить"}
@@ -782,19 +767,22 @@ export const Notifications = () => {
                                                                 backgroundColor: startDialog ? "rgba(82, 196, 26, 0.1)" : "rgba(140, 140, 140, 0.1)"
                                                             }}
                                                         >
-                                                            <FaPlay />
+                                                            <FaPlay/>
                                                         </div>
-                                                        <Text className="event-name">{t("notifStartDialog") || "Начало диалога"}</Text>
+                                                        <Text
+                                                            className="event-name">{t("notifStartDialog") || "Начало диалога"}</Text>
                                                     </div>
                                                     <Switch
                                                         checked={startDialog}
                                                         onChange={async () => {
                                                             const newValue = !startDialog;
                                                             setStartDialog(newValue);
-                                                            await saveNotification({ start: newValue });
+                                                            await saveNotification({start: newValue});
                                                         }}
-                                                        checkedChildren={<span style={{color: "black"}}>{t("notifEnabled") || "Включен"}</span>}
-                                                        unCheckedChildren={<span style={{color: "black"}}>{t("notifDisabled") || "Выключен"}</span>}
+                                                        checkedChildren={<span
+                                                            style={{color: "black"}}>{t("notifEnabled") || "Включен"}</span>}
+                                                        unCheckedChildren={<span
+                                                            style={{color: "black"}}>{t("notifDisabled") || "Выключен"}</span>}
                                                         style={{color: "black"}}
                                                     />
                                                 </div>
@@ -820,19 +808,22 @@ export const Notifications = () => {
                                                                 backgroundColor: endDialog ? "rgba(82, 196, 26, 0.1)" : "rgba(140, 140, 140, 0.1)"
                                                             }}
                                                         >
-                                                            <FaStop />
+                                                            <FaStop/>
                                                         </div>
-                                                        <Text className="event-name">{t("notifEndDialog") || "Окончание диалога"}</Text>
+                                                        <Text
+                                                            className="event-name">{t("notifEndDialog") || "Окончание диалога"}</Text>
                                                     </div>
                                                     <Switch
                                                         checked={endDialog}
                                                         onChange={async () => {
                                                             const newValue = !endDialog;
                                                             setEndDialog(newValue);
-                                                            await saveNotification({ end: newValue});
+                                                            await saveNotification({end: newValue});
                                                         }}
-                                                        checkedChildren={<span style={{color: "black"}}>{t("notifEnabled") || "Включен"}</span>}
-                                                        unCheckedChildren={<span style={{color: "black"}}>{t("notifDisabled") || "Выключен"}</span>}
+                                                        checkedChildren={<span
+                                                            style={{color: "black"}}>{t("notifEnabled") || "Включен"}</span>}
+                                                        unCheckedChildren={<span
+                                                            style={{color: "black"}}>{t("notifDisabled") || "Выключен"}</span>}
                                                         style={{color: "black"}}
                                                     />
                                                 </div>
@@ -858,19 +849,22 @@ export const Notifications = () => {
                                                                 backgroundColor: targetDialog ? "rgba(82, 196, 26, 0.1)" : "rgba(140, 140, 140, 0.1)"
                                                             }}
                                                         >
-                                                            <FiTarget />
+                                                            <FiTarget/>
                                                         </div>
-                                                        <Text className="event-name">{t("notifTargetReached") || "Достижение цели"}</Text>
+                                                        <Text
+                                                            className="event-name">{t("notifTargetReached") || "Достижение цели"}</Text>
                                                     </div>
                                                     <Switch
                                                         checked={targetDialog}
                                                         onChange={async () => {
                                                             const newValue = !targetDialog;
                                                             setTargetDialog(newValue);
-                                                            await saveNotification({ target: newValue });
+                                                            await saveNotification({target: newValue});
                                                         }}
-                                                        checkedChildren={<span style={{color: "black"}}>{t("notifEnabled") || "Включен"}</span>}
-                                                        unCheckedChildren={<span style={{color: "black"}}>{t("notifDisabled") || "Выключен"}</span>}
+                                                        checkedChildren={<span
+                                                            style={{color: "black"}}>{t("notifEnabled") || "Включен"}</span>}
+                                                        unCheckedChildren={<span
+                                                            style={{color: "black"}}>{t("notifDisabled") || "Выключен"}</span>}
                                                         style={{color: "black"}}
                                                     />
                                                 </div>
@@ -916,7 +910,7 @@ export const Notifications = () => {
                 {tourPanelVisible && (
                     <div className="tour-controls tour-primary">
                         <div className="tour-controls-header">
-                            <PlayCircleOutlined className="tour-controls-icon" />
+                            <PlayCircleOutlined className="tour-controls-icon"/>
                             <h3 className="tour-controls-title">
                                 {t("notifTourTitle") || "Интерактивный обзор"}
                             </h3>
@@ -988,7 +982,7 @@ export const Notifications = () => {
             />
 
             <FloatButton
-                icon={<QuestionCircleOutlined />}
+                icon={<QuestionCircleOutlined/>}
                 tooltip={t("notifTourTooltip") || "Начать обзор настроек уведомлений"}
                 onClick={showTourPanel}
                 className="tour-float-button"
@@ -1008,35 +1002,32 @@ export const Notifications = () => {
                             setRestartMessages([]);
                             setRestartComplete(false);
 
-                            const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
-                            if (token) {
-                                // Функция для перевода сообщений от сервера
-                                const translateMessage = (msg) => {
-                                    const translations = {
-                                        '🔌 Соединение с сервером установлено': t("chUtilsConnectionEstablished") || '🔌 Соединение с сервером установлено',
-                                        '✅ Перезапуск сервисов завершен успешно': t("chUtilsRestartCompleted") || '✅ Перезапуск сервисов завершен успешно',
-                                        '❌ Произошла ошибка при перезапуске сервисов': t("chUtilsRestartError") || '❌ Произошла ошибка при перезапуске сервисов',
-                                        '❌ Ошибка соединения с сервером': t("chUtilsConnectionError") || '❌ Ошибка соединения с сервером'
-                                    };
-                                    return translations[msg] || msg;
+
+                            // Функция для перевода сообщений от сервера
+                            const translateMessage = (msg) => {
+                                const translations = {
+                                    '🔌 Соединение с сервером установлено': t("chUtilsConnectionEstablished") || '🔌 Соединение с сервером установлено',
+                                    '✅ Перезапуск сервисов завершен успешно': t("chUtilsRestartCompleted") || '✅ Перезапуск сервисов завершен успешно',
+                                    '❌ Произошла ошибка при перезапуске сервисов': t("chUtilsRestartError") || '❌ Произошла ошибка при перезапуске сервисов',
+                                    '❌ Ошибка соединения с сервером': t("chUtilsConnectionError") || '❌ Ошибка соединения с сервером'
                                 };
+                                return translations[msg] || msg;
+                            };
 
-                                // Передаём callback для получения сообщений
-                                await restartActiveChannels(token, (message) => {
-                                    setRestartMessages(prev => [...prev, translateMessage(message)]);
-                                });
+                            // Передаём callback для получения сообщений
+                            await restartActiveChannels((message) => {
+                                setRestartMessages(prev => [...prev, translateMessage(message)]);
+                            });
 
-                                setRestartComplete(true);
-                                setRestartLoading(false);
+                            setRestartComplete(true);
+                            setRestartLoading(false);
 
-                                setTimeout(() => {
-                                    showNotification(t("createModelRestartSuccess") || 'Успешно', t("createModelRestartSuccessMsg") || 'Активные сервисы перезапущены');
-                                    setRestartProgressVisible(false);
-                                    setIsRestartServicesModalOpen(false);
-                                }, 2000);
-                            } else {
-                                throw new Error(t("notifTokenError") || "Токен не обновлен");
-                            }
+                            setTimeout(() => {
+                                showNotification(t("createModelRestartSuccess") || 'Успешно', t("createModelRestartSuccessMsg") || 'Активные сервисы перезапущены');
+                                setRestartProgressVisible(false);
+                                setIsRestartServicesModalOpen(false);
+                            }, 2000);
+
                         } catch (error) {
                             setRestartMessages(prev => [...prev, `❌ ${error.message || (t("createModelRestartErrorMsg") || 'Ошибка при перезапуске активных сервисов')}`]);
                             showErrorNotification(t("createModelRestartError") || 'Ошибка', error.message || (t("createModelRestartErrorMsg") || 'Ошибка при перезапуске активных сервисов'));
@@ -1054,12 +1045,12 @@ export const Notifications = () => {
                 }}
                 okText={restartProgressVisible ? (t("createModelRestartOkComplete") || "Закрыть") : (t("createModelRestartOk") || "Перезапустить")}
                 okButtonProps={{
-                    style: { color: 'black' },
+                    style: {color: 'black'},
                     disabled: restartLoading
                 }}
                 cancelText={t("channelsCancelButton") || "Отмена"}
                 cancelButtonProps={{
-                    style: { display: restartProgressVisible ? 'none' : 'inline-block' }
+                    style: {display: restartProgressVisible ? 'none' : 'inline-block'}
                 }}
                 closable={!restartLoading}
                 maskClosable={false}
@@ -1070,17 +1061,22 @@ export const Notifications = () => {
                     <p>{t("createModelRestartText") || "Есть активные сервисы работающие со старой моделью Агента, перезапустить сервисы?"}</p>
                 ) : (
                     <>
-                        {restartLoading && <Spin size="large" />}
-                        <div style={{ marginTop: '20px', maxHeight: '300px', overflowY: 'auto' }}>
+                        {restartLoading && <Spin size="large"/>}
+                        <div style={{marginTop: '20px', maxHeight: '300px', overflowY: 'auto'}}>
                             {restartMessages.map((msg, index) => (
-                                <div key={index} style={{ marginBottom: '8px', padding: '8px', backgroundColor: 'var(--dialog-bg-color)', borderRadius: '4px' }}>
+                                <div key={index} style={{
+                                    marginBottom: '8px',
+                                    padding: '8px',
+                                    backgroundColor: 'var(--dialog-bg-color)',
+                                    borderRadius: '4px'
+                                }}>
                                     {msg}
                                 </div>
                             ))}
                         </div>
                         {restartComplete && (
-                            <div style={{ marginTop: '16px', textAlign: 'center' }}>
-                                <CheckCircleOutlined style={{ fontSize: '24px', color: '#52c41a', marginRight: '8px' }} />
+                            <div style={{marginTop: '16px', textAlign: 'center'}}>
+                                <CheckCircleOutlined style={{fontSize: '24px', color: '#52c41a', marginRight: '8px'}}/>
                                 <span>{t("createModelRestartComplete") || "Перезапуск завершен!"}</span>
                             </div>
                         )}

@@ -1,6 +1,6 @@
 import {useEffect, useState, useRef} from "react";
 import {useTranslation} from 'react-i18next';
-import {validateAndRefreshToken} from "../../../../utils/easyUtils";
+import {getAuthToken, refreshToken} from "../../../../utils/easyUtils";
 import {message, Spin, Button, Table, Badge, Tag, Alert, Empty} from "antd";
 import {BellOutlined, ReloadOutlined, SyncOutlined} from "@ant-design/icons";
 import {LeadBotEvents} from "./leadBotEvents";
@@ -41,83 +41,81 @@ export function LeadEvents() {
     const serviceRef = useRef(null);
 
     useEffect(() => {
-        const initializeService = async () => {
-            setLoading(true);
-
+        const fetchEvents = async () => {
             try {
-                const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
+                let token = getAuthToken();
                 if (!token) {
-                    message.error(t('authError') || 'Ошибка аутентификации');
-                    setLoading(false);
-                    return;
+                    token = await refreshToken();
                 }
 
-                // Получаем userId из токена или другого источника
-                // Предполагаем, что userId хранится в localStorage или можно извлечь из токена
-                const userIdFromStorage = localStorage.getItem("userId");
-                if (!userIdFromStorage) {
-                    message.error(t('userIdError') || 'Не удалось определить ID пользователя');
-                    setLoading(false);
-                    return;
-                }
-
-                const parsedUserId = parseInt(userIdFromStorage);
-
-                // Получаем последний event_id из localStorage
-                const storedLastEventId = localStorage.getItem("lastEventId");
-                const initialLastEventId = storedLastEventId ? parseInt(storedLastEventId) : 0;
-                setLastEventId(initialLastEventId);
-
-                // Создаём сервис и настраиваем колбэки
-                const service = new LeadBotEvents();
-
-                service.setCallbacks({
-                    onEvents: (newEvents, count) => {
-                        console.log(`Получено событий: ${count}`);
-
-                        setEvents(prevEvents => {
-                            // Объединяем старые и новые события, убираем дубликаты
-                            const combinedEvents = [...prevEvents, ...newEvents];
-                            const uniqueEvents = combinedEvents.filter((event, index, self) =>
-                                index === self.findIndex(e => e.event_id === event.event_id)
-                            );
-
-                            // Сортируем по event_id в порядке убывания (новые сверху)
-                            return uniqueEvents.sort((a, b) => b.event_id - a.event_id);
-                        });
-
-                        // Обновляем lastEventId
-                        if (newEvents.length > 0) {
-                            const maxEventId = Math.max(...newEvents.map(e => e.event_id));
-                            setLastEventId(maxEventId);
-                            localStorage.setItem("lastEventId", maxEventId.toString());
-                        }
-                    },
-                    onNoNewEvents: () => {
-                        console.log('Нет новых событий');
-                    },
-                    onError: (error) => {
-                        showErrorNotification(`${t('error') || 'Ошибка'}: ${error}`);
-                    },
-                    onConnected: () => {
-                        setConnected(true);
-                        showNotification(t('eventsConnected') || 'Подключено к серверу событий');
-                    },
-                    onDisconnected: () => {
-                        setConnected(false);
-                        message.warning(t('eventsDisconnected') || 'Отключено от сервера событий');
-                    },
-                    onUpdateToken: () => {
-                        message.error(t('serviceRequireAuth') || 'Требуется обновление токена');
+                if (token) {
+                    // Получаем userId из токена или другого источника
+                    // Предполагаем, что userId хранится в localStorage или можно извлечь из токена
+                    const userIdFromStorage = localStorage.getItem("userId");
+                    if (!userIdFromStorage) {
+                        message.error(t('userIdError') || 'Не удалось определить ID пользователя');
+                        setLoading(false);
+                        return;
                     }
-                });
 
-                serviceRef.current = service;
+                    const parsedUserId = parseInt(userIdFromStorage);
 
-                // Подключаемся к серверу
-                const success = await service.connect(parsedUserId, initialLastEventId);
-                if (!success) {
-                    message.error(t('eventsConnectError') || 'Не удалось подключиться к серверу событий');
+                    // Получаем последний event_id из localStorage
+                    const storedLastEventId = localStorage.getItem("lastEventId");
+                    const initialLastEventId = storedLastEventId ? parseInt(storedLastEventId) : 0;
+                    setLastEventId(initialLastEventId);
+
+                    // Создаём сервис и настраиваем колбэки
+                    const service = new LeadBotEvents();
+
+                    service.setCallbacks({
+                        onEvents: (newEvents, count) => {
+                            console.log(`Получено событий: ${count}`);
+
+                            setEvents(prevEvents => {
+                                // Объединяем старые и новые события, убираем дубликаты
+                                const combinedEvents = [...prevEvents, ...newEvents];
+                                const uniqueEvents = combinedEvents.filter((event, index, self) =>
+                                    index === self.findIndex(e => e.event_id === event.event_id)
+                                );
+
+                                // Сортируем по event_id в порядке убывания (новые сверху)
+                                return uniqueEvents.sort((a, b) => b.event_id - a.event_id);
+                            });
+
+                            // Обновляем lastEventId
+                            if (newEvents.length > 0) {
+                                const maxEventId = Math.max(...newEvents.map(e => e.event_id));
+                                setLastEventId(maxEventId);
+                                localStorage.setItem("lastEventId", maxEventId.toString());
+                            }
+                        },
+                        onNoNewEvents: () => {
+                            console.log('Нет новых событий');
+                        },
+                        onError: (error) => {
+                            showErrorNotification(`${t('error') || 'Ошибка'}: ${error}`);
+                        },
+                        onConnected: () => {
+                            setConnected(true);
+                            showNotification(t('eventsConnected') || 'Подключено к серверу событий');
+                        },
+                        onDisconnected: () => {
+                            setConnected(false);
+                            message.warning(t('eventsDisconnected') || 'Отключено от сервера событий');
+                        },
+                        onUpdateToken: () => {
+                            message.error(t('serviceRequireAuth') || 'Требуется обновление токена');
+                        }
+                    });
+
+                    serviceRef.current = service;
+
+                    // Подключаемся к серверу
+                    const success = await service.connect(parsedUserId, initialLastEventId);
+                    if (!success) {
+                        message.error(t('eventsConnectError') || 'Не удалось подключиться к серверу событий');
+                    }
                 }
             } catch (error) {
                 console.error('Ошибка инициализации сервиса событий:', error);
@@ -127,7 +125,7 @@ export function LeadEvents() {
             }
         };
 
-        initializeService();
+        fetchEvents();
 
         // Cleanup при размонтировании компонента
         return () => {

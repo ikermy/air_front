@@ -273,12 +273,8 @@ body.dark::-webkit-scrollbar-track {
 }
 
 /* Изменение цвета ползунка */
-
 .espero-slider-row .ant-slider-handle::after {
   background: var(--link-hover-color) !important;
-  /*border: none !important;*/
-  /*box-shadow: none !important;*/
-  /*border-radius: 50% !important;*/
 }
 
 /* Изменение цвета трека (активной части) */
@@ -295,6 +291,36 @@ body.dark::-webkit-scrollbar-track {
 
 .ant-message {
   z-index: 11000 !important;
+}
+
+
+/* Хук для активного элемента с фоном */
+.ant-select-item-option.ant-select-item-option-active {
+  background-color: #d7eeaa !important;
+}
+
+.ant-select-item-option.ant-select-item-option-active .ant-select-item-option-content {
+  color: black !important;
+}
+
+/* Цвет текста выбранного элемента в выпадающем списке */
+.ant-select-dropdown .ant-select-item-option-selected .ant-select-item-option-content {
+  color: black !important;
+}
+
+/* Стили для Tooltip */
+.ant-tooltip {
+  --ant-color-bg-default: var(--main-color) !important;
+}
+
+.ant-tooltip-inner {
+  background-color: var(--main-color) !important;
+  color: var(--bg-color-dark) !important;
+}
+
+.ant-tooltip-arrow::before {
+  background-color: var(--main-color) !important;
+  border-color: var(--main-color) !important;
 }
 
 

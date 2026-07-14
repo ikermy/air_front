@@ -1,20 +1,20 @@
-export async function setUserTimeZone(token, data) {
-    const LAND_URL = (window.runtimeConfig && window.runtimeConfig.REACT_APP_LAND) || process.env.REACT_APP_LAND;
+import { authFetch } from "../../../utils/easyUtils";
 
+export async function setUserTimeZone(data) {
     try {
-        const response = await fetch(`${LAND_URL}/user/timezone?token=${token}`, {
+        const response = await authFetch(`/v1/user/timezone`, {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                "data": data,
+                "timezone": data,
             }),
         });
 
         if (!response.ok) {
             // Если статус ответа не 200-299, обрабатываем ошибку
-            const errorData = await response.json();
+            const errorData = await response.json().catch(() => ({}));
             throw new Error(errorData.error || `Ошибка сервера: ${response.status}`);
         }
 
@@ -22,6 +22,6 @@ export async function setUserTimeZone(token, data) {
         return await response.json();
     } catch (error) {
         console.error('Ошибка при сохранении UserTimeZone:', error);
-        throw error.message;
+        throw error instanceof Error ? error.message : String(error);
     }
 }

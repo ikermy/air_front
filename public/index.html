@@ -11,11 +11,19 @@
     />
     <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
     
+    <!-- DNS Prefetch для внешних ресурсов -->
+    <link rel="dns-prefetch" href="//fonts.googleapis.com" />
+    <link rel="preconnect" href="//fonts.googleapis.com" crossorigin />
+
     <!-- Предзагрузка изображений флагов для ускорения переключения языков -->
     <link rel="preload" href="%PUBLIC_URL%/flags/ru.png" as="image" />
     <link rel="preload" href="%PUBLIC_URL%/flags/en.png" as="image" />
     <link rel="preload" href="%PUBLIC_URL%/flags/es.png" as="image" />
     
+    <!-- Prefetch для вероятных маршрутов -->
+    <link rel="prefetch" href="%PUBLIC_URL%/landing/chan_l.png" as="image" />
+    <link rel="prefetch" href="%PUBLIC_URL%/landing/chan_d.png" as="image" />
+
     <!--
       manifest.json provides metadata used when your web app is installed on a
       user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
@@ -31,7 +39,6 @@
       Learn how to configure a non-root public URL by running `npm run build`.
     -->
     <title>React App</title>
-    <script src="/config.js" onload="window.dispatchEvent(new Event('runtime-config-loaded'))"></script>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>

@@ -1,39 +1,52 @@
 import React, {useEffect, useState, useRef} from "react";
 import {Button, Form, Input, Spin, Tour, FloatButton, Modal} from "antd";
-import {UserOutlined, RobotOutlined, QuestionCircleOutlined, CheckCircleOutlined, ExperimentOutlined} from "@ant-design/icons";
+import {
+    UserOutlined,
+    RobotOutlined,
+    QuestionCircleOutlined,
+    CheckCircleOutlined,
+    ExperimentOutlined
+} from "@ant-design/icons";
 import "../steps.css"
 import "./CreateModel.css"
 import './Tour.css';
 import {Target} from "./CreateModelFormElements/Target";
 import {Triggers} from "./CreateModelFormElements/Triggers";
-import {getModelData, extractAllModels, getActiveProviderName} from "./getModelData";
+import {
+    getModelData,
+    extractAllModels,
+    getActiveProviderName,
+    saveModelData,
+    setActiveProvider
+} from "./CreateModelFormElements/modUtils";
+import {getAuthToken} from "../../utils/easyUtils";
 import {DeleteModel} from "./deleteModel";
 import {showErrorNotification, showNotification, showWarningNotification} from "../hotification/showNotification";
-import {validateAndRefreshToken} from "../../utils/easyUtils";
 import {getTourPanelState, setTourPanelState} from "../../utils/cookieUtils";
 import {UpdateModel} from "./updateModel";
 import {Espero} from "./CreateModelFormElements/Espero";
-// import {TypesGPT} from "./CreateModelFormElements/TypesGPT.old";
-import {UploadFiles} from "./CreateModelFormElements/UploadFiles";
 import {S3Files} from "./CreateModelFormElements/S3Files";
 import {Embedding} from "./CreateModelFormElements/Embedding";
 import {Prompt} from "./CreateModelFormElements/Prompt";
 import {Openai_Interpreter as OpenaiInterpreter} from "./CreateModelFormElements/openai_Interpreter";
+import {Openai_Realtime as OpenaiRealtime} from "./CreateModelFormElements/Openai_Realtime";
+import {Google_Realtime as GoogleRealtime} from "./CreateModelFormElements/Google_Realtime";
 import {ModelTest} from "./ModelTest/ModelTest";
 import {Mistral_Interpreter as MistralInterpreter} from "./CreateModelFormElements/mistral_interpretator";
 import {Google_Interpreter as GoogleInterpreter} from "./CreateModelFormElements/google_interpretator";
 import {Operator} from "./CreateModelFormElements/Operator";
-import {saveModelData, setActiveProvider} from "./CreateModelFormElements/modUtils";
 import {ModelSelector} from "./CreateModelFormElements/ModelSelector";
 import {restartActiveChannels} from "./Channals/chUtils";
 import {LeadHaunter} from "./CreateModelFormElements/LeadHaunter";
 import {useTranslation} from "react-i18next";
+import {GoogleOAuth} from "./GoogleOAuth";
+import {UploadFiles} from "./CreateModelFormElements/UploadFiles";
+import {TypesGPT} from "./CreateModelFormElements/TypesGPT";
 
 
-export const CreateModel = () => {
+export const CreateModel = ({onMenuChange}) => {
     // Подписываемся на изменения языка, чтобы компонент перерисовывался при смене языка
-    const { i18n, t } = useTranslation();
-    const [token, setToken] = useState(null);
+    const {i18n, t} = useTranslation();
     const [loading, setLoading] = useState(true);
     const [form] = Form.useForm(); // Создаём экземпляр формы
     const [isButtonDisabled, setButtonDisabled] = useState(true)
@@ -41,14 +54,18 @@ export const CreateModel = () => {
     const [tourVisible, setTourVisible] = useState(false);
     const [current, setCurrent] = useState(0);
     const [tourPanelVisible, setTourPanelVisible] = useState(getTourPanelState('createmodel')); // Состояние для видимости панели
-    const showSimpleAuth = process.env.REACT_APP_SHOW_SIMPLE_AUTH === "false";
+    const showSimpleAuth = false;
 
     // Новые state для мультимодельной архитектуры
+    /** @type {[Record<string, any>, React.Dispatch<React.SetStateAction<Record<string, any>>>]} */
     const [allModelsData, setAllModelsData] = useState({}); // Все модели {openai: {...}, anthropic: {...}}
+    /** @type {[string | null, React.Dispatch<React.SetStateAction<string | null>>]} */
     const [activeProvider, setActiveProviderState] = useState(null); // Активный провайдер
+    /** @type {[string | null, React.Dispatch<React.SetStateAction<string | null>>]} */
     const [selectedProvider, setSelectedProvider] = useState(null); // Выбранный провайдер для редактирования
     const [providerLoading, setProviderLoading] = useState(false); // Загрузка при смене провайдера
     const [s3FilesEnabled, setS3FilesEnabled] = useState(false); // Состояние S3 файлов для передачи в Mistral_Interpreter
+    const [googleOAuthEnabled, setGoogleOAuthEnabled] = useState(false); // Состояние Google OAuth для передачи в Google_Interpreter
 
     // State для модального окна подтверждения переключения провайдера
     const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
@@ -74,10 +91,12 @@ export const CreateModel = () => {
     const triggersRef = useRef(null);
     const filesRef = useRef(null);
     const s3FilesRef = useRef(null);
+    const googleOAuthRef = useRef(null);
     const interpreterRef = useRef(null);
     const esperoRef = useRef(null);
     const gptTypeRef = useRef(null);
     const buttonsRef = useRef(null);
+    const updateModelRef = useRef(null); // Ref для доступа к методу обновления модели
 
     const steps = [
         {
@@ -131,6 +150,11 @@ export const CreateModel = () => {
             target: () => s3FilesRef.current,
         },
         {
+            title: t("createModelGoogleOAuth") || '📅 Google Integration',
+            description: t("createModelGoogleOAuthDesc") || 'Подключите Google аккаунт для интеграции с Google Calendar и Google Sheets. Агент сможет управлять событиями и работать с таблицами.',
+            target: () => googleOAuthRef.current,
+        },
+        {
             title: t("createModelInterpreter") || '⚙️ Интерпретатор кода',
             description: t("createModelInterpreterDesc") || 'Включите возможность выполнения и интерпретации кода. Агент сможет выполнять вычисления и программные задачи.',
             target: () => interpreterRef.current,
@@ -161,11 +185,8 @@ export const CreateModel = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const token = await validateAndRefreshToken(localStorage.getItem("authToken"))
-                if (token != null) {
-                    setToken(token)
-                    const data = await getModelData(token);
-
+                const data = await getModelData();
+                if (data != null) {
                     // Извлекаем данные в новом формате
                     const models = extractAllModels(data);
                     const activeProviderName = getActiveProviderName(data);
@@ -182,6 +203,15 @@ export const CreateModel = () => {
                         // Заполняем форму данными активной модели
                         const hasS3Data = providerData.s3 || providerData.s3_enabled || providerData.s3files || false;
 
+                        // Инициализируем состояние S3 файлов
+                        setS3FilesEnabled(hasS3Data);
+
+                        // Инициализируем состояние Google OAuth
+                        const googleOAuth = providerData.g_oauth;
+                        const isGoogleOAuthEnabled = googleOAuth && typeof googleOAuth === 'object' &&
+                            (googleOAuth.calendar || googleOAuth.sheets);
+                        setGoogleOAuthEnabled(isGoogleOAuthEnabled);
+
                         form.setFieldsValue({
                             name: providerData.name || "",
                             prompt: providerData.instructions || providerData.prompt || "",
@@ -195,13 +225,20 @@ export const CreateModel = () => {
                             s3files: hasS3Data,
                             image: providerData.image || false,
                             web_search: providerData.web_search || false,
+                            // Маппинг g_oauth с сервера на google_oauth в форме
+                            google_oauth: providerData.g_oauth && typeof providerData.g_oauth === 'object'
+                                ? providerData.g_oauth
+                                : false,
                             espero: providerData.espero || {
                                 wait: 2,
                                 limit: 1024,
-                            }
+                            },
+                            gpttype: providerData.gpttype || providerData.model,
                         });
 
-                        localStorage.setItem("userModel", true);
+                        if (typeof window !== 'undefined') {
+                            localStorage.setItem("userModel", "true");
+                        }
                     } else {
                         // Нет активного провайдера или данных - показываем предупреждение
                         showWarningNotification(t("modelNotCreated") || "Модель Агента не создана", t("createModelSelectProvider") || "Выберите провайдера и создайте модель");
@@ -218,7 +255,7 @@ export const CreateModel = () => {
             }
         };
 
-        fetchData();
+        void fetchData();
     }, [form, t]);
 
     // Синхронизируем s3FilesEnabled с значением из формы при изменении modelData
@@ -252,33 +289,31 @@ export const CreateModel = () => {
     // Функция для обновления данных всех моделей
     const refreshModelsData = async () => {
         try {
-            const currentToken = await validateAndRefreshToken(localStorage.getItem("authToken"));
-            if (currentToken) {
-                const data = await getModelData(currentToken);
-                const models = extractAllModels(data);
-                const activeProviderName = getActiveProviderName(data);
+            const data = await getModelData();
+            const models = extractAllModels(data);
+            const activeProviderName = getActiveProviderName(data);
 
-                setAllModelsData(models);
-                setActiveProviderState(activeProviderName);
+            setAllModelsData(models);
+            setActiveProviderState(activeProviderName);
 
-                // Если текущий выбранный провайдер еще существует, обновляем его данные
-                if (selectedProvider && models[selectedProvider]) {
-                    const providerData = models[selectedProvider];
-                    setModelData(providerData);
-                    loadProviderDataToForm(providerData);
-                } else if (activeProviderName && models[activeProviderName]) {
-                    // Иначе загружаем активный провайдер
-                    const providerData = models[activeProviderName];
-                    setSelectedProvider(activeProviderName);
-                    setModelData(providerData);
-                    loadProviderDataToForm(providerData);
-                } else {
-                    // Нет данных - сбрасываем
-                    setModelData(null);
-                    setSelectedProvider(null);
-                    form.resetFields();
-                }
+            // Если текущий выбранный провайдер еще существует, обновляем его данные
+            if (selectedProvider && models[selectedProvider]) {
+                const providerData = models[selectedProvider];
+                setModelData(providerData);
+                loadProviderDataToForm(providerData);
+            } else if (activeProviderName && models[activeProviderName]) {
+                // Иначе загружаем активный провайдер
+                const providerData = models[activeProviderName];
+                setSelectedProvider(activeProviderName);
+                setModelData(providerData);
+                loadProviderDataToForm(providerData);
+            } else {
+                // Нет данных - сбрасываем
+                setModelData(null);
+                setSelectedProvider(null);
+                form.resetFields();
             }
+
         } catch (error) {
             console.error("Ошибка обновления данных моделей:", error);
         }
@@ -296,7 +331,19 @@ export const CreateModel = () => {
         // Обновляем состояние S3 файлов
         setS3FilesEnabled(hasS3Data);
 
-        const formValues = {
+        // Обновляем состояние Google OAuth
+        const googleOAuth = providerData.g_oauth;
+        const isGoogleOAuthEnabled = googleOAuth && typeof googleOAuth === 'object' &&
+            (googleOAuth.calendar || googleOAuth.sheets);
+        setGoogleOAuthEnabled(isGoogleOAuthEnabled);
+
+        // Добавляем gpttype если он есть
+        const rawGptType = providerData.gpttype || providerData.model;
+        const normalizedGptType = typeof rawGptType === 'string'
+            ? rawGptType
+            : rawGptType?.name || rawGptType?.value || '';
+
+        form.setFieldsValue({
             name: providerData.name || "",
             prompt: providerData.instructions || providerData.prompt || "",
             action: providerData.mact || "",
@@ -308,20 +355,17 @@ export const CreateModel = () => {
             interpreter: providerData.interpreter || providerData.interp || false,
             s3files: hasS3Data,
             image: providerData.image || false,
-            // video: providerData.video || false,
             web_search: providerData.web_search || false,
+            // Маппинг g_oauth с сервера на google_oauth в форме
+            google_oauth: providerData.g_oauth && typeof providerData.g_oauth === 'object'
+                ? providerData.g_oauth
+                : false,
             espero: providerData.espero || {
                 wait: 2,
                 limit: 1024,
-            }
-        };
-
-        // Добавляем gptType если он есть
-        if (providerData.gpttype || providerData.model) {
-            formValues.gptType = providerData.gpttype || providerData.model;
-        }
-
-        form.setFieldsValue(formValues);
+            },
+            gpttype: normalizedGptType,
+        });
 
         // Проверяем что значения действительно установились
         setTimeout(() => {
@@ -344,7 +388,7 @@ export const CreateModel = () => {
             setIsConfirmModalOpen(true);
         } else {
             // Нет изменений - просто переключаем
-            switchProvider(provider);
+            void switchProvider(provider);
         }
     };
 
@@ -352,7 +396,7 @@ export const CreateModel = () => {
     const handleConfirmSwitch = () => {
         setIsConfirmModalOpen(false);
         if (pendingProvider) {
-            switchProvider(pendingProvider);
+            void switchProvider(pendingProvider);
             setPendingProvider(null);
         }
     };
@@ -397,6 +441,7 @@ export const CreateModel = () => {
                     s3files: false,
                     image: false,
                     web_search: false,
+                    google_oauth: false,
                     espero: {
                         wait: 2,
                         limit: 1024,
@@ -413,7 +458,7 @@ export const CreateModel = () => {
     const handleSetActiveProvider = async (provider) => {
         setProviderLoading(true);
         try {
-            const response = await setActiveProvider(token, provider);
+            const response = await setActiveProvider(provider);
             if (response.status === "ok") {
                 setActiveProviderState(provider);
 
@@ -442,6 +487,13 @@ export const CreateModel = () => {
             setS3FilesEnabled(changedValues.s3files);
         }
 
+        // Обновляем состояние Google OAuth для передачи в Google_Interpreter
+        if (changedValues.google_oauth !== undefined) {
+            const isOAuthEnabled = changedValues.google_oauth &&
+                (changedValues.google_oauth.calendar || changedValues.google_oauth.sheets);
+            setGoogleOAuthEnabled(isOAuthEnabled);
+        }
+
         if (modelData) {
             // Для существующей модели - проверяем, были ли изменения по сравнению с исходными данными
             const hasChanges =
@@ -453,11 +505,20 @@ export const CreateModel = () => {
                 allValues.operator !== (modelData.operator || false) ||
                 allValues.interp !== (modelData.interpreter || modelData.interp || false) ||
                 allValues.s3files !== (modelData.s3_enabled || modelData.s3 || false) ||
+                // Сравниваем google_oauth (форма) с g_oauth (сервер)
+                JSON.stringify(allValues.google_oauth || false) !== JSON.stringify(modelData.g_oauth || false) ||
                 JSON.stringify(allValues.espero || {}) !== JSON.stringify(modelData.espero || {wait: 2, limit: 1024}) ||
+                // Сравниваем gpttype (форма) с gpttype или model (сервер)
+                (allValues.gpttype !== (modelData.gpttype?.name || modelData.gpttype || modelData.model || "")) ||
                 // Проверка для Mistral провайдера
                 (selectedProvider === 'mistral' && (
                     allValues.image !== (modelData.image || false) ||
                     allValues.web_search !== (modelData.web_search || false)
+                )) ||
+                // Проверка Realtime (только OpenAI)
+                (selectedProvider === 'openai' && (
+                    allValues.realtime !== (modelData.realtime || false) ||
+                    JSON.stringify(allValues.realtime_vad || null) !== JSON.stringify(modelData.realtime_vad || null)
                 ));
 
             setButtonDisabled(!hasChanges);
@@ -482,41 +543,33 @@ export const CreateModel = () => {
         }
 
         // Отправка данных модели
-        const token = await validateAndRefreshToken(localStorage.getItem("authToken"))
-        if (token != null) {
-            const isCreatingNew = !modelData;
+        const isCreatingNew = !modelData;
+        // Вызываем универсальную функцию saveModelData с разными параметрами в зависимости от типа операции
+        const response = await saveModelData({
+            values,
+            isUpdate: !!modelData, // true если модель уже существует, false для создания новой
+            provider: selectedProvider // Передаем выбранный провайдер
+        });
 
-            // Вызываем универсальную функцию saveModelData с разными параметрами в зависимости от типа операции
-            const response = await saveModelData({
-                token,
-                // modelData,
-                values,
-                isUpdate: !!modelData, // true если модель уже существует, false для создания новой
-                provider: selectedProvider // Передаем выбранный провайдер
-            });
+        if (response.status === "ok") {
+            showNotification(
+                modelData ? (t("createModelModelUpdated") || "Модель обновлена") : (t("createModelModelCreated") || "Новая модель"),
+                modelData ? (t("createModelUpdateSuccess") || "Изменения успешно сохранены!") : (t("createModelCreateSuccess") || "Успешно сохранена!")
+            );
 
-            if (response.status === "ok") {
-                showNotification(
-                    modelData ? (t("createModelModelUpdated") || "Модель обновлена") : (t("createModelModelCreated") || "Новая модель"),
-                    modelData ? (t("createModelUpdateSuccess") || "Изменения успешно сохранены!") : (t("createModelCreateSuccess") || "Успешно сохранена!")
-                );
+            // Обновляем данные после сохранения
+            await refreshModelsData();
 
-                // Обновляем данные после сохранения
-                await refreshModelsData();
-
-                // Если это было создание новой модели, обновляем modelData
-                if (isCreatingNew) {
-                    localStorage.setItem("userModel", true);
-                }
-            } else {
-                showErrorNotification(
-                    modelData ? (t("createModelUpdateError") || "Ошибка обновления") : (t("createModelSaveError") || "Ошибка сохранения"),
-                    modelData ? (t("createModelUpdateErrorMsg") || "Модель не обновлена") : (t("createModelCreateErrorMsg") || "Новой модели")
-                );
-                setButtonDisabled(false); // Делаем кнопку активную в случае ошибки
+            // Если это было создание новой модели, обновляем modelData
+            if (isCreatingNew && typeof window !== 'undefined') {
+                localStorage.setItem("userModel", "true");
             }
         } else {
-            showWarningNotification(t("error") || "Ошибка", t("createModelTokenError") || "Токен не обновлен!");
+            showErrorNotification(
+                modelData ? (t("createModelUpdateError") || "Ошибка обновления") : (t("createModelSaveError") || "Ошибка сохранения"),
+                modelData ? (t("createModelUpdateErrorMsg") || "Модель не обновлена") : (t("createModelCreateErrorMsg") || "Новой модели")
+            );
+            setButtonDisabled(false); // Делаем кнопку активную в случае ошибки
         }
     };
 
@@ -566,11 +619,13 @@ export const CreateModel = () => {
                 onSetActive={handleSetActiveProvider}
                 loading={providerLoading}
                 hasUnsavedChanges={!isButtonDisabled && !!modelData}
+                setSelectedMenu={onMenuChange}
             />
 
             <div className="tour-layout">
                 <div className="tour-content">
-                    <Spin spinning={providerLoading} tip={t("createModelProviderLoadingTip") || "Загрузка данных провайдера..."}>
+                    <Spin spinning={providerLoading}
+                          tip={t("createModelProviderLoadingTip") || "Загрузка данных провайдера..."}>
                         <Form
                             form={form}
                             name="createModel"
@@ -636,7 +691,7 @@ export const CreateModel = () => {
                             {/* Секция операторов */}
                             <div className="form-section model-name-section" ref={operatorRef}>
                                 <Form.Item name="operator">
-                                    <Operator token={token} initial={modelData?.operator}/>
+                                    <Operator initial={modelData?.operator}/>
                                 </Form.Item>
                             </div>
 
@@ -644,7 +699,6 @@ export const CreateModel = () => {
                             <div className="form-section model-name-section">
                                 <Form.Item name="haunter" key={`leadhaunter-${i18n.language}`}>
                                     <LeadHaunter
-                                        token={token}
                                         initial={modelData?.haunter}
                                     />
                                 </Form.Item>
@@ -665,14 +719,20 @@ export const CreateModel = () => {
                             </div>
 
                             {/* Секция файлов для дообучения */}
-                            {selectedProvider === 'google' ? (
+                            {selectedProvider === 'openai' || selectedProvider === 'google' ? (
                                 <div className="form-section model-name-section" ref={filesRef}>
                                     <Form.Item name="embedding_docs">
                                         <Embedding
                                             toForm={form}
                                             initialDocuments={modelData?.embedding_docs}
                                             modelData={modelData}
-                                            disabled={!selectedProvider}
+                                            provider={selectedProvider || ''}
+                                            onEmbeddingChange={() => {
+                                                // Автоматически обновляем модель после изменения эмбеддингов
+                                                if (updateModelRef.current) {
+                                                    void updateModelRef.current.triggerUpdate();
+                                                }
+                                            }}
                                         />
                                     </Form.Item>
                                 </div>
@@ -684,7 +744,7 @@ export const CreateModel = () => {
                                             initialFiles={modelData?.fileIds}
                                             modelData={modelData}
                                             setButtonDisabled={setButtonDisabled}
-                                            provider={selectedProvider}
+                                            provider={selectedProvider || ''}
                                         />
                                     </Form.Item>
                                 </div>
@@ -700,6 +760,23 @@ export const CreateModel = () => {
                                     />
                                 </Form.Item>
                             </div>
+
+                            {/* Секция Google OAuth Integration */}
+                            {(selectedProvider === 'openai' || selectedProvider === 'mistral' || selectedProvider === 'anthropic' || selectedProvider === 'google') && (
+                                <div className="form-section model-name-section" ref={googleOAuthRef}>
+                                    <Form.Item
+                                        name="google_oauth"
+                                        valuePropName="value"
+                                        trigger="onChange"
+                                    >
+                                        <GoogleOAuth
+                                            provider={selectedProvider || ''}
+                                            disabled={!selectedProvider}
+                                            hasModel={!!modelData}
+                                        />
+                                    </Form.Item>
+                                </div>
+                            )}
 
                             {/* Секция интерпретатора */}
                             <div className="form-section model-name-section" ref={interpreterRef}>
@@ -720,37 +797,55 @@ export const CreateModel = () => {
                                             initialVideo={modelData?.video}
                                             initialWebSearch={modelData?.web_search}
                                             s3FilesEnabled={s3FilesEnabled}
+                                            googleOAuthEnabled={googleOAuthEnabled}
                                         />
                                     ) : (
                                         <OpenaiInterpreter
                                             toForm={form}
                                             initialFiles={modelData?.interpreter || modelData?.interp}
-                                            s3FilesEnabled={s3FilesEnabled}
+                                            initialWebSearch={modelData?.web_search}
                                         />
                                     )}
                                 </Form.Item>
+                                {/* Скрытые поля для OpenAI провайдера */}
+                                {selectedProvider === 'openai' && (
+                                    <>
+                                        <Form.Item name="interpreter" hidden>
+                                            <input type="hidden"/>
+                                        </Form.Item>
+                                        <Form.Item name="web_search" hidden>
+                                            <input type="hidden"/>
+                                        </Form.Item>
+                                    </>
+                                )}
                                 {/* Скрытые поля для Mistral провайдера */}
                                 {selectedProvider === 'mistral' && (
                                     <>
+                                        <Form.Item name="interpreter" hidden>
+                                            <input type="hidden"/>
+                                        </Form.Item>
                                         <Form.Item name="image" hidden>
-                                            <input type="hidden" />
+                                            <input type="hidden"/>
                                         </Form.Item>
                                         <Form.Item name="web_search" hidden>
-                                            <input type="hidden" />
+                                            <input type="hidden"/>
                                         </Form.Item>
                                     </>
                                 )}
                                 {/* Скрытые поля для Google провайдера */}
                                 {selectedProvider === 'google' && (
                                     <>
+                                        <Form.Item name="interpreter" hidden>
+                                            <input type="hidden"/>
+                                        </Form.Item>
                                         <Form.Item name="image" hidden>
-                                            <input type="hidden" />
+                                            <input type="hidden"/>
                                         </Form.Item>
                                         <Form.Item name="video" hidden>
-                                            <input type="hidden" />
+                                            <input type="hidden"/>
                                         </Form.Item>
                                         <Form.Item name="web_search" hidden>
-                                            <input type="hidden" />
+                                            <input type="hidden"/>
                                         </Form.Item>
                                     </>
                                 )}
@@ -763,19 +858,53 @@ export const CreateModel = () => {
                                 </Form.Item>
                             </div>
 
-                            {/* Секция типов GPT */}
-                            {/*{showSimpleAuth && (*/}
-                            {/*    <div className="form-section" ref={gptTypeRef}>*/}
-                            {/*        <Form.Item name="gptType" label={t("createModelGPTTypeLabel") || "Языковая модель"}>*/}
-                            {/*            <TypesGPT/>*/}
-                            {/*        </Form.Item>*/}
-                            {/*    </div>*/}
-                            {/*)}*/}
+                            {/* Секция OpenAI Realtime — только для провайдера openai */}
+                            {selectedProvider === 'openai' && (
+                                <div className="form-section model-name-section">
+                                    <Form.Item name="realtime_vad">
+                                        <OpenaiRealtime
+                                            toForm={form}
+                                            initialRealtime={modelData?.realtime || false}
+                                            initialRealtimeVAD={modelData?.realtime_vad || null}
+                                        />
+                                    </Form.Item>
+                                    <Form.Item name="realtime" hidden>
+                                        <input type="hidden"/>
+                                    </Form.Item>
+                                </div>
+                            )}
+
+                            {/* Секция Google Realtime — только для провайдера google */}
+                            {selectedProvider === 'google' && (
+                                <div className="form-section model-name-section">
+                                    <Form.Item name="google_realtime_vad">
+                                        <GoogleRealtime
+                                            toForm={form}
+                                            initialRealtime={!!(modelData?.realtime_vad?.google)}
+                                            initialRealtimeVAD={modelData?.realtime_vad?.google ? {
+                                                ...modelData.realtime_vad.google,
+                                                initial_greeting: modelData.realtime_vad.initial_greeting ?? true,
+                                                greeting: modelData.realtime_vad.greeting ?? null,
+                                            } : null}
+                                        />
+                                    </Form.Item>
+                                </div>
+                            )}
+
+                            {/*Секция типов GPT */}
+                            <div className="form-section model-name-section" ref={gptTypeRef}>
+                                <Form.Item name="gpttype">
+                                    <TypesGPT
+                                        provider={selectedProvider}
+                                    />
+                                </Form.Item>
+                            </div>
 
                             {/* Кнопки действий */}
                             <div className="create-model-buttons" ref={buttonsRef}>
                                 {modelData ? (
                                     <UpdateModel
+                                        ref={updateModelRef}
                                         setButtonDisabled={setButtonDisabled}
                                         modelData={modelData}
                                         form={form}
@@ -799,7 +928,7 @@ export const CreateModel = () => {
                                     <Button
                                         type="primary"
                                         size="large"
-                                        icon={<ExperimentOutlined />}
+                                        icon={<ExperimentOutlined/>}
                                         onClick={() => setIsTestModalOpen(true)}
                                         style={{
                                             color: 'black',
@@ -860,7 +989,8 @@ export const CreateModel = () => {
                         )}
 
                         <div className="tour-info">
-                            <div className="tour-info-title">{t("createModelTourWhatLearn") || "🎯 Что вы изучите:"}</div>
+                            <div
+                                className="tour-info-title">{t("createModelTourWhatLearn") || "🎯 Что вы изучите:"}</div>
                             <ul className="tour-info-list">
                                 <li>{t("createModelTourLearn1") || "Настройка имени и промпта"}</li>
                                 <li>{t("createModelTourLearn2") || "Загрузка базового шаблона"}</li>
@@ -912,7 +1042,7 @@ export const CreateModel = () => {
                 onCancel={handleCancelSwitch}
                 okText={t("createModelConfirmOk") || "Переключить модель"}
                 cancelText={t("channelsCancelButton") || "Отмена"}
-                okButtonProps={{ danger: true }}
+                okButtonProps={{danger: true}}
                 maskClosable={false}
                 centered
                 zIndex={10000}
@@ -924,7 +1054,7 @@ export const CreateModel = () => {
             <Modal
                 title={restartProgressVisible ? (t("createModelRestartTitleProgress") || "Перезапуск сервисов в процессе...") : (t("createModelRestartTitle") || "Перезапуск сервисов")}
                 open={isRestartServicesModalOpen}
-                
+
                 onOk={async () => {
                     if (!restartProgressVisible) {
                         // Начинаем процесс перезапуска
@@ -946,7 +1076,7 @@ export const CreateModel = () => {
                             };
 
                             // Передаём callback для получения сообщений
-                            await restartActiveChannels(token, (message) => {
+                            await restartActiveChannels((message) => {
                                 setRestartMessages(prev => [...prev, translateMessage(message)]);
                             });
 
@@ -975,12 +1105,12 @@ export const CreateModel = () => {
                 }}
                 okText={restartProgressVisible ? (t("createModelRestartOkComplete") || "Закрыть") : (t("createModelRestartOk") || "Перезапустить")}
                 okButtonProps={{
-                    style: { color: 'black' },
+                    style: {color: 'black'},
                     disabled: restartLoading
                 }}
                 cancelText={t("channelsCancelButton") || "Отмена"}
                 cancelButtonProps={{
-                    style: { display: restartProgressVisible ? 'none' : 'inline-block' }
+                    style: {display: restartProgressVisible ? 'none' : 'inline-block'}
                 }}
                 closable={!restartLoading}
                 maskClosable={false}
@@ -991,17 +1121,22 @@ export const CreateModel = () => {
                     <p>{t("createModelRestartText") || "Есть активные сервисы работающие со старой моделью Агента, перезапустить сервисы?"}</p>
                 ) : (
                     <>
-                        {restartLoading && <Spin size="large" />}
-                        <div style={{ marginTop: '20px', maxHeight: '300px', overflowY: 'auto' }}>
+                        {restartLoading && <Spin size="large"/>}
+                        <div style={{marginTop: '20px', maxHeight: '300px', overflowY: 'auto'}}>
                             {restartMessages.map((msg, index) => (
-                                <div key={index} style={{ marginBottom: '8px', padding: '8px', backgroundColor: 'var(--dialog-bg-color)', borderRadius: '4px' }}>
+                                <div key={index} style={{
+                                    marginBottom: '8px',
+                                    padding: '8px',
+                                    backgroundColor: 'var(--dialog-bg-color)',
+                                    borderRadius: '4px'
+                                }}>
                                     {msg}
                                 </div>
                             ))}
                         </div>
                         {restartComplete && (
-                            <div style={{ marginTop: '16px', textAlign: 'center' }}>
-                                <CheckCircleOutlined style={{ fontSize: '24px', color: '#52c41a', marginRight: '8px' }} />
+                            <div style={{marginTop: '16px', textAlign: 'center'}}>
+                                <CheckCircleOutlined style={{fontSize: '24px', color: '#52c41a', marginRight: '8px'}}/>
                                 <span>{t("createModelRestartComplete") || "Перезапуск завершен!"}</span>
                             </div>
                         )}
@@ -1021,7 +1156,7 @@ export const CreateModel = () => {
                 footer={null}
                 width={900}
                 centered={false}
-                style={{ top: '50px' }}
+                style={{top: '50px'}}
                 styles={{
                     body: {
                         padding: '0',
@@ -1031,8 +1166,8 @@ export const CreateModel = () => {
                     }
                 }}
             >
-                <ModelTest disabled={false} provider={selectedProvider} />
+                <ModelTest disabled={false} provider={selectedProvider || undefined}/>
             </Modal>
         </div>
     );
-}
+};

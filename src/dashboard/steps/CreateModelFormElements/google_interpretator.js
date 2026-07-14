@@ -5,10 +5,9 @@ import Paragraph from "antd/lib/typography/Paragraph";
 import {CodeOutlined, PictureOutlined, GlobalOutlined, VideoCameraOutlined} from "@ant-design/icons";
 import {useTranslation} from "react-i18next";
 import {checkDemo} from "./modUtils";
-import {validateAndRefreshToken} from "../../../utils/easyUtils";
 import {showErrorNotification} from "../../hotification/showNotification";
 
-export const Google_Interpreter = ({onChange, toForm, initialFiles, initialImage, initialVideo, initialWebSearch, s3FilesEnabled = false}) => {
+export const Google_Interpreter = ({onChange, toForm, initialFiles, initialImage, initialVideo, initialWebSearch, s3FilesEnabled = false, googleOAuthEnabled = false}) => {
     const {t} = useTranslation();
     const [isModalOpen, setModalOpen] = useState(false);
     const [switchChecked, setSwitchChecked] = useState(false);
@@ -16,6 +15,7 @@ export const Google_Interpreter = ({onChange, toForm, initialFiles, initialImage
     const [videoChecked, setVideoChecked] = useState(false);
     const [webSearchChecked, setWebSearchChecked] = useState(false);
     const [currentS3Status, setCurrentS3Status] = useState(s3FilesEnabled);
+    const [currentGoogleOAuthStatus, setCurrentGoogleOAuthStatus] = useState(googleOAuthEnabled);
     const prevS3FilesEnabled = useRef(s3FilesEnabled);
 
     // Инициализация при загрузке компонента
@@ -24,18 +24,21 @@ export const Google_Interpreter = ({onChange, toForm, initialFiles, initialImage
         setCurrentS3Status(s3FilesEnabled);
         prevS3FilesEnabled.current = s3FilesEnabled;
 
-        // Инициализация interp - только если S3 включен
+        // Синхронизируем локальное состояние Google OAuth с пропсом
+        setCurrentGoogleOAuthStatus(googleOAuthEnabled);
+
+        // Инициализация interpreter - только если S3 включен
         if (typeof initialFiles === 'boolean') {
             const shouldEnable = initialFiles && s3FilesEnabled;
             setSwitchChecked(shouldEnable);
             if (toForm) {
-                toForm.setFieldsValue({ interp: shouldEnable });
+                toForm.setFieldsValue({ interpreter: shouldEnable });
             }
         } else if (initialFiles) {
             const shouldEnable = s3FilesEnabled;
             setSwitchChecked(shouldEnable);
             if (toForm) {
-                toForm.setFieldsValue({ interp: shouldEnable });
+                toForm.setFieldsValue({ interpreter: shouldEnable });
             }
         }
 
@@ -64,7 +67,7 @@ export const Google_Interpreter = ({onChange, toForm, initialFiles, initialImage
                 toForm.setFieldsValue({ web_search: initialWebSearch });
             }
         }
-    }, [initialFiles, initialImage, initialVideo, initialWebSearch, toForm, s3FilesEnabled]);
+    }, [initialFiles, initialImage, initialVideo, initialWebSearch, toForm, s3FilesEnabled, googleOAuthEnabled]);
 
     // Автоматическое отключение переключателей при отключении S3
     useEffect(() => {
@@ -76,7 +79,7 @@ export const Google_Interpreter = ({onChange, toForm, initialFiles, initialImage
             // Отключаем генерацию файлов
             if (switchChecked) {
                 setSwitchChecked(false);
-                updates.interp = false;
+                updates.interpreter = false;
                 needsUpdate = true;
             }
 
@@ -110,10 +113,10 @@ export const Google_Interpreter = ({onChange, toForm, initialFiles, initialImage
         prevS3FilesEnabled.current = s3FilesEnabled;
     }, [s3FilesEnabled, switchChecked, imageChecked, videoChecked, toForm, onChange]);
 
-    // Автоматическое отключение веб-поиска при включении S3
+    // Автоматическое отключение веб-поиска при включении Google OAuth
     useEffect(() => {
-        // Если S3 включился и веб-поиск активен
-        if (s3FilesEnabled && webSearchChecked) {
+        // Если Google OAuth включился и веб-поиск активен - отключаем веб-поиск
+        if (googleOAuthEnabled && webSearchChecked) {
             setWebSearchChecked(false);
             if (toForm) {
                 toForm.setFieldsValue({ web_search: false });
@@ -125,22 +128,14 @@ export const Google_Interpreter = ({onChange, toForm, initialFiles, initialImage
                 onChange(allValues);
             }
         }
-    }, [s3FilesEnabled, webSearchChecked, toForm, onChange]);
+    }, [googleOAuthEnabled, webSearchChecked, toForm, onChange]);
 
     const handleSwitchChange = (checked) => {
         setSwitchChecked(checked);
 
-        // Если включаем генерацию файлов, автоматически отключаем веб-поиск
-        if (checked && webSearchChecked) {
-            setWebSearchChecked(false);
-            if (toForm) {
-                toForm.setFieldsValue({ web_search: false });
-            }
-        }
-
         // Сохраняем значение в форму
         if (toForm) {
-            toForm.setFieldsValue({ interp: checked });
+            toForm.setFieldsValue({ interpreter: checked });
         }
 
         // Если функция onChange существует, вызываем её
@@ -153,8 +148,7 @@ export const Google_Interpreter = ({onChange, toForm, initialFiles, initialImage
         // Проверка демо-режима при попытке включить
         if (checked) {
             try {
-                const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
-                const demoResult = await checkDemo(token);
+                const demoResult = await checkDemo();
 
                 if (demoResult.success && demoResult.status === true) {
                     showErrorNotification(t("demoModeNotAvailable") || "Этот режим не доступен в демонстрационном режиме");
@@ -182,8 +176,7 @@ export const Google_Interpreter = ({onChange, toForm, initialFiles, initialImage
         // Проверка демо-режима при попытке включить
         if (checked) {
             try {
-                const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
-                const demoResult = await checkDemo(token);
+                const demoResult = await checkDemo();
 
                 if (demoResult.success && demoResult.status === true) {
                     showErrorNotification(t("demoModeNotAvailable") || "Этот режим не доступен в демонстрационном режиме");
@@ -208,20 +201,12 @@ export const Google_Interpreter = ({onChange, toForm, initialFiles, initialImage
     };
 
     const handleWebSearchChange = (checked) => {
-        // Если включаем веб-поиск и S3 активен - не даем включить
-        if (checked && s3FilesEnabled) {
+        // Если включаем веб-поиск и Google OAuth активен - не даем включить
+        if (checked && currentGoogleOAuthStatus) {
             return; // Не меняем состояние
         }
 
         setWebSearchChecked(checked);
-
-        // Если включаем веб-поиск, автоматически отключаем генерацию файлов
-        if (checked && switchChecked) {
-            setSwitchChecked(false);
-            if (toForm) {
-                toForm.setFieldsValue({ interp: false });
-            }
-        }
 
         // Сохраняем значение в форму и триггерим onValuesChange
         if (toForm) {
@@ -246,18 +231,13 @@ export const Google_Interpreter = ({onChange, toForm, initialFiles, initialImage
         <>
             <div className="section-title">
                 <CodeOutlined />
-                {t("fileGenerationTitle") || "Генерация файлов"}
+                {t("codeInterpreterTitle") || "Интерпретатор кода"}
             </div>
             <div className="section-description">
-                {t("fileGenerationDesc") || "Позволяет агенту создавать файлы, графики и выполнять код для решения задач"}
+                {t("codeInterpreterDesc") || "Позволяет агенту писать и запускать Python скрипты для решения различных задач"}
                 {!currentS3Status && (
                     <div style={{color: 'var(--warning-color)', marginTop: '8px', fontSize: '13px'}}>
                         ⚠️ {t("fileGenerationS3Warning") || "Для использования этой функции необходимо включить S3 хранилище файлов"}
-                    </div>
-                )}
-                {webSearchChecked && (
-                    <div style={{color: 'var(--info-color, #1890ff)', marginTop: '8px', fontSize: '13px'}}>
-                        ℹ️ {t("fileGenerationWebSearchConflict") || "Ограничение Gemini: Генерация файлов и Веб-поиск не могут быть активны одновременно"}
                     </div>
                 )}
             </div>
@@ -265,11 +245,11 @@ export const Google_Interpreter = ({onChange, toForm, initialFiles, initialImage
             <div className="step">
                 <span>
                     {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
-                    {t("fileGenerationEnable") || "Включение режима"} <a onClick={showModal}>{t("fileGenerationCreateFiles") || "создания файлов"}</a>&nbsp;
+                    {t("fileGenerationEnable") || "Включение режима"} <a onClick={showModal}>{t("fileGenerationCreateFiles") || "интерпретатор кода"}</a>&nbsp;
                 </span>
                 <Switch
-                    checked={switchChecked && currentS3Status && !webSearchChecked}
-                    disabled={!currentS3Status || webSearchChecked}
+                    checked={switchChecked && currentS3Status}
+                    disabled={!currentS3Status}
                     checkedChildren={<span style={{color: "black"}}>{t("Yes") || "Да"}</span>}
                     unCheckedChildren={<span style={{color: "black"}}>{t("No") || "Нет"}</span>}
                     onChange={handleSwitchChange}
@@ -334,9 +314,9 @@ export const Google_Interpreter = ({onChange, toForm, initialFiles, initialImage
             </div>
             <div className="section-description">
                 {t("webSearchDesc") || "Позволяет агенту искать актуальную информацию в интернете для более точных и свежих ответов"}
-                {(switchChecked || s3FilesEnabled) && (
-                    <div style={{color: 'var(--info-color, #1890ff)', marginTop: '8px', fontSize: '13px'}}>
-                        ℹ️ {t("webSearchFileGenConflict") || "Ограничение Gemini: Веб-поиск не может быть активен одновременно с function_declarations (генерация файлов или S3 функции)"}
+                {currentGoogleOAuthStatus && (
+                    <div style={{color: 'var(--warning-color)', marginTop: '8px', fontSize: '13px'}}>
+                        ⚠️ {t("webSearchGoogleOAuthConflict") || "Ограничение Gemini: Веб-поиск не может быть активен одновременно с Google OAuth интеграцией"}
                     </div>
                 )}
             </div>
@@ -347,7 +327,7 @@ export const Google_Interpreter = ({onChange, toForm, initialFiles, initialImage
                 </span>
                 <Switch
                     checked={webSearchChecked}
-                    disabled={switchChecked || s3FilesEnabled}
+                    disabled={currentGoogleOAuthStatus}
                     checkedChildren={<span style={{color: "black"}}>{t("Yes") || "Да"}</span>}
                     unCheckedChildren={<span style={{color: "black"}}>{t("No") || "Нет"}</span>}
                     onChange={handleWebSearchChange}
@@ -365,7 +345,7 @@ export const Google_Interpreter = ({onChange, toForm, initialFiles, initialImage
                         fontSize: '16px',
                         color: 'var(--text-color)',
                     }}>
-                    {t("interpreterModalTitle") || "Что такое генерация файлов (Code Interpreter)?"}
+                    {t("interpreterModalTitle") || "Что такое Code Interpreter?"}
                 </Title>
                 <Paragraph
                     code={true}

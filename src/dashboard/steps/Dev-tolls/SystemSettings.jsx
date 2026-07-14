@@ -20,25 +20,22 @@ export const SystemSettings = () => {
     const { t } = useTranslation();
     const [settings, setSettings] = useState(null);
     const [loading, setLoading] = useState(true);
-    const token = localStorage.getItem('authToken');
 
     const fetchSettings = useCallback(async () => {
         try {
             setLoading(true);
-            const result = await checkSettings(token);
+            const result = await checkSettings();
             setSettings(result);
         } catch (error) {
             showErrorNotification(t("sysSettingsErrorFetch") || 'Ошибка получения настроек', error);
         } finally {
             setLoading(false);
         }
-    }, [token, t]);
+    }, [t]);
 
     useEffect(() => {
-        if (token !== null) {
-            fetchSettings()
-        }
-    }, [token, fetchSettings]);
+        fetchSettings();
+    }, [fetchSettings]);
 
     const getStatusTag = (status, isRequired = true) => {
         if (status) {
@@ -437,4 +434,3 @@ export const SystemSettings = () => {
         </div>
     );
 };
-

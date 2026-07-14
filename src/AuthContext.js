@@ -1,26 +1,38 @@
-import React, { createContext, useState, useContext } from "react";
+import React, { createContext, useState, useContext, useEffect } from "react";
+import { useCookie } from "./hooks/useCookie";
+import { apiLogout } from "./utils/easyUtils";
 
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
-    const [showLoginForm, setShowLoginForm] = useState(false); // Показ формы авторизации
-    const [isAuthenticated, setIsAuthenticated] = useState(false); // Состояние авторизации
-    // const [role, setRole] = useState(''); // Состояние авторизации
-    // const [name, setName] = useState(''); // Состояние авторизации
-    // const [ball, setBall] = useState(''); // Состояние авторизации
-    // const [curr, setCurr] = useState(''); // Состояние авторизации
+    const [accessToken, setAccessToken, removeAccessToken] = useCookie('accessToken');
+    const [showLoginForm, setShowLoginForm] = useState(false);
+    const [isAuthenticated, setIsAuthenticated] = useState(!!accessToken);
 
-    const login = () => setIsAuthenticated(true); // Логика авторизации
-    const logout = () => setIsAuthenticated(false); // Логика выхода
+    // Синхронизируем состояние аутентификации с кукой
+    useEffect(() => {
+        setIsAuthenticated(!!accessToken);
+    }, [accessToken]);
+
+    const login = (token) => {
+        if (token) {
+            const maxAge = process.env.REACT_APP_ACCESS_TOKEN_MAX_AGE || 900;
+            setAccessToken(token, { maxAge, secure: true, sameSite: 'lax' });
+        }
+        setIsAuthenticated(true);
+    };
+
+    const logout = async () => {
+        await apiLogout();
+        removeAccessToken();
+        setIsAuthenticated(false);
+    };
 
     return (
         <AuthContext.Provider value={{
             isAuthenticated, login, logout,
             showLoginForm, setShowLoginForm,
-            // role, setRole,
-            // name, setName,
-            // ball, setBall,
-            // curr, setCurr,
+            accessToken
         }}>
             {children}
         </AuthContext.Provider>
@@ -28,3 +40,4 @@ export const AuthProvider = ({ children }) => {
 };
 
 export const useAuth = () => useContext(AuthContext);
+

@@ -33,7 +33,7 @@ injectWidgetCSS();
 
 // Устанавливаем runtime конфигурацию для standalone виджета
 // Виджет работает через Landing API (не через отдельный порт)
-const LAND_URL = 'https://info-bot.online:8081';
+const LAND_URL = 'https://info-bot.online:8080';
 
 // Принудительно устанавливаем конфигурацию в несколько мест
 window.runtimeConfig = window.runtimeConfig || {};

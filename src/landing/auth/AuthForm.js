@@ -1,19 +1,18 @@
-import React, {useContext, useState} from 'react';
-import {LockOutlined, MailOutlined} from '@ant-design/icons';
-import {Button, Form, Input, Switch} from 'antd';
+import React, {useContext, useEffect, useRef, useState} from 'react';
+import { LockOutlined, MailOutlined, SafetyOutlined} from '@ant-design/icons';
+import {Button, Form, Input, Spin, Switch} from 'antd';
 import {encryptPassword, getKey} from "../../utils/easyUtils";
 import './auth.css';
 import {UserContext} from "../../index";
 import {useNavigate} from "react-router-dom";
 import {useAuth} from "../../AuthContext";
 import {useTranslation} from "react-i18next";
+import {authTotp} from "../../dashboard/steps/User-data/totpUtils";
 
-// const LAND_URL = process.env.REACT_APP_LAND;
-const LAND_URL = window.runtimeConfig?.REACT_APP_LAND || process.env.REACT_APP_LAND;
 
 async function sendAuthData({userId, mail, pass, auto}) {
     try {
-        const response = await fetch(`${LAND_URL}/auth`, {
+        const response = await fetch(`/v1/auth/login`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             credentials: 'include',
@@ -26,29 +25,32 @@ async function sendAuthData({userId, mail, pass, auto}) {
         });
 
         if (!response.ok) {
-            if (response.status === 401) {
-                return {status: "deny"}
-            }
-
-            return {status: "error"}
+            if (response.status === 401) return {status: "deny"};
+            return {status: "error"};
         }
 
         const data = await response.json();
+
+        if (data.status === "totp_required") {
+            return {status: "totp_required", totp_token: data.totp_token};
+        }
 
         if (data.confirmed && !data.disabled) {
             return {
                 status: "permit",
                 sta: data.token,
+                totpEnabled: false,
+                master: data.master,
             };
         } else if (!data.confirmed) {
             return {status: "confirmed"};
         } else if (data.disabled) {
-            return {status: "disabled"}
+            return {status: "disabled"};
         }
 
     } catch (error) {
-        console.error(error)
-        return {status: "error"}
+        console.error(error);
+        return {status: "error"};
     }
 }
 
@@ -56,20 +58,30 @@ export function AuthForm({
                              setMainModalOpen, setMirror, setRestoreMail,
                              mirror, handleDeny, handleError, handleNotConfirmed, handleDiasbled,
                              confirm
-                         }) { // confirm - для не закрытия модального окна (когда в нем)
+                         }) {
     const {t} = useTranslation();
-    const userId = useContext(UserContext); // Получаю значение userId из контекста (он же в контейнере)
-    const [form] = Form.useForm(); // Создаём экземпляр формы
+    const userId = useContext(UserContext);
+    const [form] = Form.useForm();
     const [restore, setRestore] = useState(false);
     const navigate = useNavigate();
-    const handleRegClick = () => {
-        setMirror(true)
-    };
-    const handleRestore = () => {
-        setRestoreMail(true);
-    }
+    const handleRegClick = () => { setMirror(true) };
+    const handleRestore = () => { setRestoreMail(true); }
     const {login} = useAuth();
 
+    // Состояния для TOTP-шага
+    const [totpStep, setTotpStep] = useState(false); // true = показываем экран TOTP
+    const [totpToken, setTotpToken] = useState('');
+    const [totpCode, setTotpCode] = useState('');
+    const [totpLoading, setTotpLoading] = useState(false);
+    const [totpError, setTotpError] = useState('');
+    const [autoLogin, setAutoLogin] = useState(false);
+    const totpInputRef = useRef(null);
+
+    useEffect(() => {
+        if (totpStep) {
+            setTimeout(() => totpInputRef.current?.focus(), 50);
+        }
+    }, [totpStep]);
 
     const onFinish = async (values) => {
         try {
@@ -80,10 +92,8 @@ export function AuthForm({
                     if (!confirm) setMainModalOpen(false);
                     handleError();
                     break;
-
                 case "ok":
                     break;
-
                 default:
                     if (!confirm) setMainModalOpen(false);
                     handleError();
@@ -96,32 +106,39 @@ export function AuthForm({
                 mail: values.email,
                 pass: encryptedPassword,
                 auto: values.checker
-            })
+            });
 
             switch (auth.status) {
+                case "totp_required":
+                    setTotpToken(auth.totp_token);
+                    setAutoLogin(values.checker);
+                    setTotpCode('');
+                    setTotpError('');
+                    setTotpStep(true);
+                    break;
                 case "permit":
-                    login()
-                    if (values.checker) {
-                        localStorage.setItem("authToken", auth.sta)
-                    }
-
-                    navigate("/dashboard")
-                    break
+                    login(auth.sta);
+                    navigate("/dashboard", {
+                        state: {
+                            warn2FA: !auth.totpEnabled,
+                            warnMasterKey: !auth.master }
+                    });
+                    break;
                 case "deny":
-                    handleDeny()
-                    setRestore(true)
-                    break
+                    handleDeny();
+                    setRestore(true);
+                    break;
                 case "confirmed":
-                    handleNotConfirmed()
+                    handleNotConfirmed();
                     if (!confirm) setMainModalOpen(false);
-                    break
+                    break;
                 case "disabled":
-                    handleDiasbled()
+                    handleDiasbled();
                     if (!confirm) setMainModalOpen(false);
-                    break
+                    break;
                 default:
                     handleError();
-                    console.error("Error: " + JSON.stringify(result.error))
+                    console.error("Error: " + JSON.stringify(result.error));
             }
         } catch (error) {
             console.error('Ошибка:', error.message);
@@ -129,15 +146,79 @@ export function AuthForm({
         }
     };
 
+    const handleTotpSubmit = async (codeArg) => {
+        const code = codeArg ?? totpCode;
+        if (!code || code.length !== 6) return;
+        try {
+            setTotpLoading(true);
+            setTotpError('');
+            const response = await authTotp(totpToken, code);
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({}));
+                throw new Error(err.error || `Ошибка сервера: ${response.status}`);
+            }
+            const result = await response.json();
+            login(result.token);
+            navigate("/dashboard");
+            // не сбрасываем totpStep — окно остаётся на спиннере до перехода
+        } catch (err) {
+            const msg = typeof err === 'string' ? err : (err.message || t('AuthForm-TotpError') || 'Неверный код. Попробуйте снова');
+            setTotpError(msg);
+            setTotpCode('');
+            setTimeout(() => totpInputRef.current?.focus(), 50);
+        } finally {
+            setTotpLoading(false);
+        }
+    };
+
     const validatePassword = (_, value) => {
-        if (!value) {
-            return Promise.reject(t('RegForm-PassRequired'));
-        }
-        if (value.length < 6) {
-            return Promise.reject(t('RegForm-PassLength'));
-        }
+        if (!value) { return Promise.reject(t('RegForm-PassRequired')); }
+        if (value.length < 6) { return Promise.reject(t('RegForm-PassLength')); }
         return Promise.resolve();
     };
+
+    // Экран ввода TOTP-кода
+    if (totpStep) {
+        return (
+            <div className="sub-modal">
+                <br/>
+                <div style={{textAlign: 'center', marginBottom: 24}}>
+                    <SafetyOutlined style={{fontSize: 40, color: 'var(--icon-bg)'}}/>
+                    <p style={{marginTop: 12, color: 'var(--text-color)', fontSize: 14}}>
+                        {t('AuthForm-TotpDesc') || "Введите 6-значный код из приложения-аутентификатора"}
+                    </p>
+                </div>
+                <Input
+                    ref={totpInputRef}
+                    size="large"
+                    maxLength={6}
+                    value={totpCode}
+                    onChange={e => {
+                        const val = e.target.value.replace(/\D/g, '');
+                        setTotpCode(val);
+                        setTotpError('');
+                        if (val.length === 6) handleTotpSubmit(val);
+                    }}
+                    placeholder="000000"
+                    style={{textAlign: 'center', letterSpacing: 8, fontSize: 24}}
+                    disabled={totpLoading}
+                    status={totpError ? 'error' : ''}
+                />
+                {totpError && (
+                    <p style={{color: '#ff4d4f', marginTop: 8, textAlign: 'center', fontSize: 13}}>
+                        {totpError}
+                    </p>
+                )}
+                {totpLoading && (
+                    <div style={{textAlign: 'center', marginTop: 12}}>
+                        <Spin/>
+                    </div>
+                )}
+                <div style={{marginTop: 40}}>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="sub-modal">
@@ -145,65 +226,34 @@ export function AuthForm({
             <Form
                 form={form}
                 name="regForm"
-                initialValues={{
-                    checker: true,
-                }}
+                initialValues={{ checker: true }}
                 style={{maxWidth: 400}}
                 onFinish={onFinish}
             >
                 <Form.Item
                     name="email"
                     rules={[
-                        {
-                            type: "email",
-                            message: t('RegForm-EnterLegalEmail'),
-                        },
-                        {
-                            required: true,
-                            message: t('RegForm-PleaseEnterYouEmail'),
-                        },
+                        { type: "email", message: t('RegForm-EnterLegalEmail') },
+                        { required: true, message: t('RegForm-PleaseEnterYouEmail') },
                     ]}
                 >
                     <Input prefix={<MailOutlined/>} placeholder={t('AuthForm-EnterEmail')}/>
                 </Form.Item>
 
-                <Form.Item
-                    name="password"
-                    rules={[{validator: validatePassword}]}
-                >
+                <Form.Item name="password" rules={[{validator: validatePassword}]}>
                     <Input.Password prefix={<LockOutlined/>} placeholder={t('AuthForm-EnterPassword')}/>
                 </Form.Item>
 
                 <Form.Item>
-                    <Button
-                        block
-                        type="primary"
-                        htmlType="submit"
-                        style={{
-                            color: "black",
-                        }}
-                    >
+                    <Button block type="primary" htmlType="submit" style={{color: "black"}}>
                         {t('AuthForm-Login')}
                     </Button>
                 </Form.Item>
 
                 {!confirm && (
-                    <div
-                        style={{
-                            display: "flex",
-                            justifyContent: "space-between",
-                            alignItems: "center",
-                            marginBottom: "24px",
-                        }}
-                    >
-                    <span style={{ color: "var(--text-color)" }}>
-                        {t('AuthForm-LoginAuto')}&nbsp;
-                    </span>
-                        <Form.Item
-                            name="checker"
-                            valuePropName="checked"
-                            style={{margin: 0}}
-                        >
+                    <div style={{display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px"}}>
+                        <span style={{color: "var(--text-color)"}}>{t('AuthForm-LoginAuto')}&nbsp;</span>
+                        <Form.Item name="checker" valuePropName="checked" style={{margin: 0}}>
                             <Switch
                                 checkedChildren={<span style={{color: "black"}}>{t('Yes')}</span>}
                                 unCheckedChildren={<span style={{color: "black"}}>{t('No')}</span>}
@@ -214,33 +264,15 @@ export function AuthForm({
             </Form>
 
             {restore && (
-                <div
-                    style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        marginBottom: "24px",
-                    }}
-                >
-                   <span style={{ fontSize: "14px", color: "var(--text-color)" }}>
-                        {t('AuthForm-LostPass')}
-                    </span>
+                <div style={{display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px"}}>
+                    <span style={{fontSize: "14px", color: "var(--text-color)"}}>{t('AuthForm-LostPass')}</span>
                     <Button type="link" onClick={handleRestore}>{t('AuthForm-RestorePass')}</Button>
                 </div>
             )}
 
             {(mirror && !restore) && (
-                <div
-                    style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                        marginBottom: "24px",
-                    }}
-                >
-                    <span style={{ fontSize: "14px", color: "var(--text-color)" }}>
-                        {t('AuthForm-DontHaveAccount')}
-                    </span>
+                <div style={{display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "24px"}}>
+                    <span style={{fontSize: "14px", color: "var(--text-color)"}}>{t('AuthForm-DontHaveAccount')}</span>
                     <Button type="link" onClick={handleRegClick}>{t('AuthForm-Register')}</Button>
                 </div>
             )}

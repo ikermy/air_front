@@ -9,11 +9,10 @@ import { useAuth } from "../../../AuthContext";
 import { showNotification, showWarningNotification, showErrorNotification } from "../../hotification/showNotification.js";
 import logoImage from '../../../assets/img/logo.png';
 
-const LAND_URL = (window.runtimeConfig && window.runtimeConfig.REACT_APP_LAND) || process.env.REACT_APP_LAND;
 
 async function sendAuthData({ userId, mail, pass, auto }) {
     try {
-        const response = await fetch(`${LAND_URL}/auth`, {
+        const response = await fetch(`/auth/login`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
@@ -30,7 +29,7 @@ async function sendAuthData({ userId, mail, pass, auto }) {
         }
         const data = await response.json();
         if (data.confirmed && !data.disabled) {
-            return { status: "permit", sta: data.token };
+            return { status: "permit", sta: data.token};
         } else if (!data.confirmed) {
             return { status: "confirmed" };
         } else if (data.disabled) {
@@ -64,8 +63,7 @@ export function SimpleAuthForm() {
             });
             switch (auth.status) {
                 case "permit":
-                    login();
-                    localStorage.setItem("authToken", auth.sta);
+                    login(auth.sta);
                     showNotification("Успех", "Вы успешно авторизованы");
                     navigate("/dashboard");
                     break;

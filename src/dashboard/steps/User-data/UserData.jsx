@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useRef} from 'react';
+import React, {useState, useEffect, useRef, useContext} from 'react';
 import {
     Card,
     Row,
@@ -16,13 +16,15 @@ import {
     message,
     Tour,
     FloatButton,
-    Tooltip
+    Tooltip,
+    QRCode,
+    Popconfirm,
+    Steps,
 } from 'antd';
 import {
     UserOutlined,
     WalletOutlined,
     CalendarOutlined,
-    MessageOutlined,
     DatabaseOutlined,
     MailOutlined,
     BellOutlined,
@@ -35,24 +37,36 @@ import {
     DeleteOutlined,
     ExclamationCircleOutlined,
     QuestionCircleOutlined,
-    PlayCircleOutlined, ThunderboltOutlined
+    PlayCircleOutlined,
+    ThunderboltOutlined,
+    SafetyOutlined,
+    UnlockOutlined,
+    KeyOutlined,
+    LockOutlined,
 } from '@ant-design/icons';
 import {FaTelegramPlane} from 'react-icons/fa';
-import {getUserData} from './getUserData';
 import './UserData.css';
 import '../Tour.css';
 import {getTourPanelState, setTourPanelState} from "../../../utils/cookieUtils";
 import {GrLanguage} from "react-icons/gr";
 import {TbTimezone} from "react-icons/tb";
-import {setUserTimeZone} from "./setUserTimeZone";
-import {validateAndRefreshToken} from "../../../utils/easyUtils";
+import {totpSetup, totpConfirm, totpDisable} from "./totpUtils";
+import {createMasterKey, rewrapMasterKey} from "./masterKeyUtils";
+import {getAuthToken, apiLogout, authFetch} from "../../../utils/easyUtils";
+import {UserContext} from "../../../index";
 import {showErrorNotification, showNotification} from "../../hotification/showNotification";
 import {useTranslation} from "react-i18next";
+import {fetchProvidersAvailability, setProviderKey, revokeProviderKey} from '../CreateModelFormElements/providersUtils';
+import {restartActiveChannels} from '../Channals/chUtils';
+import {AI_PROVIDERS} from '../CreateModelFormElements/providersConfig';
+import {BsFiletypeKey} from "react-icons/bs";
+import {GiThreeKeys} from "react-icons/gi";
 
 const {Title, Text, Paragraph} = Typography;
 
 export const UserData = () => {
     const {t} = useTranslation();
+    const userId = useContext(UserContext);
     const [userData, setUserData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -71,6 +85,132 @@ export const UserData = () => {
     const [deleteMessages, setDeleteMessages] = useState([]);
     const [deleteComplete, setDeleteComplete] = useState(false);
 
+    // Состояния для 2FA (TOTP)
+    const [totpSetupVisible, setTotpSetupVisible] = useState(false);
+    const [totpDisableVisible, setTotpDisableVisible] = useState(false);
+    const [totpUri, setTotpUri] = useState('');
+    const [totpCode, setTotpCode] = useState('');
+    const [totpLoading, setTotpLoading] = useState(false);
+    const [totpStep, setTotpStep] = useState(0);
+    const [totpEnabled, setTotpEnabled] = useState(false);
+    const [masterKey, setMasterKey] = useState(false);
+
+    // Состояния для Master Key прогресса
+    const [mkProgressVisible, setMkProgressVisible] = useState(false);
+    const [mkMessages, setMkMessages] = useState([]);
+    const [mkComplete, setMkComplete] = useState(false);
+
+    // Состояния для Master Key
+    const [mkModalVisible, setMkModalVisible] = useState(false);
+    const [mkPassword, setMkPassword] = useState('');
+    const [mkLoading, setMkLoading] = useState(false);
+    const [mkRawKey, setMkRawKey] = useState(''); // raw_master_key — показывается один раз
+    const [mkDoneVisible, setMkDoneVisible] = useState(false); // экран с результатом
+
+    // Состояния для смены пароля
+    const [chPassModalVisible, setChPassModalVisible] = useState(false);
+
+    // Состояния для API Key провайдеров
+    const [apiKeyModalVisible, setApiKeyModalVisible] = useState(false);
+    const [apiKeyProviders, setApiKeyProviders] = useState({ available: [], unavailable: [] });
+    const [apiKeyProvidersLoading, setApiKeyProvidersLoading] = useState(false);
+    const [apiKeyInput, setApiKeyInput] = useState('');
+    const [apiKeySelectedProvider, setApiKeySelectedProvider] = useState(null);
+    const [apiKeySaveLoading, setApiKeySaveLoading] = useState(false);
+    const [apiKeyRevokeLoading, setApiKeyRevokeLoading] = useState(null);
+    const [apiKeyRestartLoading, setApiKeyRestartLoading] = useState(false);
+
+    const API_KEY_PROVIDERS = AI_PROVIDERS;
+
+    const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+    const loadApiKeyProviders = async () => {
+        setApiKeyProvidersLoading(true);
+        const result = await fetchProvidersAvailability();
+        if (result.success && result.data) {
+            setApiKeyProviders(result.data);
+        }
+        setApiKeyProvidersLoading(false);
+    };
+
+    const handleApiKeyModalOpen = () => {
+        setApiKeySelectedProvider(null);
+        setApiKeyInput('');
+        setApiKeyModalVisible(true);
+        loadApiKeyProviders().then(r => {});
+    };
+
+    const triggerRestartIfNeeded = async (restart) => {
+        if (!restart) return;
+        setApiKeyRestartLoading(true);
+        try {
+            await restartActiveChannels(() => {});
+            showNotification(t("apiKeyRestartDone") || "Модель перезапущена");
+        } catch (e) {
+            showErrorNotification(t("apiKeyRestartError") || "Ошибка перезапуска модели", e?.message);
+        } finally {
+            setApiKeyRestartLoading(false);
+        }
+    };
+
+    const handleApiKeySave = async () => {
+        if (!apiKeySelectedProvider || !apiKeyInput.trim()) return;
+        setApiKeySaveLoading(true);
+        try {
+            const result = await setProviderKey(apiKeySelectedProvider, apiKeyInput.trim());
+            if (result.success) {
+                showNotification(t("apiKeySetSuccess") || "API Key сохранён", apiKeySelectedProvider);
+                // Оптимистичное обновление — сразу переносим провайдера в available
+                setApiKeyProviders(prev => ({
+                    available: prev.available.includes(apiKeySelectedProvider)
+                        ? prev.available
+                        : [...prev.available, apiKeySelectedProvider],
+                    unavailable: (prev.unavailable || []).filter(p => p !== apiKeySelectedProvider),
+                }));
+                setApiKeyInput('');
+                setApiKeySelectedProvider(null);
+                // Подтверждаем с сервера в фоне
+                loadApiKeyProviders();
+                await triggerRestartIfNeeded(result.restart);
+            } else {
+                showErrorNotification(t("apiKeySetError") || "Ошибка сохранения API Key", result.error);
+            }
+        } finally {
+            setApiKeySaveLoading(false);
+        }
+    };
+
+    const handleApiKeyRevoke = async (providerKey) => {
+        setApiKeyRevokeLoading(providerKey);
+        try {
+            const result = await revokeProviderKey(providerKey);
+            if (result.success) {
+                showNotification(t("apiKeyRevokeSuccess") || "API Key удалён", providerKey);
+                // Оптимистичное обновление — сразу убираем из available
+                setApiKeyProviders(prev => ({
+                    available: prev.available.filter(p => p !== providerKey),
+                    unavailable: (prev.unavailable || []).includes(providerKey)
+                        ? prev.unavailable
+                        : [...(prev.unavailable || []), providerKey],
+                }));
+                // Подтверждаем с сервера в фоне
+                loadApiKeyProviders();
+                await triggerRestartIfNeeded(result.restart);
+            } else {
+                showErrorNotification(t("apiKeyRevokeError") || "Ошибка удаления API Key", result.error);
+            }
+        } finally {
+            setApiKeyRevokeLoading(null);
+        }
+    };
+
+    const [chPassOld, setChPassOld] = useState('');
+    const [chPassNew, setChPassNew] = useState('');
+    const [chPassConfirm, setChPassConfirm] = useState('');
+    const [chPassRawKey, setChPassRawKey] = useState('');
+    const [chPassLoading, setChPassLoading] = useState(false);
+    const [chPassWarnModalVisible, setChPassWarnModalVisible] = useState(false);
+
     // Состояния для Tour
     const [tourVisible, setTourVisible] = useState(false);
     const [current, setCurrent] = useState(0);
@@ -85,18 +225,29 @@ export const UserData = () => {
     const channelsCardRef = useRef(null);
     const dangerZoneRef = useRef(null);
     const wsRef = useRef(null); // Добавляем ref для WebSocket
+    const totpCodeInputRef = useRef(null);
+
+    const getUserData = async () => {
+        return authFetch(`/v1/user/data`, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json"
+            },
+        });
+    };
 
     useEffect(() => {
         const fetchUserData = async () => {
             try {
                 setLoading(true);
-                const token = localStorage.getItem('authToken');
-                if (!token) {
-                    throw new Error(t("authTokenNotFound") || 'Токен авторизации не найден');
+                const response = await getUserData();
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
                 }
-
-                const data = await getUserData(token);
+                const data = await response.json();
                 setUserData(data);
+                setTotpEnabled(!!data?.TotpEnabled);
+                setMasterKey(!!data?.MasterKey);
             } catch (err) {
                 setError(err.message);
             } finally {
@@ -106,6 +257,13 @@ export const UserData = () => {
 
         fetchUserData();
     }, [t]);
+
+    // Автофокус на поле ввода кода TOTP при переходе на шаг 1
+    useEffect(() => {
+        if (totpStep === 1 && totpSetupVisible) {
+            setTimeout(() => totpCodeInputRef.current?.focus(), 100);
+        }
+    }, [totpStep, totpSetupVisible]);
 
     // Очистка WebSocket соединения при размонтировании компонента
     useEffect(() => {
@@ -163,8 +321,8 @@ export const UserData = () => {
         return languages[langId] || 'Русский';
     };
 
-    const messagesUsagePercent = userData.Subscription ?
-        (userData.Subscription.MessagesUsed / userData.Subscription.MessageLimit) * 100 : 0;
+    // const messagesUsagePercent = userData.Subscription ?
+    //     (userData.Subscription.MessagesUsed / userData.Subscription.MessageLimit) * 100 : 0;
 
     const storageUsagePercent = userData.Subscription ?
         (userData.Subscription.StorageUsed / userData.Subscription.StorageLimit) * 100 : 0;
@@ -229,13 +387,11 @@ export const UserData = () => {
             setDeleteProgressVisible(true); // Показываем окно прогресса
             setDeleteMessages([]);
             setDeleteComplete(false);
-            console.warn('Deleting all user data...');
 
-            const token = localStorage.getItem('authToken');
-            const LAND_WSS = (window.runtimeConfig && window.runtimeConfig.REACT_APP_LAND_WSS) || process.env.REACT_APP_LAND_WSS;
-            const wsUrl = `${LAND_WSS}/ws/deleteall`;
-            const wsUrlWithToken = `${wsUrl}?token=${encodeURIComponent(token)}`;
-            wsRef.current = new WebSocket(wsUrlWithToken);
+            const token = getAuthToken();
+            const wsUrl = `/ws/deleteall`;
+            const wsUrlWithToken = `${wsUrl}`;
+            wsRef.current = new WebSocket(wsUrlWithToken, [token]);
 
             // Обработчик открытия соединения
             wsRef.current.onopen = () => {
@@ -245,7 +401,6 @@ export const UserData = () => {
 
             // Обработчик сообщений от сервера
             wsRef.current.onmessage = (event) => {
-                console.log('Received message:', event.data);
 
                 // Добавляем любое сообщение от сервера в список
                 setDeleteMessages(prev => [...prev, event.data]);
@@ -263,7 +418,7 @@ export const UserData = () => {
             };
 
             // Обработчик закрытия соединения
-            wsRef.current.onclose = (event) => {
+            wsRef.current.onclose = async (event) => {
                 console.log('WebSocket connection closed:', event.code, event.reason);
 
                 // Если соединение закрылось нормально (код 1000), значит операция завершена
@@ -271,12 +426,12 @@ export const UserData = () => {
                     setDeleteMessages(prev => [...prev, t("userDeleteCompleted") || '✅ Операция удаления завершена успешно']);
                     setDeleteComplete(true);
 
-                    setTimeout(() => {
+                    setTimeout(async () => {
                         message.success(t("userAllDataDeleted") || 'Все данные пользователя удалены');
                         setDeleteProgressVisible(false);
 
-                        // Очищаем localStorage и перенаправляем на страницу входа
-                        localStorage.removeItem('authToken');
+                        // Очищаем куки/localStorage и перенаправляем на главную
+                        await apiLogout();
                         window.location.href = '/';
                     }, 5000);
                 } else {
@@ -306,6 +461,168 @@ export const UserData = () => {
     const handleCancelDelete = () => {
         setDeleteModalVisible(false);
         setDeleteConfirmation('');
+    };
+
+    // Обработчики для 2FA (TOTP)
+    const handleTotpSetup = async () => {
+        try {
+            setTotpLoading(true);
+            const response = await totpSetup();
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({}));
+                throw new Error(err.error || `Ошибка сервера: ${response.status}`);
+            }
+            const result = await response.json();
+
+            if (result.uri) {
+                setTotpUri(result.uri);
+                setTotpCode('');
+                setTotpStep(0);
+                setTotpSetupVisible(true);
+            } else {
+                message.error(t("totpSetupError") || 'Ошибка настройки 2FA: некорректный ответ сервера');
+            }
+        } catch (err) {
+            console.error('TOTP Setup error:', err);
+            message.error(typeof err === 'string' ? err : (err.message || (t("totpSetupError") || 'Ошибка настройки 2FA')));
+        } finally {
+            setTotpLoading(false);
+        }
+    };
+
+    const handleTotpConfirm = async (codeArg) => {
+        const code = codeArg ?? totpCode;
+        if (!code || code.length !== 6) {
+            message.warning(t("totpCodeRequired") || 'Введите 6-значный код из приложения');
+            return;
+        }
+        try {
+            setTotpLoading(true);
+            const response = await totpConfirm(code);
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({}));
+                throw new Error(err.error || `Ошибка сервера: ${response.status}`);
+            }
+            const result = await response.json();
+            setTotpEnabled(!!result.enabled);
+            setUserData(prev => ({...prev, TotpEnabled: result.enabled}));
+            setTotpSetupVisible(false);
+            setTotpCode('');
+            message.success(t("totpEnabled") || '2FA успешно подключена');
+        } catch (err) {
+            message.error(typeof err === 'string' ? err : (err.message || (t("totpConfirmError") || 'Неверный код. Попробуйте снова')));
+            setTotpCode('');
+            setTimeout(() => totpCodeInputRef.current?.focus(), 50);
+        } finally {
+            setTotpLoading(false);
+        }
+    };
+
+    const handleTotpDisable = async () => {
+        if (!totpCode || totpCode.length !== 6) {
+            message.warning(t("totpCodeRequired") || 'Введите 6-значный код из приложения');
+            return;
+        }
+        try {
+            setTotpLoading(true);
+            const response = await totpDisable(totpCode);
+            if (!response.ok) {
+                const err = await response.json().catch(() => ({}));
+                throw new Error(err.error || `Ошибка сервера: ${response.status}`);
+            }
+            const result = await response.json();
+            // Сервер возвращает пустой объект {} при успехе
+            if (response.ok && (Object.keys(result).length === 0 || result.status === 'ok')) {
+                setTotpEnabled(!!result.enabled);
+                setUserData(prev => ({...prev, TotpEnabled: result.enabled}));
+                setTotpDisableVisible(false);
+                setTotpCode('');
+                message.success(t("totpDisabled") || '2FA отключена');
+            } else {
+                message.error(t("userTimezoneUpdateError") || 'Ошибка при обновлении часового пояса');
+                showErrorNotification(t("userTimezoneUpdateError") || 'Ошибка при обновлении часового пояса');
+            }
+
+        } catch (err) {
+            message.error(typeof err === 'string' ? err : (err.message || (t("totpDisableError") || 'Неверный код. Попробуйте снова')));
+        } finally {
+            setTotpLoading(false);
+        }
+    };
+
+    // Обработчик смены пароля
+    const handleChangePassword = async () => {
+        if (!chPassOld) { message.warning(t("chPassOldRequired") || 'Введите текущий пароль'); return; }
+        if (!chPassNew) { message.warning(t("chPassNewRequired") || 'Введите новый пароль'); return; }
+        if (chPassNew !== chPassConfirm) { message.warning(t("chPassMismatch") || 'Пароли не совпадают'); return; }
+
+        // Если MasterKey существует, но raw-ключ не указан — предупреждаем об удалении зашифрованных данных
+        if (masterKey && !chPassRawKey.trim()) {
+            setChPassWarnModalVisible(true);
+            return;
+        }
+
+        await doChangePassword();
+    };
+
+    const doChangePassword = async () => {
+        try {
+            setChPassLoading(true);
+            await rewrapMasterKey(userId, chPassOld, masterKey ? chPassRawKey : null, chPassNew);
+            showNotification(t("chPassSuccess") || 'Пароль успешно изменён');
+            // Если MasterKey не был передан — сервер сбросил его, обновляем состояние
+            if (masterKey && !chPassRawKey.trim()) {
+                setMasterKey(false);
+                setUserData(prev => ({...prev, MasterKey: 0}));
+            }
+            setChPassModalVisible(false);
+            setChPassWarnModalVisible(false);
+            setChPassOld(''); setChPassNew(''); setChPassConfirm(''); setChPassRawKey('');
+        } catch (err) {
+            const errMsg = typeof err === 'string' ? err : err.message;
+            const localizedMsg = errMsg === 'mkWrongOldPassword'
+                ? (t("chPassWrongOld") || 'Неверный текущий пароль')
+                : (errMsg || t("chPassError") || 'Ошибка смены пароля');
+            showErrorNotification(t("chPassError") || 'Ошибка смены пароля', localizedMsg);
+        } finally {
+            setChPassLoading(false);
+        }
+    };
+
+    // Обработчик создания Master Key
+    const handleCreateMasterKey = async () => {
+        if (!mkPassword) {
+            message.warning(t("mkPasswordRequired") || 'Введите пароль');
+            return;
+        }
+        try {
+            setMkLoading(true);
+            setMkProgressVisible(true);
+            setMkMessages([]);
+            setMkComplete(false);
+
+            const result = await createMasterKey(userId, mkPassword, (msg) => {
+                setMkMessages(prev => [...prev, msg.message]);
+                if (msg.type === 'success') {
+                    setMkComplete(true);
+                }
+            });
+
+            setMkRawKey(result.raw_master_key);
+            setMkDoneVisible(true);
+            setMasterKey(true);
+            setUserData(prev => ({...prev, MasterKey: 1}));
+            // Задержка в что бы увидеть данные
+            await sleep(1500);
+            setMkProgressVisible(false); // Закрываем прогресс после успеха, основной модал покажет результат
+        } catch (err) {
+            const errMsg = typeof err === 'string' ? err : err.message;
+            setMkMessages(prev => [...prev, `❌ ${errMsg}`]);
+            // Не закрываем модал прогресса сразу, чтобы пользователь видел ошибку
+        } finally {
+            await sleep(1500);
+            setMkLoading(false);
+        }
     };
 
     // Функция для получения названия поля для редактирования
@@ -391,32 +708,31 @@ export const UserData = () => {
     const timezoneOptions = getAllTimezones();
 
     const handleTimezoneChange = async (newTimezone) => {
-        const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
-        if (token !== null) {
-            try {
-                const result = await setUserTimeZone(token, newTimezone);
-                // Сервер возвращает пустой объект {} при успехе
-                if (Object.keys(result).length === 0 || result.status === 'ok') {
-                    // Обновляем локальные данные
-                    setUserData(prev => ({
-                        ...prev,
-                        TimeZone: newTimezone
-                    }));
+        try {
+            const response = await authFetch(`/v1/user/timezone`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ timezone: newTimezone })
+            });
 
-                    showNotification(t("userTimezoneUpdated") || 'Часовой пояс обновлен');
-                } else {
-                    message.error(t("userTimezoneUpdateError") || 'Ошибка при обновлении часового пояса');
-                    showErrorNotification(t("userTimezoneUpdateError") || 'Ошибка при обновлении часового пояса');
-                }
+            const result = await response.json();
 
-            } catch (error) {
-                console.error('Error updating timezone:', error);
+            if (response.ok && (Object.keys(result).length === 0 || result.status === 'ok')) {
+                setUserData(prev => ({
+                    ...prev,
+                    TimeZone: newTimezone
+                }));
+                showNotification(t("userTimezoneUpdated") || 'Часовой пояс обновлен');
+            } else {
                 message.error(t("userTimezoneUpdateError") || 'Ошибка при обновлении часового пояса');
                 showErrorNotification(t("userTimezoneUpdateError") || 'Ошибка при обновлении часового пояса');
             }
-        } else {
+        } catch (error) {
+            console.error('Error updating timezone:', error);
+            message.error(t("userTimezoneUpdateError") || 'Ошибка при обновлении часового пояса');
             showErrorNotification(t("userTimezoneUpdateError") || 'Ошибка при обновлении часового пояса');
-            message.error(t("userTimezoneUpdateErrorToken") || 'Ошибка при обновлении часового пояса: токен не обновлен');
         }
     };
 
@@ -533,6 +849,98 @@ export const UserData = () => {
                                                 <br/>
                                                 <Text>{userData?.Email}</Text>
                                             </div>
+                                        </div>
+
+                                        {/* Пароль авторизации */}
+                                        <div className="user-info-item">
+                                            <LockOutlined className="info-icon"/>
+                                            <div style={{flex: 1}}>
+                                                <Text strong>{t("userPassword") || "Пароль авторизации"}</Text>
+                                                <br/>
+                                                <Input.Password
+                                                    value="••••••••"
+                                                    disabled
+                                                    visibilityToggle={false}
+                                                    style={{width: '60%', background: 'transparent', border: 'none', padding: 0, cursor: 'default'}}
+                                                />
+                                            </div>
+                                            <Tooltip title={t("userChangePassword") || "Сменить пароль"}>
+                                                <Button
+                                                    icon={<EditOutlined/>}
+                                                    size="small"
+                                                    onClick={() => { setChPassOld(''); setChPassNew(''); setChPassConfirm(''); setChPassRawKey(''); setChPassModalVisible(true); }}
+                                                />
+                                            </Tooltip>
+                                        </div>
+
+                                        {/* 2FA / TOTP */}
+                                        <div className="user-info-item">
+                                            <SafetyOutlined className="info-icon" style={{color: totpEnabled ? 'var(--icon-bg)' : '#bfbfbf', opacity: totpEnabled ? 1 : 0.7}}/>
+                                            <div style={{flex: 1}}>
+                                                <Text strong>{t("user2FA") || "Двухфакторная аутентификация"}</Text>
+                                            </div>
+                                            {totpEnabled ? (
+                                                <Space>
+                                                    <Tooltip title={t("user2FADisableBtn") || "Отключить 2FA"}>
+                                                        <Button
+                                                            icon={<UnlockOutlined/>}
+                                                            size="small"
+                                                            danger
+                                                            onClick={() => {setTotpCode(''); setTotpDisableVisible(true);}}
+                                                        />
+                                                    </Tooltip>
+                                                </Space>
+                                            ) : (
+                                                <Space>
+                                                    <Tooltip title={t("user2FASetupBtn") || "Подключить 2FA"}>
+                                                        <Button
+                                                            icon={<SafetyOutlined/>}
+                                                            size="small"
+                                                            type="primary"
+                                                            loading={totpLoading}
+                                                            onClick={handleTotpSetup}
+                                                        />
+                                                    </Tooltip>
+                                                </Space>
+                                            )}
+                                        </div>
+
+                                        {/* Ключ шифрования / Master Key */}
+                                        <div className="user-info-item">
+                                            <KeyOutlined className="info-icon" style={{color: masterKey ? 'var(--icon-bg)' : '#bfbfbf', opacity: masterKey ? 1 : 0.7}}/>
+                                            <div style={{flex: 1}}>
+                                                <Text strong>{t("userMasterKey") || "Ключ шифрования"}</Text>
+                                            </div>
+                                            {!masterKey && (
+                                                <Tooltip title={t("userMasterKeySetupBtn") || "Создать ключ шифрования"}>
+                                                    <Button
+                                                        icon={<KeyOutlined/>}
+                                                        size="small"
+                                                        type="primary"
+                                                        onClick={() => { setMkPassword(''); setMkDoneVisible(false); setMkRawKey(''); setMkModalVisible(true); }}
+                                                    />
+                                                </Tooltip>
+                                            )}
+                                        </div>
+
+                                        {/* API Key AI провайдеров */}
+                                        <div className="user-info-item">
+                                            <BsFiletypeKey className="info-icon" style={{color: apiKeyProviders.available?.length > 0 ? 'var(--icon-bg)' : '#bfbfbf', opacity: apiKeyProviders.available?.length > 0 ? 1 : 0.7}}/>
+                                            <div style={{flex: 1}}>
+                                                <Text strong>{t("apiKeyProvidersSectionTitle") || "API Key AI провайдеров"}</Text>
+                                                <br/>
+                                                <Text type="secondary" style={{fontSize: 12}}>
+                                                    {t("apiKeyProvidersSectionDesc") || "Управление API-ключами для провайдеров ИИ"}
+                                                </Text>
+                                            </div>
+                                            <Tooltip title={t("apiKeyProvidersManageBtn") || "Управление API Key"}>
+                                                <Button
+                                                    icon={<GiThreeKeys/>}
+                                                    size="small"
+                                                    type="primary"
+                                                    onClick={handleApiKeyModalOpen}
+                                                />
+                                            </Tooltip>
                                         </div>
 
                                         <div className="user-info-item">
@@ -663,28 +1071,29 @@ export const UserData = () => {
                                     <Card title={t("userResourceUsage") || "Использование ресурсов"} className="user-data-card"
                                           ref={resourcesCardRef}>
                                         <Row gutter={[24, 24]}>
-                                            <Col xs={24} md={12}>
-                                                <div className="usage-item">
-                                                    <div className="usage-header">
-                                                        <MessageOutlined className="usage-icon"/>
-                                                        <Text strong>{t("userMessages") || "Сообщения"}</Text>
-                                                    </div>
-                                                    <Progress
-                                                        percent={messagesUsagePercent}
-                                                        status={messagesUsagePercent > 80 ? 'exception' : 'active'}
-                                                        format={() => `${userData.Subscription.MessagesUsed} / ${userData.Subscription.MessageLimit}`}
-                                                    />
+                                            {/*<Col xs={24} md={12}>*/}
+                                                {/*<div className="usage-item">*/}
+                                                    {/*<div className="usage-header">*/}
+                                                    {/*    <MessageOutlined className="usage-icon"/>*/}
+                                                    {/*    <Text strong>{t("userMessages") || "Сообщения"}</Text>*/}
+                                                    {/*</div>*/}
+                                                    {/*<Progress*/}
+                                                    {/*    percent={messagesUsagePercent}*/}
+                                                    {/*    status={messagesUsagePercent > 80 ? 'exception' : 'active'}*/}
+                                                    {/*    format={() => `${userData.Subscription.MessagesUsed} / ${userData.Subscription.MessageLimit}`}*/}
+                                                    {/*/>*/}
 
-                                                    {userData.Subscription.MessageLimit > 0 ? (
-                                                        <Text type="secondary">
-                                                            {t("userMessagesUsed", {percent: messagesUsagePercent.toFixed(1)}) || `Использовано ${messagesUsagePercent.toFixed(1)}% лимита сообщений`}
-                                                        </Text>
-                                                    ) : null}
+                                                    {/*{userData.Subscription.MessageLimit > 0 ? (*/}
+                                                    {/*    <Text type="secondary">*/}
+                                                    {/*        {t("userMessagesUsed", {percent: messagesUsagePercent.toFixed(1)}) || `Использовано ${messagesUsagePercent.toFixed(1)}% лимита сообщений`}*/}
+                                                    {/*    </Text>*/}
+                                                    {/*) : null}*/}
 
-                                                </div>
-                                            </Col>
+                                                {/*</div>*/}
+                                            {/*</Col>*/}
 
-                                            <Col xs={24} md={12}>
+                                            {/*<Col xs={24} md={12}>*/}
+                                            <Col xs={24} md={24}>
                                                 <div className="usage-item">
                                                     <div className="usage-header">
                                                         <DatabaseOutlined className="usage-icon"/>
@@ -1009,6 +1418,338 @@ export const UserData = () => {
                                 )}
                             </div>
                         </Modal>
+
+                        {/* Модальное окно смены пароля */}
+                        <Modal
+                            title={<span><LockOutlined/> {t("chPassModalTitle") || "Смена пароля"}</span>}
+                            open={chPassModalVisible}
+                            onCancel={() => { if (!chPassLoading) setChPassModalVisible(false); }}
+                            footer={null}
+                            width={460}
+                            centered
+                            maskClosable={!chPassLoading}
+                            closable={!chPassLoading}
+                        >
+                            <Space direction="vertical" size="middle" style={{width: '100%'}}>
+                                <Input.Password
+                                    size="large"
+                                    value={chPassOld}
+                                    onChange={e => setChPassOld(e.target.value)}
+                                    placeholder={t("chPassOldPlaceholder") || "Текущий пароль"}
+                                    disabled={chPassLoading}
+                                />
+                                <Input.Password
+                                    size="large"
+                                    value={chPassNew}
+                                    onChange={e => setChPassNew(e.target.value)}
+                                    placeholder={t("chPassNewPlaceholder") || "Новый пароль"}
+                                    disabled={chPassLoading}
+                                />
+                                <Input.Password
+                                    size="large"
+                                    value={chPassConfirm}
+                                    onChange={e => setChPassConfirm(e.target.value)}
+                                    placeholder={t("chPassConfirmPlaceholder") || "Подтвердите новый пароль"}
+                                    disabled={chPassLoading}
+                                    status={chPassConfirm && chPassNew !== chPassConfirm ? 'error' : ''}
+                                />
+                                {masterKey && (
+                                    <>
+                                        <Alert
+                                            type="warning"
+                                            showIcon
+                                            style={{background: 'transparent', border: '1px solid var(--warning-color, #faad14)', fontSize: 12}}
+                                            message={t("chPassMasterKeyHint") || "У вас создан ключ шифрования. Для смены пароля необходимо указать raw MasterKey, иначе зашифрованные данные будут удалены."}
+                                        />
+                                        <Input
+                                            size="large"
+                                            value={chPassRawKey}
+                                            onChange={e => setChPassRawKey(e.target.value)}
+                                            placeholder={t("chPassRawKeyPlaceholder") || "Raw MasterKey (base64)"}
+                                            style={{fontFamily: 'monospace'}}
+                                            prefix={<KeyOutlined/>}
+                                            disabled={chPassLoading}
+                                        />
+                                    </>
+                                )}
+                                <Button
+                                    type="primary"
+                                    block
+                                    size="large"
+                                    loading={chPassLoading}
+                                    onClick={handleChangePassword}
+                                    style={{color: 'black'}}
+                                    disabled={!chPassOld || !chPassNew || chPassNew !== chPassConfirm}
+                                >
+                                    {t("chPassSubmit") || "Сменить пароль"}
+                                </Button>
+                            </Space>
+                        </Modal>
+
+                        {/* Модальное окно подтверждения смены пароля без MasterKey */}
+                        <Modal
+                            title={
+                                <span style={{color: '#ff4d4f'}}>
+                                    <ExclamationCircleOutlined/> {t("chPassWarnTitle") || "Внимание! Зашифрованные данные будут удалены"}
+                                </span>
+                            }
+                            open={chPassWarnModalVisible}
+                            onOk={async () => {
+                                setChPassWarnModalVisible(false);
+                                await doChangePassword();
+                            }}
+                            onCancel={() => setChPassWarnModalVisible(false)}
+                            okText={t("chPassWarnConfirm") || "Всё равно сменить пароль"}
+                            cancelText={t("cancel") || "Отмена"}
+                            okButtonProps={{danger: true}}
+                            width={520}
+                            centered
+                        >
+                            <Space direction="vertical" size="middle" style={{width: '100%'}}>
+                                <Alert
+                                    message={t("chPassWarnIrreversible") || "Внимание! Это действие необратимо!"}
+                                    type="error"
+                                    showIcon
+                                />
+                                <div>
+                                    <Text strong style={{color: '#ff4d4f'}}>
+                                        {t("chPassWarnText") || "Вы не указали raw MasterKey. При смене пароля все зашифрованные данные (ключи каналов, токены, секреты) будут безвозвратно удалены:"}
+                                    </Text>
+                                    <ul style={{marginTop: 8, paddingLeft: 20}}>
+                                        <li>{t("chPassWarnItem1") || "Ключи и токены интеграций (Telegram, WhatsApp и др.)"}</li>
+                                        <li>{t("chPassWarnItem2") || "Зашифрованные настройки каналов"}</li>
+                                        <li>{t("chPassWarnItem3") || "Прочие данные, защищённые MasterKey"}</li>
+                                    </ul>
+                                </div>
+                                <Alert
+                                    message={t("chPassWarnAdvice") || "Если у вас есть raw MasterKey — закройте это окно и введите его в соответствующее поле."}
+                                    type="warning"
+                                    showIcon
+                                />
+                            </Space>
+                        </Modal>
+
+                        {/* Модальное окно создания Master Key */}
+                        <Modal
+                            title={<span><KeyOutlined/> {t("userMasterKeyModalTitle") || "Создание ключа шифрования"}</span>}
+                            open={mkModalVisible}
+                            onCancel={() => { if (!mkLoading) { setMkModalVisible(false); setMkPassword(''); } }}
+                            footer={null}
+                            width={480}
+                            centered
+                            maskClosable={!mkLoading}
+                            closable={!mkLoading}
+                        >
+                            {!mkDoneVisible ? (
+                                <Space direction="vertical" size="middle" style={{width: '100%'}}>
+                                    <Alert
+                                        message={t("userMasterKeyDesc") || "MasterKey генерируется один раз и оборачивается вашим паролем. После создания raw-ключ будет показан ОДИН РАЗ — обязательно сохраните его в надёжном месте."}
+                                        type="warning"
+                                        showIcon
+                                    />
+                                    <Input.Password
+                                        size="large"
+                                        value={mkPassword}
+                                        onChange={e => setMkPassword(e.target.value)}
+                                        placeholder={t("userMasterKeyPasswordPlaceholder") || "Введите ваш текущий пароль"}
+                                        onPressEnter={handleCreateMasterKey}
+                                        disabled={mkLoading}
+                                    />
+                                    <Button
+                                        type="primary"
+                                        block
+                                        size="large"
+                                        loading={mkLoading}
+                                        onClick={handleCreateMasterKey}
+                                        style={{color: 'black'}}
+                                        disabled={!mkPassword}
+                                    >
+                                        {t("userMasterKeyCreate") || "Создать ключ шифрования"}
+                                    </Button>
+                                </Space>
+                            ) : (
+                                <Space direction="vertical" size="middle" style={{width: '100%'}}>
+                                    <Alert
+                                        message={t("userMasterKeySaveWarning") || "Сохраните этот ключ прямо сейчас! Он больше никогда не будет показан."}
+                                        type="error"
+                                        showIcon
+                                    />
+                                    <Input
+                                        value={mkRawKey}
+                                        readOnly
+                                        size="large"
+                                        style={{fontFamily: 'monospace', fontSize: 13}}
+                                        addonAfter={
+                                            <Button
+                                                type="link"
+                                                size="small"
+                                                style={{padding: 0}}
+                                                onClick={() => {
+                                                    navigator.clipboard.writeText(mkRawKey);
+                                                    message.success(t("userMasterKeyCopied") || 'Ключ скопирован');
+                                                }}
+                                            >
+                                                {t("copy") || "Копировать"}
+                                            </Button>
+                                        }
+                                    />
+                                    <Button
+                                        type="primary"
+                                        block
+                                        size="large"
+                                        onClick={() => { setMkModalVisible(false); setMkRawKey(''); setMkPassword(''); }}
+                                        style={{color: 'black'}}
+                                    >
+                                        {t("userMasterKeySaved") || "Я сохранил ключ"}
+                                    </Button>
+                                </Space>
+                            )}
+                        </Modal>
+
+                        {/* Модальное окно прогресса создания Master Key */}
+                        <Modal
+                            title={
+                                <span>
+                                    <KeyOutlined/> {t("userMasterKeyProgressTitle") || "Создание ключа шифрования"}
+                                </span>
+                            }
+                            open={mkProgressVisible}
+                            footer={mkComplete || !mkLoading ? [
+                                <Button key="close" onClick={() => setMkProgressVisible(false)}>
+                                    {t("close") || "Закрыть"}
+                                </Button>
+                            ] : null}
+                            closable={mkComplete || !mkLoading}
+                            centered
+                            width={600}
+                            maskClosable={false}
+                        >
+                            <div className="delete-progress-container">
+                                {!mkComplete && mkLoading && (
+                                    <div className="delete-progress-header">
+                                        <Spin size="large"/>
+                                        <Title level={4} style={{margin: '16px 0'}}>
+                                            {t("userMasterKeyProcessing") || "Выполняется генерация и шифрование..."}
+                                        </Title>
+                                    </div>
+                                )}
+
+                                <div className="delete-messages-container">
+                                    <div className="delete-messages-list">
+                                        {mkMessages.map((msg, index) => (
+                                            <div key={index} className="delete-message-item">
+                                                <span className="delete-message-time">
+                                                    {new Date().toLocaleTimeString()}
+                                                </span>
+                                                <Text className="delete-message-text">{msg}</Text>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        </Modal>
+
+                        {/* Модальное окно настройки 2FA */}
+                        <Modal
+                            title={<span><SafetyOutlined/> {t("user2FASetupTitle") || "Подключение двухфакторной аутентификации"}</span>}
+                            open={totpSetupVisible}
+                            onCancel={() => {setTotpSetupVisible(false); setTotpCode(''); setTotpStep(0);}}
+                            footer={null}
+                            width={480}
+                            centered
+                        >
+                            <Steps
+                                current={totpStep}
+                                size="small"
+                                style={{marginBottom: 24}}
+                                items={[
+                                    {title: t("user2FAStepScan") || "Сканирование"},
+                                    {title: t("user2FAStepConfirm") || "Подтверждение"},
+                                ]}
+                            />
+                            {totpStep === 0 && (
+                                <Space direction="vertical" size="middle" style={{width: '100%', alignItems: 'center'}}>
+                                    <Alert
+                                        message={t("user2FAScanDesc") || "Отсканируйте QR-код в приложении-аутентификаторе (Google Authenticator, Yandex Key и др.)"}
+                                        type="info"
+                                        showIcon
+                                        style={{width: '100%'}}
+                                    />
+                                    {totpUri && (
+                                        <QRCode
+                                            type="svg"
+                                            errorLevel="Q"
+                                            value={totpUri}
+                                            color="#000000"
+                                            bgColor="#ffffff"
+                                            size={220}
+                                        />
+                                    )}
+                                    <Button
+                                        type="primary"
+                                        block
+                                        style={{color: 'black'}}
+                                        onClick={() => setTotpStep(1)}
+                                    >
+                                        {t("user2FANextStep") || "Далее — ввести код"}
+                                    </Button>
+                                </Space>
+                            )}
+                            {totpStep === 1 && (
+                                <Space direction="vertical" size="middle" style={{width: '100%'}}>
+                                    <Alert
+                                        message={t("user2FAEnterCodeDesc") || "Введите 6-значный код из приложения-аутентификатора для активации 2FA"}
+                                        type="info"
+                                        showIcon
+                                    />
+                                    <Input
+                                        ref={totpCodeInputRef}
+                                        size="large"
+                                        maxLength={6}
+                                        value={totpCode}
+                                        onChange={e => {
+                                            const val = e.target.value.replace(/\D/g, '');
+                                            setTotpCode(val);
+                                            if (val.length === 6) handleTotpConfirm(val);
+                                        }}
+                                        placeholder={t("user2FACodePlaceholder") || "000000"}
+                                        style={{textAlign: 'center', letterSpacing: 8, fontSize: 24}}
+                                        disabled={totpLoading}
+                                    />
+                                    {totpLoading && <Spin style={{alignSelf: 'center'}}/>}
+                                </Space>
+                            )}
+                        </Modal>
+
+                        {/* Модальное окно отключения 2FA по коду */}
+                        <Modal
+                            title={<span style={{color: '#ff4d4f'}}><UnlockOutlined/> {t("user2FADisableTitle") || "Отключение двухфакторной аутентификации"}</span>}
+                            open={totpDisableVisible}
+                            onCancel={() => {setTotpDisableVisible(false); setTotpCode('');}}
+                            onOk={handleTotpDisable}
+                            confirmLoading={totpLoading}
+                            okText={t("user2FADisableConfirm") || "Отключить"}
+                            cancelText={t("cancel") || "Отмена"}
+                            okButtonProps={{danger: true}}
+                            centered
+                        >
+                            <Space direction="vertical" size="middle" style={{width: '100%'}}>
+                                <Alert
+                                    message={t("user2FADisableWarning") || "Введите 6-значный код из приложения-аутентификатора для отключения 2FA"}
+                                    type="warning"
+                                    showIcon
+                                />
+                                <Input
+                                    size="large"
+                                    maxLength={6}
+                                    value={totpCode}
+                                    onChange={e => setTotpCode(e.target.value.replace(/\D/g, ''))}
+                                    placeholder={t("user2FACodePlaceholder") || "000000"}
+                                    style={{textAlign: 'center', letterSpacing: 8, fontSize: 24}}
+                                    onPressEnter={handleTotpDisable}
+                                />
+                            </Space>
+                        </Modal>
                     </div>
                 </div>
 
@@ -1094,6 +1835,132 @@ export const UserData = () => {
                 onClick={showTourPanel}
                 className="tour-float-button"
             />
+
+            {/* Модальное окно управления API Key провайдеров */}
+            <Modal
+                title={<span><GiThreeKeys/> {t("apiKeyModalTitle") || "API Key AI провайдеров"}</span>}
+                open={apiKeyModalVisible}
+                onCancel={() => { if (!apiKeySaveLoading && !apiKeyRevokeLoading && !apiKeyRestartLoading) setApiKeyModalVisible(false); }}
+                footer={null}
+                width={520}
+                centered
+                maskClosable={!apiKeySaveLoading && !apiKeyRevokeLoading && !apiKeyRestartLoading}
+            >
+                <Spin spinning={apiKeyRestartLoading} tip={t("apiKeyRestartLoading") || "Перезапуск модели..."}>
+                    <Space direction="vertical" size="middle" style={{width: '100%'}}>
+                        <Alert
+                            type="info"
+                            showIcon
+                            message={t("apiKeyModalDesc") || "Установите личные API-ключи для каждого провайдера. После изменения ключа активная модель будет автоматически перезапущена."}
+                        />
+
+                        <Spin spinning={apiKeyProvidersLoading}>
+                            <Space direction="vertical" size="small" style={{width: '100%'}}>
+                                {API_KEY_PROVIDERS.map(provider => {
+                                    const hasKey = apiKeyProviders.available?.includes(provider.key);
+                                    const isRevoking = apiKeyRevokeLoading === provider.key;
+                                    return (
+                                        <div key={provider.key} style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 10,
+                                            padding: '10px 14px',
+                                            borderRadius: 8,
+                                            border: `1px solid ${hasKey ? provider.color : 'var(--midle-color)'}`,
+                                            background: hasKey ? `${provider.color}10` : 'var(--bg-color)',
+                                        }}>
+                                            <img src={provider.logo} alt={provider.name} style={{width: 28, height: 28, objectFit: 'contain', flexShrink: 0}}/>
+                                            <div style={{flex: 1, minWidth: 0}}>
+                                                <Text strong style={{color: provider.color}}>{provider.name}</Text>
+                                                <br/>
+                                                <Text type="secondary" style={{fontSize: 12}}>
+                                                    {hasKey
+                                                        ? (t("apiKeyProviderHasKey") || "API Key установлен ✓")
+                                                        : (t("apiKeyProviderNoKey") || "API Key не установлен")}
+                                                </Text>
+                                            </div>
+                                            {hasKey && (
+                                                <Popconfirm
+                                                    title={t("apiKeyRevokeConfirmTitle") || "Удалить API Key?"}
+                                                    description={t("apiKeyRevokeConfirmDesc") || `API Key для ${provider.name} будет удалён. Продолжить?`}
+                                                    onConfirm={() => handleApiKeyRevoke(provider.key)}
+                                                    okText={t("apiKeyRevokeConfirmOk") || "Удалить"}
+                                                    cancelText={t("cancel") || "Отмена"}
+                                                    okButtonProps={{ danger: true }}
+                                                    disabled={!!apiKeyRevokeLoading && !isRevoking}
+                                                >
+                                                    <Tooltip title={t("apiKeyRevokeBtn") || "Удалить API Key"}>
+                                                        <Button
+                                                            icon={<DeleteOutlined/>}
+                                                            size="small"
+                                                            danger
+                                                            loading={isRevoking}
+                                                            disabled={!!apiKeyRevokeLoading && !isRevoking}
+                                                        />
+                                                    </Tooltip>
+                                                </Popconfirm>
+                                            )}
+                                            <Tooltip title={hasKey ? (t("apiKeyUpdateBtn") || "Обновить API Key") : (t("apiKeySetBtn") || "Установить API Key")}>
+                                                <Button
+                                                    icon={<GiThreeKeys/>}
+                                                    size="small"
+                                                    type={'primary'}
+                                                    style={{ color : 'black'}}
+                                                    onClick={() => { setApiKeySelectedProvider(provider.key); setApiKeyInput(''); }}
+                                                    disabled={apiKeySelectedProvider === provider.key}
+                                                />
+                                            </Tooltip>
+                                        </div>
+                                    );
+                                })}
+                            </Space>
+                        </Spin>
+
+                        {apiKeySelectedProvider && (
+                            <div style={{
+                                padding: '14px',
+                                borderRadius: 8,
+                                border: `1px solid ${API_KEY_PROVIDERS.find(p => p.key === apiKeySelectedProvider)?.color || '#d9d9d9'}`,
+                                background: 'var(--bg-color)',
+                            }}>
+                                <div style={{display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10}}>
+                                    <img
+                                        src={API_KEY_PROVIDERS.find(p => p.key === apiKeySelectedProvider)?.logo}
+                                        alt={apiKeySelectedProvider}
+                                        style={{width: 22, height: 22, objectFit: 'contain'}}
+                                    />
+                                    <Text strong style={{color: API_KEY_PROVIDERS.find(p => p.key === apiKeySelectedProvider)?.color}}>
+                                        {API_KEY_PROVIDERS.find(p => p.key === apiKeySelectedProvider)?.name}
+                                    </Text>
+                                </div>
+                                <Input.Password
+                                    placeholder={t("apiKeyInputPlaceholder") || "Введите API Key..."}
+                                    value={apiKeyInput}
+                                    onChange={e => setApiKeyInput(e.target.value)}
+                                    onPressEnter={handleApiKeySave}
+                                    autoFocus
+                                    style={{marginBottom: 10}}
+                                />
+                                <Space>
+                                    <Button
+                                        type="primary"
+                                        icon={<CheckCircleOutlined/>}
+                                        loading={apiKeySaveLoading}
+                                        disabled={!apiKeyInput.trim()}
+                                        onClick={handleApiKeySave}
+                                        style={{ color : 'black'}}
+                                    >
+                                        {t("apiKeySaveBtn") || "Сохранить"}
+                                    </Button>
+                                    <Button onClick={() => { setApiKeySelectedProvider(null); setApiKeyInput(''); }}>
+                                        {t("cancel") || "Отмена"}
+                                    </Button>
+                                </Space>
+                            </div>
+                        )}
+                    </Space>
+                </Spin>
+            </Modal>
         </div>
     );
 };

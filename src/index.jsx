@@ -2,7 +2,7 @@ import React, {createContext, useEffect, useState} from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
-import reportWebVitals from './reportWebVitals';
+import reportWebVitals, { logWebVitals } from './reportWebVitals';
 import './i18n';
 import {ThemeProvider} from './ThemeContext';
 import {getOrSetUserId} from './utils/getOrSetUserId';
@@ -48,17 +48,12 @@ const renderApp = () => {
     root.render(<Root/>);
 }
 
-// В режиме разработки (npm start) рендерим приложение немедленно.
-// В продакшене (в Docker) ждем загрузки динамической конфигурации.
+renderApp();
+
+// Включаем детальное логирование метрик в development режиме
 if (process.env.NODE_ENV === 'development') {
-    renderApp();
+    reportWebVitals(logWebVitals);
 } else {
-    window.addEventListener('runtime-config-loaded', renderApp);
-
-    // На случай, если конфиг уже загружен (из кэша)
-    if (window.runtimeConfig) {
-        renderApp();
-    }
+    // В production можно передать функцию для отправки в аналитику
+    reportWebVitals();
 }
-
-reportWebVitals();

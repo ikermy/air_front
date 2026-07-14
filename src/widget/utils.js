@@ -1,13 +1,14 @@
-const LAND_URL = (window.runtimeConfig && window.runtimeConfig.REACT_APP_LAND) || process.env.REACT_APP_LAND;
-
 export const validateAndRefreshWidgetToken = async (token) => {
     if (token === "no_balance") { return token } // Такого не бывает
 
     try {
         // Пытаемся валидировать текущий токен
-        const response = await fetch(`${LAND_URL}/widget/validate?token=${encodeURIComponent(token)}`, {
+        const response = await fetch(`/v1/widget/validate`, {
             method: 'GET',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
             // credentials: 'include', // Куки будут отправлены
         });
 
@@ -22,7 +23,9 @@ export const validateAndRefreshWidgetToken = async (token) => {
             return token; // Возвращаем существующий токен
         } else {
             console.error("Неизвестная ошибка при проверке токена");
-            localStorage.removeItem("authToken");
+            if (typeof window !== "undefined") {
+                localStorage.removeItem("authToken");
+            }
             return null; // Ошибка при валидации токена
         }
     } catch (error) {
@@ -33,7 +36,7 @@ export const validateAndRefreshWidgetToken = async (token) => {
 
 const refreshToken = async ({oldtoken}) => {
     try {
-        const response = await fetch(`${LAND_URL}/widget/refresh`, {
+        const response = await fetch(`/v1/widget/refresh`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ "oldToken": oldtoken }),
@@ -55,9 +58,6 @@ const refreshToken = async ({oldtoken}) => {
 };
 
 export async function fetchUserName({ token, setToken, setUserName}, maxRetries = 3) {
-    // TODO Пауза 250 для теста
-    await new Promise(resolve => setTimeout(resolve, 250));
-
     const newtoken = await validateAndRefreshWidgetToken(token)
     if (newtoken === null) {
         console.error('Ошибка при обновлении токена');
@@ -71,9 +71,11 @@ export async function fetchUserName({ token, setToken, setUserName}, maxRetries 
 
     const makeRequest = async () => {
         try {
-            response = await fetch(`${LAND_URL}/widget/username?token=${encodeURIComponent(newtoken)}`, {
+        const response = await fetch(`/v1/widget/username`, {
                 method: "GET",
-                headers: {"Content-Type": "application/json"},
+                headers: {
+                    "Content-Type": "application/json",
+                    'Authorization': `Bearer ${newtoken}`},
             });
 
             if (response.status === 404) {
@@ -116,40 +118,24 @@ export async function fetchUserName({ token, setToken, setUserName}, maxRetries 
     await makeRequest();
 }
 
-export function generateRandomThreeDigitNumber() {
-    return Math.floor(100 + Math.random() * 900);
-}
-
 export const formatTgubotData = (data, uids) => {
-    if (!uids || uids.length === 0)
-        return typeof data === 'string' ? data : JSON.stringify(data);
+    const parsedData = typeof data === 'string' ? JSON.parse(data) : (data || {});
+    const options = parsedData?.options || {};
 
-    const uidsString = uids.join(" ");
+    const normalizedToken = typeof parsedData?.token === 'string'
+        ? parsedData.token
+        : parsedData?.token
+            ? JSON.stringify(parsedData.token)
+            : '';
 
-    if (typeof data === 'string') {
-        try {
-            // Попытка разобрать корректный JSON
-            const dataObj = JSON.parse(data);
-            dataObj.uids = uidsString;
-            return JSON.stringify({
-                token: JSON.stringify(dataObj)
-            });
-        } catch {
-            // Если парсинг не проходит и строка начинается с "{", вставляем uids вручную
-            if (data.trim().startsWith("{")) {
-                // Вставляем ключ uids после первой открывающей фигурной скобки
-                const modifiedData = data.replace(/^{/, `{"uids":"${uidsString}",`);
-                return JSON.stringify({ token: modifiedData });
-            }
-            // В остальных случаях возвращаем исходную строку в качестве token
-            return JSON.stringify({ token: data });
+    return JSON.stringify({
+        ...parsedData,
+        token: normalizedToken,
+        options: {
+            ...options,
+            uids: Array.isArray(uids) ? uids.join(" ") : (uids || '')
         }
-    } else {
-        const dataObj = { ...data, uids: uidsString };
-        return JSON.stringify({
-            token: JSON.stringify(dataObj)
-        });
-    }
+    });
 };
 
 export const formatWhatsBotData = (data, uids) => {

@@ -4,7 +4,6 @@ import {useTranslation} from 'react-i18next';
 import './SimpleTransceiver.css';
 import {IoSend} from "react-icons/io5";
 
-const LAND_URL = (window.runtimeConfig && window.runtimeConfig.REACT_APP_LAND) || process.env.REACT_APP_LAND;
 
 export function SimpleTransceiver({
                                       userName,
@@ -19,7 +18,7 @@ export function SimpleTransceiver({
         if (message.trim() === '') return; // Не отправлять пустое сообщение
 
         try {
-            const response = await axios.post(`${LAND_URL}/demo/data`, {
+            const response = await axios.post(`/demo/data`, {
                 type: 'user',
                 token: token,
                 uname: userName,
@@ -73,34 +72,6 @@ export function SimpleTransceiver({
             sendMessage();
         }
     };
-
-    // Локальное состояние токена и флаг для обновления токена
-    // const [shouldRefresh, setShouldRefresh] = useState(false);
-
-    // Эффект для обновления токена при возникновении ошибки 401
-    // useEffect(() => {
-    //     if (shouldRefresh) {
-    //         (async () => {
-    //             try {
-    //                 const newToken = await validateAndRefreshWidgetToken(token)
-    //
-    //                 if (newToken === null || token === "no_balance") {
-    //                     console.log("Токен не обновлен!")
-    //                     setPermit(false)
-    //                 }
-    //
-    //                 setToken(newToken.data.token);
-    //                 console.log('Токен обновлён:', newToken.data.token);
-    //             } catch (refreshError) {
-    //                 console.error('Ошибка при обновлении токена', refreshError);
-    //                 setPermit(false)
-    //             } finally {
-    //                 // Сбрасываем флаг, чтобы эффект сработал только один раз
-    //                 setShouldRefresh(false);
-    //             }
-    //         })();
-    //     }
-    // }, [setToken, shouldRefresh, token, setPermit]);
 
     return (
         <div className="input-container">

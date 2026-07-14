@@ -1,4 +1,4 @@
-import { validateAndRefreshToken } from '../utils/easyUtils';
+import {getAuthToken, refreshToken} from '../utils/easyUtils';
 
 const RECONNECT_INTERVAL = 3000;
 const MAX_RECONNECT_ATTEMPTS = 5;
@@ -13,27 +13,33 @@ class InstantNotificationService {
         this.isRefreshingToken = false;
     }
 
-    async connect(token) {
+    async connect() {
+        if (typeof window === 'undefined') return;
         if (this.ws?.readyState === WebSocket.OPEN) {
             return;
         }
 
-        // Валидируем и обновляем токен перед подключением
-        const validToken = await validateAndRefreshToken(token);
-        if (!validToken) {
-            console.error('Ошибка аутентификации: невозможно получить валидный токен');
-            this.notifyListeners({ error: 'authentication_failed' });
-            return;
+        // Берём начальный токен (кука/localStorage)
+        let currentToken = getAuthToken();
+
+        if (!currentToken) {
+            // Пытаемся получить токен через рефреш если нет STA
+            const newToken = await refreshToken();
+            if (newToken) {
+                currentToken = newToken;
+            } else {
+                console.error('Ошибка аутентификации: токен не найден');
+                this.notifyListeners({error: 'authentication_failed'});
+                return;
+            }
         }
 
-        this.token = validToken;
+        this.token = currentToken;
         this.shouldReconnect = true;
         this.reconnectAttempts = 0;
 
         try {
-            const LAND_WSS = (window.runtimeConfig && window.runtimeConfig.REACT_APP_LAND_WSS) || process.env.REACT_APP_LAND_WSS;
-
-            this.ws = new WebSocket(`${LAND_WSS}/ws/instant?token=${encodeURIComponent(this.token)}`);
+            this.ws = new WebSocket(`/v1/ws/instant`, [this.token]);
 
             this.ws.onopen = () => {
                 console.log('WebSocket connected');
@@ -79,8 +85,8 @@ class InstantNotificationService {
     }
 
     async handleTokenRefresh() {
-        if (this.isRefreshingToken) {
-            return; // Уже обновляем токен
+        if (this.isRefreshingToken || typeof window === 'undefined') {
+            return; // Уже обновляем токен или SSR
         }
 
         this.isRefreshingToken = true;
@@ -92,9 +98,8 @@ class InstantNotificationService {
                 this.ws = null;
             }
 
-            // Получаем текущий токен из localStorage и обновляем его
-            const currentToken = localStorage.getItem("authToken");
-            const newToken = await validateAndRefreshToken(currentToken);
+            // Пытаемся обновить токен через refreshToken из easyUtils
+            const newToken = await refreshToken();
 
             if (newToken) {
                 console.log('Токен успешно обновлен, переподключаемся...');
@@ -103,16 +108,16 @@ class InstantNotificationService {
 
                 // Переподключаемся с новым токеном
                 setTimeout(() => {
-                    this.connect(newToken);
+                    this.connect();
                 }, 1000);
             } else {
                 console.error('Не удалось обновить токен');
-                this.notifyListeners({ error: 'token_refresh_failed' });
+                this.notifyListeners({error: 'token_refresh_failed'});
                 this.shouldReconnect = false;
             }
         } catch (error) {
             console.error('Ошибка при обновлении токена:', error);
-            this.notifyListeners({ error: 'token_refresh_error' });
+            this.notifyListeners({error: 'token_refresh_error'});
         } finally {
             this.isRefreshingToken = false;
         }
@@ -128,8 +133,8 @@ class InstantNotificationService {
         console.log(`Попытка переподключения ${this.reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS}...`);
 
         setTimeout(async () => {
-            if (this.token && this.shouldReconnect) {
-                await this.connect(this.token);
+            if (this.shouldReconnect) {
+                await this.connect();
             }
         }, RECONNECT_INTERVAL);
     }

@@ -1,11 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useImperativeHandle, forwardRef } from "react";
 import {Button, Modal} from "antd";
 import { useTranslation } from "react-i18next";
-import { showErrorNotification, showNotification, showWarningNotification } from "../hotification/showNotification";
-import { validateAndRefreshToken } from "../../utils/easyUtils";
+import { showErrorNotification, showNotification } from "../hotification/showNotification";
 import {saveModelData} from "./CreateModelFormElements/modUtils";
 
-export const UpdateModel = ({ setButtonDisabled, modelData, form, isUploadingFiles, onModelUpdated, isButtonDisabled, selectedProvider }) => {
+export const UpdateModel = forwardRef(({ setButtonDisabled, modelData, form, isUploadingFiles, onModelUpdated, isButtonDisabled, selectedProvider }, ref) => {
     const { t } = useTranslation();
     const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -22,43 +21,39 @@ export const UpdateModel = ({ setButtonDisabled, modelData, form, isUploadingFil
 
         // Получаем актуальные значения формы в момент подтверждения
         const currentValues = form.getFieldsValue(true);
+        const response = await saveModelData({
+            values: currentValues,
+            isUpdate: true, // Явно указываем, что это обновление
+            provider: selectedProvider, // Передаем провайдер
+            gpttype: currentValues.gpttype ?? null
+        });
 
-        const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
-        if (token !== null) {
-            const response = await saveModelData({
-                token,
-                // modelData,
-                values: currentValues,
-                isUpdate: true, // Явно указываем, что это обновление
-                provider: selectedProvider // Передаем провайдер
-            });
+        if (response.status === "ok") {
+            showNotification(
+                t("serviceModelUpdated") || "Модель обновлена",
+                t("serviceModelUpdateSuccess") || "Изменения успешно сохранены!"
+            );
+            setButtonDisabled(true);
 
-            if (response.status === "ok") {
-                showNotification(
-                    t("serviceModelUpdated") || "Модель обновлена",
-                    t("serviceModelUpdateSuccess") || "Изменения успешно сохранены!"
-                );
-                setButtonDisabled(true);
-
-                // Обновляем modelData в родительском компоненте
-                if (onModelUpdated) {
-                    onModelUpdated();
-                }
-            } else {
-                showErrorNotification(
-                    t("serviceModelUpdateError") || "Ошибка обновления",
-                    t("serviceModelUpdateErrorMessage") || "Модель не обновлена!"
-                );
-                setButtonDisabled(false);
+            // Обновляем modelData в родительском компоненте
+            if (onModelUpdated) {
+                onModelUpdated();
             }
         } else {
-            showWarningNotification(
-                t("serviceModelUpdateTokenError") || "Ошибка изменения модели",
-                t("serviceModelUpdateTokenErrorMessage") || "Токен не обновлен!"
+            showErrorNotification(
+                t("serviceModelUpdateError") || "Ошибка обновления",
+                t("serviceModelUpdateErrorMessage") || "Модель не обновлена!"
             );
             setButtonDisabled(false);
         }
     };
+
+    // Предоставляем доступ к handleConfirm через ref
+    useImperativeHandle(ref, () => ({
+        triggerUpdate: () => {
+            void handleConfirm();
+        }
+    }));
 
     return (
         <div>
@@ -88,4 +83,4 @@ export const UpdateModel = ({ setButtonDisabled, modelData, form, isUploadingFil
             </Modal>
         </div>
     );
-};
+});

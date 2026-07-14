@@ -1,38 +1,31 @@
 import {formatTgubotData, formatWhatsBotData} from "../../../widget/utils";
+import {authFetch} from "../../../utils/easyUtils";
 
-const LAND_URL = (window.runtimeConfig && window.runtimeConfig.REACT_APP_LAND) || process.env.REACT_APP_LAND;
-
-export const deleteNotifChanel = async (token, chanel) => {
+export const deleteNotifChanel = async (chanel) => {
     try {
-        const response = await fetch(`${LAND_URL}/nota?token=${token}`, {
-            method: "DELETE",
+        const response = await authFetch(`/v1/nota`, {
+            method: 'DELETE',
             headers: {
-                "Content-Type": "application/json"
+                'Content-Type': 'application/json',
             },
-            credentials: "include",
-            body: JSON.stringify({
-                chan: chanel,
-            }),
+            credentials: 'include',
+            body: JSON.stringify({chan: chanel}),
         });
 
-        if (!response.ok) {
-            console.error("Сервер вернул ошибку:", response.status);
-            return false
-        } else {
-            return true
-        }
-
+        return response.ok;
     } catch (error) {
         console.error("Ошибка при удалении канала:", error);
         return false
     }
 }
 
-export const getMail = async (token) => {
+export const getMail = async () => {
     try {
-        const response = await fetch(`${LAND_URL}/nota/mail?token=${encodeURIComponent(token)}`, {
-            method: "GET",
-            headers: {"Content-Type": "application/json"},
+        const response = await authFetch(`/v1/nota/mail`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            }
         });
 
         if (!response.ok) {
@@ -46,24 +39,20 @@ export const getMail = async (token) => {
     }
 };
 
-export const saveNotifEvent = async (token, start, end, target) => {
+export const saveNotifEvent = async (start, end, target) => {
     try {
-        const response = await fetch(`${LAND_URL}/nota/events?token=${token}`, {
-            method: "POST",
+        const response = await authFetch(`/v1/nota/events`, {
+            method: 'POST',
             headers: {
-                "Content-Type": "application/json"
+                'Content-Type': 'application/json',
             },
-            credentials: "include",
-            body: JSON.stringify({
-                start: start,
-                end: end,
-                target: target,
-            }),
+            credentials: 'include',
+            body: JSON.stringify({start, end, target}),
         });
 
         if (!response.ok) {
             console.error("Сервер вернул ошибку:", response.status);
-            return { success: false, active_channels: false }
+            return {success: false, active_channels: false}
         }
 
         const result = await response.json();
@@ -74,22 +63,19 @@ export const saveNotifEvent = async (token, start, end, target) => {
 
     } catch (error) {
         console.error("Ошибка при сохранении канала:", error);
-        return { success: false, active_channels: false }
+        return {success: false, active_channels: false}
     }
 }
 
-export const sendVerifCode = async (token, telegramId, pin) => {
+export const sendVerifCode = async (telegramId, pin) => {
     try {
-        const response = await fetch(`${LAND_URL}/nota/code?token=${token}`, {
-            method: "POST",
+        const response = await authFetch(`/v1/nota/code`, {
+            method: 'POST',
             headers: {
-                "Content-Type": "application/json"
+                'Content-Type': 'application/json',
             },
-            credentials: "include",
-            body: JSON.stringify({
-                id: telegramId,
-                pin: String(pin)
-            }),
+            credentials: 'include',
+            body: JSON.stringify({id: telegramId, pin: String(pin)}),
         });
 
         if (!response.ok) {
@@ -104,19 +90,15 @@ export const sendVerifCode = async (token, telegramId, pin) => {
     }
 }
 
-export const readNotificationsData = async (token) => {
+export const readNotificationsData = async () => {
     try {
-        // Проверка наличия токена
-        if (!token) {
-            throw new Error('Токен не предоставлен');
-        }
-
-        const response = await fetch(`${LAND_URL}/nota?token=${encodeURIComponent(token)}`, {
-            method: "GET",
-            headers: {"Content-Type": "application/json"},
+        const response = await authFetch(`/v1/nota`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+            }
         });
 
-        // Проверка ответа
         if (!response.ok) {
             if (response.status === 401) {
                 throw new Error('Недействительный токен авторизации');
@@ -128,7 +110,6 @@ export const readNotificationsData = async (token) => {
             }
         }
 
-        // Получение данных из ответа
         return await response.json();
     } catch (error) {
         console.error('Ошибка при получении каналов:', error);
@@ -136,42 +117,33 @@ export const readNotificationsData = async (token) => {
     }
 }
 
-export const saveNotificationsData = async (channelType, data, uids, isEnabled, token) => {
-    console.log("saveNotificationsData called with:", {channelType, data, uids, isEnabled, token});
+export const saveNotificationsData = async (channelType, data, uids, isEnabled) => {
     try {
         var finalData
         switch (channelType) {
             case "tgubot":
-                // Используем функцию форматирования для tgubot
                 finalData = formatTgubotData(data, uids);
                 break;
             case "whatsbot":
-                // Для WhatsApp бота просто сериализуем данные
-                // finalData = JSON.stringify(data);
                 finalData = formatWhatsBotData(data, uids);
                 break;
             default:
-                // Для остальных типов каналов просто используем данные как есть
                 finalData = data
         }
 
-        const response = await fetch(`${LAND_URL}/nota`, {
-            method: "POST",
+        const response = await authFetch(`/v1/nota`, {
+            method: 'POST',
             headers: {
-                "Content-Type": "application/json",
-                'Authorization': `Bearer ${token}`
+                'Content-Type': 'application/json',
             },
-            credentials: "include",
-            body: JSON.stringify({
-                type: channelType,
-                data: finalData,
-                enabled: isEnabled
-            }),
+            credentials: 'include',
+            body: JSON.stringify({type: channelType, data: finalData, enabled: isEnabled}),
         });
+
 
         if (!response.ok) {
             console.error("Сервер вернул ошибку:", response.status);
-            return { success: false, active_channels: false }
+            return {success: false, active_channels: false}
         }
 
         let result;
@@ -192,14 +164,13 @@ export const saveNotificationsData = async (channelType, data, uids, isEnabled, 
 
         } catch (parseError) {
             console.error("Ошибка парсинга JSON:", parseError);
-            // Если не удалось распарсить, но статус 200, считаем успешным
             if (response.status === 200) {
                 return {
                     success: true,
                     active_channels: false
                 }
             }
-            return { success: false, active_channels: false }
+            return {success: false, active_channels: false}
         }
 
         return {
@@ -208,6 +179,6 @@ export const saveNotificationsData = async (channelType, data, uids, isEnabled, 
         }
     } catch (error) {
         console.error("Ошибка при сохранении канала:", error);
-        return { success: false, active_channels: false }
+        return {success: false, active_channels: false}
     }
 }

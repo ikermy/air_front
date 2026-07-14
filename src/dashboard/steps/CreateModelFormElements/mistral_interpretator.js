@@ -5,7 +5,6 @@ import Paragraph from "antd/lib/typography/Paragraph";
 import {CodeOutlined, PictureOutlined, GlobalOutlined} from "@ant-design/icons";
 import {useTranslation} from "react-i18next";
 import {checkDemo} from "./modUtils";
-import {validateAndRefreshToken} from "../../../utils/easyUtils";
 import {showErrorNotification} from "../../hotification/showNotification";
 
 export const Mistral_Interpreter = ({onChange, toForm, initialFiles, initialImage, initialWebSearch, s3FilesEnabled = false}) => {
@@ -23,18 +22,16 @@ export const Mistral_Interpreter = ({onChange, toForm, initialFiles, initialImag
         setCurrentS3Status(s3FilesEnabled);
         prevS3FilesEnabled.current = s3FilesEnabled;
 
-        // Инициализация interp - только если S3 включен
+        // Инициализация interpreter
         if (typeof initialFiles === 'boolean') {
-            const shouldEnable = initialFiles && s3FilesEnabled;
-            setSwitchChecked(shouldEnable);
+            setSwitchChecked(initialFiles);
             if (toForm) {
-                toForm.setFieldsValue({ interp: shouldEnable });
+                toForm.setFieldsValue({ interpreter: initialFiles });
             }
         } else if (initialFiles) {
-            const shouldEnable = s3FilesEnabled;
-            setSwitchChecked(shouldEnable);
+            setSwitchChecked(true);
             if (toForm) {
-                toForm.setFieldsValue({ interp: shouldEnable });
+                toForm.setFieldsValue({ interpreter: true });
             }
         }
 
@@ -63,13 +60,6 @@ export const Mistral_Interpreter = ({onChange, toForm, initialFiles, initialImag
             let needsUpdate = false;
             const updates = {};
 
-            // Отключаем генерацию файлов
-            if (switchChecked) {
-                setSwitchChecked(false);
-                updates.interp = false;
-                needsUpdate = true;
-            }
-
             // Отключаем генерацию изображений
             if (imageChecked) {
                 setImageChecked(false);
@@ -91,14 +81,14 @@ export const Mistral_Interpreter = ({onChange, toForm, initialFiles, initialImag
 
         // Обновляем предыдущее значение
         prevS3FilesEnabled.current = s3FilesEnabled;
-    }, [s3FilesEnabled, switchChecked, imageChecked, toForm, onChange]);
+    }, [s3FilesEnabled, imageChecked, toForm, onChange]);
 
     const handleSwitchChange = (checked) => {
         setSwitchChecked(checked);
 
         // Сохраняем значение в форму
         if (toForm) {
-            toForm.setFieldsValue({ interp: checked });
+            toForm.setFieldsValue({ interpreter: checked });
         }
 
         // Если функция onChange существует, вызываем её
@@ -111,8 +101,7 @@ export const Mistral_Interpreter = ({onChange, toForm, initialFiles, initialImag
         // Проверка демо-режима при попытке включить
         if (checked) {
             try {
-                const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
-                const demoResult = await checkDemo(token);
+                const demoResult = await checkDemo();
 
                 if (demoResult.success && demoResult.status === true) {
                     showErrorNotification(t("demoModeNotAvailable") || "Этот режим не доступен в демонстрационном режиме");
@@ -160,32 +149,6 @@ export const Mistral_Interpreter = ({onChange, toForm, initialFiles, initialImag
 
     return (
         <>
-            <div className="section-title">
-                <CodeOutlined />
-                {t("fileGenerationTitle") || "Генерация файлов"}
-            </div>
-            <div className="section-description">
-                {t("fileGenerationDesc") || "Позволяет агенту создавать файлы, графики и выполнять код для решения задач"}
-                {!currentS3Status && (
-                    <div style={{color: 'var(--warning-color)', marginTop: '8px', fontSize: '13px'}}>
-                        ⚠️ {t("fileGenerationS3Warning") || "Для использования этой функции необходимо включить S3 хранилище файлов"}
-                    </div>
-                )}
-            </div>
-
-            <div className="step">
-                <span>
-                    {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
-                    {t("fileGenerationEnable") || "Включение режима"} <a onClick={showModal}>{t("fileGenerationCreateFiles") || "создания файлов"}</a>&nbsp;
-                </span>
-                <Switch
-                    checked={switchChecked && currentS3Status}
-                    disabled={!currentS3Status}
-                    checkedChildren={<span style={{color: "black"}}>{t("Yes") || "Да"}</span>}
-                    unCheckedChildren={<span style={{color: "black"}}>{t("No") || "Нет"}</span>}
-                    onChange={handleSwitchChange}
-                />
-            </div>
 
             <div className="section-title" style={{marginTop: '24px'}}>
                 <PictureOutlined />
@@ -210,6 +173,28 @@ export const Mistral_Interpreter = ({onChange, toForm, initialFiles, initialImag
                     checkedChildren={<span style={{color: "black"}}>{t("Yes") || "Да"}</span>}
                     unCheckedChildren={<span style={{color: "black"}}>{t("No") || "Нет"}</span>}
                     onChange={handleImageChange}
+                />
+            </div>
+
+
+            <div className="section-title">
+                <CodeOutlined />
+                {t("codeInterpreterTitle") || "Интерпретатор кода"}
+            </div>
+            <div className="section-description">
+                {t("codeInterpreterDesc") || "Позволяет агенту писать и запускать Python скрипты для решения различных задач"}
+            </div>
+
+            <div className="step">
+                <span>
+                    {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
+                    {t("fileGenerationEnable") || "Включение режима"} <a onClick={showModal}>{t("fileGenerationCreateFiles") || "интерпретатор кода"}</a>&nbsp;
+                </span>
+                <Switch
+                    checked={switchChecked && currentS3Status}
+                    checkedChildren={<span style={{color: "black"}}>{t("Yes") || "Да"}</span>}
+                    unCheckedChildren={<span style={{color: "black"}}>{t("No") || "Нет"}</span>}
+                    onChange={handleSwitchChange}
                 />
             </div>
 
@@ -244,7 +229,7 @@ export const Mistral_Interpreter = ({onChange, toForm, initialFiles, initialImag
                         fontSize: '16px',
                         color: 'var(--text-color)',
                     }}>
-                    {t("interpreterModalTitle") || "Что такое генерация файлов (Code Interpreter)?"}
+                    {t("interpreterModalTitle") || "Что такое Code Interpreter?"}
                 </Title>
                 <Paragraph
                     code={true}

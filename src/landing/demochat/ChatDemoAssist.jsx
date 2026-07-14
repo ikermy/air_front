@@ -9,8 +9,6 @@ import {TypingIndicator} from "../../utils/TypingIndicator";
 import {useAutoScroll} from "../../utils/useAutoScroll";
 import {Modal, Spin, Typography} from 'antd';
 
-const LAND_URL = (window.runtimeConfig && window.runtimeConfig.REACT_APP_LAND) || process.env.REACT_APP_LAND;
-
 const animationAssistWrite = 20; // мс на символ
 
 export function ChatDemoAssist({token, isTokenLoading, isModalOpen}) {
@@ -38,10 +36,12 @@ export function ChatDemoAssist({token, isTokenLoading, isModalOpen}) {
 
             setUserNameLoading(true);
             const makeRequest = async (isRetry = false) => {
-                const response = await fetch(`${LAND_URL}/demo/username?token=${encodeURIComponent(token)}`, {
+                const response = await fetch(`/demo/username`, {
                     method: "GET",
-                    headers: {"Content-Type": "application/json"},
-                });
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                }, token);
 
                 if (response.status === 429 && !isRetry) {
                     // Слишком много запросов, ждем секунду и повторяем только один раз
@@ -207,7 +207,7 @@ export function ChatDemoAssist({token, isTokenLoading, isModalOpen}) {
                     }}
                     placeholder={t('ChatDemoAssist-placeholder')}
                 />
-                <button onClick={handleSaveName}>{t('ChatDemoAssist-button')}</button>
+                <button onClick={handleSaveName}>{t('send')}</button>
             </div>
         );
     }

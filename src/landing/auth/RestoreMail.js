@@ -4,17 +4,18 @@ import {Button, Form, Input} from 'antd';
 import './auth.css';
 import { useNavigate } from "react-router-dom";
 import {UserContext} from "../../index";
+import i18n from "i18next";
 
-const LAND_URL = (window.runtimeConfig && window.runtimeConfig.REACT_APP_LAND) || process.env.REACT_APP_LAND;
 
 async function sendRestoreData({userId, mail}) {
     try {
-        const response = await fetch(`${LAND_URL}/rest`, {
+        const response = await fetch(`/v1/auth/reset-password/request`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
             body: JSON.stringify({
                 "a": userId,
                 "b": mail,
+                "lang": i18n.language
             })
         });
 

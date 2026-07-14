@@ -7,9 +7,6 @@ import {CheckOutlined, LoadingOutlined, CloseCircleOutlined} from '@ant-design/i
 import {UserContext} from "../../index";
 import {ResetPass} from "./resetPass";
 
-// const LAND_URL = process.env.REACT_APP_LAND;
-const LAND_URL = window.runtimeConfig?.REACT_APP_LAND || process.env.REACT_APP_LAND;
-
 function ResetPassword() {
     const [status, setStatus] = useState("loading");
     const [email, setEmail] = useState("");
@@ -25,7 +22,7 @@ function ResetPassword() {
 
             if (key) {
                 try {
-                    const response = await fetch(`${LAND_URL}/checkreset`, {
+                    const response = await fetch(`/v1/auth/reset-password/validate`, {
                         method: 'POST',
                         headers: {'Content-Type': 'application/json'},
                         body: JSON.stringify({

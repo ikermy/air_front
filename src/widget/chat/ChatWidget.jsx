@@ -1,5 +1,5 @@
 import React, {useState, useRef, useCallback, useEffect, useContext} from 'react';
-import './ChatWidget.css';
+// CSS импортируется в родительском Widget.jsx для поддержки lazy loading
 import {useTranslation} from "react-i18next";
 import {TypingIndicator} from "../../utils/TypingIndicator";
 import {fetchUserName} from "../utils";
@@ -59,9 +59,7 @@ export function ChatWidget({
     useEffect(() => {
         const checkConnection = async () => {
             try {
-                const LAND_URL = (window.runtimeConfig && window.runtimeConfig.REACT_APP_LAND) || process.env.REACT_APP_LAND;
-
-                const url = `${LAND_URL}/available/widget`;
+                const url = `/system/available/widget`;
                 const response = await axios.get(url);
 
                 if (response.status >= 400) {
@@ -98,9 +96,9 @@ export function ChatWidget({
         if (connected) {
             const checkPermission = async () => {
                 try {
-                    const LAND_URL = (window.runtimeConfig && window.runtimeConfig.REACT_APP_LAND) || process.env.REACT_APP_LAND;
+                    const LAND_URL = window.location.origin;
 
-                    const response = await fetch(`${LAND_URL}/widget/exam`, {
+                    const response = await fetch(`/widget/exam`, {
                         method: 'POST',
                         headers: {'Content-Type': 'application/json'},
                         body: JSON.stringify({
@@ -342,7 +340,6 @@ export function ChatWidget({
 
         (async () => {
             try {
-                console.log('Загрузка имени пользователя...');
                 await fetchUserName({
                     token,
                     setToken,
@@ -503,7 +500,7 @@ export function ChatWidget({
                         }}
                         placeholder={t('ChatDemoAssist-placeholder')}
                     />
-                    <button onClick={handleSaveName}>{t('ChatDemoAssist-button')}</button>
+                    <button onClick={handleSaveName}>{t('send')}</button>
                 </div>
             </div>
         );

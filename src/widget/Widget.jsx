@@ -1,7 +1,11 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, lazy, Suspense } from 'react';
 import './Widget.css';
+import './chat/ChatWidget.css'; // Импортируем стили ChatWidget сразу
+import '../dialog/ChatWindow.css'; // Импортируем стили для сообщений (.chat-message, .left, .right)
 // import {useTranslation}from "react-i18next";
-import {ChatWidget} from "./chat/ChatWidget";
+
+// Lazy loading для ChatWidget - загружается только при клике на кнопку
+const ChatWidget = lazy(() => import("./chat/ChatWidget").then(module => ({ default: module.ChatWidget })));
 
 
 // Функция для получения правильного пути к статическим файлам
@@ -348,18 +352,30 @@ export function Widget({
                             onClick={handleOpenModal}>×
                         </button>
                     </div>
-                    <ChatWidget
-                        examKey={propExamKey}
-                        connected={connected}
-                        setConnected={setConnected}
-                        setIsModalOpen={setIsModalOpen}
-                        messageStyles={{
-                            user: dynamicMessageUserStyle,
-                            bot: dynamicMessageBotStyle
-                        }} // Передаем стили для сообщений
-                        inputStyle={dynamicInputStyle} // Передаем стили для поля ввода
-                        sendButtonStyle={dynamicSendButtonStyle} // Передаем стили для кнопки отправки
-                    />
+                    <Suspense fallback={
+                        <div style={{
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            height: '300px',
+                            color: themeColors.textColor
+                        }}>
+                            Загрузка...
+                        </div>
+                    }>
+                        <ChatWidget
+                            examKey={propExamKey}
+                            connected={connected}
+                            setConnected={setConnected}
+                            setIsModalOpen={setIsModalOpen}
+                            messageStyles={{
+                                user: dynamicMessageUserStyle,
+                                bot: dynamicMessageBotStyle
+                            }} // Передаем стили для сообщений
+                            inputStyle={dynamicInputStyle} // Передаем стили для поля ввода
+                            sendButtonStyle={dynamicSendButtonStyle} // Передаем стили для кнопки отправки
+                        />
+                    </Suspense>
                 </div>
             )}
         </>

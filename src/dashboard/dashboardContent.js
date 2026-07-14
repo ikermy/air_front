@@ -13,7 +13,7 @@ import {UserData} from "./steps/User-data/UserData";
 import {CreateService} from "./steps/Services/CreateService";
 import {CreateCRM} from "./steps/CRM/CreateCRM";
 
-const showSimpleAuth = process.env.REACT_APP_SHOW_SIMPLE_AUTH === "false";
+const showSimpleAuth = false;
 
 export const dashboardContent = (selectedMenu, refreshUserData, userRole = null, onMenuChange = null) => {
     // Возвращает контент в зависимости от выбранного меню
@@ -40,7 +40,7 @@ export const dashboardContent = (selectedMenu, refreshUserData, userRole = null,
         case "models":
             return (
                 <div className="form-section model-name-section">
-                    <CreateModel/>
+                    <CreateModel onMenuChange={onMenuChange}/>
                 </div>
             );
         case "crm":

@@ -1,5 +1,5 @@
 // leadStartService.js
-import {validateAndRefreshToken} from "../../../../utils/easyUtils";
+import {authFetch} from "../../../../utils/easyUtils";
 import {startServiceWSS} from "./leadUtils";
 
 export class LeadStartService {
@@ -59,20 +59,12 @@ export class LeadStartService {
 
     async startService() {
         try {
-            const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
-            if (token) {
-                // Сбрасываем флаги при новой попытке запуска
-                this.successHandled = false;
-                this.errorHandled = false;
+            // Сбрасываем флаги при новой попытке запуска
+            this.successHandled = false;
+            this.errorHandled = false;
 
-                this.connectWebSocket(token);
-                return true;
-            } else {
-                if (this.callbacks.onUpdateToken) {
-                    this.callbacks.onUpdateToken();
-                }
-                return false;
-            }
+            this.connectWebSocket();
+            return true;
         } catch (error) {
             if (this.callbacks.onError) {
                 this.callbacks.onError(`Ошибка запуска сервиса: ${error.message}`);
@@ -215,9 +207,9 @@ export class LeadStartService {
         }
     }
 
-    connectWebSocket(token) {
+    connectWebSocket() {
         try {
-            this.socket = startServiceWSS(token);
+            this.socket = startServiceWSS();
             this.intentionalClose = false; // Сбрасываем флаг при новом подключении
 
             this.socket.onopen = () => {
@@ -490,5 +482,31 @@ export class LeadStartService {
         }
         this.successHandled = false; // Сбрасываем флаги при закрытии соединения
         this.errorHandled = false;
+    }
+
+    async startBot(botId) {
+        try {
+            const response = await authFetch(`/v1/service/leadhunter/bot/start`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    bot_id: botId,
+                }),
+            });
+
+
+            if (!response.ok) {
+                throw new Error(`Ошибка запуска бота: ${response.statusText}`);
+            }
+
+            return response.json();
+        } catch (error) {
+            if (this.callbacks.onError) {
+                this.callbacks.onError(`Ошибка запуска бота: ${error.message}`);
+            }
+            throw error;
+        }
     }
 }

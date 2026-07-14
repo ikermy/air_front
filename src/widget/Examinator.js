@@ -7,12 +7,10 @@ export function Examinator({ mode, examId, examKey, setToken, setIsTokenLoading 
     useEffect(() => {
         const checkPermission = async () => {
             try {
-                const LAND_URL = (window.runtimeConfig && window.runtimeConfig.REACT_APP_LAND) || process.env.REACT_APP_LAND;
-
                 let response
                 switch (mode) {
                     case "widget":
-                        response = await fetch(`${LAND_URL}/widget/exam`, {
+                        response = await fetch(`/widget/exam`, {
                             method: 'POST',
                             headers: {'Content-Type': 'application/json'},
                             body: JSON.stringify({
@@ -22,7 +20,7 @@ export function Examinator({ mode, examId, examKey, setToken, setIsTokenLoading 
                         });
                         break
                     case "demo":
-                        response = await fetch(`${LAND_URL}/demo/exam`, {
+                        response = await fetch(`/demo/exam`, {
                             method: 'POST',
                             headers: {'Content-Type': 'application/json'},
                             body: JSON.stringify({

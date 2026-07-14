@@ -1,5 +1,5 @@
 // leadTgAuthService.js
-import {validateAndRefreshToken} from "../../../../utils/easyUtils";
+import {getAuthToken, refreshToken} from "../../../../utils/easyUtils";
 import {serviceTgAuthWSS} from "./leadUtils";
 
 export class LeadTgAuthService {
@@ -24,29 +24,21 @@ export class LeadTgAuthService {
 
     async startAuthentication(params) {
         try {
-            const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
-            if (token) {
-                // Сбрасываем флаг при новой попытке авторизации
-                this.successHandled = false;
+            // Сбрасываем флаг при новой попытке авторизации
+            this.successHandled = false;
 
-                // Сохраняем параметры авторизации для отправки через WebSocket
-                this.authParams = {
-                    type: 'auth_data',
-                    alias: params.alias,
-                    app_hash: params.appHash,
-                    phone: params.phone,
-                    app_id: parseInt(params.appId),
-                    bot_id: parseInt(params.botId)
-                };
+            // Сохраняем параметры авторизации для отправки через WebSocket
+            this.authParams = {
+                type: 'auth_data',
+                alias: params.alias,
+                app_hash: params.appHash,
+                phone: params.phone,
+                app_id: parseInt(params.appId),
+                bot_id: parseInt(params.botId)
+            };
 
-                this.connectWebSocket(token);
-                return true;
-            } else {
-                if (this.callbacks.onUpdateToken) {
-                    this.callbacks.onUpdateToken();
-                }
-                return false;
-            }
+            this.connectWebSocket();
+            return true;
         } catch (error) {
             if (this.callbacks.onError) {
                 this.callbacks.onError(`Ошибка запуска аутентификации: ${error.message}`);
@@ -55,10 +47,10 @@ export class LeadTgAuthService {
         }
     }
 
-    connectWebSocket(token) {
+    connectWebSocket() {
         try {
             // serviceTgAuthWSS возвращает WebSocket напрямую, не Promise
-            this.socket = serviceTgAuthWSS(token);
+            this.socket = serviceTgAuthWSS();
             this.intentionalClose = false; // Сбрасываем флаг при новом подключении
 
             this.socket.onopen = () => {
@@ -186,13 +178,8 @@ export class LeadTgAuthService {
 
     async updateBotAlias(botId, alias) {
         try {
-            const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
-            if (!token) {
-                throw new Error('Токен недействителен');
-            }
-
             if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
-                this.connectWebSocket(token);
+                this.connectWebSocket();
                 await new Promise((resolve, reject) => {
                     if (!this.socket) return reject(new Error('Не удалось открыть WebSocket'));
                     if (this.socket.readyState === WebSocket.OPEN) return resolve();

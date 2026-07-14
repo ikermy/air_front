@@ -1,0 +1,35 @@
+services:
+  airfront:
+    image: ${DOCKER_IMAGE}
+    container_name: airfront
+    restart: always
+    environment:
+      - NODE_ENV=production
+    networks:
+      - app_internal
+      - air_shared
+    deploy:
+      resources:
+        limits:
+          memory: 50M
+        reservations:
+          memory: 50M
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  app_internal:
+    external: true
+  air_shared:
+    external: true
+
+

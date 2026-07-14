@@ -74,9 +74,10 @@ const DashboardOverView = () => {
             description: 'Подключение мессенджеров и платформ для взаимодействия',
             features: [
                 'Telegram Bot и User Bot',
-                'WhatsApp Business API',
+                'WhatsApp UserBot',
                 'Веб-виджет для сайтов',
-                'Instagram Bot'
+                'Instagram Bot',
+                'Avito Bot'
             ],
             color: '#1890ff',
             status: 'active'

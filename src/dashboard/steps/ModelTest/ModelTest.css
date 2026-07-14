@@ -224,4 +224,110 @@
   background: var(--main-color, #555);
 }
 
+/* TRUE STREAMING - добавлено 2026-02-13 */
+/* Стили для потокового сообщения */
+.message-streaming {
+  position: relative;
+  display: inline;
+}
+
+.streaming-cursor {
+  display: inline-block;
+  margin-left: 2px;
+  color: var(--text-color, rgba(0, 0, 0, 0.85));
+  animation: blink-cursor 1s infinite;
+  font-weight: normal;
+}
+
+@keyframes blink-cursor {
+  0%, 50% {
+    opacity: 1;
+  }
+  51%, 100% {
+    opacity: 0;
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   REALTIME MODE — статус-полоска и транскрипт
+   ═══════════════════════════════════════════════ */
+
+.realtime-status-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  border-radius: var(--border-radius, 10px);
+  border: 1px solid var(--shadow-color, #e8e8e8);
+  background-color: var(--midle-color, #f0f5ff);
+  font-size: 13px;
+  transition: background-color 0.3s, border-color 0.3s;
+  flex-shrink: 0;
+}
+
+/* Состояния */
+.realtime-state-listening {
+  background-color: rgba(82, 196, 26, 0.08);
+  border-color: #52c41a;
+}
+
+.realtime-state-speaking {
+  background-color: rgba(24, 144, 255, 0.08);
+  border-color: #1890ff;
+}
+
+.realtime-state-connecting,
+.realtime-state-ready {
+  background-color: rgba(250, 140, 22, 0.08);
+  border-color: #fa8c16;
+}
+
+.realtime-state-error {
+  background-color: rgba(255, 77, 79, 0.08);
+  border-color: #ff4d4f;
+}
+
+.realtime-status-icon {
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+}
+
+.realtime-state-listening  .realtime-status-icon { color: #52c41a; }
+.realtime-state-speaking   .realtime-status-icon { color: #1890ff; }
+.realtime-state-connecting .realtime-status-icon,
+.realtime-state-ready      .realtime-status-icon { color: #fa8c16; }
+.realtime-state-error      .realtime-status-icon { color: #ff4d4f; }
+
+.realtime-status-label {
+  font-weight: 500;
+  white-space: nowrap;
+  color: var(--text-color, rgba(0,0,0,0.85));
+}
+
+.realtime-transcript {
+  flex: 1;
+  font-style: italic;
+  opacity: 0.75;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-color, rgba(0,0,0,0.65));
+}
+
+/* Анимация пульсации микрофона в активном состоянии */
+.realtime-state-listening .realtime-status-icon {
+  animation: mic-pulse 1.4s ease-in-out infinite;
+}
+
+@keyframes mic-pulse {
+  0%, 100% { opacity: 1;   transform: scale(1);    }
+  50%       { opacity: 0.5; transform: scale(1.15); }
+}
+
+/* Switch цвет в активном realtime */
+.realtime-switch-active.ant-switch-checked {
+  background-color: #52c41a !important;
+}
+
 

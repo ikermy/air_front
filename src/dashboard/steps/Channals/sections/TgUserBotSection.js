@@ -1,14 +1,13 @@
 import React, {useEffect, useState} from "react";
-import {Alert, Button, Input, Modal, QRCode, Progress, Form} from "antd";
+import {Alert, Button, Input, Modal, QRCode, Progress, Form, Switch} from "antd";
 import {PhoneOutlined, QrcodeOutlined} from "@ant-design/icons";
 import {ContactsModal} from "../ContactsModal";
 import {showErrorNotification, showNotification} from "../../../hotification/showNotification";
-import { Typography } from 'antd';
-import {validateAndRefreshToken} from "../../../../utils/easyUtils";
+import {Typography} from 'antd';
 import {getBotName} from "../chUtils";
 import {useTranslation} from "react-i18next";
 
-const { Title, Paragraph } = Typography;
+const {Title, Paragraph} = Typography;
 
 export const TgUserBotSection = ({
                                      channel,
@@ -42,8 +41,33 @@ export const TgUserBotSection = ({
 
     // Функция, вызываемая при сохранении выбора в модальном окне
     const handleSaveSelectedContacts = (selectedIds) => {
+        const updatedContacts = channel.contacts || '';
+        const updatedChannelData = serializeChannelData(parsedChannelData.token, {
+            ...parsedChannelData.options,
+            uids: selectedIds.join(' ')
+        });
+
         channel.contactsIds = selectedIds;
-        // handleSetContactsIds(selectedIds);
+        channel.contacts = updatedContacts;
+        channel.data = updatedChannelData;
+
+        setSelectedChannels(
+            selectedChannels.map((ch) =>
+                ch.key === channel.key
+                    ? {
+                        ...ch,
+                        contactsIds: selectedIds,
+                        contacts: updatedContacts,
+                        data: updatedChannelData,
+                        options: {
+                            ...parsedChannelData.options,
+                            uids: selectedIds.join(' ')
+                        }
+                    }
+                    : ch
+            )
+        );
+
         const usersCount = `${t("tguserBotContactsSelected") || "Выбрано пользователей -"} ${selectedIds.length}`;
         showNotification(usersCount,
             t("tguserBotContactsSaveDesc") || "После сохранения настроек Агент будет взаимодействовать с выбранными пользователями");
@@ -65,11 +89,8 @@ export const TgUserBotSection = ({
     const [botName, setBotName] = useState(null);
 
     const fetchBotNameFor = async (chName) => {
-        const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
-        if (!token) return null;
-
         try {
-            const res = await getBotName(token, chName);
+            const res = await getBotName(chName);
             if (res && typeof res === "object") {
                 return res.name ?? null;
             }
@@ -134,6 +155,50 @@ export const TgUserBotSection = ({
         }
     }, [passwordModalVisible, setPassword2FA]);
 
+    const parseChannelData = (data) => {
+        try {
+            if (!data) {
+                return {token: '', options: {text: true, call: true}};
+            }
+
+            const parsed = typeof data === 'string' ? JSON.parse(data) : data;
+            return {
+                token: parsed?.token || '',
+                options: {
+                    text: parsed?.options?.text ?? true,
+                    call: parsed?.options?.call ?? true,
+                    ...(parsed?.options || {})
+                }
+            };
+        } catch {
+            return {token: '', options: {text: true, call: true}};
+        }
+    };
+
+    const serializeChannelData = (token, options) => JSON.stringify({token, options});
+
+    const parsedChannelData = parseChannelData(channel.data);
+
+    const handleOptionToggle = (optionKey) => (checked) => {
+        setSelectedChannels(
+            selectedChannels.map((ch) =>
+                ch.key === channel.key
+                    ? {
+                        ...ch,
+                        data: serializeChannelData(parsedChannelData.token, {
+                            ...parsedChannelData.options,
+                            [optionKey]: checked
+                        }),
+                        options: {
+                            ...parsedChannelData.options,
+                            [optionKey]: checked
+                        }
+                    }
+                    : ch
+            )
+        );
+    };
+
     if (channel.data) {
         return (
             <>
@@ -144,7 +209,8 @@ export const TgUserBotSection = ({
                         description={
                             botName != null ? (
                                 <>
-                                    {t("tguserBotRunning") || "Сейчас ваш Telegram UserBot"} <b>{botName}</b> {t("tguserBotInteracting") || "запущен и взаимодействует с Агентом."}
+                                    {t("tguserBotRunning") || "Сейчас ваш Telegram UserBot"}
+                                    <b>{botName}</b> {t("tguserBotInteracting") || "запущен и взаимодействует с Агентом."}
                                     {t("tguserBotReauth") || "Если требуется повторная авторизация, или вы хотите повторно создать канал Telegram UserBot, вам нужно удалить текущий канал."}
                                 </>
                             ) : (
@@ -164,7 +230,7 @@ export const TgUserBotSection = ({
                             message={t("tguserBotLoadingContacts") || "Загрузка контактов"}
                             description={
                                 <div>
-                                    <div style={{ marginBottom: 8 }}>{contactsLoadingStatus.message}</div>
+                                    <div style={{marginBottom: 8}}>{contactsLoadingStatus.message}</div>
                                     {contactsLoadingStatus.progress > 0 && (
                                         <div>
                                             <Progress
@@ -181,7 +247,7 @@ export const TgUserBotSection = ({
                                 </div>
                             }
                             type="info"
-                            style={{ marginBottom: 16 }}
+                            style={{marginBottom: 16}}
                         />
                     )}
 
@@ -194,7 +260,7 @@ export const TgUserBotSection = ({
                             disabled={isLoadingContacts || !(channel.isEnabled && !!channel.data)}
                         >
                             {isLoadingContacts ? (t("tguserBotLoadingMsg") || 'Загружаем контакты...') :
-                             currentSelectedIds.length > 0 ? (t("tguserBotChangeContacts") || 'Изменить выбор контактов') : (t("tguserBotSelectContacts") || 'Выбрать контакты')}
+                                currentSelectedIds.length > 0 ? (t("tguserBotChangeContacts") || 'Изменить выбор контактов') : (t("tguserBotSelectContacts") || 'Выбрать контакты')}
                         </Button>
 
                         {currentSelectedIds.length > 0 && (
@@ -244,6 +310,28 @@ export const TgUserBotSection = ({
                         }
                         type={channel.contacts ? "success" : "warning"}
                     />
+                    <div style={{display: "flex", flexDirection: "column", gap: 8, marginTop: 8, paddingLeft: 16}}>
+                        <div style={{display: "flex", alignItems: "center", gap: 8, justifyContent: "flex-end"}}>
+                            <span>{t("tguserBotReplyTextMessages") || "Отвечать на текстовые сообщения"}</span>
+                            <Switch
+                                checked={parsedChannelData.options.text}
+                                onChange={handleOptionToggle('text')}
+                                disabled={!channel.isEnabled}
+                                checkedChildren={<span style={{color: "black"}}>{t('Yes')}</span>}
+                                unCheckedChildren={<span style={{color: "black"}}>{t('No')}</span>}
+                            />
+                        </div>
+                        <div style={{display: "flex", alignItems: "center", gap: 8, justifyContent: "flex-end"}}>
+                            <span>{t("tguserBotReplyVoiceCalls") || "Отвечать на голосовые вызовы"}</span>
+                            <Switch
+                                checked={parsedChannelData.options.call}
+                                onChange={handleOptionToggle('call')}
+                                disabled={!channel.isEnabled}
+                                checkedChildren={<span style={{color: "black"}}>{t('Yes')}</span>}
+                                unCheckedChildren={<span style={{color: "black"}}>{t('No')}</span>}
+                            />
+                        </div>
+                    </div>
                 </div>
                 <ContactsModal
                     visible={isContactsModalVisible}
@@ -263,9 +351,10 @@ export const TgUserBotSection = ({
                 message={t("tguserBotSetup") || "Настройка параметров Telegram UserBot"}
                 description={
                     <>
-                        {t("tguserBotSetupDesc") || "Для того что бы ваш агент мог вести себя как реальный человек в Telegram, нужно получить api_id и api_hash перейдя по ссылке"} <a
-                        href="https://my.telegram.org/" target="_blank"
-                        rel="noopener noreferrer">my.telegram.org</a>&nbsp;
+                        {t("tguserBotSetupDesc") || "Для того что бы ваш агент мог вести себя как реальный человек в Telegram, нужно получить api_id и api_hash перейдя по ссылке"}
+                        <a
+                            href="https://my.telegram.org/" target="_blank"
+                            rel="noopener noreferrer">my.telegram.org</a>&nbsp;
                         {t("moreAbout") || "Подробнее о процесса создания Telegram UserBot в можно узнать в"}
                         {/* eslint-disable-next-line jsx-a11y/anchor-is-valid */}
                         <a onClick={showManual}>{t("tguserBotManual") || "руководстве"}</a>
@@ -335,6 +424,27 @@ export const TgUserBotSection = ({
                 </div>
             </div>
 
+            <div style={{display: "flex", flexDirection: "column", gap: 8, marginTop: 8, paddingLeft: 16}}>
+                <div style={{display: "flex", alignItems: "center", gap: 8, justifyContent: "flex-end"}}>
+                    <span>{t("tguserBotReplyTextMessages") || "Отвечать на текстовые сообщения"}</span>
+                    <Switch
+                        checked={parsedChannelData.options.text}
+                        onChange={handleOptionToggle('text')}
+                        checkedChildren={<span style={{color: "black"}}>{t('Yes')}</span>}
+                        unCheckedChildren={<span style={{color: "black"}}>{t('No')}</span>}
+                    />
+                </div>
+                <div style={{display: "flex", alignItems: "center", gap: 8, justifyContent: "flex-end"}}>
+                    <span>{t("tguserBotReplyVoiceCalls") || "Отвечать на голосовые вызовы"}</span>
+                    <Switch
+                        checked={parsedChannelData.options.call}
+                        onChange={handleOptionToggle('call')}
+                        checkedChildren={<span style={{color: "black"}}>{t('Yes')}</span>}
+                        unCheckedChildren={<span style={{color: "black"}}>{t('No')}</span>}
+                    />
+                </div>
+            </div>
+
             {!showQRCode && (
                 <Button
                     style={{color: "black"}}
@@ -399,8 +509,8 @@ export const TgUserBotSection = ({
                     footer={null}
                     width={400}
                 >
-                    <div style={{ textAlign: 'center', marginBottom: '16px' }}>
-                        <QrcodeOutlined style={{ fontSize: '32px', color: '#1890ff' }} />
+                    <div style={{textAlign: 'center', marginBottom: '16px'}}>
+                        <QrcodeOutlined style={{fontSize: '32px', color: '#1890ff'}}/>
                     </div>
                     <Form
                         layout="vertical"
@@ -412,7 +522,10 @@ export const TgUserBotSection = ({
                             name="password"
                             label={t("tguserBot2FAPassword") || "Пароль 2FA"}
                             rules={[
-                                { required: true, message: t("tguserBot2FARequired") || 'Введите пароль двухфакторной аутентификации' }
+                                {
+                                    required: true,
+                                    message: t("tguserBot2FARequired") || 'Введите пароль двухфакторной аутентификации'
+                                }
                             ]}
                         >
                             <Input.Password
@@ -427,12 +540,12 @@ export const TgUserBotSection = ({
                                 type="primary"
                                 htmlType="submit"
                                 size="large"
-                                style={{ width: '100%', color: 'black' }}
+                                style={{width: '100%', color: 'black'}}
                             >
                                 {t("send") || "Отправить"}
                             </Button>
                         </Form.Item>
-                        <Form.Item style={{ marginBottom: 0 }}>
+                        <Form.Item style={{marginBottom: 0}}>
                             <Button
                                 type="default"
                                 size="large"
@@ -442,7 +555,7 @@ export const TgUserBotSection = ({
                                         authService.closeConnection();
                                     }
                                 }}
-                                style={{ width: '100%' }}
+                                style={{width: '100%'}}
                             >
                                 {t("channelsCancelButton") || "Отмена"}
                             </Button>
@@ -483,7 +596,8 @@ export const TgUserBotSection = ({
                         }}
                     >
                         1. Перейдите на портал разработки Telegram:{'\n'}
-                        Посетите сайт <a href="https://my.telegram.org/apps" target="_blank" rel="noopener noreferrer">https://my.telegram.org/apps</a>.{'\n'}
+                        Посетите сайт <a href="https://my.telegram.org/apps" target="_blank"
+                                         rel="noopener noreferrer">https://my.telegram.org/apps</a>.{'\n'}
                         2. Авторизуйтесь:{'\n'}
                         Войдите в свой аккаунт Telegram, указав свой номер телефона и подтвердив код из SMS или
                         Telegram сообщения.{'\n'}
@@ -508,7 +622,8 @@ export const TgUserBotSection = ({
                             fontSize: '16px',
                         }}
                     >
-                        Важно! Если в настройках конфиденциальности вашего Telegram-аккаунта включена двухэтапная аутентификация
+                        Важно! Если в настройках конфиденциальности вашего Telegram-аккаунта включена двухэтапная
+                        аутентификация
                         (настоятельно рекомендуется это сделать), то для дальнейшей настройки пользовательского бота,
                         вам потребуется указать пароль 2FA (пароль двухфакторной аутентификации).{'\n'}
                         Если вы не уверены что помните его, перейдите на вашем устройстве в раздел "Настройки"{'\n'}
@@ -521,3 +636,4 @@ export const TgUserBotSection = ({
         </div>
     );
 };
+

@@ -1,5 +1,4 @@
 import {useEffect, useState, useCallback, forwardRef, useImperativeHandle} from "react";
-import {validateAndRefreshToken} from "../../../../utils/easyUtils";
 import {
     deleteServiceContact,
     readServiceContactsData,
@@ -13,6 +12,7 @@ import {ContactsOutlined, PlusOutlined, DeleteOutlined, ExclamationCircleOutline
 import {showErrorNotification, showNotification} from "../../../hotification/showNotification";
 import {LeadViewDialog} from "./leadViewDialog";
 import {useTranslation} from "react-i18next";
+import { getAuthToken } from "../../../../utils/easyUtils";
 
 const { Text } = Typography;
 
@@ -77,16 +77,16 @@ export const ServiceContactsData = forwardRef(function ServiceContactsData(props
     const refreshContacts = useCallback(async () => {
         setLoading(true);
         try {
-            const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
+            const token = getAuthToken();
             if (!token) {
-                message.error(t('authError') || 'Ошибка аутентификации');
-                setContactsData([]);
-                setInitialContacts([]);
+                console.error("Token not found");
+                setLoading(false);
                 return;
             }
 
             const data = await readServiceContactsData(token);
-            if (data && Array.isArray(data) && data.length > 0) {
+
+            if (data && Array.isArray(data)) {
                 // Сортируем: сначала по дате добавления (старые -> новые), контакты без даты в конце
                 const sortedData = [...data].sort((a, b) => {
                     if (!a.Added && !b.Added) return 0;
@@ -219,19 +219,11 @@ export const ServiceContactsData = forwardRef(function ServiceContactsData(props
             return;
         }
 
-        const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
-        if (!token) {
-            message.error(t('authError') || 'Ошибка аутентификации');
-            setIsDeleteModalOpen(false);
-            setSelectedContact(null);
-            return;
-        }
-
         setLoading(true);
 
         try {
             // Удаляем контакт на сервере
-            const result = await deleteServiceContact(token, selectedContact.Contact);
+            const result = await deleteServiceContact(selectedContact.Contact);
 
             if (result) {
                 // Удаляем контакт из локального состояния и initialContacts после успешного удаления на сервере
@@ -262,18 +254,11 @@ export const ServiceContactsData = forwardRef(function ServiceContactsData(props
     };
 
     const handleDeleteAllConfirm = async () => {
-        const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
-        if (!token) {
-            message.error(t('authError') || 'Ошибка аутентификации');
-            setIsDeleteAllModalOpen(false);
-            return;
-        }
-
         setLoading(true);
 
         try {
             // Удаляем все контакты на сервере
-            const result = await deleteAllServiceContacts(token);
+            const result = await deleteAllServiceContacts();
 
             if (result) {
                 // Очищаем список контактов только после успешного удаления на сервере
@@ -396,22 +381,16 @@ export const ServiceContactsData = forwardRef(function ServiceContactsData(props
     };
 
     const handleSaveConfirm = async () => {
-        const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
-        if (!token) {
-            message.error(t('authError') || 'Ошибка аутентификации');
-            setIsSaveModalOpen(false);
-            return;
-        }
         setLoading(true);
         try {
             // Сначала сохраняем контакты на сервере
-            const res = await saveServiceContactsData(token, contacts);
+            const res = await saveServiceContactsData(contacts);
             if (res) {
                 showNotification(t('contactsSaveSuccess') || 'Данные контактов успешно сохранены');
                 setIsSaveModalOpen(false);
 
                 // Перезагружаем обновлённый список с сервера
-                const data = await readServiceContactsData(token);
+                const data = await readServiceContactsData();
                 if (data && Array.isArray(data) && data.length > 0) {
                     // Сортируем: сначала по дате добавления (старые -> новые), контакты без даты в конце
                     const sortedData = [...data].sort((a, b) => {

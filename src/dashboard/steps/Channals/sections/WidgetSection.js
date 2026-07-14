@@ -3,31 +3,26 @@ import {Alert, Button} from "antd";
 import {getWidgetCode} from "../chUtils";
 import {useTranslation} from "react-i18next";
 
-import {validateAndRefreshToken} from "../../../../utils/easyUtils";
+// Токен теперь валидируется/обновляется внутри утилит (withTokenRefresh). Компонент берёт текущий токен из localStorage.
 
 export const WidgetSection = ({
-                         channel,
-                         selectedChannels,
-                         setSelectedChannels,
-                     }) => {
+                                  channel,
+                                  selectedChannels,
+                                  setSelectedChannels,
+                              }) => {
     const {t} = useTranslation();
 
     const fetchDataAsync = async () => {
         try {
-            const token = await validateAndRefreshToken(localStorage.getItem("authToken"));
-            if (token) {
-                const widgetCode = await getWidgetCode(token);
+            const widgetCode = await getWidgetCode();
 
-                setSelectedChannels(
-                    selectedChannels.map((ch) =>
-                        ch.key === "widg"
-                            ? { ...ch, data: widgetCode }
-                            : ch
-                    )
-                );
-            } else {
-                console.error(t("widgetTokenError") || "Ошибка: токен недействителен");
-            }
+            setSelectedChannels(
+                selectedChannels.map((ch) =>
+                    ch.key === "widg"
+                        ? {...ch, data: widgetCode}
+                        : ch
+                )
+            );
         } catch (error) {
             console.error("Ошибка при загрузке данных:", error);
         }
@@ -57,26 +52,26 @@ export const WidgetSection = ({
 
             {channel.data ?
                 <Button
-                style={{ color: "black" }}
-                type="primary"
-                onClick={openIntegrationGuide}
-            >
-                {t("widgetIntegrationButton") || "Примеры интеграции виджета"}
-            </Button> :
+                    style={{color: "black"}}
+                    type="primary"
+                    onClick={openIntegrationGuide}
+                >
+                    {t("widgetIntegrationButton") || "Примеры интеграции виджета"}
+                </Button> :
                 <Button
-                style={{ color: "black" }}
-                type="primary"
-                disabled={channel.data}
-                onClick={fetchDataAsync}
-            >
-                {t("widgetGetCodeButton") || "Получить код"}
-            </Button>}
+                    style={{color: "black"}}
+                    type="primary"
+                    disabled={channel.data}
+                    onClick={fetchDataAsync}
+                >
+                    {t("widgetGetCodeButton") || "Получить код"}
+                </Button>}
 
             {channel.data && (
                 <TextArea
                     value={channel.data}
                     readOnly
-                    autoSize={{ minRows: 1, maxRows: 20 }}
+                    autoSize={{minRows: 1, maxRows: 20}}
                 />
             )}
         </div>

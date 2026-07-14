@@ -15,7 +15,6 @@
 import React, {useState, useEffect, useRef} from 'react';
 import {Input, Typography, Button, Space, Alert, Tooltip, Modal, Descriptions, Radio, Card, Switch, Tag} from 'antd';
 import {CheckCircleOutlined, ApiOutlined, CloudServerOutlined, SettingOutlined} from '@ant-design/icons';
-import {validateAndRefreshToken} from '../../../../utils/easyUtils';
 import {showNotification, showErrorNotification, showWarningNotification} from '../../../hotification/showNotification';
 import {
     testAmoCRMConnection,
@@ -130,13 +129,8 @@ export const AmoCRMSection = ({
     const handleLoadCustomFields = async () => {
         try {
             setIsLoadingCustomFields(true);
-            const token = await validateAndRefreshToken();
-            if (!token) {
-                showErrorNotification('Ошибка авторизации', 'Необходимо войти в систему');
-                return;
-            }
 
-            const result = await getAmoCRMCustomFields(token);
+            const result = await getAmoCRMCustomFields(null);
             if (result.success) {
                 setCustomFields(result.custom_fields || []);
                 // Восстанавливаем выбранное поле из конфигурации
@@ -161,14 +155,9 @@ export const AmoCRMSection = ({
     const handleLoadMetadataFields = async () => {
         try {
             setIsLoadingMetadata(true);
-            const token = await validateAndRefreshToken();
-            if (!token) {
-                showErrorNotification('Ошибка авторизации', 'Необходимо войти в систему');
-                return;
-            }
 
             // Загружаем метаданные полей
-            const result = await getAmoCRMCustomFieldsMetadata(token);
+            const result = await getAmoCRMCustomFieldsMetadata(null);
             if (!result.success) {
                 showErrorNotification('Ошибка загрузки', result.error || 'Не удалось загрузить метаданные полей');
                 return;
@@ -176,11 +165,8 @@ export const AmoCRMSection = ({
 
             setMetadataFields(result.custom_fields || []);
 
-            // Добавляю небольшую задержку для избежания блокировки от сервера
-            await new Promise(resolve => setTimeout(resolve, 500));
-
             // Загружаем настройки каналов для восстановления сохраненных значений
-            const settingsResult = await getCRMChannelSettings(token);
+            const settingsResult = await getCRMChannelSettings(null);
             if (settingsResult.success && settingsResult.settings) {
                 const { Telegram, Instagram, Widget } = settingsResult.settings;
 
@@ -227,24 +213,19 @@ export const AmoCRMSection = ({
 
         try {
             setIsSavingNewField(true);
-            const token = await validateAndRefreshToken();
-            if (!token) {
-                showErrorNotification('Ошибка авторизации', 'Необходимо войти в систему');
-                return;
-            }
 
             const fieldData = {
                 name: newFieldName.trim(),
                 type: 'text'
             };
 
-            const result = await createAmoCRMCustomField(token, fieldData);
+            const result = await createAmoCRMCustomField(fieldData, null);
             if (result.success) {
                 showNotification('Успешно', result.message || 'Кастомное поле успешно создано');
                 setNewFieldName('');
 
                 // Повторно загружаем метаданные для получения актуального списка с новым полем
-                const metadataResult = await getAmoCRMCustomFieldsMetadata(token);
+                const metadataResult = await getAmoCRMCustomFieldsMetadata(null);
                 if (metadataResult.success) {
                     setMetadataFields(metadataResult.custom_fields || []);
                 }
@@ -271,12 +252,7 @@ export const AmoCRMSection = ({
             showNotification('Поле выбрано', `Источник перехода: ${selectedField.name}`);
             // Сохраняем на сервере
             try {
-                const token = await validateAndRefreshToken();
-                if (!token) {
-                    showErrorNotification('Ошибка авторизации', 'Необходимо войти в систему');
-                    return;
-                }
-                const saveResult = await saveAmoCRMSourceField(token, fieldId);
+                const saveResult = await saveAmoCRMSourceField(fieldId, null);
                 if (saveResult.success) {
                     showNotification('Сохранено', saveResult.message || 'Поле источника перехода сохранено');
                 } else {
@@ -294,12 +270,7 @@ export const AmoCRMSection = ({
     const handleLoadPipelines = async () => {
         try {
             setIsLoadingPipelines(true);
-            const token = await validateAndRefreshToken();
-            if (!token) {
-                showErrorNotification('Ошибка авторизации', 'Необходимо войти в систему');
-                return;
-            }
-            const result = await getAmoCRMPipelines(token);
+            const result = await getAmoCRMPipelines(null);
             if (result.success) {
                 setPipelines(result.pipelines || []);
 
@@ -333,11 +304,6 @@ export const AmoCRMSection = ({
     const handleRealOAuth = async () => {
         try {
             setIsAuthLoading(true);
-            const token = await validateAndRefreshToken(localStorage.getItem('authToken'));
-            if (!token) {
-                showErrorNotification('Ошибка авторизации', 'Необходимо повторно авторизоваться');
-                return;
-            }
 
             // Формируем полный redirectUrl на основе базового из состояния (без суффикса)
             const baseRedirect = (channel.redirectUrl || '')
@@ -345,7 +311,7 @@ export const AmoCRMSection = ({
                 .replace(/\/crm\/oauth\/amoCRM\/callback\/?$/, '');
             const fullRedirectUrl = `${baseRedirect}/crm/oauth/amoCRM/callback`;
 
-            const response = await authorizeAmoCRM(token, {
+            const response = await authorizeAmoCRM(null, {
                 name: channel.configName,
                 subdomain: channel.subdomain,
                 clientId: channel.clientId,
@@ -359,7 +325,7 @@ export const AmoCRMSection = ({
                 return;
             }
 
-            const authorized = await isAmoCRMAuthorized(token);
+            const authorized = await isAmoCRMAuthorized(null);
             setSelectedChannels(prev => prev.map(ch => ch.key === channel.key ? {
                 ...ch,
                 expiresAt: response.expires_at || ch.expiresAt || null,
@@ -396,14 +362,8 @@ export const AmoCRMSection = ({
         savePipelineLockRef.current = true;
 
         try {
-            const rawToken = localStorage.getItem('authToken');
-            const token = await validateAndRefreshToken(rawToken);
-            if (!token) {
-                showErrorNotification('Ошибка авторизации', 'Необходимо войти в систему');
-                return;
-            }
             // Передаем оба идентификатора: pipeline и статус
-            const saveResult = await saveAmoCRMDefaultPipeline(token, pipelineId, statusId);
+            const saveResult = await saveAmoCRMDefaultPipeline(pipelineId, statusId, null);
             if (saveResult.success) {
                 showNotification('Сохранено', `Выбрано: ${pipeline.name} → ${status.name}`);
             } else {
@@ -423,12 +383,7 @@ export const AmoCRMSection = ({
     const handleLoadChannelSettings = async () => {
         setIsLoadingChannelSettings(true);
         try {
-            const token = await validateAndRefreshToken();
-            if (!token) {
-                showErrorNotification('Ошибка авторизации', 'Необходимо войти в систему');
-                return;
-            }
-            const result = await getCRMChannelSettings(token);
+            const result = await getCRMChannelSettings(null);
             if (result.success && result.settings) {
                 setChannelSettings(result.settings);
                 setIsChannelSettingsModalOpen(true);
@@ -449,12 +404,7 @@ export const AmoCRMSection = ({
     const handleSaveChannelSettings = async () => {
         setIsSavingChannelSettings(true);
         try {
-            const token = await validateAndRefreshToken();
-            if (!token) {
-                showErrorNotification('Ошибка авторизации', 'Необходимо войти в систему');
-                return;
-            }
-            const result = await saveCRMChannelSettings(token, channelSettings);
+            const result = await saveCRMChannelSettings(channelSettings, null);
             if (result.success) {
                 showNotification('Сохранено', 'Настройки канала успешно сохранены');
             } else {
@@ -531,14 +481,8 @@ export const AmoCRMSection = ({
      */
     const handleSaveMetadataChanges = async () => {
         try {
-            const token = await validateAndRefreshToken();
-            if (!token) {
-                showErrorNotification('Ошибка авторизации', 'Необходимо войти в систему');
-                return;
-            }
-
             // Получаем текущие настройки каналов
-            const currentSettings = await getCRMChannelSettings(token);
+            const currentSettings = await getCRMChannelSettings(null);
             const settings = currentSettings.success && currentSettings.settings
                 ? currentSettings.settings
                 : {
@@ -561,11 +505,8 @@ export const AmoCRMSection = ({
             settings.Instagram = selectedInstagramField ? selectedInstagramField.id : 0;
             settings.Widget = selectedWidgetField ? selectedWidgetField.id : 0;
 
-            // Добавляю небольшую задержку для избежания блокировки от сервера
-            await new Promise(resolve => setTimeout(resolve, 500));
-
             // Сохраняем настройки
-            const result = await saveCRMChannelSettings(token, settings);
+            const result = await saveCRMChannelSettings(settings, null);
             if (result.success) {
                 showNotification('Сохранено', 'Настройки полей контактов успешно сохранены');
             } else {
@@ -692,13 +633,7 @@ export const AmoCRMSection = ({
                             icon={<CloudServerOutlined/>}
                             onClick={async () => {
                                 try {
-                                    const token = await validateAndRefreshToken(localStorage.getItem('authToken'));
-                                    if (!token) {
-                                        showErrorNotification(t("authError") || 'Ошибка авторизации', t("needReauth") || 'Необходимо повторно авторизоваться');
-                                        return;
-                                    }
-
-                                    const result = await testAmoCRMConnection(token);
+                                    const result = await testAmoCRMConnection(null);
                                     if (result.success) {
                                         // Сохраняем информацию об аккаунте и показываем модальное окно
                                         if (result.account) {

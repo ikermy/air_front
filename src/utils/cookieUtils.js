@@ -1,11 +1,31 @@
 // Утилиты для работы с cookie
-export const setCookie = (name, value, days = 30) => {
-    const expires = new Date();
-    expires.setTime(expires.getTime() + (days * 24 * 60 * 60 * 1000));
-    document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/`;
+export const setCookie = (name, value, options = {}) => {
+    if (typeof window === 'undefined') return;
+
+    let { days, maxAge, secure, sameSite = 'lax', path = '/' } = options;
+
+    // Поддержка старого сигнатуры (name, value, days)
+    if (typeof options === 'number') {
+        days = options;
+    }
+
+    let expires = "";
+    if (days) {
+        const date = new Date();
+        date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+        expires = "; expires=" + date.toUTCString();
+    } else if (maxAge) {
+        expires = "; max-age=" + maxAge;
+    }
+
+    const secureFlag = secure ? "; secure" : "";
+    const sameSiteFlag = "; samesite=" + sameSite;
+
+    document.cookie = `${name}=${value || ""}${expires}; path=${path}${sameSiteFlag}${secureFlag}`;
 };
 
 export const getCookie = (name) => {
+    if (typeof window === 'undefined') return null;
     const nameEQ = name + "=";
     const ca = document.cookie.split(';');
     for (let i = 0; i < ca.length; i++) {
@@ -17,14 +37,17 @@ export const getCookie = (name) => {
 };
 
 export const deleteCookie = (name) => {
-    document.cookie = `${name}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;`;
+    if (typeof window === 'undefined') return;
+    document.cookie = `${name}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT;`;
+    // Также пробуем удалить с текущего хоста без path если он был установлен иначе
+    document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT;`;
 };
 
 // Специальные функции для tour панелей
 export const getTourPanelState = (componentName) => {
     const cookieName = `tourPanel_${componentName}`;
     const value = getCookie(cookieName);
-    return value === 'false' ? false : true; // По умолчанию true для первого посещения
+    return value !== 'false'; // По умолчанию true для первого посещения
 };
 
 export const setTourPanelState = (componentName, isVisible) => {

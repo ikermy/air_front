@@ -1,8 +1,6 @@
 import {useEffect} from "react";
-import {validateAndRefreshToken} from "../utils/easyUtils";
+import { authFetch } from "../utils/easyUtils";
 import {validateAndRefreshWidgetToken} from "../widget/utils";
-
-const LAND_URL = (window.runtimeConfig && window.runtimeConfig.REACT_APP_LAND) || process.env.REACT_APP_LAND;
 
 export function ReadDialog({mode, dialogId, onDialogData, userName, inToken, setRudSuck}) {
     useEffect(() => {
@@ -13,19 +11,13 @@ export function ReadDialog({mode, dialogId, onDialogData, userName, inToken, set
 
                 if (cancelled) return;
 
-                let response, params;
+                let response;
                 switch (mode) {
                     case "work": // Используется для в Land для чтения истории диалога
-                        const workToken = await validateAndRefreshToken(inToken)
-                        if (workToken === null) {
-                            console.error("Токен не обновлен!");
-                            return;
-                        }
-                        response = await fetch(`${LAND_URL}/dialog/view/${dialogId}?token=${workToken}`, {
+                        response = await authFetch(`/v1/dialog/view/${dialogId}`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' }
-                        });
-
+                        }, inToken);
                         break;
                     case "widget":
                         const widgetToken = await validateAndRefreshWidgetToken(inToken);
@@ -34,8 +26,8 @@ export function ReadDialog({mode, dialogId, onDialogData, userName, inToken, set
                             return;
                         }
 
-                        params = new URLSearchParams({token: widgetToken, name: userName});
-                        const url = `${LAND_URL}/widget/dialog?${params.toString()}`;
+                        const params = new URLSearchParams({token: widgetToken, name: userName});
+                        const url = `/v1/widget/dialog?${params.toString()}`;
                         response = await fetch(url, {
                             method: 'GET',
                             headers: {
@@ -90,18 +82,13 @@ export function ReadDialog({mode, dialogId, onDialogData, userName, inToken, set
     return null; // Этот компонент не отображает данные напрямую
 }
 
-export async function DeleteDialog(token, dialogId) {
-    const newToken = await validateAndRefreshToken(token);
-    if (newToken === null) {
-        console.error("Токен не обновлен!");
-        return { status: "error", error: "token_not_refreshed" };
-    }
-
+export async function DeleteDialog(dialogId) {
     try {
-        const url = `${LAND_URL}/dialog/${encodeURIComponent(dialogId)}?token=${encodeURIComponent(newToken)}`;
-        const response = await fetch(url, {
+        const response = await authFetch(`/v1/dialog/${encodeURIComponent(dialogId)}`, {
             method: "DELETE",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Content-Type": "application/json"
+            },
             credentials: "include",
         });
 
@@ -121,13 +108,7 @@ export async function DeleteDialog(token, dialogId) {
     }
 }
 
-export async function DeleteDialogs(token, ids) {
-    const newToken = await validateAndRefreshToken(token);
-    if (newToken === null) {
-        console.error("Токен не обновлен!");
-        return { status: "error", error: "token_not_refreshed" };
-    }
-
+export async function DeleteDialogs(ids) {
     // Нормализуем ids в массив чисел
     let idsArr = [];
     if (Array.isArray(ids)) {
@@ -145,10 +126,11 @@ export async function DeleteDialogs(token, ids) {
     }
 
     try {
-        const url = `${LAND_URL}/dialog/list?token=${encodeURIComponent(newToken)}`;
-        const response = await fetch(url, {
+        const response = await authFetch(`/v1/dialog/list`, {
             method: "DELETE",
-            headers: { "Content-Type": "application/json" },
+            headers: {
+                "Content-Type": "application/json"
+            },
             credentials: "include",
             body: JSON.stringify({ ids: idsArr }),
         });
@@ -168,4 +150,3 @@ export async function DeleteDialogs(token, ids) {
         return { status: "error", error: error.message || "Network error" };
     }
 }
-
