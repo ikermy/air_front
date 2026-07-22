@@ -42,12 +42,12 @@ export const AvitoSection: React.FC<AvitoSectionProps> = ({
     const showSimpleAuth = true;
 
     // Фиксированный redirect URL для упрощенного режима
-    const fixedRedirectUrl = "https://info-bot.online/avito/auth/callback";
+    const fixedRedirectUrl = "https://info-bot.online/open/avito/auth/callback";
 
     // Формируем redirect_url в зависимости от режима
     const redirectUrl = showSimpleAuth
         ? fixedRedirectUrl
-        : redirectDomain ? `https://${redirectDomain}/avito/auth/callback` : "";
+        : redirectDomain ? `https://${redirectDomain}/open/avito/auth/callback` : "";
 
     // Проверка заполненности всех полей
     const isFormValid = clientId.trim() !== "" &&
@@ -268,7 +268,7 @@ export const AvitoSection: React.FC<AvitoSectionProps> = ({
                                 >
                                     <Input
                                         addonBefore="https://"
-                                        addonAfter="/avito/auth/callback"
+                                        addonAfter="/open/avito/auth/callback"
                                         placeholder="your-domain"
                                         value={redirectDomain}
                                         onChange={(e) => setRedirectDomain(e.target.value)}

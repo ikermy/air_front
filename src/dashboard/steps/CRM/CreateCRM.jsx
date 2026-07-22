@@ -56,9 +56,9 @@ export function CreateCRM() {
                 const configResult = await getCRMConfig('amoCRM');
                 if (configResult.success && configResult.config) {
                     const { config } = configResult;
-                    // Обрезаем суффикс /crm/oauth/amoCRM/callback из redirectUrl
+                    // Обрезаем суффикс /open/crm/oauth/amoCRM/callback из redirectUrl
                     const rawRedirectUrl = config.credentials?.redirect_url || '';
-                    const cleanRedirectUrl = rawRedirectUrl.replace('/crm/oauth/amoCRM/callback', '');
+                    const cleanRedirectUrl = rawRedirectUrl.replace('/open/crm/oauth/amoCRM/callback', '');
 
                     setAvailableCRMs(prev => prev.filter(crm => crm.key !== 'amoCRM'));
                     setSelectedCRMs(prev => {

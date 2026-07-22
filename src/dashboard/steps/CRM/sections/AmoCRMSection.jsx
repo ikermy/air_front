@@ -308,8 +308,8 @@ export const AmoCRMSection = ({
             // Формируем полный redirectUrl на основе базового из состояния (без суффикса)
             const baseRedirect = (channel.redirectUrl || '')
                 .trim()
-                .replace(/\/crm\/oauth\/amoCRM\/callback\/?$/, '');
-            const fullRedirectUrl = `${baseRedirect}/crm/oauth/amoCRM/callback`;
+                .replace(/\/open\/crm\/oauth\/amoCRM\/callback\/?$/, '');
+            const fullRedirectUrl = `${baseRedirect}/open/crm/oauth/amoCRM/callback`;
 
             const response = await authorizeAmoCRM(null, {
                 name: channel.configName,
@@ -568,7 +568,7 @@ export const AmoCRMSection = ({
                         onChange={(e) => handleInputChange('redirectUrl', e.target.value)}
                         className="channel-input-modern"
                         style={{flex: 1}}
-                        addonAfter="/crm/oauth/amoCRM/callback"
+                        addonAfter="/open/crm/oauth/amoCRM/callback"
                     />
                     <Button
                         onClick={() => handleInputChange('redirectUrl', 'https://info-bot.online')}

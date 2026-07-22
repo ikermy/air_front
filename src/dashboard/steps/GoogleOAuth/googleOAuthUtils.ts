@@ -16,7 +16,7 @@ import {
  */
 export async function getGoogleAuthUrl(): Promise<{ success: boolean; url?: string; error?: string }> {
   try {
-    const response = await authFetch(`/v1/google/oauth/url`, {
+    const response = await authFetch(`/open/google/oauth/url`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',

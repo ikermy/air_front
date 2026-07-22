@@ -8,7 +8,7 @@ import { authFetch } from '../../../utils/easyUtils';
  */
 export async function healthCheck() {
     try {
-        const response = await fetch(`/v1/crm/health`, {
+        const response = await fetch(`/open/crm/health`, {
             method: "GET",
             headers: {"Content-Type": "application/json"},
         });

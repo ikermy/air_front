@@ -42,6 +42,7 @@ import {useTranslation} from "react-i18next";
 import {GoogleOAuth} from "./GoogleOAuth";
 import {UploadFiles} from "./CreateModelFormElements/UploadFiles";
 import {TypesGPT} from "./CreateModelFormElements/TypesGPT";
+import S3storage from "./CreateModelFormElements/S3storage";
 
 
 export const CreateModel = ({onMenuChange}) => {
@@ -755,7 +756,10 @@ export const CreateModel = ({onMenuChange}) => {
                                 <Form.Item
                                     name="s3files"
                                 >
-                                    <S3Files
+                                    {/*<S3Files*/}
+                                    {/*    initialS3Enabled={modelData?.s3_enabled || false}*/}
+                                    {/*/>*/}
+                                    <S3storage
                                         initialS3Enabled={modelData?.s3_enabled || false}
                                     />
                                 </Form.Item>

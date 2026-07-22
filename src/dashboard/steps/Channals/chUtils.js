@@ -4,27 +4,47 @@ import {getAuthToken, refreshToken, authFetch} from "../../../utils/easyUtils";
 
 
 export async function chAvailable(chType) {
+    const encoded = encodeURIComponent(chType);
+    const url = `/v1/channel/available/${encoded}`;
+
     try {
-        const response = await fetch(`/v1/system/available/${chType}`, {
+        const response = await authFetch(url, {
             method: 'GET',
+            headers: { 'Accept': 'application/json' },
         });
-        return response.ok;
+
+        if (!response.ok) {
+            // Попробуем вытащить JSON с ошибкой
+            let errMsg = response.statusText;
+            try {
+                const errData = await response.json();
+                if (errData && errData.error) {
+                    errMsg = errData.error;
+                }
+            } catch (_) {}
+            console.error(`Ошибка при проверке канала ${chType}:`, response.status, errMsg);
+            return false;
+        }
+
+        // При 200 сервер возвращает {"available": true}
+        const data = await response.json();
+        return !!data.available;
     } catch (error) {
-        console.error('Ошибка при проверке доступности:', error);
+        console.error(`Ошибка при проверке канала ${chType}:`, error);
         return false;
     }
 }
 
-const showSimpleAuth = false;
+// const showSimpleAuth = false;
 
 export const checkSubscription = async () => {
-    if (showSimpleAuth) {
-        // Фактическая проверка при взаимодействии осуществляется на сервере, ткчто это безопасно
-        return true;
-    }
+    // if (showSimpleAuth) {
+    //     // Фактическая проверка при взаимодействии осуществляется на сервере, ткчто это безопасно
+    //     return true;
+    // }
 
     try {
-        const response = await authFetch(`/v1/subscription`, {
+        const response = await authFetch(`/v1/auth/check-subscription`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
