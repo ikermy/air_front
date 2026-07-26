@@ -4,7 +4,7 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        LAND_URL: https://${DOMAIN:-info-bot.online}
+        LAND_URL: https://${DOMAIN}
     image: ${DOCKER_IMAGE}
     container_name: airfront
     restart: always
