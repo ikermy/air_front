@@ -1,29 +1,51 @@
 import React, {useState, useRef, useCallback, useEffect, useContext} from 'react';
 // CSS импортируется в родительском Widget.jsx для поддержки lazy loading
 import {useTranslation} from "react-i18next";
-import {TypingIndicator} from "../../utils/TypingIndicator";
-import {fetchUserName} from "../utils";
-import {Transceiver} from "../Transceiver";
+import {MessageInput} from "../MessageInput";
 import {Receiver} from "../Receiver";
 import {Spin, Typography} from 'antd';
-import axios from "axios";
-import {UserContext} from "../../index";
+import {UserContext} from "../../UserContext";
 import {ReadDialog} from "../../dialog/dialogUtils";
+import {getOrSetUserId} from "../../utils/getOrSetUserId";
+import {processMessageWithImages} from "../model/messageMappers";
+import {useWidgetMessages} from "../hooks/useWidgetMessages";
+import {MessageList} from "./MessageList";
+import {useWidgetAuthorization} from "../hooks/useWidgetAuthorization";
+import {useWidgetUsername} from "../hooks/useWidgetUsername";
+import {useAutoScroll} from "../hooks/useAutoScroll";
+import {AccessState} from "./AccessState";
 
-const animationAssistWrite = 25; // 25 мс на символ
+export interface ChatWidgetProps {
+    widgetCode: string;
+    connected?: boolean;
+    setConnected: React.Dispatch<React.SetStateAction<boolean | undefined>>;
+    setIsModalOpen: (open: boolean) => void;
+    messageStyles?: {
+        user?: React.CSSProperties;
+        bot?: React.CSSProperties;
+    };
+    inputStyle?: React.CSSProperties;
+    sendButtonStyle?: React.CSSProperties;
+}
 
 export function ChatWidget({
-                               examKey,
+                               widgetCode,
                                connected,
                                setConnected,
                                setIsModalOpen,
                                messageStyles = {},
                                inputStyle = {},
                                sendButtonStyle = {}
-                           }) {
+                           }: ChatWidgetProps) {
     const {t} = useTranslation();
-    const [messages, setMessages] = useState([]);
-    const [isTyping, setIsTyping] = useState(false);
+    const {
+        messages,
+        isTyping,
+        shouldAutoScroll,
+        addMessage: addMessageInput,
+        replaceMessages,
+        setShouldAutoScroll,
+    } = useWidgetMessages();
     const messagesEndRef = useRef(null);
     const [rudSuck, setRudSuck] = useState(false);
     const [localPermit, setPermit] = useState(true);
@@ -32,120 +54,32 @@ export function ChatWidget({
     const [token, setToken] = useState(null);
     const [modelName, setModelName] = useState(null);
     const [isInitialLoading, setIsInitialLoading] = useState(true);
-    const [userNameLoading, setUserNameLoading] = useState(false);
-    const [shouldAutoScroll, setShouldAutoScroll] = useState(false); // Флаг для контроля автопрокрутки
-    const userNameFetchedRef = useRef(false); // Флаг для отслеживания выполненной загрузки
 
     const [appState, setAppState] = useState(null);
-    const respId = useContext(UserContext);
+    const contextUserId = useContext(UserContext);
+    const respId = contextUserId || getOrSetUserId();
+    const authorization = useWidgetAuthorization({
+        widgetCode,
+        responderId: respId,
+        connected,
+        setToken,
+        setConnected,
+    });
+    const {isLoading: userNameLoading} = useWidgetUsername({
+        token,
+        connected,
+        setToken,
+        setUserName,
+    });
 
-    // Функция для выполнения автопрокрутки
-    const performAutoScroll = useCallback(() => {
-        if (messagesEndRef.current) {
-            const scrollableParent = messagesEndRef.current.closest('.wid-chat-messages');
-
-            if (scrollableParent) {
-                scrollableParent.scrollTop = scrollableParent.scrollHeight;
-            } else {
-                messagesEndRef.current.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'nearest',
-                    inline: 'nearest'
-                });
-            }
-        }
-    }, []);
-
-    useEffect(() => {
-        const checkConnection = async () => {
-            try {
-                const url = `/system/available/widget`;
-                const response = await axios.get(url);
-
-                if (response.status >= 400) {
-                    setConnected(false);
-                    return;
-                }
-
-                setConnected(true);
-            } catch (error) {
-                if (error.response) {
-                } else {
-                }
-                setConnected(false);
-            }
-        };
-
-        // Проверка при монтировании компонента
-        checkConnection();
-
-        // Устанавливаем интервал проверки каждые 5 секунд
-        const interval = setInterval(checkConnection, 5000);
-        return () => clearInterval(interval);
-    }, [setConnected]);
-
-    // Эффект для условной автопрокрутки
-    useEffect(() => {
-        if (shouldAutoScroll) {
-            performAutoScroll();
-            setShouldAutoScroll(false); // Сбрасываем флаг
-        }
-    }, [shouldAutoScroll, performAutoScroll]);
+    const clearAutoScroll = useCallback(() => setShouldAutoScroll(false), []);
+    useAutoScroll(messagesEndRef, shouldAutoScroll, clearAutoScroll);
 
     useEffect(() => {
-        if (connected) {
-            const checkPermission = async () => {
-                try {
-                    const LAND_URL = window.location.origin;
-
-                    const response = await fetch(`/widget/exam`, {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({
-                            b: examKey,
-                            c: respId,
-                        }),
-                    });
-
-                    if (response.status === 400) {
-                        setAppState('invalidRequest');
-                        return;
-                    }
-                    if (response.status === 402) {
-                        setAppState('paymentRequired');
-                        return;
-                    }
-                    if (response.status === 429) {
-                        setAppState('tooManyRequests');
-                        return;
-                    }
-                    if (response.status === 404) {
-                        setAppState('botNotFound');
-                        return;
-                    }
-                    if (response.status === 503) {
-                        setAppState('botStopped');
-                        return;
-                    }
-                    if (response.status === 500) {
-                        setAppState('serverError');
-                        return;
-                    }
-                    if (!response.ok) {
-                        setAppState('unknownError');
-                        return;
-                    }
-
-                    const data = await response.json();
-                    setToken(data.resp);
-                } catch (error) {
-                    console.error('Error:', error);
-                    setAppState('networkError');
-                }
-            };
-            checkPermission();
+        if (authorization.state !== 'loading' && authorization.state !== 'authorized' && authorization.state !== 'nameInput') {
+            setAppState(authorization.state);
         }
-    }, [examKey, respId, connected]);
+    }, [authorization.state]);
 
     const [imageModal, setImageModal] = useState({
         isOpen: false,
@@ -153,146 +87,48 @@ export function ChatWidget({
         imageName: ''
     });
 
-    const calculateAnimationDuration = (message) => {
-        const length = message.length;
-        return length * animationAssistWrite;
-    };
-
-    const processMessageWithImages = useCallback((message) => {
-        if (typeof message !== "string") {
-            if (typeof message === "object" && message !== null) {
-                if (message.message) {
-                    return processMessageWithImages(message.message);
-                }
-                return {text: JSON.stringify(message), imageUrl: null};
-            }
-            return {text: String(message), imageUrl: null};
-        }
-
-        const imgRegex = /<img[^>]*src=\\?"([^"\\]+)\\?"[^>]*>/;
-        const match = message.match(imgRegex);
-
-        if (!match) return {text: message, imageUrl: null};
-
-        const imageUrl = match[1];
-        const text = message.replace(imgRegex, '').trim();
-
-        return {text, imageUrl};
-    }, []);
-
     const addMessage = useCallback((message, name, side, timestamp, imageUrl = null, files = null) => {
-        const {text, imageUrl: processedImageUrl} = processMessageWithImages(message);
-        const finalImageUrl = imageUrl || processedImageUrl;
-
-        let processedFiles = null;
-        if (files && files.length > 0) {
-            processedFiles = {
-                images: files.filter(f => f.type === 'photo').map(f => ({url: f.url, file_name: f.fileName})),
-                videos: files.filter(f => f.type === 'video').map(f => ({url: f.url, file_name: f.fileName})),
-                audio: files.filter(f => f.type === 'audio').map(f => ({url: f.url, file_name: f.fileName})),
-                documents: files.filter(f => f.type === 'doc').map(f => ({url: f.url, file_name: f.fileName}))
-            };
-        } else if (finalImageUrl) {
-            processedFiles = {
-                images: [{url: finalImageUrl, file_name: 'image'}],
-                videos: [],
-                audio: [],
-                documents: []
-            };
-        }
-
-        if (side === "left") {
-            setMessages(prevMessages => [...prevMessages, {
-                text, name, side, timestamp, imageUrl: finalImageUrl, files: processedFiles
-            }]);
-            // Устанавливаем флаг автопрокрутки для новых сообщений из Receiver
-            setShouldAutoScroll(true);
-        } else {
-            setIsTyping(true);
-            const duration = calculateAnimationDuration(text);
-            setTimeout(() => {
-                setMessages(prevMessages => [...prevMessages, {
-                    text, name, side, timestamp, imageUrl: finalImageUrl, files: processedFiles
-                }]);
-                setIsTyping(false);
-                // Устанавливаем флаг автопрокрутки для новых сообщений пользователя
-                setShouldAutoScroll(true);
-            }, duration);
-        }
-    }, [processMessageWithImages]);
+        addMessageInput({message, name, side, timestamp, imageUrl, files});
+    }, [addMessageInput]);
 
     const handleDialogData = useCallback((dialogData) => {
-        if (dialogData.Data === null) return;
+        if (!dialogData || dialogData.Data === null ||
+            (Array.isArray(dialogData.Data) && dialogData.Data.length === 0)) return;
 
-        const {Model: modelName, Responder: responderName} = dialogData;
-        const parsedMessages = JSON.parse(dialogData.Data).map(msg => JSON.parse(msg));
-        const formattedMessages = parsedMessages.map(msg => {
-            let messageText = '';
-            if (msg.message && typeof msg.message === 'object' && msg.message.message) {
-                messageText = msg.message.message;
-            } else if (typeof msg.message === 'string') {
-                messageText = msg.message;
+        try {
+            const {Model: modelName, Responder: responderName} = dialogData;
+            let parsedMessages;
+
+            if (Array.isArray(dialogData.Data)) {
+                parsedMessages = dialogData.Data.map(msg =>
+                    typeof msg === 'string' ? JSON.parse(msg) : msg
+                );
+            } else if (typeof dialogData.Data === 'string') {
+                parsedMessages = JSON.parse(dialogData.Data).map(msg =>
+                    typeof msg === 'string' ? JSON.parse(msg) : msg
+                );
+            } else {
+                return;
             }
 
-            const {text, imageUrl} = processMessageWithImages(messageText);
+            const formattedMessages = parsedMessages.map(msg => {
+                const creator = Number(msg.creator);
+                let messageText = typeof msg.message === 'string'
+                    ? msg.message
+                    : (msg.message?.message || msg.message || '');
+                if (typeof messageText !== 'string') messageText = String(messageText);
+
+                const {text, imageUrl} = processMessageWithImages(messageText);
+                const sendFiles = msg.send_files || msg.message?.action?.send_files ||
+                    msg.action?.send_files || msg.files || [];
             let files = null;
 
-            if (msg.message && msg.message.action && msg.message.action.send_files && Array.isArray(msg.message.action.send_files)) {
+            if (Array.isArray(sendFiles) && sendFiles.length > 0) {
                 files = {
-                    images: msg.message.action.send_files.filter(f => f.type === 'photo').map(f => ({
-                        url: f.url,
-                        file_name: f.file_name
-                    })),
-                    videos: msg.message.action.send_files.filter(f => f.type === 'video').map(f => ({
-                        url: f.url,
-                        file_name: f.file_name
-                    })),
-                    audio: msg.message.action.send_files.filter(f => f.type === 'audio').map(f => ({
-                        url: f.url,
-                        file_name: f.file_name
-                    })),
-                    documents: msg.message.action.send_files.filter(f => f.type === 'doc').map(f => ({
-                        url: f.url,
-                        file_name: f.file_name
-                    }))
-                };
-            } else if (msg.files && Array.isArray(msg.files) && msg.files.length > 0) {
-                files = {
-                    images: msg.files.filter(f => f.type === 'photo').map(f => ({
-                        url: f.url,
-                        file_name: f.fileName || f.file_name
-                    })),
-                    videos: msg.files.filter(f => f.type === 'video').map(f => ({
-                        url: f.url,
-                        file_name: f.fileName || f.file_name
-                    })),
-                    audio: msg.files.filter(f => f.type === 'audio').map(f => ({
-                        url: f.url,
-                        file_name: f.fileName || f.file_name
-                    })),
-                    documents: msg.files.filter(f => f.type === 'doc').map(f => ({
-                        url: f.url,
-                        file_name: f.fileName || f.file_name
-                    }))
-                };
-            } else if (msg.action && msg.action.send_files && Array.isArray(msg.action.send_files)) {
-                files = {
-                    images: msg.action.send_files.filter(f => f.type === 'photo').map(f => ({
-                        url: f.url,
-                        file_name: f.file_name
-                    })),
-                    videos: msg.action.send_files.filter(f => f.type === 'video').map(f => ({
-                        url: f.url,
-                        file_name: f.file_name
-                    })),
-                    audio: msg.action.send_files.filter(f => f.type === 'audio').map(f => ({
-                        url: f.url,
-                        file_name: f.file_name
-                    })),
-                    documents: msg.action.send_files.filter(f => f.type === 'doc').map(f => ({
-                        url: f.url,
-                        file_name: f.file_name
-                    }))
+                    images: sendFiles.filter(f => f.type === 'photo' || f.type === 'image'),
+                    videos: sendFiles.filter(f => f.type === 'video'),
+                    audio: sendFiles.filter(f => f.type === 'audio'),
+                    documents: sendFiles.filter(f => f.type === 'doc' || f.type === 'document')
                 };
             } else if (imageUrl) {
                 files = {
@@ -305,18 +141,24 @@ export function ChatWidget({
 
             return {
                 text,
-                name: msg.creator === 1 ? modelName : responderName,
-                side: msg.creator === 1 ? 'left' : 'right',
-                timestamp: new Date(msg.timestamp),
+                // В истории creator=1 — модель, остальные creator — пользователь.
+                // Это соответствует SSE: assist отображается справа, user — слева.
+                name: creator === 1 ? modelName : responderName,
+                side: creator === 1 ? 'right' : 'left',
+                timestamp: (() => {
+                    const date = new Date(msg.timestamp);
+                    return !isNaN(date.getTime()) ? date : new Date();
+                })(),
                 imageUrl,
                 files
             };
-        });
+            });
 
-        setMessages(formattedMessages);
-        // Устанавливаем флаг автопрокрутки при загрузке истории диалогов
-        setShouldAutoScroll(true);
-    }, [processMessageWithImages]);
+            replaceMessages(formattedMessages);
+        } catch (error) {
+            console.error('Failed to process dialog data:', error);
+        }
+    }, [replaceMessages]);
 
     useEffect(() => {
         if (connected === true || connected === false) {
@@ -329,29 +171,6 @@ export function ChatWidget({
             setAppState('disconnected');
         }
     }, [connected, isInitialLoading, appState]);
-
-    useEffect(() => {
-        if (!connected || token == null || userNameFetchedRef.current) {
-            return;
-        }
-
-        userNameFetchedRef.current = true;
-        setUserNameLoading(true);
-
-        (async () => {
-            try {
-                await fetchUserName({
-                    token,
-                    setToken,
-                    setUserName,
-                });
-            } catch (error) {
-                console.error('Ошибка при загрузке имени пользователя:', error);
-            } finally {
-                setUserNameLoading(false);
-            }
-        })();
-    }, [token, connected]);
 
     useEffect(() => {
         if (connected && !isInitialLoading && !userNameLoading && token) {
@@ -393,6 +212,15 @@ export function ChatWidget({
     };
 
     const renderMessages = () => {
+        return <MessageList
+            messages={messages}
+            isTyping={isTyping}
+            modelName={modelName}
+            messageStyles={messageStyles}
+            onOpenImage={openImageModal}
+            messagesEndRef={messagesEndRef}
+        />;
+        /* Legacy markup is retained below temporarily as a visual reference during migration.
         return (
             <div className="wid-chat-messages">
                 {messages.map((msg, index) => {
@@ -481,7 +309,7 @@ export function ChatWidget({
                 )}
                 <div ref={messagesEndRef}/>
             </div>
-        );
+        ); */
     };
 
     const renderNameInput = () => {
@@ -507,6 +335,10 @@ export function ChatWidget({
     };
 
     const renderChatContent = () => {
+        if (appState && appState !== 'authorized' && appState !== 'nameInput') {
+            return <AccessState state={appState}/>;
+        }
+
         switch (appState) {
             case 'disconnected':
                 return <div className="error-message">Нет соединения с сервером</div>;
@@ -516,6 +348,8 @@ export function ChatWidget({
                 return <div className="error-message">В авторизации отказано</div>;
             case 'invalidRequest':
                 return <div className="error-message">Неверный запрос проверьте ключ</div>;
+            case 'forbiddenOrigin':
+                return <div className="error-message">Текущий сайт не входит в список разрешённых</div>;
             case 'paymentRequired':
                 return <div className="error-message">Необходимо продлить подписку</div>;
             case 'botNotFound':
@@ -535,6 +369,7 @@ export function ChatWidget({
                     <>
                         <ReadDialog
                             mode={"widget"}
+                            dialogId={null}
                             userName={userName}
                             inToken={token}
                             onDialogData={handleDialogData}
@@ -566,11 +401,12 @@ export function ChatWidget({
 
     const renderInputArea = () => {
         return localPermit ? (
-            <Transceiver
+            <MessageInput
                 token={token}
                 userName={userName}
                 setToken={setToken}
                 setIsModalOpen={setIsModalOpen}
+                addMessage={addMessage}
                 setPermit={setPermit}
                 inputStyle={inputStyle}
                 sendButtonStyle={sendButtonStyle}

@@ -1,4 +1,4 @@
-import {formatTgubotData, formatWhatsBotData} from "../../../widget/utils";
+import {formatTgubotData, formatWhatsBotData} from "../../../widget/utils/formatting";
 import {authFetch} from "../../../utils/easyUtils";
 
 export const deleteNotifChanel = async (chanel) => {

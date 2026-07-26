@@ -3,7 +3,7 @@ const webpack = require('webpack');
 
 module.exports = {
     mode: 'production',
-    entry: './src/widget/widget-entrypoint.js', // Используем полноценную React версию
+    entry: './src/widget/widget-entrypoint.ts', // Используем полноценную React версию
     output: {
         path: path.resolve(__dirname, 'build/widget'),
         filename: 'marusya-widget.js',
@@ -80,7 +80,8 @@ module.exports = {
             Buffer: ['buffer', 'Buffer']
         }),
         new webpack.DefinePlugin({
-            'process.env.NODE_ENV': JSON.stringify('production')
+            'process.env.NODE_ENV': JSON.stringify('production'),
+            'process.env.LAND_URL': JSON.stringify(process.env.LAND_URL || 'https://localhost')
         })
     ]
 };

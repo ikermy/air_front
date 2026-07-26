@@ -192,6 +192,31 @@ export async function generateSvcKey() {
     }
 }
 
+export async function generateWidgKey() {
+    try {
+        const response = await authFetch(`/v1/dev/generate-widget-key`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+
+        if (response.status === 401) throw new Error('Невалидный токен');
+        if (response.status === 403) throw new Error('Недостаточно прав');
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({ error: `Ошибка сервера: ${response.status}` }));
+            throw new Error(errorData.error || `Ошибка сервера: ${response.status}`);
+        }
+
+        // В отличие от service key, здесь тело пустое, поэтому просто возвращаем true
+        return true;
+    } catch (error) {
+        console.error('Ошибка при генерации widget key:', error);
+        throw error;
+    }
+}
+
+
 export async function checkSettings() {
     try {
         const response = await authFetch(`/v1/dev/check-settings`, {

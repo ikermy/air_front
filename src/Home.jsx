@@ -91,7 +91,7 @@ function Home() {
             <TopMenu/>
             <LandingPage/>
             <Widget
-                examKey={"08a80a0e08272b86ac75870b43a01d9774285186e783f6068611a34b757f21f8c7327ae19fe4257fc1f"}
+                widgetCode={process.env.REACT_APP_WIDGET_CODE}
                 // buttonPosition={{right: '30px', bottom: '30px'}}
                 // buttonSize={{width: '50px', height: '50px'}}
                 // buttonStyle={{

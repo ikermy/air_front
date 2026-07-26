@@ -1,6 +1,5 @@
 import {useEffect} from "react";
 import { authFetch } from "../utils/easyUtils";
-import {validateAndRefreshWidgetToken} from "../widget/utils";
 
 export function ReadDialog({mode, dialogId, onDialogData, userName, inToken, setRudSuck}) {
     useEffect(() => {
@@ -26,13 +25,14 @@ export function ReadDialog({mode, dialogId, onDialogData, userName, inToken, set
                             return;
                         }
 
-                        const params = new URLSearchParams({token: widgetToken, name: userName});
+                        const params = new URLSearchParams({name: userName});
                         const url = `/v1/widget/dialog?${params.toString()}`;
                         response = await fetch(url, {
                             method: 'GET',
                             headers: {
-                                'Accept': 'application/json'
-                            }
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${widgetToken}`
+                            },
                         });
                         break;
                     default:
@@ -48,6 +48,11 @@ export function ReadDialog({mode, dialogId, onDialogData, userName, inToken, set
 
                 if (response.status === 401) {
                     console.error('Токен недействителен или истек');
+                    return;
+                }
+
+                if (mode === "widget" && response.status === 403) {
+                    console.error('Текущий сайт не входит в список разрешённых origin');
                     return;
                 }
 
@@ -150,3 +155,65 @@ export async function DeleteDialogs(ids) {
         return { status: "error", error: error.message || "Network error" };
     }
 }
+
+export const validateAndRefreshWidgetToken = async (token) => {
+    if (token === "no_balance") { return token } // Такого не бывает
+
+    try {
+        // Пытаемся валидировать текущий токен
+        const response = await fetch(`/v1/widget/validate`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            // credentials: 'include', // Куки будут отправлены
+        });
+
+        if (response.status === 401) {
+            const newToken = await refreshToken({oldtoken: token});
+            if (newToken) {
+                return newToken; // Возвращаем новый токен
+            } else {
+                return null; // Ошибка обновления токена
+            }
+        } else if (response.ok) {
+            return token; // Возвращаем существующий токен
+        } else {
+            console.error("Неизвестная ошибка при проверке токена");
+            if (typeof window !== "undefined") {
+                localStorage.removeItem("authToken");
+            }
+            return null; // Ошибка при валидации токена
+        }
+    } catch (error) {
+        console.error("Ошибка при проверке токена:", error);
+        return null; // Исключение при валидации
+    }
+};
+
+const refreshToken = async ({oldtoken}) => {
+    try {
+        const response = await fetch(`/v1/widget/refresh`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${oldtoken}`
+            },
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            if (data.token) {
+                return data.token; // Возвращаю обновленный токен
+            }
+        } else {
+            console.error("Не удалось обновить токен");
+            return null
+        }
+    } catch (error) {
+        console.error("Ошибка при обновлении токена:", error);
+        return null
+    }
+};
+

@@ -674,7 +674,6 @@ export function FloatingChatDemo({ onMinimize }) {
                        onClose={handleCloseModal}
                 >
                     <Examinator
-                        mode={"demo"}
                         examId={demoAssist}
                         setToken={setToken}
                         setIsTokenLoading={setIsTokenLoading}

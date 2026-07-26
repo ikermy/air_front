@@ -1,5 +1,5 @@
 // Функция проверки доступности канала
-import {formatTgubotData, formatWhatsBotData} from "../../../widget/utils";
+import {formatTgubotData, formatWhatsBotData} from "../../../widget/utils/formatting";
 import {getAuthToken, refreshToken, authFetch} from "../../../utils/easyUtils";
 
 
@@ -115,20 +115,28 @@ export async function getBotName(chName) {
     }
 }
 
-export const getWidgetCode = async () => {
+export const getWidgetCode = async (payload) => {
     try {
+        const requestPayload = {
+            ...payload,
+            allowedUrls: payload.allowedUrls || payload.allowedUrls || [],
+        };
+
         const response = await authFetch(`/v1/widget/code`, {
-            method: "GET",
+            method: "POST",
             headers: {
                 "Content-Type": "application/json",
             },
+            body: JSON.stringify(requestPayload),
         });
 
         const data = await response.json().catch(() => ({}));
         if (response.ok) {
             return data.widgetCode;
         } else {
-            throw new Error(data.message || "Failed to fetch widget code");
+            const error = new Error(data.message || "Failed to fetch widget code");
+            error.status = response.status;
+            throw error;
         }
     } catch (error) {
         throw error;
@@ -216,12 +224,12 @@ export const saveChannelData = async (channelType, data, uids, isEnabled) => {
                 break;
             case "whatsbot":
                 // Для WhatsApp бота просто сериализуем данные
-                // finalData = JSON.stringify(data);
                 finalData = formatWhatsBotData(data, uids);
                 break;
             default:
-                // Для остальных типов каналов просто используем данные как есть
-                finalData = data
+                // Backend ожидает поле data именно строкового типа.
+                // Объект конфигурации Widget предварительно сериализуем в JSON.
+                finalData = typeof data === "string" ? data : JSON.stringify(data ?? {});
         }
 
         const response = await authFetch(`/v1/channel`, {

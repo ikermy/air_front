@@ -10,7 +10,7 @@ import {UserContext} from "../../../index";
 import {ToolOutlined} from "@ant-design/icons";
 import {
     getDevData, setDistribMailData, setNewSessionKey, setGAuthData, setCarpinteroData, getSvcKey, generateSvcKey,
-    setOperBotData
+    setOperBotData, generateWidgKey
 } from "./gevUtils";
 
 
@@ -43,6 +43,7 @@ export const Dev = () => {
     const [svcKey, setSvcKey] = useState('');
     const [svcKeyLoading, setSvcKeyLoading] = useState(false);
     const [isGenerateSvcKeyModalOpen, setIsGenerateSvcKeyModalOpen] = useState(false);
+    const [isGenerateWidgetKeyModalOpen, setIsGenerateWidgetKeyModalOpen] = useState(false);
 
 
     const fetchData = useCallback(async () => {
@@ -189,6 +190,23 @@ export const Dev = () => {
             setSvcKey(result.service_key || '');
             setIsGenerateSvcKeyModalOpen(false);
             showNotification(t("devSvcKeyGenerated") || "Ключ сгенерирован", t("devSvcKeySaveWarning") || "Сохраните ключ — повторно он не будет показан в явном виде!");
+        } catch (e) {
+            showErrorNotification(t("error") || "Ошибка", e);
+        } finally {
+            setSvcKeyLoading(false);
+        }
+    };
+
+    const handleGenerateWidgetKey = async () => {
+        setSvcKeyLoading(true);
+        try {
+            await generateWidgKey(); // возвращает true при успехе
+            setIsGenerateWidgetKeyModalOpen(false);
+            await fetchData();
+            showNotification(
+                t("devWidgKeyGenerated") || "Widget ключи сгенерированы",
+                t("devWidgKeySaveWarning") || "Ключи сохранены в конфиге, повторно получить plaintext нельзя."
+            );
         } catch (e) {
             showErrorNotification(t("error") || "Ошибка", e);
         } finally {
@@ -544,6 +562,36 @@ export const Dev = () => {
                         ]}
                     >
                         <p>{t("devSvcKeyGenerateWarning") || "Генерация нового ключа требует перезапуска всех микросервисов. Новый ключ будет показан один раз — сохраните его в файл secrets/service_key.txt каждого микросервиса."}</p>
+                    </Modal>
+
+                    <div style={{display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', marginBottom: 16}}>
+                        <h3 style={{margin: 0}}>{t("devWidgKey") || "Widget Ed25519 Keys"}</h3>
+                        <Button
+                            type="primary"
+                            danger={Boolean(data.widg_keys)}
+                            loading={svcKeyLoading}
+                            onClick={() => data.widg_keys
+                                ? setIsGenerateWidgetKeyModalOpen(true)
+                                : handleGenerateWidgetKey()}
+                        >
+                            {data.widg_keys
+                                ? (t("devGenerateSvcKey") || "Сгенерировать новый ключ")
+                                : (t("devGenerateWidgKey") || "Generate Widget keys")}
+                        </Button>
+                    </div>
+                    <Modal
+                        open={isGenerateWidgetKeyModalOpen}
+                        onCancel={() => setIsGenerateWidgetKeyModalOpen(false)}
+                        footer={[
+                            <Button key="cancel" onClick={() => setIsGenerateWidgetKeyModalOpen(false)}>
+                                {t("cancel") || "Отмена"}
+                            </Button>,
+                            <Button key="generate" type="primary" danger loading={svcKeyLoading} onClick={handleGenerateWidgetKey}>
+                                {t("devGenerateSvcKey") || "Сгенерировать новый ключ"}
+                            </Button>
+                        ]}
+                    >
+                        <p>{t("devWidgKeyRegenerateWarning") || "Генерация новых ключей потребует пересоздания кода всех виджетов!"}</p>
                     </Modal>
 
                 </Card>

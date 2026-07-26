@@ -3,6 +3,10 @@ FROM node:18-alpine AS build
 
 WORKDIR /app
 
+# URL Landing API встраивается в standalone widget во время сборки.
+ARG LAND_URL=https://localhost
+ENV LAND_URL=${LAND_URL}
+
 # Install dependencies
 # Using --legacy-peer-deps to avoid potential conflicts with newer npm versions
 COPY package*.json ./

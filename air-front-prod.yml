@@ -1,10 +1,16 @@
 services:
   airfront:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        LAND_URL: https://${DOMAIN:-info-bot.online}
     image: ${DOCKER_IMAGE}
     container_name: airfront
     restart: always
     environment:
       - NODE_ENV=production
+      - LAND_URL=https://${DOMAIN}
     networks:
       - app_internal
       - air_shared

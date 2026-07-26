@@ -253,7 +253,7 @@ export const Channels = () => {
                             }
                             try {
                                 const widgetData = channelsData.widget.data;
-                                const scriptData = typeof widgetData === 'object' ? widgetData.script : widgetData;
+                                const scriptData = typeof widgetData === 'object' ? widgetData : widgetData;
                                 newSelectedChannels.push({
                                     ...widgetChannel,
                                     data: scriptData || '',

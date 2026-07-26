@@ -1,4 +1,4 @@
-import React, {createContext, useEffect, useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
@@ -7,9 +7,9 @@ import './i18n';
 import {ThemeProvider} from './ThemeContext';
 import {getOrSetUserId} from './utils/getOrSetUserId';
 import { trackVisitor } from './utils/tracking';
+import {UserContext} from './UserContext';
 
-// Создание контекста
-export const UserContext = createContext();
+export {UserContext};
 
 function Root() {
     const [userId] = useState(getOrSetUserId()); // Вызываем функцию и сохраняем userId

@@ -3,14 +3,30 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        LAND_URL: https://localhost
     image: airfront
     container_name: airfront
     ports:
       - "80:80"
     restart: always
     environment:
-      # - HOST=info-bot.online
       - HOST=localhost
+      - LAND_URL=https://localhost
+    develop:
+      watch:
+        # The widget is compiled into the image and served by nginx, so source
+        # changes require rebuilding the service rather than syncing files.
+        - action: rebuild
+          path: ./src/widget
+        - action: rebuild
+          path: ./webpack.widget.config.js
+        - action: rebuild
+          path: ./Dockerfile
+        - action: rebuild
+          path: ./package.json
+        - action: rebuild
+          path: ./package-lock.json
     networks:
       - app_internal
       - air_shared
