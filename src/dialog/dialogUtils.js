@@ -1,6 +1,8 @@
 import {useEffect} from "react";
 import { authFetch } from "../utils/easyUtils";
 
+const WIDGET_API_BASE = process.env.LAND_URL;
+
 export function ReadDialog({mode, dialogId, onDialogData, userName, inToken, setRudSuck}) {
     useEffect(() => {
         let cancelled = false;
@@ -26,7 +28,7 @@ export function ReadDialog({mode, dialogId, onDialogData, userName, inToken, set
                         }
 
                         const params = new URLSearchParams({name: userName});
-                        const url = `/v1/widget/dialog?${params.toString()}`;
+                        const url = `${WIDGET_API_BASE}/v1/widget/dialog?${params.toString()}`;
                         response = await fetch(url, {
                             method: 'GET',
                             headers: {
@@ -171,7 +173,7 @@ export const validateAndRefreshWidgetToken = async (token) => {
         });
 
         if (response.status === 401) {
-            const newToken = await refreshToken({oldtoken: token});
+            const newToken = await refreshWidgetToken({oldtoken: token});
             if (newToken) {
                 return newToken; // Возвращаем новый токен
             } else {
@@ -192,9 +194,9 @@ export const validateAndRefreshWidgetToken = async (token) => {
     }
 };
 
-const refreshToken = async ({oldtoken}) => {
+const refreshWidgetToken = async ({oldtoken}) => {
     try {
-        const response = await fetch(`/v1/widget/refresh`, {
+        const response = await fetch(`${WIDGET_API_BASE}/v1/widget/refresh`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
