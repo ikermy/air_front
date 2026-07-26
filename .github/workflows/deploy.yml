@@ -20,6 +20,16 @@ jobs:
           registry: ${{ env.REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Validate DOMAIN
+        env:
+          DOMAIN: ${{ vars.DOMAIN }}
+        run: |
+          echo "DOMAIN=$DOMAIN"
+          echo "LAND_URL=https://$DOMAIN"
+          test -n "$DOMAIN" || {
+            echo "DOMAIN repository variable is not configured"
+            exit 1
+          }
       - name: Build and push Docker image
         uses: docker/build-push-action@v6
         with:
@@ -61,4 +71,3 @@ jobs:
             docker compose -f air-front-prod.yml up -d
             # Cleanup
             docker image prune -f
-
