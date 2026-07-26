@@ -28,16 +28,6 @@ export interface WidgetUsernameResponse {
   message?: "No user name";
 }
 
-export interface WidgetDialogMessage {
-  creator: number;
-  message: {
-    message?: string;
-    action?: Record<string, unknown>;
-    [key: string]: unknown;
-  };
-  timestamp: string;
-}
-
 export interface WidgetDialogResponse {
   /** JSON string containing WidgetDialogMessage[]. */
   Data: string | null;
@@ -90,35 +80,7 @@ export interface WidgetSseFile {
   [key: string]: unknown;
 }
 
-export interface WidgetSseShutdownEvent {
-  type: "shutdown";
-  message: string;
-}
-
-export interface WidgetSseTimeoutEvent {
-  type: "timeout";
-  message: string;
-}
-
 export type WidgetSseMessage = WidgetSseAssistEvent | WidgetSseUserEvent;
-
-export interface WidgetApiError {
-  error: string;
-  message?: string;
-}
-
-export type WidgetApiStatus =
-  | 200
-  | 400
-  | 401
-  | 402
-  | 403
-  | 404
-  | 408
-  | 429
-  | 500
-  | 502
-  | 503;
 
 export const WIDGET_API_ROUTES = {
   exam: {
@@ -155,9 +117,6 @@ export const WIDGET_API_ROUTES = {
   },
 } as const;
 
-export type WidgetApiRoute =
-  (typeof WIDGET_API_ROUTES)[keyof typeof WIDGET_API_ROUTES];
-
 export interface WidgetApiRouteMap {
   exam: {
     request: WidgetExamRequest;
@@ -192,8 +151,6 @@ export interface WidgetApiRouteMap {
     response: WidgetEventsTicketResponse;
   };
 }
-
-export type WidgetApiRouteName = keyof WidgetApiRouteMap;
 
 const WIDGET_API_BASE =
     process.env.LAND_URL;
@@ -312,5 +269,5 @@ export async function createWidgetEventsTicket(token: string): Promise<string> {
 }
 
 export function getWidgetEventsUrl(ticket: string): string {
-  return `${WIDGET_API_ROUTES.events.path}?ticket=${encodeURIComponent(ticket)}`;
+  return `${WIDGET_API_BASE}${WIDGET_API_ROUTES.events.path}?ticket=${encodeURIComponent(ticket)}`;
 }
