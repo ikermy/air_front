@@ -163,7 +163,7 @@ export const validateAndRefreshWidgetToken = async (token) => {
 
     try {
         // Пытаемся валидировать текущий токен
-        const response = await fetch(`/v1/widget/validate`, {
+        const response = await fetch(`${WIDGET_API_BASE}/v1/widget/validate`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
