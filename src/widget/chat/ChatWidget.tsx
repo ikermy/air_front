@@ -104,7 +104,12 @@ export function ChatWidget({
                     typeof msg === 'string' ? JSON.parse(msg) : msg
                 );
             } else if (typeof dialogData.Data === 'string') {
-                parsedMessages = JSON.parse(dialogData.Data).map(msg =>
+                if (!dialogData.Data.trim()) return;
+
+                const parsedData = JSON.parse(dialogData.Data);
+                if (!Array.isArray(parsedData)) return;
+
+                parsedMessages = parsedData.map(msg =>
                     typeof msg === 'string' ? JSON.parse(msg) : msg
                 );
             } else {
