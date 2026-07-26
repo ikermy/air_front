@@ -200,7 +200,8 @@ const WIDGET_API_BASE =
 
 /** Typed API helpers used by the widget UI. */
 async function widgetRequest<T>(path: string, init: RequestInit = {}): Promise<T> {
-  console.log(`WIDGET_API_BASE ${path}`);
+  console.log(`PATCH ${path}`);
+  console.log(`WIDGET_API_BASE ${WIDGET_API_BASE}`);
   const response = await fetch(`${WIDGET_API_BASE}${path}`, {
     ...init,
     headers: { "Content-Type": "application/json", ...(init.headers || {}) },
