@@ -8,7 +8,8 @@ module.exports = {
         path: path.resolve(__dirname, 'build/widget'),
         filename: 'marusya-widget.js',
         chunkFilename: '[id].[contenthash:8].chunk.js', // Имена для динамических чанков
-        publicPath: '/widget/' // Путь для загрузки чанков
+        // publicPath: '/widget/' // Путь для загрузки чанков
+        publicPath: 'auto' // Путь для загрузки чанков
     },
     optimization: {
         splitChunks: {
