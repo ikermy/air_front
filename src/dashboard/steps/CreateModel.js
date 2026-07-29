@@ -234,7 +234,8 @@ export const CreateModel = ({onMenuChange}) => {
                                 wait: 2,
                                 limit: 1024,
                             },
-                            gpttype: providerData.gpttype || providerData.model,
+                            gpttype: providerData.use_model_name?.gpttype || null,
+                            realtime_gpttype: providerData.use_model_name?.realtime || null,
                         });
 
                         if (typeof window !== 'undefined') {
@@ -338,11 +339,9 @@ export const CreateModel = ({onMenuChange}) => {
             (googleOAuth.calendar || googleOAuth.sheets);
         setGoogleOAuthEnabled(isGoogleOAuthEnabled);
 
-        // Добавляем gpttype если он есть
-        const rawGptType = providerData.gpttype || providerData.model;
-        const normalizedGptType = typeof rawGptType === 'string'
-            ? rawGptType
-            : rawGptType?.name || rawGptType?.value || '';
+        // API хранит обычную и realtime-модели в use_model_name.
+        const rawGptType = providerData.use_model_name?.gpttype;
+        const normalizedGptType = rawGptType?.name || '';
 
         form.setFieldsValue({
             name: providerData.name || "",
@@ -366,6 +365,7 @@ export const CreateModel = ({onMenuChange}) => {
                 limit: 1024,
             },
             gpttype: normalizedGptType,
+            realtime_gpttype: providerData.use_model_name?.realtime || null,
         });
 
         // Проверяем что значения действительно установились
@@ -509,8 +509,11 @@ export const CreateModel = ({onMenuChange}) => {
                 // Сравниваем google_oauth (форма) с g_oauth (сервер)
                 JSON.stringify(allValues.google_oauth || false) !== JSON.stringify(modelData.g_oauth || false) ||
                 JSON.stringify(allValues.espero || {}) !== JSON.stringify(modelData.espero || {wait: 2, limit: 1024}) ||
-                // Сравниваем gpttype (форма) с gpttype или model (сервер)
-                (allValues.gpttype !== (modelData.gpttype?.name || modelData.gpttype || modelData.model || "")) ||
+                // Сравниваем обе модели формы с use_model_name на сервере.
+                (allValues.gpttype?.name || allValues.gpttype || "") !==
+                    (modelData.use_model_name?.gpttype?.name || "") ||
+                (allValues.realtime_gpttype?.name || allValues.realtime_gpttype || "") !==
+                    (modelData.use_model_name?.realtime?.name || "") ||
                 // Проверка для Mistral провайдера
                 (selectedProvider === 'mistral' && (
                     allValues.image !== (modelData.image || false) ||
@@ -867,6 +870,7 @@ export const CreateModel = ({onMenuChange}) => {
                                 <div className="form-section model-name-section">
                                     <Form.Item name="realtime_vad">
                                         <OpenaiRealtime
+                                            provider={selectedProvider}
                                             toForm={form}
                                             initialRealtime={modelData?.realtime || false}
                                             initialRealtimeVAD={modelData?.realtime_vad || null}
@@ -883,6 +887,7 @@ export const CreateModel = ({onMenuChange}) => {
                                 <div className="form-section model-name-section">
                                     <Form.Item name="google_realtime_vad">
                                         <GoogleRealtime
+                                            provider={selectedProvider}
                                             toForm={form}
                                             initialRealtime={!!(modelData?.realtime_vad?.google)}
                                             initialRealtimeVAD={modelData?.realtime_vad?.google ? {
@@ -900,6 +905,7 @@ export const CreateModel = ({onMenuChange}) => {
                                 <Form.Item name="gpttype">
                                     <TypesGPT
                                         provider={selectedProvider}
+                                        modelType="general"
                                     />
                                 </Form.Item>
                             </div>

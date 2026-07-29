@@ -45,6 +45,11 @@ export interface GptTypeValue {
     id?: number | null;
 }
 
+export interface UseModelName {
+    gpttype?: GptTypeValue | null;
+    realtime?: GptTypeValue | null;
+}
+
 export interface DocumentMetadata {
     source?: string;
     createdAt?: string;
@@ -70,6 +75,7 @@ export interface ModelFormValues {
     interpreter?: boolean;
     espero?: EsperoConfig;
     gpttype?: GptTypeValue | string | null;
+    realtime_gpttype?: GptTypeValue | string | null;
     s3files?: boolean;
     operator?: boolean;
     image?: boolean;
@@ -88,7 +94,7 @@ export interface SaveModelParams {
     values: ModelFormValues;
     isUpdate?: boolean;
     provider?: string | null;
-    gpttype?: GptTypeValue | string | null;
+    useModelName?: UseModelName | null;
 }
 
 export interface SaveModelResult {
@@ -139,8 +145,8 @@ export interface ModelData {
     video?: boolean;
     g_oauth?: GOAuth;
     espero?: EsperoConfig;
-    gpttype?: GptTypeValue | string | null;
-    model?: string;
+    /** Выбранные модели для обычного и realtime-режимов. */
+    use_model_name?: UseModelName | null;
     realtime?: boolean;
     realtime_vad?: RealtimeVAD | null;
     google_realtime?: boolean;
@@ -150,9 +156,15 @@ export interface ModelData {
 
 // ─── getModelData ─────────────────────────────────────────────────────────────
 
-export async function getListModelNames(provider?: string | null): Promise<GptTypeValue[]> {
-    const providerParam = provider ? `?provider=${provider}` : "";
-    const response = await authFetch(`/v1/model/list${providerParam}`, {
+export async function getListModelNames(
+    provider?: string | null,
+    modelType: "general" | "realtime" = "general",
+): Promise<GptTypeValue[]> {
+    const params = new URLSearchParams();
+    if (provider) params.set("provider", provider);
+    params.set("type", modelType);
+    const query = params.toString();
+    const response = await authFetch(`/v1/model/list${query ? `?${query}` : ""}`, {
         method: "GET",
         headers: {
             "Content-Type": "application/json",
@@ -226,7 +238,7 @@ export const saveModelData = async ({
     values,
     isUpdate = false,
     provider = null,
-    gpttype = null,
+    useModelName = null,
 }: SaveModelParams): Promise<SaveModelResult> => {
     const endpoint = isUpdate ? "/v1/model/update" : "/v1/model/create";
     const providerParam = provider ? `?provider=${provider}` : "";
@@ -267,7 +279,8 @@ export const saveModelData = async ({
             return undefined;
         };
 
-        const resolvedGptType = normalizeGptType(gpttype ?? values.gpttype);
+        const resolvedModelName = normalizeGptType(useModelName?.gpttype ?? values.gpttype);
+        const resolvedRealtimeModelName = normalizeGptType(useModelName?.realtime ?? values.realtime_gpttype);
 
         // ── Google Realtime VAD ───────────────────────────────────────────────
         const googleRtContainer = values.google_realtime_vad as any;
@@ -328,7 +341,13 @@ export const saveModelData = async ({
             search: Boolean(values.search),
             interpreter: Boolean(values.interpreter),
             espero: values.espero,
-            gpttype: resolvedGptType ?? null,
+            // Поле формы остаётся gpttype для совместимости с Form.Item,
+            // но API хранит обычную и realtime-модели раздельно.
+            use_model_name: {
+                // Обе модели сохраняются одновременно: realtime не заменяет general.
+                gpttype: resolvedModelName ?? null,
+                realtime: Boolean(values.realtime) || googleRtEnabled ? (resolvedRealtimeModelName ?? null) : null,
+            },
             fileids: Boolean(values.s3files) ? (values.fileids || []) : [],
             s3: Boolean(values.s3files),
             operator: Boolean(values.operator),

@@ -8,6 +8,7 @@ import "./Espero.css";
 interface TypesGPTProps {
     token?: string | null;
     provider?: string | null;
+    modelType?: "general" | "realtime";
     value?: string | GptTypeValue | null;
     onChange?: (value: GptTypeValue) => void;
 }
@@ -33,7 +34,7 @@ const normalizeModelValue = (value: unknown): string | undefined => {
     return undefined;
 };
 
-export const TypesGPT: React.FC<TypesGPTProps> = ({provider = null, value, onChange}) => {
+export const TypesGPT: React.FC<TypesGPTProps> = ({provider = null, modelType, value, onChange}) => {
     const {t} = useTranslation();
     const [models, setModels] = useState<GptTypeValue[]>([]);
     const [loading, setLoading] = useState(false);
@@ -67,7 +68,7 @@ export const TypesGPT: React.FC<TypesGPTProps> = ({provider = null, value, onCha
         try {
             setLoading(true);
             setError(null);
-            const list = await getListModelNames(provider);
+            const list = await getListModelNames(provider, modelType);
             setModels(list);
         } catch (err) {
             setError(err instanceof Error ? err.message : "Не удалось загрузить модели");
@@ -75,7 +76,7 @@ export const TypesGPT: React.FC<TypesGPTProps> = ({provider = null, value, onCha
         } finally {
             setLoading(false);
         }
-    }, [provider]);
+    }, [modelType, provider]);
 
     const handleOpenChange = useCallback((visible: boolean) => {
         setOpen(visible);

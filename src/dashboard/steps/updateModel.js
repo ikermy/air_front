@@ -25,7 +25,10 @@ export const UpdateModel = forwardRef(({ setButtonDisabled, modelData, form, isU
             values: currentValues,
             isUpdate: true, // Явно указываем, что это обновление
             provider: selectedProvider, // Передаем провайдер
-            gpttype: currentValues.gpttype ?? null
+            useModelName: {
+                gpttype: currentValues.gpttype ?? null,
+                realtime: currentValues.realtime_gpttype ?? null,
+            }
         });
 
         if (response.status === "ok") {

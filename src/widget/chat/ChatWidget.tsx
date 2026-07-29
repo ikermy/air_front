@@ -146,9 +146,8 @@ export function ChatWidget({
 
             return {
                 text,
-                // В истории creator=1 — модель, остальные creator — пользователь.
-                // Это соответствует SSE: assist отображается справа, user — слева.
-                name: creator === 1 ? modelName : responderName,
+                // Положение сообщений сохраняем прежним, меняем только подписи.
+                name: creator === 1 ? responderName : modelName,
                 side: creator === 1 ? 'right' : 'left',
                 timestamp: (() => {
                     const date = new Date(msg.timestamp);

@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { Switch, Slider, InputNumber, Tooltip, Collapse, Input, Select } from "antd";
+import { Switch, Slider, InputNumber, Tooltip, Collapse, Input, Select, Form } from "antd";
 import type { CollapseProps } from "antd";
 import { AudioOutlined, SettingOutlined, InfoCircleOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import "./Espero.css";
+import {TypesGPT} from "./TypesGPT";
 
 export interface RealtimeVADValue {
     threshold?: number | null;
@@ -23,6 +24,7 @@ export interface RealtimeVADValue {
     toForm?: any;
     initialRealtime?: boolean;
     initialRealtimeVAD?: RealtimeVADValue | null;
+    provider?: string | null;
 }
 
 const DEFAULT_VAD: RealtimeVADValue = {
@@ -42,6 +44,7 @@ export const Openai_Realtime: React.FC<OpenaiRealtimeProps> = ({
     toForm,
     initialRealtime,
     initialRealtimeVAD,
+    provider,
 }) => {
     const { t } = useTranslation();
 
@@ -474,7 +477,12 @@ export const Openai_Realtime: React.FC<OpenaiRealtimeProps> = ({
             </div>
 
             {realtimeEnabled && (
-                <Collapse ghost defaultActiveKey={[]} style={{ marginTop: 8 }} items={collapseItems} />
+                <>
+                    <Form.Item name="realtime_gpttype" style={{marginBottom: 16}}>
+                        <TypesGPT provider={provider} modelType="realtime" />
+                    </Form.Item>
+                    <Collapse ghost defaultActiveKey={[]} style={{ marginTop: 8 }} items={collapseItems} />
+                </>
             )}
         </>
     );
