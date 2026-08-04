@@ -11,7 +11,6 @@ import {
     LockOutlined
 } from '@ant-design/icons';
 import {showErrorNotification} from '../../hotification/showNotification';
-import './SystemSettings.css';
 import {checkSettings} from "./gevUtils";
 
 const {Title, Text, Paragraph} = Typography;
@@ -56,7 +55,7 @@ export const SystemSettings = () => {
                 border: '1px solid rgba(24, 144, 255, 0.2)',
                 boxShadow: '0 2px 8px rgba(24, 144, 255, 0.1)'
             }}>
-                <Space direction="horizontal" size={12} align="center">
+                <Space orientation="horizontal" size={12} align="center">
                     <div style={{
                         fontSize: '28px',
                         lineHeight: 1,
@@ -273,7 +272,7 @@ export const SystemSettings = () => {
 
             {!settings?.user_key && (
                 <Alert
-                    message={t("sysSettingsMissingKeyTitle") || "⚠️ Отсутствует обязательный ключ"}
+                    title={t("sysSettingsMissingKeyTitle") || "⚠️ Отсутствует обязательный ключ"}
                     description={t("sysSettingsMissingKeyDesc") || "UserKey не настроен. Без этого ключа невозможно взаимодействие с каналами и базовые функции системы."}
                     type="error"
                     showIcon
@@ -287,7 +286,7 @@ export const SystemSettings = () => {
 
             {!settings?.open_key && !settings?.mistral_key && !settings?.google_key && (
                 <Alert
-                    message={t("sysSettingsRecommendationTitle") || "💡 Рекомендация по настройке"}
+                    title={t("sysSettingsRecommendationTitle") || "💡 Рекомендация по настройке"}
                     description={t("sysSettingsRecommendationDesc") || "Не настроен ни один API ключ для моделей ИИ. Рекомендуется настроить хотя бы один ключ (OpenAI, MistralAI или Google Gemini) для полноценной работы с моделями искусственного интеллекта."}
                     type="warning"
                     showIcon
@@ -395,7 +394,7 @@ export const SystemSettings = () => {
 
                                             {/* Статус */}
                                             <Alert
-                                                message={
+                                                title={
                                                     <Space style={{ justifyContent: 'space-between', width: '100%' }}>
                                                         <Text strong>{t("sysSettingsConfigStatus") || "Статус конфигурации"}</Text>
                                                         {getStatusTag(isConfigured, setting.isRequired)}

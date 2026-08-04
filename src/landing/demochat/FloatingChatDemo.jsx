@@ -1,5 +1,4 @@
 import React, {useEffect, useState, useRef, useCallback} from 'react';
-import './ChatWindowDemo.css';
 import {useTranslation} from "react-i18next";
 import Modal from "../../Modal";
 import {ChatDemoAssist} from "./ChatDemoAssist";

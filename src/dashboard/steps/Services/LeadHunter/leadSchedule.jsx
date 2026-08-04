@@ -198,10 +198,10 @@ export function LeadSchedule() {
 
     return (
         <div style={{ maxWidth: 1000, margin: '0 auto', padding: '24px' }}>
-            <Space direction="vertical" size="large" style={{ width: '100%' }}>
+            <Space orientation="vertical" size="large" style={{ width: '100%' }}>
                 {/* Заголовок со статистикой */}
                 <div style={{ marginBottom: 16 }}>
-                    <Space direction="vertical" size={4} style={{ width: '100%' }}>
+                    <Space orientation="vertical" size={4} style={{ width: '100%' }}>
                         <Space align="center">
                             <CalendarOutlined style={{ fontSize: 24, color: '#1890ff' }} />
                             <Title level={3} style={{ margin: 0 }}>
@@ -383,7 +383,7 @@ export function LeadSchedule() {
                 cancelText={t('cancel') || 'Отмена'}
                 okButtonProps={{style: {color: "black"}}}
             >
-                <Space direction="vertical" style={{ width: '100%' }}>
+                <Space orientation="vertical" style={{ width: '100%' }}>
                     <Text>{t('monToFriModalDesc') || 'Выберите время работы для будних дней (понедельник - пятница):'}</Text>
                     <RangePicker
                         format="HH:mm"
@@ -410,7 +410,7 @@ export function LeadSchedule() {
                 cancelText={t('cancel') || 'Отмена'}
                 okButtonProps={{style: {color: "black"}}}
             >
-                <Space direction="vertical" style={{ width: '100%' }}>
+                <Space orientation="vertical" style={{ width: '100%' }}>
                     <Text>{t('allDaysModalDesc') || 'Выберите время работы для всех дней недели:'}</Text>
                     <RangePicker
                         format="HH:mm"

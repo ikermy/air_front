@@ -612,7 +612,7 @@ export const AmoCRMSection = ({
 
             {/* Кнопки авторизации */}
             <div className="input-group-modern" style={{marginTop: '20px'}} ref={oauthRef}>
-                <Space direction="vertical" style={{width: '100%'}}>
+                <Space orientation="vertical" style={{width: '100%'}}>
                     <Tooltip title={!canAuthorize ? (t("amoCRMFillAllFields") || "Заполните все обязательные поля") : ""}>
                         <Button
                             type="primary"
@@ -1548,7 +1548,7 @@ export const AmoCRMSection = ({
                         <Text>{currentSelectingField.name}</Text>
                     </div>
                 )}
-                <Space direction="vertical" style={{width: '100%'}}>
+                <Space orientation="vertical" style={{width: '100%'}}>
                     <Button
                         style={{ color : 'black' }}
                         type="primary"

@@ -1,9 +1,8 @@
 import React, {useContext} from 'react';
 import {MailOutlined} from '@ant-design/icons';
 import {Button, Form, Input} from 'antd';
-import './auth.css';
 import { useNavigate } from "react-router-dom";
-import {UserContext} from "../../index";
+import {UserContext} from "../../UserContext";
 import i18n from "i18next";
 
 

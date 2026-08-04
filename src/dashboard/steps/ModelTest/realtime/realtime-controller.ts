@@ -77,14 +77,18 @@ export class RealtimeController {
       if (this.state === 'speaking') this._setState('listening');
     };
 
-    const wsUrl = `/v1/ws/test-realtime?tread_id=${encodeURIComponent(sessionInfo.treadId)}`;
+    const wsPath = `/v1/ws/test-realtime?tread_id=${encodeURIComponent(sessionInfo.treadId)}`;
+    // Next dev server (3001) proxies HTTP requests to the local HTTPS Envoy,
+    // but it does not proxy WebSocket upgrades. Connect to Envoy directly.
+    const wsUrl = window.location.port === '3001'
+      ? `wss://localhost${wsPath}`
+      : `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}${wsPath}`;
 
     this.ws.onAudioDelta = (pcm16) => {
       // Первый фрейм нового ответа — прерываем всё что ещё играет
       if (this._expectingNewResponse) {
         this.player.flush();
         this._expectingNewResponse = false;
-        console.log('[RealtimeController] Новый ответ → flush старой очереди');
       }
       if (this.state !== 'speaking') this._setState('speaking');
       if (this.firstAudioAt === undefined) this.firstAudioAt = Date.now();
@@ -119,7 +123,6 @@ export class RealtimeController {
           this.capture.onChunk = (pcm16) => this.ws.sendAudio(pcm16);
           await this.capture.start();
           this._setState('listening');
-          console.log('[RealtimeController] Mic started, listening');
         } catch (e: any) {
           this._handleError(`Ошибка микрофона: ${e?.message || e}`);
         }
@@ -143,7 +146,6 @@ export class RealtimeController {
         if (event.usage) {
           this.pendingTokenUsage = event.usage;
           this.onTokenUsage(event.usage);
-          console.log('[RealtimeController] token_usage:', event.usage.total_tokens, 'tokens');
         }
         break;
 
@@ -162,7 +164,6 @@ export class RealtimeController {
          *   3. Переходим в listening
          */
       case 'audio_stop':
-        console.log('[RealtimeController] audio_stop (Google) → flush + listening');
         this.player.flush();
         this._expectingNewResponse = true;
         this.transcriptBuffer  = '';
@@ -180,10 +181,7 @@ export class RealtimeController {
         if (this.provider === 'google') {
           // Google не должен слать speech_started, но на всякий случай
           // обрабатываем как audio_stop
-          console.log('[RealtimeController] speech_started (Google fallback) → flush');
           this.player.flush();
-        } else {
-          console.log('[RealtimeController] speech_started → ждём первый фрейм нового ответа');
         }
         this.transcriptBuffer      = '';
         this.pendingTokenUsage     = undefined;

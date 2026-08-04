@@ -30,7 +30,6 @@ export async function getGoogleAuthUrl(): Promise<{ success: boolean; url?: stri
     }
 
     const result: GoogleAuthUrlResponse = await response.json();
-    console.log("result:", result);
     return { success: true, url: result.url };
   } catch (error) {
     console.error('Ошибка при получении Google auth URL:', error);

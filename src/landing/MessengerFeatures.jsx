@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Row, Col, Tabs } from 'antd';
-import './MessengerFeatures.css';
 import {MessageOutlined} from "@ant-design/icons";
 import Title from "antd/lib/typography/Title";
 import Text from "antd/lib/typography/Text";

@@ -48,7 +48,6 @@ import {
     showWarningNotification,
 } from "../../hotification/showNotification";
 import {useTranslation} from "react-i18next";
-import "./ModelTest.css";
 import MarkdownRenderer from "../../../utils/MarkdownRenderer";
 import {DeleteDialog} from "../../../dialog/dialogUtils";
 import { RealtimeController } from "./realtime/realtime-controller";
@@ -429,11 +428,9 @@ export const ModelTest: React.FC<ModelTestProps> = ({
                 // onFunctionCall - FUNCTION CALLS callback (добавлено 2026-02-15)
                 // Обработка событий вызовов функций OpenAI формата
                 (event: FunctionCallEvent) => {
-                    console.log('💡 [Function Call Event]:', event.type, event);
 
                     // Пропускаем обработку если показ Function Calls отключен
                     if (!showFunctionCalls) {
-                        console.log('⏭️ [Function Call] Пропущено - showFunctionCalls=false');
                         return;
                     }
 
@@ -444,7 +441,6 @@ export const ModelTest: React.FC<ModelTestProps> = ({
 
                     if (event.type === 'response.output_item.added') {
                         // Начало вызова функции
-                        console.log('🔧 [Function Call] Начало вызова:', event.item.name);
                         setActiveFunctionCalls((prev) => {
                             const newMap = new Map(prev);
                             newMap.set(event.item.id, {
@@ -1415,7 +1411,7 @@ export const ModelTest: React.FC<ModelTestProps> = ({
                         <Alert
                             message={t("sessionInfo") || "Информация о сессии"}
                             description={
-                                <Space direction="vertical" size="small" style={{width: '100%'}}>
+                                <Space orientation="vertical" size="small" style={{width: '100%'}}>
                                     <div>
                                         <Text strong>
                                             {t("modelName") || "Модель"}:
@@ -1635,7 +1631,7 @@ export const ModelTest: React.FC<ModelTestProps> = ({
                                 }
                             />
                         ) : (
-                            <Space direction="vertical" style={{width: "100%"}} size="middle">
+                            <Space orientation="vertical" style={{width: "100%"}} size="middle">
                                 {messages.map(renderMessage)}
 
                                 {/* FUNCTION CALLS: Активные вызовы функций (добавлено 2026-02-15) */}
@@ -1657,7 +1653,7 @@ export const ModelTest: React.FC<ModelTestProps> = ({
                                                 </Text>
                                             </div>
                                             <div className="message-text">
-                                                <Space direction="vertical" style={{width: '100%'}} size="small">
+                                                <Space orientation="vertical" style={{width: '100%'}} size="small">
                                                     {Array.from(activeFunctionCalls.values()).map((funcCall) => (
                                                         <div
                                                             key={funcCall.id}
@@ -1749,7 +1745,7 @@ export const ModelTest: React.FC<ModelTestProps> = ({
                         gap: "12px",
                     }}
                 >
-                    <Space direction="vertical" style={{width: "100%"}} size="middle">
+                    <Space orientation="vertical" style={{width: "100%"}} size="middle">
                         <Space style={{width: "100%", flexWrap: "wrap", gap: "8px"}}>
                             {/* Voice switch */}
                             <Tooltip

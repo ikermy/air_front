@@ -54,8 +54,6 @@ export class AvitoAuthService {
                 throw new Error('Не получен auth_url от сервера');
             }
 
-            console.log('[Avito Auth] Открываем окно авторизации и запускаем polling');
-
             // Открываем popup окно для авторизации
             this.openAuthWindow(data.auth_url);
 
@@ -101,7 +99,6 @@ export class AvitoAuthService {
         // Проверяем, закрыл ли пользователь окно вручную
         this.windowCheckInterval = setInterval(() => {
             if (this.authWindow?.closed) {
-                console.log('[Avito Auth] Окно авторизации закрыто пользователем');
                 this.stopPolling();
                 this.stopWindowCheck();
                 this.removePostMessageHandler();
@@ -121,7 +118,6 @@ export class AvitoAuthService {
 
             // Обработка успешной авторизации
             if (data.type === 'avito_oauth_success' && data.success) {
-                console.log('[Avito Auth] OAuth успешно завершен (получено postMessage)');
                 this.authCompleted = true;
                 this.stopPolling();
                 this.stopWindowCheck();
@@ -152,7 +148,6 @@ export class AvitoAuthService {
         };
 
         window.addEventListener('message', this.messageHandler, false);
-        console.log('[Avito Auth] postMessage обработчик установлен');
     }
 
     /**
@@ -162,7 +157,6 @@ export class AvitoAuthService {
         if (this.messageHandler) {
             window.removeEventListener('message', this.messageHandler);
             this.messageHandler = null;
-            console.log('[Avito Auth] postMessage обработчик удалён');
         }
     }
 
@@ -170,8 +164,6 @@ export class AvitoAuthService {
      * Запускает polling статуса авторизации
      */
     private startPolling(): void {
-        console.log('[Avito Auth] Запуск polling статуса');
-
         this.pollingInterval = setInterval(async () => {
             if (this.authCompleted) {
                 this.stopPolling();
@@ -182,7 +174,6 @@ export class AvitoAuthService {
                 const status = await getAvitoStatus();
 
                 if (status.connected && !this.authCompleted) {
-                    console.log('[Avito Auth] OAuth успешно завершен (обнаружен через polling)');
                     this.authCompleted = true;
                     this.stopPolling();
                     this.stopWindowCheck();
@@ -208,7 +199,6 @@ export class AvitoAuthService {
         if (this.pollingInterval) {
             clearInterval(this.pollingInterval);
             this.pollingInterval = null;
-            console.log('[Avito Auth] Polling остановлен');
         }
     }
 

@@ -150,7 +150,6 @@ export const saveNotificationsData = async (channelType, data, uids, isEnabled) 
 
         try {
             const text = await response.text();
-            console.log("response text:", text);
 
             if (!text || text.trim() === '') {
                 console.warn("Пустой ответ от сервера, считаем успешным");

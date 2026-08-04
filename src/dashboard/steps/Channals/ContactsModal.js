@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { List, Avatar, Empty, Tabs, Input, Modal } from 'antd';
 import { SearchOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
-import "./Chanels.css";
 
 const { TabPane } = Tabs;
 

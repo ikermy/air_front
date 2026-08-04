@@ -21,7 +21,6 @@ export const useAppPreloader = () => {
 
             try {
                 await imagePreloader.preloadBatch(criticalImages);
-                console.log('Критически важные изображения предзагружены');
             } catch (error) {
                 console.warn('Ошибка предзагрузки критических изображений:', error);
             }

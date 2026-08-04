@@ -8,9 +8,6 @@ import {
     QuestionCircleOutlined
 } from "@ant-design/icons";
 import {Badge, Button, Card, Empty, FloatButton, Modal, Spin, Switch, Tour, Typography} from "antd";
-import "./Chanels.css"
-import "./ChannelsModern.css"
-import '../Tour.css';
 import {showErrorNotification, showNotification, showWarningNotification} from "../../hotification/showNotification";
 import {FaInstagram, FaTelegramPlane, FaWhatsapp} from 'react-icons/fa';
 import AvitoIcon from "./AvitoIcon";
@@ -1307,7 +1304,7 @@ export const Channels = () => {
                                     onCancel={handleCancelRemove}
                                     className="channels-modal"
                                     maskClassName="blur-modal-mask"
-                                    maskClosable={false}
+                                    mask={{ closable: false }}
                                     zIndex={20000}
                                     footer={[
                                         <Button key="cancel" onClick={handleCancelRemove}>

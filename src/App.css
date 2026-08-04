@@ -311,9 +311,11 @@ body.dark::-webkit-scrollbar-track {
 /* Стили для Tooltip */
 .ant-tooltip {
   --ant-color-bg-default: var(--main-color) !important;
+  --ant-tooltip-bg: var(--main-color) !important;
 }
 
-.ant-tooltip-inner {
+.ant-tooltip-inner,
+.ant-tooltip-container {
   background-color: var(--main-color) !important;
   color: var(--bg-color-dark) !important;
 }
@@ -321,6 +323,10 @@ body.dark::-webkit-scrollbar-track {
 .ant-tooltip-arrow::before {
   background-color: var(--main-color) !important;
   border-color: var(--main-color) !important;
+}
+
+.ant-tooltip-arrow {
+  --ant-tooltip-arrow-background-color: var(--main-color) !important;
 }
 
 
@@ -405,4 +411,41 @@ body.dark::-webkit-scrollbar-track {
     padding: 12px;
     font-size: 16px;
   }
+}
+.ant-tour-header,
+.ant-tour-title,
+.ant-tour-description,
+.ant-tour-actions,
+.ant-tour-actions .ant-btn {
+  color: #000 !important;
+}
+.dark .ant-tour-actions .ant-btn:hover {
+  color: var(--new-hover-color) !important;
+}
+.ant-tour-close-icon svg {
+  fill: #000 !important;
+}
+
+.ant-segmented-item:hover {
+  background-color: var(--hover-color) !important;
+  color: var(--text-color) !important;
+}
+body.light .ant-segmented {
+  border: 1px solid var(--chat-window-border-light);
+}
+body.light .ant-segmented-item-selected {
+  background-color: var(--main-color-light) !important;
+  color: var(--text-color-light) !important;
+}
+body.dark .ant-segmented {
+  border: 1px solid var(--chat-window-border-dark);
+}
+body.dark .ant-segmented-item-selected {
+  background-color: var(--main-color-dark) !important;
+}
+body.dark .ant-segmented-item:not(.ant-segmented-item-selected) .ant-segmented-item-label span {
+  color: var(--text-color-dark) !important;
+}
+body.dark .ant-segmented-item:not(.ant-segmented-item-selected) .ant-segmented-item-label span:hover {
+  color: black !important;
 }

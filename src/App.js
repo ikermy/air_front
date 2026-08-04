@@ -1,7 +1,7 @@
 import React, {useCallback, useEffect, Suspense, lazy} from 'react';
-import {BrowserRouter, Routes, Route, useNavigate, Navigate} from 'react-router-dom';
+import {useRouter as useNextRouter} from 'next/router';
+import {BrowserRouter, MemoryRouter, Routes, Route, useNavigate, Navigate} from 'react-router-dom';
 import { useTheme } from "./ThemeContext";
-import './App.css';
 import {AuthProvider, useAuth} from "./AuthContext";
 import {ChatVisibilityProvider} from "./ChatVisibilityContext";
 import {handleError} from "./landing/auth/notificationHandlers";
@@ -32,9 +32,17 @@ const LoadingFallback = () => (
         alignItems: 'center',
         height: '100vh'
     }}>
-        <Spin size="large" tip="Загрузка..." />
+        <Spin size="large" fullscreen description="Загрузка..." />
     </div>
 );
+
+const AppRouter = ({children}) => {
+    const nextRouter = useNextRouter();
+    if (typeof window === 'undefined') {
+        return <MemoryRouter initialEntries={[nextRouter.asPath || '/']}>{children}</MemoryRouter>;
+    }
+    return <BrowserRouter>{children}</BrowserRouter>;
+};
 
 const ProtectedRoute = ({ children }) => {
     const { isAuthenticated } = useAuth();
@@ -66,7 +74,7 @@ function App() {
     return (
         <AuthProvider>
             <ChatVisibilityProvider>
-                <BrowserRouter>
+                <AppRouter>
                     <div className={`App ${theme}`}>
                         {contextHolder}
                         {notificationContextHolder}
@@ -101,7 +109,7 @@ function App() {
                             </Routes>
                         </Suspense>
                     </div>
-                </BrowserRouter>
+                </AppRouter>
             </ChatVisibilityProvider>
         </AuthProvider>
     );

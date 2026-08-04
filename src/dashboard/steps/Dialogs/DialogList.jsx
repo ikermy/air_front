@@ -1,7 +1,5 @@
 import React, {useState, useEffect, useRef} from 'react';
 import {useTranslation} from 'react-i18next';
-import './DialogList.css';
-import '../Tour.css';
 import {authFetch} from '../../../utils/easyUtils';
 import {DeleteDialogs} from './dialogsUtils';
 import {
@@ -470,7 +468,7 @@ export function DialogList() {
                                                             </div>
                                                         </div>
 
-                                                        <Space direction="vertical" size="small"
+                                                        <Space orientation="vertical" size="small"
                                                                style={{width: '100%'}}>
                                                             <div className="dialog-info-row">
                                                                 <CalendarOutlined className="info-icon"/>

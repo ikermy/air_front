@@ -11,7 +11,6 @@ import {
     PlayCircleOutlined,
     QuestionCircleOutlined
 } from "@ant-design/icons";
-import "./Billing.css"
 import {paymentSSEManager} from './paymentSSEManager';
 import {getTourPanelState, setTourPanelState} from "../../../utils/cookieUtils";
 import jsPDF from "jspdf";
@@ -374,12 +373,6 @@ export function Billing({refreshUserData}) {
             key: 'months'
         },
         {
-            title: t("billingTableMessages") || 'Оплачено сообщений',
-            dataIndex: 'Messages',
-            key: 'messages',
-            render: (text) => text?.toLocaleString('ru-RU')
-        },
-        {
             title: t("billingTableDiscount") || 'Размер скидки',
             dataIndex: 'Discount',
             key: 'discount',
@@ -664,7 +657,6 @@ export function Billing({refreshUserData}) {
 
                                 <div className="billing-data" ref={paymentInfoRef}>
                                     <p>{t("billingPaymentFor") || "Оплата за"} <b>{payment.value}</b> {getMonthSuffix(payment.value)}</p>
-                                    <p>{t("billingAgentMessages") || "Сообщений Агента"} <b>{payment.value * payment.messages}</b></p>
                                     {payment.value !== 1 && (
                                         <p>{t("billingBenefit") || "Выгода"} <b>{calculateDiscount(payment.value)}</b> {payment.currency}</p>
                                     )}
@@ -825,7 +817,7 @@ export function Billing({refreshUserData}) {
                                     >
                                         {showAllCurrencies ? (
                                             // Полная информация для всех криптовалют
-                                            <Space direction="vertical" style={{width: '100%'}}>
+                                            <Space orientation="vertical" style={{width: '100%'}}>
                                                 <div style={{
                                                     display: 'flex',
                                                     justifyContent: 'space-between',
@@ -949,7 +941,7 @@ export function Billing({refreshUserData}) {
                 footer={null}
                 width={700}
                 centered
-                maskClosable={false}
+                mask={{ closable: false }}
                 styles={{
                     body: {
                         maxHeight: '80vh',
@@ -1462,7 +1454,7 @@ export function Billing({refreshUserData}) {
                                         border: '1px solid #ffd591',
                                         marginBottom: '16px'
                                     }}>
-                                        <Space direction="vertical" size="small">
+                                        <Space orientation="vertical" size="small">
                                             <Text strong style={{fontSize: '13px'}}>
                                                 <ClockCircleOutlined/> {t("billingTimeUntilExpiry") || "Время до истечения платежа"}
                                             </Text>

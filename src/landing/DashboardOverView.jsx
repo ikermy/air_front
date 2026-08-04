@@ -10,7 +10,6 @@ import {
 } from '@ant-design/icons';
 import {GiConversation} from "react-icons/gi";
 import {GoLog} from "react-icons/go";
-import './DashboardDemo.css';
 import {useNavigate} from "react-router-dom";
 import {useAuth} from "../AuthContext";
 import Modal from "../Modal";

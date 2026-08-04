@@ -16,7 +16,6 @@ import React, { useEffect } from 'react';
 import { Spin, Result } from 'antd';
 import { CheckCircleOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
-import './OAuthCallback.css';
 
 interface OAuthSuccessProps {
   provider: 'google' | 'avito' | string;
@@ -26,8 +25,6 @@ export const OAuthSuccess: React.FC<OAuthSuccessProps> = ({ provider }) => {
   const { t } = useTranslation();
 
   useEffect(() => {
-    console.log(`[${provider.toUpperCase()} OAuth Success] Страница загружена`);
-
     // Получаем параметры из URL
     const urlParams = new URLSearchParams(window.location.search);
 
@@ -44,7 +41,6 @@ export const OAuthSuccess: React.FC<OAuthSuccessProps> = ({ provider }) => {
       const modelProvider = urlParams.get('provider');
       messageData.email = email;
       messageData.modelProvider = modelProvider;
-      console.log(`[${provider.toUpperCase()} OAuth Success] Email:`, email, 'Provider:', modelProvider);
     } else if (provider === 'avito') {
       // Для Avito можно добавить дополнительные параметры, если нужно
       console.log(`[${provider.toUpperCase()} OAuth Success] Авторизация успешна`);
@@ -52,13 +48,10 @@ export const OAuthSuccess: React.FC<OAuthSuccessProps> = ({ provider }) => {
 
     // Отправляем сообщение в родительское окно
     if (window.opener && !window.opener.closed) {
-      console.log(`[${provider.toUpperCase()} OAuth Success] Отправляем postMessage в родительское окно`);
-
       window.opener.postMessage(messageData, window.location.origin);
 
       // Закрываем окно через 2 секунды
       setTimeout(() => {
-        console.log(`[${provider.toUpperCase()} OAuth Success] Закрываем окно`);
         window.close();
       }, 2000);
     } else {

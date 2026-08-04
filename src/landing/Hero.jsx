@@ -1,6 +1,5 @@
 import React, {useEffect, useState} from 'react';
 import {useTranslation} from "react-i18next";
-import './hero.css';
 import Modal from "../Modal";
 import {RegForm} from "./auth/RegForm";
 import {message} from "antd";
@@ -16,8 +15,6 @@ import {
 import {RestoreMail} from "./auth/RestoreMail";
 import {useAuth} from "../AuthContext";
 import {useNavigate} from "react-router-dom";
-import {trackVisitor} from "../utils/tracking";
-import {getOrSetUserId} from "../utils/getOrSetUserId";
 
 
 const HeroSection = () => {
@@ -29,7 +26,6 @@ const HeroSection = () => {
     const {isAuthenticated} = useAuth();
     const navigate = useNavigate();
 
-    const [userId] = useState(getOrSetUserId()); // Вызываем функцию ииии получаем userId, ведь так?!
 
     // Управляем классом modal-open для body при открытии/закрытии модального окна
     useEffect(() => {
@@ -48,9 +44,6 @@ const HeroSection = () => {
         if (isAuthenticated) {
             navigate("/dashboard")
         } else {
-            // трекинг открытия модалки — всегда отправляем (sampleRate:1, minIntervalMs:0)
-            trackVisitor(userId, { event: 'open_try_modal', minIntervalMs: 0 });
-
             setIsModalOpen(true);
             setMirror(false)
             setRestore(false)

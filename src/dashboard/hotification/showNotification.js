@@ -1,6 +1,5 @@
 import { notification } from "antd";
 import {CheckCircleOutlined, ExclamationCircleOutlined, CloseCircleOutlined, BellOutlined} from "@ant-design/icons";
-import "./style.css"
 
 // Создаем глобальный экземпляр notification API
 let globalNotificationApi = null;
@@ -27,7 +26,7 @@ const getNotificationApi = () => {
 export const showNotification = (title, message) => {
     const api = getNotificationApi();
     api.open({
-        message: title,
+        title,
         description: message,
         placement: "topRight",
         icon: <CheckCircleOutlined style={{ color: "var(--conected-color)" }}/>,
@@ -37,7 +36,7 @@ export const showNotification = (title, message) => {
 export const showWarningNotification = (title, message) => {
     const api = getNotificationApi();
     api.open({
-        message: title,
+        title,
         description: message,
         placement: "topRight",
         icon: <ExclamationCircleOutlined style={{ color: "var(--warning-color)" }}/>,
@@ -47,7 +46,7 @@ export const showWarningNotification = (title, message) => {
 export const showErrorNotification = (title, message) => {
     const api = getNotificationApi();
     api.open({
-        message: title,
+        title,
         description: message,
         placement: "topRight",
         icon: <CloseCircleOutlined style={{ color: "var(--error-color)" }}/>,
@@ -57,7 +56,7 @@ export const showErrorNotification = (title, message) => {
 export const showInstantNotification = (title, message) => {
     const api = getNotificationApi();
     api.open({
-        message: title,
+        title,
         description: message,
         placement: "topRight",
         duration: 4.5, // можно увеличить время показа для важных уведомлений

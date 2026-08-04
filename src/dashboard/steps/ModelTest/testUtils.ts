@@ -494,7 +494,9 @@ export const testGetAnswer = (
     }) => void  // ← Token usage
 ): WebSocket => {
   
-const wsUrl = `/v1/ws/test-model`;
+const wsUrl = typeof window !== "undefined" && window.location.port === "3001"
+  ? "wss://localhost/v1/ws/test-model"
+  : `${typeof window !== "undefined" && window.location.protocol === "https:" ? "wss" : "ws"}://${typeof window !== "undefined" ? window.location.host : "localhost"}/v1/ws/test-model`;
   // Используем токен, переданный в функцию; если пустой, пробуем читать из localStorage
   const wsToken = getAuthToken();
   if (!wsToken) {
@@ -600,9 +602,6 @@ const wsUrl = `/v1/ws/test-model`;
 
         // Проверяем каждую дельту на наличие token_usage
         if (deltaContent && typeof deltaContent === 'string' && deltaContent.includes('token_usage')) {
-          console.log('🔍 [DELTA] Найдена дельта с "token_usage"!');
-          console.log('🔍 [DELTA] content:', deltaContent);
-
           try {
             // ВАЖНО: Дельта может содержать НЕСКОЛЬКО JSON объектов подряд
             // Например: }{"type":"token_usage",...}
@@ -630,17 +629,9 @@ const wsUrl = `/v1/ws/test-model`;
 
               if (endPos !== -1) {
                 const tokenUsageJson = fromTokenUsage.substring(0, endPos);
-                console.log('🔍 [DELTA] Извлечен JSON:', tokenUsageJson);
-
                 const possibleEvent = JSON.parse(tokenUsageJson);
-
-                console.log('🔍 [DELTA] Парсинг успешен:', possibleEvent);
-                console.log('🔍 [DELTA] possibleEvent.usage:', possibleEvent.usage);
-
                 // Проверяем, это token_usage событие?
                 if (possibleEvent.type === 'token_usage' && possibleEvent.usage) {
-                  console.log('💰 [TOKEN_USAGE] НАЙДЕН! Токены:', possibleEvent.usage.total_tokens);
-
                   // Сохраняем информацию о токенах
                   tokenUsage = possibleEvent.usage;
 
@@ -666,7 +657,6 @@ const wsUrl = `/v1/ws/test-model`;
           try {
             const possibleEvent = JSON.parse(deltaContent);
             if (possibleEvent.type === 'token_usage' && possibleEvent.usage) {
-              console.log('💰 [TOKEN_USAGE] НАЙДЕН (обычный парсинг)! Токены:', possibleEvent.usage.total_tokens);
               tokenUsage = possibleEvent.usage;
               if (onTokenUsage) {
                 onTokenUsage(possibleEvent.usage);
@@ -722,9 +712,6 @@ const wsUrl = `/v1/ws/test-model`;
         lastExtractedText = '';
 
         const finalMsg = data as FinalMessage;
-
-        console.log('📊 [FINAL] tokenUsage:', tokenUsage);
-
         const response: AnswerResponse = {
           message: finalMsg.message,
           operator: finalMsg.operator,
@@ -740,8 +727,6 @@ const wsUrl = `/v1/ws/test-model`;
             tokenUsage
           })
         };
-
-        console.log('📊 [FINAL] response.tokenUsage:', response.tokenUsage);
 
         // Сбрасываем таймер, function calls и token usage для следующего сообщения
         firstDeltaAt = null;

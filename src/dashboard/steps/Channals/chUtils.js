@@ -154,13 +154,11 @@ export const readChannelData = async () => {
         // Проверка кэша
         const now = Date.now();
         if (readChannelDataCache && (now - readChannelDataCacheTimestamp) < CACHE_DURATION) {
-            console.log('Возвращаем данные из кэша');
             return readChannelDataCache;
         }
 
         // Если уже есть активный запрос, ждём его завершения (дедупликация)
         if (readChannelDataPendingRequest) {
-            console.log('Ожидаем завершения существующего запроса');
             return await readChannelDataPendingRequest;
         }
 

@@ -4,7 +4,6 @@ import { MessageOutlined, DownloadOutlined } from '@ant-design/icons';
 import { readServiceContactDialogData } from './leadUtils';
 import { showErrorNotification } from '../../../hotification/showNotification';
 import MarkdownRenderer from '../../../../utils/MarkdownRenderer';
-import '../../Dialogs/ViewDialog.css';
 
 export function LeadViewDialog({ contact, visible, onClose }) {
     const [historyMessages, setHistoryMessages] = useState([]);
@@ -19,9 +18,6 @@ export function LeadViewDialog({ contact, visible, onClose }) {
 
         try {
             const data = await readServiceContactDialogData(contact.Contact);
-
-            console.log('LeadViewDialog: raw dialog data:', data);
-
             if (!data) {
                 message.warning('История диалога не найдена');
                 setHistoryLoading(false);
@@ -66,8 +62,6 @@ export function LeadViewDialog({ contact, visible, onClose }) {
                 const typeField = obj.type || (obj.from === 'agent' ? 'assistant' : 'user');
                 return { content: contentField, type: typeField, uname: obj.uname || obj.username || null, timestamp: obj.timestamp || obj.time || null };
             }).filter(Boolean);
-
-            console.log('LeadViewDialog: normalized messages:', normalized);
 
             // Преобразуем в формат для отображения (как раньше)
             const formattedMessages = normalized.map((msg, index) => ({

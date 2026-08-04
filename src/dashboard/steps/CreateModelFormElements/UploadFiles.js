@@ -7,6 +7,7 @@ import {UploadOutlined, FilePdfOutlined, FileOutlined, DeleteOutlined, FileTextO
 import {showWarningNotification, showErrorNotification, showNotification} from "../../hotification/showNotification";
 import {useTranslation} from "react-i18next";
 import {authFetch} from "../../../utils/easyUtils";
+import {providerToName} from "./modUtils";
 
 export const UploadFiles = ({onChange, toForm, initialFiles, modelData, setButtonDisabled, provider}) => {
     const {t} = useTranslation();
@@ -134,7 +135,8 @@ export const UploadFiles = ({onChange, toForm, initialFiles, modelData, setButto
                 formData.append('purpose', 'assistants');
 
                 try {
-                    const providerParam = provider ? `?provider=${encodeURIComponent(provider)}` : '';
+                    const providerName = providerToName(provider);
+                    const providerParam = providerName ? `?provider=${providerName}` : '';
                     setButtonDisabled(true);
                     const response = await authFetch(`/v1/model/upload-file${providerParam}`, {
                         method: 'POST',
@@ -163,7 +165,8 @@ export const UploadFiles = ({onChange, toForm, initialFiles, modelData, setButto
                     // Добавляем файлы в модель через /mod-fileadd одним запросом
                     try {
                         const params = new URLSearchParams();
-                        if (provider) params.append('provider', provider);
+                        const providerName = providerToName(provider);
+                        if (providerName) params.append('provider', String(providerName));
                         const url = `/v1/model/add-file${params.toString() ? `?${params.toString()}` : ''}`;
 
                         const payload = {
@@ -256,7 +259,8 @@ export const UploadFiles = ({onChange, toForm, initialFiles, modelData, setButto
     const handleDeleteFile = async (fileToDelete) => {
         try {
             const params = new URLSearchParams();
-            if (provider) params.append('provider', provider);
+            const providerName = providerToName(provider);
+            if (providerName) params.append('provider', String(providerName));
             const url = `/v1/model/delete-file${params.toString() ? `?${params.toString()}` : ''}`;
 
             const response = await authFetch(url, {

@@ -1,6 +1,5 @@
 import {Card, Badge} from "antd";
 import React from "react";
-import "./AssistFeatures.css";
 
 const AssistFeatures = () => {
     const keyFeatures = [

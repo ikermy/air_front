@@ -6,10 +6,8 @@ const ThemeContext = createContext();
 
 export const ThemeProvider = ({ children }) => {
     const [theme, setTheme] = useState(() => {
-        if (typeof window !== 'undefined') {
-            return localStorage.getItem('theme') || 'light';
-        }
-        return 'light';
+        if (typeof window === 'undefined') return 'light';
+        return localStorage.getItem('theme') === 'dark' ? 'dark' : 'light';
     });
     const [antTheme, setAntTheme] = useState({
         token: {
@@ -28,10 +26,9 @@ export const ThemeProvider = ({ children }) => {
     });
 
     useEffect(() => {
-        if (typeof window !== 'undefined') {
-            localStorage.setItem('theme', theme);
-            document.body.className = theme;
-        }
+        localStorage.setItem('theme', theme);
+        document.body.classList.remove('light', 'dark');
+        document.body.classList.add(theme);
 
         // Задержка для применения стилей
         setTimeout(() => {

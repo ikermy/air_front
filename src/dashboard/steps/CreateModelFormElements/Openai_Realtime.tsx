@@ -3,7 +3,6 @@ import { Switch, Slider, InputNumber, Tooltip, Collapse, Input, Select, Form } f
 import type { CollapseProps } from "antd";
 import { AudioOutlined, SettingOutlined, InfoCircleOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
-import "./Espero.css";
 import {TypesGPT} from "./TypesGPT";
 
 export interface RealtimeVADValue {

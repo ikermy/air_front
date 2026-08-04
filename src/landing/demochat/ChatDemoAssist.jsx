@@ -1,6 +1,4 @@
 import React, {useEffect, useState, useRef, useCallback} from 'react';
-import '../../dialog/ChatWindow.css';
-import './ChatDemoAssist.css';
 import {useTranslation} from "react-i18next";
 import {SimpleTransceiver} from "../../dialog/SimpleTransceiver";
 import {SimpleReceiver} from "../../dialog/SimpleReceiver";

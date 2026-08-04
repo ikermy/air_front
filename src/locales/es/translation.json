@@ -2608,5 +2608,16 @@
     "typesGPTTitle": "Selección de modelo de lenguaje",
     "typesGPTModelLabel": "Modelos disponibles",
     "typesGPTModelTip": "La lista de modelos disponibles se actualiza al abrir la lista",
-    "tbotWebhookMode": "Modo WebHook del Bot de Telegram"
+    "tbotWebhookMode": "Modo WebHook del Bot de Telegram",
+    "mistralSttModel": "Modelo STT", "mistralTtsModel": "Modelo TTS", "mistralSttLanguage": "Idioma STT", "mistralVoice": "Voz",
+    "mistralVoiceCustom": "Clonada", "mistralVoicePreset": "Preestablecida", "mistralVoicePresetLabel": "Voz preestablecida", "mistralVoiceCustomLabel": "Voz clonada",
+    "mistralCreateVoice": "Crear una nueva voz clonada", "mistralEdit": "Editar", "mistralSave": "Guardar", "mistralCancel": "Cancelar",
+    "mistralNewVoiceName": "Nombre de la nueva voz", "mistralAudioSample": "Muestra de audio (WAV/MP3/FLAC/OGG/PCM)", "mistralChooseFile": "Elegir archivo",
+    "mistralCreateClone": "Crear clon", "mistralLanguageOptional": "Opcional", "mistralMinRecording": "La grabación debe durar al menos 3 segundos",
+    "mistralRealtimeTitle": "Mistral realtime", "mistralRealtimeDesc": "Modo de voz Mistral Voxtral STT/TTS", "mistralRealtimeEnableLabel": "Activar modo de voz",
+    "mistralPresetVoice": "Voz preestablecida", "mistralCustomVoice": "Voz clonada", "mistralListen": "Escuchar", "mistralCreateNewClone": "Crear una nueva voz clonada",
+    "mistralEditVoice": "Editar", "mistralName": "Nombre", "mistralLanguage": "Idioma", "mistralDescription": "Descripción",
+    "mistralGender": "Género", "mistralChooseGender": "Elija el género", "mistralMale": "Masculino", "mistralFemale": "Femenino", "mistralNeutral": "Neutral", "mistralTags": "Etiquetas",
+    "mistralStopRecording": "Detener grabación", "mistralRecordMicrophone": "Grabar desde el micrófono", "mistralSelectAudio": "Elija un archivo de audio", "mistralUnsupportedAudio": "Formato de audio no compatible",
+    "mistralFileTooLarge": "El archivo de audio no debe superar 25 MB", "mistralRecordingTooShort": "La grabación debe durar al menos 3 segundos", "mistralVoiceCreated": "Voz creada", "mistralVoiceDeleted": "Voz eliminada", "mistralVoiceUpdated": "Datos de voz actualizados", "mistralMicrophoneUnsupported": "El micrófono no es compatible con el navegador", "mistralTagsPlaceholder": "support, warm"
 }

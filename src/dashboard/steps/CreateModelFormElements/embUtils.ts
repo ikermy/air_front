@@ -82,7 +82,7 @@ export const uploadEmbedding = async (
 ): Promise<UploadEmbeddingResponse> => {
   try {
     const request: UploadEmbeddingRequest = {
-      provider: provider,
+      provider: provider.toLowerCase() === "gemini" ? "google" : provider.toLowerCase(),
       doc_name: docName,
       content: content,
       ...(metadata && { metadata }),
@@ -127,7 +127,8 @@ export const listUserDocuments = async (
   provider: string
 ): Promise<ListDocumentsResponse> => {
   try {
-    const response = await authFetch(`/v1/embedding/list?provider=${encodeURIComponent(provider)}`, {
+    const embeddingProvider = provider.toLowerCase() === "gemini" ? "google" : provider.toLowerCase();
+    const response = await authFetch(`/v1/embedding/list?provider=${encodeURIComponent(embeddingProvider)}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json'
@@ -214,7 +215,8 @@ export const deleteDocument = async (
       throw new Error("Document ID is required");
     }
 
-    const url = `/v1/embedding/${encodeURIComponent(documentId)}?provider=${encodeURIComponent(provider)}`;
+    const embeddingProvider = provider.toLowerCase() === "gemini" ? "google" : provider.toLowerCase();
+    const url = `/v1/embedding/${encodeURIComponent(documentId)}?provider=${encodeURIComponent(embeddingProvider)}`;
     const response = await authFetch(url, {
       method: 'DELETE',
       headers: {

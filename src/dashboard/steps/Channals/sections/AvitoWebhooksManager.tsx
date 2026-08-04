@@ -179,7 +179,7 @@ export const AvitoWebhooksManager: React.FC = () => {
                 {/* Список подписок */}
                 {loading ? (
                     <div style={{ textAlign: 'center', padding: '40px' }}>
-                        <Spin tip="Загрузка подписок..." />
+                        <Spin description="Загрузка подписок..." />
                     </div>
                 ) : subscriptions.length === 0 ? (
                     <Alert

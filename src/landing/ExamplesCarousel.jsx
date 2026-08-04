@@ -1,7 +1,6 @@
 import React from 'react';
 import { Carousel, Typography } from 'antd';
 import { LeftOutlined, RightOutlined } from '@ant-design/icons';
-import './ExamplesCarousel.css';
 
 const { Title, Paragraph } = Typography;
 

@@ -39,10 +39,13 @@ class InstantNotificationService {
         this.reconnectAttempts = 0;
 
         try {
-            this.ws = new WebSocket(`/v1/ws/instant`, [this.token]);
+            const devEnvoy = window.location.port === "3001";
+            const wsUrl = devEnvoy
+                ? "wss://localhost/v1/ws/instant"
+                : `${window.location.protocol === "https:" ? "wss" : "ws"}://${window.location.host}/v1/ws/instant`;
+            this.ws = new WebSocket(wsUrl, [this.token]);
 
             this.ws.onopen = () => {
-                console.log('WebSocket connected');
                 this.reconnectAttempts = 0;
             };
 
@@ -68,8 +71,6 @@ class InstantNotificationService {
             };
 
             this.ws.onclose = (event) => {
-                console.log('WebSocket disconnected', event.code, event.reason);
-
                 // Если код закрытия 1008 (Policy Violation) или 4001 (custom unauthorized)
                 // это может означать ошибку аутентификации
                 if (event.code === 1008 || event.code === 4001) {
@@ -102,7 +103,6 @@ class InstantNotificationService {
             const newToken = await refreshToken();
 
             if (newToken) {
-                console.log('Токен успешно обновлен, переподключаемся...');
                 this.token = newToken;
                 this.reconnectAttempts = 0;
 
@@ -125,12 +125,10 @@ class InstantNotificationService {
 
     attemptReconnect() {
         if (!this.shouldReconnect || this.reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
-            console.log('Превышен лимит попыток переподключения или переподключение отключено');
             return;
         }
 
         this.reconnectAttempts++;
-        console.log(`Попытка переподключения ${this.reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS}...`);
 
         setTimeout(async () => {
             if (this.shouldReconnect) {

@@ -7,9 +7,6 @@ import {
     CheckCircleOutlined,
     ExperimentOutlined
 } from "@ant-design/icons";
-import "../steps.css"
-import "./CreateModel.css"
-import './Tour.css';
 import {Target} from "./CreateModelFormElements/Target";
 import {Triggers} from "./CreateModelFormElements/Triggers";
 import {
@@ -19,18 +16,17 @@ import {
     saveModelData,
     setActiveProvider
 } from "./CreateModelFormElements/modUtils";
-import {getAuthToken} from "../../utils/easyUtils";
 import {DeleteModel} from "./deleteModel";
 import {showErrorNotification, showNotification, showWarningNotification} from "../hotification/showNotification";
 import {getTourPanelState, setTourPanelState} from "../../utils/cookieUtils";
 import {UpdateModel} from "./updateModel";
 import {Espero} from "./CreateModelFormElements/Espero";
-import {S3Files} from "./CreateModelFormElements/S3Files";
 import {Embedding} from "./CreateModelFormElements/Embedding";
 import {Prompt} from "./CreateModelFormElements/Prompt";
 import {Openai_Interpreter as OpenaiInterpreter} from "./CreateModelFormElements/openai_Interpreter";
 import {Openai_Realtime as OpenaiRealtime} from "./CreateModelFormElements/Openai_Realtime";
 import {Google_Realtime as GoogleRealtime} from "./CreateModelFormElements/Google_Realtime";
+import {Mistral_Realtime as MistralRealtime} from "./CreateModelFormElements/Mistral_Realtime";
 import {ModelTest} from "./ModelTest/ModelTest";
 import {Mistral_Interpreter as MistralInterpreter} from "./CreateModelFormElements/mistral_interpretator";
 import {Google_Interpreter as GoogleInterpreter} from "./CreateModelFormElements/google_interpretator";
@@ -629,7 +625,7 @@ export const CreateModel = ({onMenuChange}) => {
             <div className="tour-layout">
                 <div className="tour-content">
                     <Spin spinning={providerLoading}
-                          tip={t("createModelProviderLoadingTip") || "Загрузка данных провайдера..."}>
+                          description={t("createModelProviderLoadingTip") || "Загрузка данных провайдера..."}>
                         <Form
                             form={form}
                             name="createModel"
@@ -872,6 +868,7 @@ export const CreateModel = ({onMenuChange}) => {
                                         <OpenaiRealtime
                                             provider={selectedProvider}
                                             toForm={form}
+                                            modelData={modelData}
                                             initialRealtime={modelData?.realtime || false}
                                             initialRealtimeVAD={modelData?.realtime_vad || null}
                                         />
@@ -896,6 +893,27 @@ export const CreateModel = ({onMenuChange}) => {
                                                 greeting: modelData.realtime_vad.greeting ?? null,
                                             } : null}
                                         />
+                                    </Form.Item>
+                                </div>
+                            )}
+
+                            {selectedProvider === 'mistral' && (
+                                <div className="form-section model-name-section">
+                                    <Form.Item name="realtime_vad">
+                                        <MistralRealtime
+                                            provider={selectedProvider}
+                                            toForm={form}
+                                            modelData={modelData}
+                                            initialRealtime={modelData?.realtime || false}
+                                            initialRealtimeVAD={modelData?.realtime_vad ? {
+                                                ...modelData.realtime_vad.mistral,
+                                                initial_greeting: modelData.realtime_vad.initial_greeting ?? true,
+                                                greeting: modelData.realtime_vad.greeting ?? null,
+                                            } : null}
+                                        />
+                                    </Form.Item>
+                                    <Form.Item name="realtime" hidden>
+                                        <input type="hidden" />
                                     </Form.Item>
                                 </div>
                             )}
@@ -1053,7 +1071,7 @@ export const CreateModel = ({onMenuChange}) => {
                 okText={t("createModelConfirmOk") || "Переключить модель"}
                 cancelText={t("channelsCancelButton") || "Отмена"}
                 okButtonProps={{danger: true}}
-                maskClosable={false}
+                mask={{ closable: false }}
                 centered
                 zIndex={10000}
             >
@@ -1123,7 +1141,7 @@ export const CreateModel = ({onMenuChange}) => {
                     style: {display: restartProgressVisible ? 'none' : 'inline-block'}
                 }}
                 closable={!restartLoading}
-                maskClosable={false}
+                mask={{ closable: false }}
                 centered
                 zIndex={10000}
             >

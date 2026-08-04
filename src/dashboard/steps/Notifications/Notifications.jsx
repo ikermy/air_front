@@ -14,8 +14,6 @@ import {FaPlay, FaStop, FaTelegramPlane} from 'react-icons/fa';
 import {Alert, Button, Input, Modal, Spin, Switch, Card, Typography, Tour, FloatButton} from "antd";
 import {showErrorNotification, showNotification, showWarningNotification} from "../../hotification/showNotification";
 import {FiTarget} from "react-icons/fi";
-import './Notifications.css';
-import '../Tour.css';
 import {getTourPanelState, setTourPanelState} from "../../../utils/cookieUtils";
 import {
     deleteNotifChanel,
@@ -888,7 +886,7 @@ export const Notifications = () => {
                                     onCancel={handleCancelRemove}
                                     className="notifications-modal"
                                     maskClassName="blur-modal-mask"
-                                    maskClosable={false}
+                                    mask={{ closable: false }}
                                     zIndex={20000}
                                     footer={[
                                         <Button key="cancel" onClick={handleCancelRemove}>
@@ -1053,7 +1051,7 @@ export const Notifications = () => {
                     style: {display: restartProgressVisible ? 'none' : 'inline-block'}
                 }}
                 closable={!restartLoading}
-                maskClosable={false}
+                mask={{ closable: false }}
                 centered
                 zIndex={10000}
             >

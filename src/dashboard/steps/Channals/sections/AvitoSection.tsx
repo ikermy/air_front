@@ -218,12 +218,11 @@ export const AvitoSection: React.FC<AvitoSectionProps> = ({
 
     // Определяем, подключен ли Avito
     const isConnected = connectionStatus?.connected || false;
-    console.log("showSimpleAuth", showSimpleAuth);
     return (
         <div className="padding">
             {isStatusLoading ? (
                 <div style={{ textAlign: 'center', padding: '20px' }}>
-                    <Spin tip="Проверка статуса подключения..." />
+                    <Spin description="Проверка статуса подключения..." />
                 </div>
             ) : (
                 <>
@@ -307,7 +306,7 @@ export const AvitoSection: React.FC<AvitoSectionProps> = ({
                     )}
 
                     {/* Кнопки управления */}
-                    <Space direction="horizontal" style={{ width: '100%', flexWrap: 'wrap' }}>
+                    <Space orientation="horizontal" style={{ width: '100%', flexWrap: 'wrap' }}>
                         {!isConnected ? (
                             <Button
                                 type="primary"

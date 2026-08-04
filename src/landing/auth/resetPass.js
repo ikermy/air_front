@@ -2,7 +2,6 @@ import React, {useState} from 'react';
 import {KeyOutlined, LockOutlined} from '@ant-design/icons';
 import {Alert, Button, Collapse, Form, Input} from 'antd';
 import {encryptPassword, getKey} from "../../utils/easyUtils";
-import './auth.css';
 import {useNavigate} from "react-router-dom";
 import {useAuth} from "../../AuthContext";
 import {useTranslation} from "react-i18next";

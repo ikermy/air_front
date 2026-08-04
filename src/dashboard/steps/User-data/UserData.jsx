@@ -45,15 +45,13 @@ import {
     LockOutlined,
 } from '@ant-design/icons';
 import {FaTelegramPlane} from 'react-icons/fa';
-import './UserData.css';
-import '../Tour.css';
 import {getTourPanelState, setTourPanelState} from "../../../utils/cookieUtils";
 import {GrLanguage} from "react-icons/gr";
 import {TbTimezone} from "react-icons/tb";
 import {totpSetup, totpConfirm, totpDisable} from "./totpUtils";
 import {createMasterKey, rewrapMasterKey} from "./masterKeyUtils";
 import {getAuthToken, apiLogout, authFetch} from "../../../utils/easyUtils";
-import {UserContext} from "../../../index";
+import {UserContext} from "../../../UserContext";
 import {showErrorNotification, showNotification} from "../../hotification/showNotification";
 import {useTranslation} from "react-i18next";
 import {fetchProvidersAvailability, setProviderKey, revokeProviderKey} from '../CreateModelFormElements/providersUtils';
@@ -286,7 +284,7 @@ export const UserData = () => {
     if (error) {
         return (
             <div className="user-data-error">
-                <Alert message={t("userLoadingError") || "Ошибка загрузки"} description={error} type="error" showIcon/>
+                <Alert title={t("userLoadingError") || "Ошибка загрузки"} description={error} type="error" showIcon/>
             </div>
         );
     }
@@ -389,13 +387,12 @@ export const UserData = () => {
             setDeleteComplete(false);
 
             const token = getAuthToken();
-            const wsUrl = `/ws/deleteall`;
+            const wsUrl = `/v1/ws/delete-all`;
             const wsUrlWithToken = `${wsUrl}`;
             wsRef.current = new WebSocket(wsUrlWithToken, [token]);
 
             // Обработчик открытия соединения
             wsRef.current.onopen = () => {
-                console.log('WebSocket connection opened for user deletion');
                 setDeleteMessages(prev => [...prev, t("userDeleteConnectionEstablished") || '🔌 Соединение с сервером установлено']);
             };
 
@@ -825,7 +822,7 @@ export const UserData = () => {
                             {/* Основная информация */}
                             <Col xs={24} lg={12}>
                                 <Card title={t("userProfile") || "Профиль"} className="user-data-card" ref={profileCardRef}>
-                                    <Space direction="vertical" size="large" style={{width: '100%'}}>
+                                    <Space orientation="vertical" size="large" style={{width: '100%'}}>
                                         <div className="user-info-item">
                                             <UserOutlined className="info-icon"/>
                                             <div style={{flex: 1}}>
@@ -1010,7 +1007,7 @@ export const UserData = () => {
                             {/* Баланс */}
                             <Col xs={24} lg={12}>
                                 <Card title={t("userBalanceSubscription") || "Баланс и подписка"} className="user-data-card" ref={balanceCardRef}>
-                                    <Space direction="vertical" size="large" style={{width: '100%'}}>
+                                    <Space orientation="vertical" size="large" style={{width: '100%'}}>
                                         <div className="balance-item" style={{
                                             display: 'flex',
                                             alignItems: 'center',
@@ -1119,7 +1116,7 @@ export const UserData = () => {
                                 <Col xs={24} md={12}>
                                     <Card title={t("userNotificationsSettings") || "Настройки уведомлений"} className="user-data-card"
                                           ref={notificationsCardRef}>
-                                        <Space direction="vertical" size="middle" style={{width: '100%'}}>
+                                        <Space orientation="vertical" size="middle" style={{width: '100%'}}>
                                             <div className="notification-item">
                                                 <FaTelegramPlane className="notification-icon"/>
                                                 <Text>{t("userTelegramBotConfigured") || "Telegram бот настроен"}</Text>
@@ -1238,7 +1235,7 @@ export const UserData = () => {
                                     style={{borderColor: '#ff4d4f'}}
                                     ref={dangerZoneRef}
                                 >
-                                    <Space direction="vertical" size="middle" style={{width: '100%'}}>
+                                    <Space orientation="vertical" size="middle" style={{width: '100%'}}>
                                         <div>
                                             <Text strong style={{color: '#ff4d4f'}}>{t("userDeleteAllData") || "Удаление всех данных пользователя"}</Text>
                                             <br/>
@@ -1298,9 +1295,9 @@ export const UserData = () => {
                             okButtonProps={{danger: true}}
                             width={600}
                         >
-                            <Space direction="vertical" size="middle" style={{width: '100%'}}>
+                            <Space orientation="vertical" size="middle" style={{width: '100%'}}>
                                 <Alert
-                                    message={t("userDeleteIrreversibleWarning") || "Внимание! Это действие необратимо!"}
+                                    title={t("userDeleteIrreversibleWarning") || "Внимание! Это действие необратимо!"}
                                     type="error"
                                     showIcon
                                     style={{marginBottom: 16}}
@@ -1352,7 +1349,7 @@ export const UserData = () => {
                             closable={false}
                             centered
                             width={700}
-                            maskClosable={false}
+                            mask={{ closable: false }}
                             className="delete-progress-modal"
                         >
                             <div className="delete-progress-container">
@@ -1427,10 +1424,10 @@ export const UserData = () => {
                             footer={null}
                             width={460}
                             centered
-                            maskClosable={!chPassLoading}
+                            mask={{ closable: !chPassLoading }}
                             closable={!chPassLoading}
                         >
-                            <Space direction="vertical" size="middle" style={{width: '100%'}}>
+                            <Space orientation="vertical" size="middle" style={{width: '100%'}}>
                                 <Input.Password
                                     size="large"
                                     value={chPassOld}
@@ -1459,7 +1456,7 @@ export const UserData = () => {
                                             type="warning"
                                             showIcon
                                             style={{background: 'transparent', border: '1px solid var(--warning-color, #faad14)', fontSize: 12}}
-                                            message={t("chPassMasterKeyHint") || "У вас создан ключ шифрования. Для смены пароля необходимо указать raw MasterKey, иначе зашифрованные данные будут удалены."}
+                                            title={t("chPassMasterKeyHint") || "У вас создан ключ шифрования. Для смены пароля необходимо указать raw MasterKey, иначе зашифрованные данные будут удалены."}
                                         />
                                         <Input
                                             size="large"
@@ -1505,9 +1502,9 @@ export const UserData = () => {
                             width={520}
                             centered
                         >
-                            <Space direction="vertical" size="middle" style={{width: '100%'}}>
+                            <Space orientation="vertical" size="middle" style={{width: '100%'}}>
                                 <Alert
-                                    message={t("chPassWarnIrreversible") || "Внимание! Это действие необратимо!"}
+                                    title={t("chPassWarnIrreversible") || "Внимание! Это действие необратимо!"}
                                     type="error"
                                     showIcon
                                 />
@@ -1522,7 +1519,7 @@ export const UserData = () => {
                                     </ul>
                                 </div>
                                 <Alert
-                                    message={t("chPassWarnAdvice") || "Если у вас есть raw MasterKey — закройте это окно и введите его в соответствующее поле."}
+                                    title={t("chPassWarnAdvice") || "Если у вас есть raw MasterKey — закройте это окно и введите его в соответствующее поле."}
                                     type="warning"
                                     showIcon
                                 />
@@ -1537,13 +1534,13 @@ export const UserData = () => {
                             footer={null}
                             width={480}
                             centered
-                            maskClosable={!mkLoading}
+                            mask={{ closable: !mkLoading }}
                             closable={!mkLoading}
                         >
                             {!mkDoneVisible ? (
-                                <Space direction="vertical" size="middle" style={{width: '100%'}}>
+                                <Space orientation="vertical" size="middle" style={{width: '100%'}}>
                                     <Alert
-                                        message={t("userMasterKeyDesc") || "MasterKey генерируется один раз и оборачивается вашим паролем. После создания raw-ключ будет показан ОДИН РАЗ — обязательно сохраните его в надёжном месте."}
+                                        title={t("userMasterKeyDesc") || "MasterKey генерируется один раз и оборачивается вашим паролем. После создания raw-ключ будет показан ОДИН РАЗ — обязательно сохраните его в надёжном месте."}
                                         type="warning"
                                         showIcon
                                     />
@@ -1568,9 +1565,9 @@ export const UserData = () => {
                                     </Button>
                                 </Space>
                             ) : (
-                                <Space direction="vertical" size="middle" style={{width: '100%'}}>
+                                <Space orientation="vertical" size="middle" style={{width: '100%'}}>
                                     <Alert
-                                        message={t("userMasterKeySaveWarning") || "Сохраните этот ключ прямо сейчас! Он больше никогда не будет показан."}
+                                        title={t("userMasterKeySaveWarning") || "Сохраните этот ключ прямо сейчас! Он больше никогда не будет показан."}
                                         type="error"
                                         showIcon
                                     />
@@ -1622,7 +1619,7 @@ export const UserData = () => {
                             closable={mkComplete || !mkLoading}
                             centered
                             width={600}
-                            maskClosable={false}
+                            mask={{ closable: false }}
                         >
                             <div className="delete-progress-container">
                                 {!mkComplete && mkLoading && (
@@ -1668,9 +1665,9 @@ export const UserData = () => {
                                 ]}
                             />
                             {totpStep === 0 && (
-                                <Space direction="vertical" size="middle" style={{width: '100%', alignItems: 'center'}}>
+                                <Space orientation="vertical" size="middle" style={{width: '100%', alignItems: 'center'}}>
                                     <Alert
-                                        message={t("user2FAScanDesc") || "Отсканируйте QR-код в приложении-аутентификаторе (Google Authenticator, Yandex Key и др.)"}
+                                        title={t("user2FAScanDesc") || "Отсканируйте QR-код в приложении-аутентификаторе (Google Authenticator, Yandex Key и др.)"}
                                         type="info"
                                         showIcon
                                         style={{width: '100%'}}
@@ -1696,9 +1693,9 @@ export const UserData = () => {
                                 </Space>
                             )}
                             {totpStep === 1 && (
-                                <Space direction="vertical" size="middle" style={{width: '100%'}}>
+                                <Space orientation="vertical" size="middle" style={{width: '100%'}}>
                                     <Alert
-                                        message={t("user2FAEnterCodeDesc") || "Введите 6-значный код из приложения-аутентификатора для активации 2FA"}
+                                        title={t("user2FAEnterCodeDesc") || "Введите 6-значный код из приложения-аутентификатора для активации 2FA"}
                                         type="info"
                                         showIcon
                                     />
@@ -1733,9 +1730,9 @@ export const UserData = () => {
                             okButtonProps={{danger: true}}
                             centered
                         >
-                            <Space direction="vertical" size="middle" style={{width: '100%'}}>
+                            <Space orientation="vertical" size="middle" style={{width: '100%'}}>
                                 <Alert
-                                    message={t("user2FADisableWarning") || "Введите 6-значный код из приложения-аутентификатора для отключения 2FA"}
+                                    title={t("user2FADisableWarning") || "Введите 6-значный код из приложения-аутентификатора для отключения 2FA"}
                                     type="warning"
                                     showIcon
                                 />
@@ -1844,18 +1841,18 @@ export const UserData = () => {
                 footer={null}
                 width={520}
                 centered
-                maskClosable={!apiKeySaveLoading && !apiKeyRevokeLoading && !apiKeyRestartLoading}
+                mask={{ closable: !apiKeySaveLoading && !apiKeyRevokeLoading && !apiKeyRestartLoading }}
             >
-                <Spin spinning={apiKeyRestartLoading} tip={t("apiKeyRestartLoading") || "Перезапуск модели..."}>
-                    <Space direction="vertical" size="middle" style={{width: '100%'}}>
+                <Spin spinning={apiKeyRestartLoading} description={t("apiKeyRestartLoading") || "Перезапуск модели..."}>
+                    <Space orientation="vertical" size="middle" style={{width: '100%'}}>
                         <Alert
                             type="info"
                             showIcon
-                            message={t("apiKeyModalDesc") || "Установите личные API-ключи для каждого провайдера. После изменения ключа активная модель будет автоматически перезапущена."}
+                            title={t("apiKeyModalDesc") || "Установите личные API-ключи для каждого провайдера. После изменения ключа активная модель будет автоматически перезапущена."}
                         />
 
                         <Spin spinning={apiKeyProvidersLoading}>
-                            <Space direction="vertical" size="small" style={{width: '100%'}}>
+                            <Space orientation="vertical" size="small" style={{width: '100%'}}>
                                 {API_KEY_PROVIDERS.map(provider => {
                                     const hasKey = apiKeyProviders.available?.includes(provider.key);
                                     const isRevoking = apiKeyRevokeLoading === provider.key;

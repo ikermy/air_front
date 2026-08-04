@@ -127,7 +127,7 @@ export const AvitoChatsTest: React.FC<AvitoChatsTestProps> = () => {
             key: 'users',
             width: 90,
             render: (users) => (
-                <Space direction="vertical" size="small">
+                <Space orientation="vertical" size="small">
                     {users && users.map((user: any, idx: number) => (
                         <Tag key={idx} icon={<UserOutlined />} color="blue">
                             {user.name} (ID: {user.id})

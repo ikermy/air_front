@@ -2,11 +2,10 @@ import React, {useCallback, useContext, useEffect, useState} from "react";
 import {Card, Form, Input, Descriptions, Spin, Button, Modal, Typography} from "antd";
 import {useTranslation} from 'react-i18next';
 import {showErrorNotification, showNotification} from "../../hotification/showNotification";
-import "../../../dashboard/hotification/style.css";
 import {useNavigate} from "react-router-dom";
 import {useAuth} from "../../../AuthContext";
 import {encryptPassword, getKey} from "../../../utils/easyUtils";
-import {UserContext} from "../../../index";
+import {UserContext} from "../../../UserContext";
 import {ToolOutlined} from "@ant-design/icons";
 import {
     getDevData, setDistribMailData, setNewSessionKey, setGAuthData, setCarpinteroData, getSvcKey, generateSvcKey,

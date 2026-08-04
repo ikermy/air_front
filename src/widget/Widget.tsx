@@ -1,7 +1,4 @@
 import React, { useEffect, useState, lazy, Suspense } from 'react';
-import './Widget.css';
-import './chat/ChatWidget.css'; // Импортируем стили ChatWidget сразу
-import '../dialog/ChatWindow.css'; // Импортируем стили для сообщений (.chat-message, .left, .right)
 import {getWidgetStaticPath} from './utils/environment';
 import {useWidgetTheme} from './hooks/useWidgetTheme';
 import {useWidgetHoverStyles} from './hooks/useWidgetHoverStyles';

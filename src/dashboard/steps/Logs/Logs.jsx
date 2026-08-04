@@ -4,7 +4,6 @@ import {FileTextOutlined, QuestionCircleOutlined, PlayCircleOutlined} from '@ant
 import {getAuthToken, refreshToken} from "../../../utils/easyUtils";
 import {getTourPanelState, setTourPanelState} from "../../../utils/cookieUtils";
 import {useTranslation} from 'react-i18next';
-import '../Tour.css';
 
 // Функция для определения цвета лог-сообщения на основе ANSI кодов и содержимого
 const getLogColor = (message) => {

@@ -1,7 +1,6 @@
 import React, {useEffect, useState, useRef} from 'react';
 import { useTranslation } from 'react-i18next';
 import imagePreloader from './utils/ImagePreloader';
-import './LanguageSwitcher.css';
 
 const flags = {
     ru: '/flags/ru.png',

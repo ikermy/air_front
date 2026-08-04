@@ -1,11 +1,13 @@
 import React from 'react';
 import {createRoot, Root} from 'react-dom/client';
 import {Widget} from './Widget';
-import '../i18n';
+// TODO сделать для виджета один свой css
 import '../App.css';
 import './Widget.css';
-import '../dialog/ChatWindow.css';
+import './Transceiver.css';
 import './chat/ChatWidget.css';
+import '../dialog/ChatWindow.css';
+import '../i18n';
 import {configureWidgetRuntime} from './utils/environment';
 import {normalizeWidgetColors, parseWidgetColors} from './model/color.types';
 import type {WidgetColorConfig} from './model/color.types';

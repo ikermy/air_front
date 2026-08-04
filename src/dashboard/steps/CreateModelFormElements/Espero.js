@@ -2,7 +2,6 @@ import {InputNumber, Modal, Slider, Switch, Typography} from "antd";
 import React, {useEffect, useState} from "react";
 import {SettingOutlined} from "@ant-design/icons";
 import {useTranslation} from "react-i18next";
-import "./Espero.css";
 
 
 export const Espero = ({ value = {}, onChange }) => {

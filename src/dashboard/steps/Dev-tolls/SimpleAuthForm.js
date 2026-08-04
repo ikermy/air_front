@@ -3,7 +3,7 @@ import { LockOutlined, MailOutlined } from '@ant-design/icons';
 import { Button, Form, Input } from 'antd';
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { UserContext } from "../../../index";
+import { UserContext } from "../../../UserContext";
 import { getKey, encryptPassword } from '../../../utils/easyUtils';
 import { useAuth } from "../../../AuthContext";
 import { showNotification, showWarningNotification, showErrorNotification } from "../../hotification/showNotification.js";

@@ -1,9 +1,13 @@
 import React, {useEffect} from "react";
+import dynamic from "next/dynamic";
 import {useSearchParams} from "react-router-dom";
 import {useTranslation} from "react-i18next";
 import LandingPage from "./landing/LandingPage";
 import TopMenu from "./menu/TopMenu";
-import {Widget} from "./widget/Widget";
+const Widget = dynamic(
+    () => import("./widget/Widget").then((module) => module.Widget),
+    {ssr: false}
+);
 import {useAuth} from "./AuthContext";
 import {checkAuthToken} from "./landing/auth/CheckAuth";
 import {showNotification, showErrorNotification} from "./dashboard/hotification/showNotification";

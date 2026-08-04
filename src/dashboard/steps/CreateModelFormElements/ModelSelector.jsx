@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Card, Button, Badge, Spin, Tooltip, Alert } from 'antd';
 import { CheckCircleOutlined, PlusOutlined, RocketOutlined, KeyOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
-import './ModelSelector.css';
 import { fetchProvidersAvailability } from './providersUtils';
 import { showErrorNotification } from '../../hotification/showNotification';
 import { AI_PROVIDERS } from './providersConfig';
@@ -87,6 +86,9 @@ export const ModelSelector = ({
             <Spin spinning={providersLoading}>
                 <div className="model-selector-grid">
                     {visibleProviders.map((provider) => {
+                        const providerLogo = typeof provider.logo === 'string'
+                            ? provider.logo
+                            : provider.logo?.src;
                         const modelData = allModelsData?.[provider.key];
                         const isActive = activeProvider === provider.key;
                         const isSelected = selectedProvider === provider.key;
@@ -105,7 +107,7 @@ export const ModelSelector = ({
                                 hoverable={!loading && !isDisabled}
                                 onClick={() => !isDisabled && hasModel && !loading && onSelectProvider(provider.key)}
                             >
-                                <Spin spinning={isActivating} tip={t("modelActivating") || "Активация..."}>
+                                <Spin spinning={isActivating} description={t("modelActivating") || "Активация..."}>
                                     {!isDisabled && isSelected && hasUnsavedChanges && (
                                         <Badge.Ribbon
                                             text={t("modelUnsaved") || "Не сохранено"}
@@ -117,7 +119,7 @@ export const ModelSelector = ({
                                     <div className="provider-card-content">
                                         <div className="provider-logo-container">
                                             <img
-                                                src={provider.logo}
+                                                src={providerLogo}
                                                 alt={provider.name}
                                                 className="provider-logo"
                                                 style={{ filter: (!hasModel || isDisabled) ? 'grayscale(100%) opacity(0.3)' : 'none' }}

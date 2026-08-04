@@ -7,7 +7,6 @@ import {
     DollarOutlined, UserOutlined,
 } from '@ant-design/icons';
 import { FaDev } from 'react-icons/fa';
-import './DashboardOverview.css';
 import {GiConversation} from "react-icons/gi";
 import {GoLog} from "react-icons/go";
 import {GrServices} from "react-icons/gr";

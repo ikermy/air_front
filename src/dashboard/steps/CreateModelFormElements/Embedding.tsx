@@ -71,6 +71,10 @@ export const Embedding: React.FC<EmbeddingProps> = ({
 
   // Получение списка документов при загрузке
   const fetchDocuments = useCallback(async () => {
+    if (!provider) {
+      setExistingDocuments([]);
+      return;
+    }
     try {
       setLoadingDocs(true);
 
@@ -217,6 +221,10 @@ export const Embedding: React.FC<EmbeddingProps> = ({
 
   // Загрузка эмбеддинга
   const handleSubmitText = useCallback(async () => {
+    if (!provider) {
+      console.warn("Embedding: provider is required before uploading documents");
+      return;
+    }
     if (!validateText()) {
       return;
     }

@@ -21,7 +21,6 @@ import {
     DeleteOutlined
 } from '@ant-design/icons';
 import {useTranslation} from 'react-i18next';
-import '../Tour.css';
 import {LeadSchedule} from "./LeadHunter/leadSchedule";
 import {ServiceModelData} from "./LeadHunter/leadModelData";
 import {ServiceContactsData} from "./LeadHunter/leadContacts";
@@ -33,7 +32,6 @@ import {showNotification, showErrorNotification} from "../../hotification/showNo
 import {getTourPanelState, setTourPanelState} from "../../../utils/cookieUtils";
 import {LeadStartService} from "./LeadHunter/leadStartService";
 import {DelService} from "./serviceUtils";
-import '../Tour.css';
 
 export function LeadHunterService({ onServiceDeleted }) {
     const {t} = useTranslation();
@@ -119,7 +117,6 @@ export function LeadHunterService({ onServiceDeleted }) {
 
     // Обработчик подтверждения запуска
     const handleStartConfirm = async () => {
-        console.log('handleStartConfirm: начало выполнения');
         setIsActionLoading(true); // Блокируем кнопку
         setStartStatus(t("serviceStarting") || 'Подготовка к запуску...'); // Устанавливаем начальный статус
 
@@ -130,8 +127,6 @@ export function LeadHunterService({ onServiceDeleted }) {
             // Настраиваем коллбэки для обработки событий WebSocket ПЕРЕД запуском
             startServiceRef.current.setCallbacks({
                 onStatus: (step, msg) => {
-                    console.log('WebSocket onStatus:', step, msg);
-
                     // Обработка ошибки запуска
                     if (step === 'service_start_failed') {
                         if (!errorHandled) {
@@ -178,8 +173,6 @@ export function LeadHunterService({ onServiceDeleted }) {
                 },
 
                 onProgress: (step, msg) => {
-                    console.log('WebSocket onProgress:', step, msg);
-
                     // Специальная обработка для проверки прокси
                     if (step === 'proxy_check') {
                         setStartStatus(msg || t("serviceStatusProxyCheck") || 'Проверка proxy...');
@@ -193,17 +186,14 @@ export function LeadHunterService({ onServiceDeleted }) {
                 },
 
                 onBotStarting: (botId, msg) => {
-                    console.log('WebSocket onBotStarting:', botId, msg);
                     // Уведомление о начале инициализации конкретного бота
                     setStartStatus(`${t("bot") || "Бот"} #${botId}: ${msg || t("serviceBotInit") || 'инициализация...'}`);
                 },
                 onBotCreated: (botId, msg) => {
-                    console.log('WebSocket onBotCreated:', botId, msg);
                     // Уведомление о создании конкретного бота
                     setStartStatus(`${t("bot") || "Бот"} #${botId}: ${msg || t("serviceBotCreated") || 'создан'}`);
                 },
                 onBotStarted: (botId, msg) => {
-                    console.log('WebSocket onBotStarted:', botId, msg);
                     // Уведомление о запуске конкретного бота
                     setStartStatus(`${t("bot") || "Бот"} #${botId}: ${msg || t("serviceBotStarted") || 'запущен'}`);
                 },
@@ -217,7 +207,6 @@ export function LeadHunterService({ onServiceDeleted }) {
                 },
 
                 onCompleted: (step, data) => {
-                    console.log('WebSocket onCompleted:', step, data);
                     // Успешное завершение
                     setIsServiceRunning(true);
                     const totalContacts = data?.total_contacts || 0;
@@ -245,7 +234,6 @@ export function LeadHunterService({ onServiceDeleted }) {
                 },
 
                 onTimeout: () => {
-                    console.log('WebSocket onTimeout');
                     // Обработка таймаута
                     showErrorNotification(t("serviceStartTimeoutTitle") || 'Таймаут', t("serviceStartTimeout") || 'Превышено время ожидания запуска сервиса');
                     setTimeout(() => {
@@ -256,7 +244,6 @@ export function LeadHunterService({ onServiceDeleted }) {
                 },
 
                 onUpdateToken: () => {
-                    console.log('WebSocket onUpdateToken');
                     // Обновление токена
                     message.error(t("serviceRequireAuth") || 'Требуется повторная авторизация');
                     setTimeout(() => {
@@ -269,7 +256,6 @@ export function LeadHunterService({ onServiceDeleted }) {
 
             // Запускаем сервис через WebSocket (userID передаётся через токен автоматически)
             const result = await startServiceRef.current.startService();
-            console.log('handleStartConfirm: результат startService =', result);
 
             if (!result) {
                 // Если startService вернул false, значит проблема с токеном
@@ -691,7 +677,7 @@ export function LeadHunterService({ onServiceDeleted }) {
                     disabled: isActionLoading
                 }}
                 closable={!isActionLoading}
-                maskClosable={!isActionLoading}
+                mask={{ closable: !isActionLoading }}
             >
                 {/* Предупреждение при отсутствии активных Telegram ботов */}
                 {(() => {
@@ -765,7 +751,7 @@ export function LeadHunterService({ onServiceDeleted }) {
                     disabled: isActionLoading
                 }}
                 closable={!isActionLoading}
-                maskClosable={!isActionLoading}
+                mask={{ closable: !isActionLoading }}
             >
                 <p>{t("serviceStopModalText1") || "Вы собираетесь остановить работу сервиса поиска лидов."}</p>
                 <p>{t("serviceStopModalText2") || "Все активные процессы будут остановлены."}</p>

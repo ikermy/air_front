@@ -79,8 +79,6 @@ export const DeleteModel = ({onModelDeleted, selectedProvider}) => {
 
             // Обработчик сообщений от сервера
             wsRef.current.onmessage = (event) => {
-                console.log('Получено сообщение:', event.data);
-
                 // Добавляем любое сообщение от сервера в список
                 setDeleteMessages(prev => [...prev, event.data]);
 
@@ -227,7 +225,7 @@ export const DeleteModel = ({onModelDeleted, selectedProvider}) => {
                 closable={false}
                 centered
                 width={700}
-                maskClosable={false}
+                mask={{ closable: false }}
 
                 className="delete-progress-modal"
             >

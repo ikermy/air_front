@@ -95,12 +95,9 @@ export const fetchCurrencies = async (setLoadingCurrencies, setCurrencies) => {
 export const checkPayAvailability = async () => {
     let errorToThrow = null;
     try {
-        const response = await fetch(`/v1/system/available/pay`, {
+        const response = await authFetch(`/v1/channel/available/pay`, {
             method: 'GET',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            signal: AbortSignal.timeout(5000)
+            headers: { 'Accept': 'application/json' },
         });
 
         if (!response.ok) {

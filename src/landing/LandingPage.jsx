@@ -3,7 +3,6 @@ import HeroSection from "./Hero";
 import Meta from "./Meta";
 import AssistFeatures from "./AssistFeatures";
 import {useChatVisibility} from "../ChatVisibilityContext";
-import "./LandingPage.css"
 import FooterSection from "./FooterSection";
 import { Spin } from 'antd';
 

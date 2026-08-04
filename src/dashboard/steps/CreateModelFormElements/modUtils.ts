@@ -1,4 +1,10 @@
-import { authFetch } from "../../../utils/easyUtils";
+import {authFetch} from "../../../utils/easyUtils";
+
+export function providerToName(provider?: string | number | null): string | null {
+    const name = String(provider ?? "").toLowerCase();
+    if (name === "gemini") return "google";
+    return ["openai", "mistral", "google"].includes(name) ? name : null;
+}
 
 
 // ─── Типы ────────────────────────────────────────────────────────────────────
@@ -24,6 +30,27 @@ export interface GoogleRealtimeVAD {
     silence_duration_ms?: number | null;
 }
 
+export interface MistralVoiceCloneConfig {
+    enabled: boolean;
+    profile_id: string;
+    reference_audio_id: string;
+    reference_format: string;
+    reference_duration_ms: number;
+}
+
+export interface MistralRealtimeVAD {
+    initial_greeting?: boolean | null;
+    greeting?: string | null;
+    stt_model?: string | null;
+    tts_model?: string | null;
+    voice?: string | null;
+    voice_id?: string | null;
+    reference_audio_id?: string | null;
+    voice_clone?: MistralVoiceCloneConfig | null;
+    speech_format?: string | null;
+    stt_language?: string | null;
+}
+
 export interface RealtimeVAD {
     threshold?: number | null;
     prefix_padding_ms?: number | null;
@@ -38,11 +65,14 @@ export interface RealtimeVAD {
     voice?: string | null;
     /** Google-специфичные параметры */
     google?: GoogleRealtimeVAD | null;
+    mistral?: MistralRealtimeVAD | null;
 }
 
 export interface GptTypeValue {
     name: string;
     id?: number | null;
+    stt?: string;
+    tts?: string;
 }
 
 export interface UseModelName {
@@ -114,7 +144,14 @@ export interface CheckDemoResult {
 }
 
 export interface ListModelsResponse {
-    models?: Array<string | { Id?: string | number | null; Name?: string | null } | null>;
+    models?: Array<string | ProviderModel | null>;
+}
+
+export interface ProviderModel {
+    Id?: string | number | null;
+    Name?: string | null;
+    stt?: string;
+    tts?: string;
 }
 
 // ─── Типы для getModelData ────────────────────────────────────────────────────
@@ -160,8 +197,9 @@ export async function getListModelNames(
     provider?: string | null,
     modelType: "general" | "realtime" = "general",
 ): Promise<GptTypeValue[]> {
+    const providerName = providerToName(provider);
     const params = new URLSearchParams();
-    if (provider) params.set("provider", provider);
+    params.set("provider", String(providerName));
     params.set("type", modelType);
     const query = params.toString();
     const response = await authFetch(`/v1/model/list${query ? `?${query}` : ""}`, {
@@ -178,14 +216,13 @@ export async function getListModelNames(
         throw new Error(errorData.error || `Ошибка сервера: ${response.status}`);
     }
 
-    const data = await response.json() as ListModelsResponse;
-    const rawModels = Array.isArray(data?.models) ? data.models : [];
-
+    const data = await response.json() as ListModelsResponse | Array<string | ProviderModel | null>;
+    const rawModels = Array.isArray(data) ? data : (Array.isArray(data?.models) ? data.models : []);
     return rawModels
-        .filter((item): item is string | { Id?: string | number | null; Name?: string | null } => item != null)
+        .filter((item): item is string | ProviderModel => item != null)
         .map((item) => {
             if (typeof item === "string") {
-                return { name: item, id: 0 };
+                return {name: item, id: 0};
             }
 
             if (typeof item === "object") {
@@ -200,28 +237,37 @@ export async function getListModelNames(
                         : undefined;
 
                 const finalId = id !== undefined && Number.isFinite(id) ? id : 0;
-                return name ? { name, id: finalId } : { name: "", id: 0 };
+                return name
+                    ? {name, id: finalId, stt: item.stt, tts: item.tts}
+                    : {name: "", id: 0};
             }
 
-            return { name: "", id: 0 };
+            return {name: "", id: 0};
         })
         .filter((model) => Boolean(model.name));
 }
 
-export async function getModelData(): Promise<AllModelsResponse | null> {
-    const response = await authFetch(`/v1/model`, {
+export async function getModelData(provider?: string | number | null): Promise<AllModelsResponse | null> {
+    const providers = providerToName(provider)
+        ? [providerToName(provider)!]
+        : ["openai", "mistral", "google"];
+    const responses = await Promise.all(providers.map((providerName) => authFetch(`/v1/model?provider=${providerName}`, {
         method: "GET",
         headers: {
             "Content-Type": "application/json",
         },
-    });
-
-    if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `Ошибка сервера: ${response.status}`);
-    }
-
-    return await response.json() as AllModelsResponse;
+    })));
+    const data = await Promise.all(responses.map(async (response) => {
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || `Ошибка сервера: ${response.status}`);
+        }
+        return await response.json() as AllModelsResponse;
+    }));
+    return {
+        models: Object.assign({}, ...data.map((item) => item?.models ?? {})),
+        active_provider: data.find((item) => item?.active_provider)?.active_provider ?? null,
+    };
 }
 
 export function extractAllModels(data: AllModelsResponse | null): Record<string, ModelData> {
@@ -241,7 +287,8 @@ export const saveModelData = async ({
     useModelName = null,
 }: SaveModelParams): Promise<SaveModelResult> => {
     const endpoint = isUpdate ? "/v1/model/update" : "/v1/model/create";
-    const providerParam = provider ? `?provider=${provider}` : "";
+    const providerName = providerToName(provider);
+    const providerParam = providerName ? `?provider=${providerName}` : "";
 
     try {
         const mrt = values.realtime_vad?.max_response_output_tokens;
@@ -308,7 +355,7 @@ export const saveModelData = async ({
 
         // ── OpenAI Realtime VAD ───────────────────────────────────────────────
         let openaiVadResult: (Partial<RealtimeVAD> & { max_response_output_tokens?: number }) | null = null;
-        if (Boolean(values.realtime) && values.realtime_vad) {
+        if (provider !== "mistral" && Boolean(values.realtime) && values.realtime_vad) {
             const vadContainer = values.realtime_vad as any;
             const vad = vadContainer.realtime_vad || vadContainer;
             openaiVadResult = {};
@@ -324,12 +371,34 @@ export const saveModelData = async ({
             if (vad.voice != null && vad.voice !== "verse") openaiVadResult.voice = vad.voice;
         }
 
+        // ── Mistral Realtime ─────────────────────────────────────────────────
+        const mistralContainer = values.realtime_vad as any;
+        const mistralFormValue = mistralContainer && Object.prototype.hasOwnProperty.call(mistralContainer, "realtime_vad")
+            ? mistralContainer.realtime_vad
+            : mistralContainer;
+        const mistralVadResult: MistralRealtimeVAD | null = provider === "mistral" && mistralFormValue
+            ? (mistralFormValue.mistral || mistralFormValue)
+            : null;
+        const mistralCommonFields = mistralVadResult
+            ? {
+                  ...(mistralVadResult.initial_greeting != null ? {initial_greeting: mistralVadResult.initial_greeting} : {}),
+                  ...(mistralVadResult.greeting != null ? {greeting: mistralVadResult.greeting} : {}),
+              }
+            : {};
+
         // realtime_vad объединяет OpenAI-поля, общие поля Google и вложенный google-блок
         const realtimeVadPayload =
-            openaiVadResult || googleVadResult
+            openaiVadResult || googleVadResult || mistralVadResult
                 ? {
                       ...(openaiVadResult ?? {}),
                       ...(googleVadResult ? { ...googleCommonFields, google: googleVadResult } : {}),
+                      ...(mistralVadResult ? {
+                          ...mistralCommonFields,
+                          mistral: (() => {
+                              const {initial_greeting: _initialGreeting, greeting: _greeting, ...mistral} = mistralVadResult;
+                              return mistral;
+                          })(),
+                      } : {}),
                   }
                 : null;
 
@@ -346,7 +415,9 @@ export const saveModelData = async ({
             use_model_name: {
                 // Обе модели сохраняются одновременно: realtime не заменяет general.
                 gpttype: resolvedModelName ?? null,
-                realtime: Boolean(values.realtime) || googleRtEnabled ? (resolvedRealtimeModelName ?? null) : null,
+                realtime: provider === "mistral"
+                    ? null
+                    : (Boolean(values.realtime) || googleRtEnabled ? (resolvedRealtimeModelName ?? null) : null),
             },
             fileids: Boolean(values.s3files) ? (values.fileids || []) : [],
             s3: Boolean(values.s3files),
@@ -363,7 +434,7 @@ export const saveModelData = async ({
                       }
                     : { calendar: false, sheets: false },
             // OpenAI Realtime API или Google Realtime — оба используют поле realtime на сервере
-            realtime: Boolean(values.realtime) || googleRtEnabled,
+                realtime: Boolean(values.realtime) || googleRtEnabled || Boolean(mistralVadResult),
             // Объединённый VAD (OpenAI-поля + общие поля + google-блок)
             realtime_vad: realtimeVadPayload,
         };
@@ -397,7 +468,11 @@ export const saveModelData = async ({
 
 export const setActiveProvider = async (provider: string): Promise<SetActiveProviderResult> => {
     try {
-        const url = `/v1/model/set-active?provider=${encodeURIComponent(provider)}`;
+        const providerName = providerToName(provider);
+        if (!providerName) {
+            return { status: "error", error: "Неизвестный провайдер" };
+        }
+        const url = `/v1/model/set-active?provider=${providerName}`;
         const response = await authFetch(url, {
             headers: {
                 "Content-Type": "application/json",

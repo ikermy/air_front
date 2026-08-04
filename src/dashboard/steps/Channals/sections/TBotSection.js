@@ -119,10 +119,10 @@ export const TBotSection = ({channel, selectedChannels, setSelectedChannels}) =>
             {botName ? (
                 <Alert
                     className="channel-alert"
-                    message={t("tbotBotRunning") || "Telegram Bot запущен"}
+                    title={t("tbotBotRunning") || "Telegram Bot запущен"}
                     description={
                         <>
-                            {t("tbotBotRunningDesc") || "Сейчас ваш"}
+                            {t("tbotBotRunningDesc") || "Сейчас ваш"}{" "}
                             <b>{botName}</b> {t("tbotBotRunningDesc2") || "бот запущен и взаимодействует с Агентом!"}
                         </>
                     }
@@ -132,7 +132,7 @@ export const TBotSection = ({channel, selectedChannels, setSelectedChannels}) =>
                 <div className="padding">
                     <Alert
                         className="channel-alert"
-                        message={t("tbotRequireToken") || "Укажите API Token"}
+                        title={t("tbotRequireToken") || "Укажите API Token"}
                         description={
                             <>
                                 {t("tbotTokenDescription") || "Для работы агента с вашим ботом необходимо указать bot token, получить который можно в Telegram"}
@@ -189,5 +189,4 @@ export const TBotSection = ({channel, selectedChannels, setSelectedChannels}) =>
                 />
             </div>
         </>
-    );
-};
+    );};

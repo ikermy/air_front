@@ -3,7 +3,6 @@ import {Select, Spin, Tooltip} from "antd";
 import {RobotOutlined, InfoCircleOutlined} from "@ant-design/icons";
 import {useTranslation} from "react-i18next";
 import {getListModelNames, type GptTypeValue} from "./modUtils";
-import "./Espero.css";
 
 interface TypesGPTProps {
     token?: string | null;

@@ -1,12 +1,11 @@
 import React, {useEffect} from 'react';
 import ReactDOM from 'react-dom';
-import {Modal, Typography} from 'antd';
+import {ConfigProvider, Modal, Typography} from 'antd';
 import {useTranslation} from 'react-i18next';
-import './HighZIndexModals.css';
 
 // Настроим глобальный z-index для всех модальных окон Ant Design
 if (typeof window !== 'undefined') {
-    Modal.config({
+    ConfigProvider.config({
         rootClassName: 'high-z-index-modal',
     });
 }
@@ -36,7 +35,7 @@ export function PolicyModal({ isOpen, onClose }) {
             width={700}
             centered
             mask={true}
-            maskClosable={true}
+            mask={{ closable: true }}
             wrapClassName="regform-policy-modal-portal"
             style={{ zIndex: 30000 }}
             maskStyle={{ zIndex: 29999 }}
@@ -102,7 +101,7 @@ export function DemoModal({ isOpen, onClose }) {
             width={700}
             centered
             mask={true}
-            maskClosable={true}
+            mask={{ closable: true }}
             wrapClassName="regform-demo-modal-portal"
             style={{ zIndex: 30000 }}
             maskStyle={{ zIndex: 29999 }}

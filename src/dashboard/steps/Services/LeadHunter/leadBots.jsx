@@ -11,8 +11,6 @@ import {
     saveServiceSetting
 } from "./leadUtils";
 import {showErrorNotification, showNotification} from "../../../hotification/showNotification";
-import "../../../steps.css";
-import "../../CreateModel.css";
 
 // Получение статусов ботов с переводами
 const getBotStatuses = (t) => ({
@@ -72,7 +70,6 @@ export const LeadBots = forwardRef((props, ref) => {
         if (isBotsLoadingRef.current) {
             // Если уже идёт загрузка — увеличиваем счетчик ожидающих обновлений
             botsRefreshQueueRef.current++;
-            console.log('[fetchBotsInfo] Загрузка в процессе, добавлено в очередь. Очередь:', botsRefreshQueueRef.current);
             return;
         }
         isBotsLoadingRef.current = true;
@@ -80,11 +77,9 @@ export const LeadBots = forwardRef((props, ref) => {
             const data = await readServiceAllBotInfo();
             if (data.bots && Array.isArray(data.bots) && data.bots.length > 0) {
                 setBots(data.bots);
-                console.log('[fetchBotsInfo] Ботов загружено:', data.bots.length);
             } else {
                 // Если пришло null или не массив — ставим пустой список, чтобы не падать
                 setBots([]);
-                console.log('[fetchBotsInfo] Пустой список ботов');
             }
 
             // Обновляем настройки, если они пришли с сервера
@@ -111,7 +106,6 @@ export const LeadBots = forwardRef((props, ref) => {
             if (botsRefreshQueueRef.current > 0) {
                 const pendingRefreshes = botsRefreshQueueRef.current;
                 botsRefreshQueueRef.current = 0; // Сбрасываем очередь перед новой загрузкой
-                console.log('[fetchBotsInfo] Обработка ожидающих обновлений:', pendingRefreshes);
                 // Небольшая задержка, чтобы не попасть под rate limit
                 setTimeout(() => {
                     fetchBotsInfo();
@@ -286,7 +280,6 @@ export const LeadBots = forwardRef((props, ref) => {
             service.setCallbacks({
                 onStatus: (step) => {
                     setAuthStepDescription(getStepDescription(step));
-                    console.log('Шаг авторизации:', step, getStepDescription(step));
                 },
                 onQrCode: (qrUrl) => {
                     setQrCodeUrl(qrUrl);
@@ -387,7 +380,6 @@ export const LeadBots = forwardRef((props, ref) => {
             service.setCallbacks({
                 onStatus: (step) => {
                     setAuthStepDescription(getStepDescription(step));
-                    console.log('Шаг авторизации WhatsApp:', step, getStepDescription(step));
                 },
                 onQrCode: (qrUrl) => {
                     setQrCodeUrl(qrUrl);

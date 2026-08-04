@@ -4,7 +4,6 @@ import {useTheme} from '../ThemeContext';
 import LanguageSwitcher from '../LanguageSwitcher';
 import ThemeToggle from './ThemeToggle'; // Импортируем ThemeToggle
 import {useTranslation} from "react-i18next";
-import './TopMenu.css';
 import {Avatar, Badge, message, Tooltip} from 'antd';
 import {UserOutlined} from "@ant-design/icons";
 import {AuthForm} from "../landing/auth/AuthForm";
@@ -151,7 +150,7 @@ function TopMenu() {
                     <ThemeToggle/>
                 </div>
             </div>
-            {isModalOpen && createPortal(
+            {isModalOpen && typeof document !== 'undefined' && createPortal(
                 <Modal
                     onClose={handleCloseModal}
                     itFreeClose={false}

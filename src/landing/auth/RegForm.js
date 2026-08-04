@@ -1,9 +1,8 @@
 import React, {useContext, useState} from 'react';
 import {LockOutlined, UserOutlined, MailOutlined} from '@ant-design/icons';
 import {Button, Form, Input, Switch} from 'antd';
-import {UserContext} from "../../index";
+import {UserContext} from "../../UserContext";
 import {encryptPassword} from "../../utils/easyUtils";
-import './auth.css';
 import {useTranslation} from "react-i18next";
 import i18n from "i18next";
 import {PolicyModal, DemoModal} from './PolicyModals';
@@ -216,7 +215,7 @@ export function RegForm({
                     name="password"
                     rules={[{validator: validatePassword}]}
                 >
-                    <Input.Password prefix={<LockOutlined/>} placeholder={t('RegForm-ThinkPass')}/>
+                    <Input.Password autoComplete="new-password" prefix={<LockOutlined/>} placeholder={t('RegForm-ThinkPass')}/>
                 </Form.Item>
 
                 <Form.Item
@@ -234,7 +233,7 @@ export function RegForm({
                         }),
                     ]}
                 >
-                    <Input.Password prefix={<LockOutlined/>} placeholder={t('RegForm-ConfirmPass')}/>
+                    <Input.Password autoComplete="new-password" prefix={<LockOutlined/>} placeholder={t('RegForm-ConfirmPass')}/>
                 </Form.Item>
 
                 <div

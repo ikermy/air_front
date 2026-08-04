@@ -5,12 +5,14 @@ import LanguageDetector from 'i18next-browser-languagedetector'
 // Базовый язык загружается сразу (русский или английский)
 import translationRu from './locales/ru/translation.json';
 import translationEn from './locales/en/translation.json';
+import translationEs from './locales/es/translation.json';
 
 // Динамическая загрузка дополнительных языков
 const loadLanguageAsync = async (lng) => {
     try {
-        const translation = await import(`./locales/${lng}/translation.json`);
-        i18n.addResourceBundle(lng, 'translation', translation.default, true, true);
+        const language = lng.split('-')[0];
+        const translation = await import(`./locales/${language}/translation.json`);
+        i18n.addResourceBundle(language, 'translation', translation.default, true, true);
         return translation.default;
     } catch (error) {
         console.warn(`Failed to load language: ${lng}`, error);
@@ -24,6 +26,9 @@ const resources = {
     },
     en: {
         translation: translationEn
+    },
+    es: {
+        translation: translationEs
     }
     // Другие языки будут загружены по требованию
 };
@@ -38,6 +43,8 @@ i18n
             caches: ['cookie', 'localStorage']
         },
         resources,
+        supportedLngs: ['ru', 'en', 'es'],
+        nonExplicitSupportedLngs: true,
         fallbackLng: 'en',
         keySeparator: false,
         interpolation: {

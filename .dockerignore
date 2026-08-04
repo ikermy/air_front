@@ -33,6 +33,8 @@ App.test.js
 build/
 dist/
 .cache/
+.next/
+coverage/
 
 # Docker файлы (не нужны внутри контейнера)
 docker-compose.yml

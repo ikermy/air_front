@@ -213,15 +213,12 @@ export class LeadStartService {
             this.intentionalClose = false; // Сбрасываем флаг при новом подключении
 
             this.socket.onopen = () => {
-                console.log('WebSocket соединение для запуска сервиса установлено');
                 // НЕ отправляем данные - сервер сам начнёт отправлять события после подключения
             };
 
             this.socket.onmessage = (event) => {
                 try {
                     const data = JSON.parse(event.data);
-                    console.log('WebSocket получено сообщение:', data);
-
                     // Формируем расширенное сообщение с информацией о Provider, если он указан
                     const enhancedMessage = this.enhanceMessageWithProvider(data);
 
@@ -457,7 +454,6 @@ export class LeadStartService {
             };
 
             this.socket.onclose = (event) => {
-                console.log('WebSocket соединение закрыто', event.code, event.reason);
                 // Если закрытие произошло после успешного завершения, обработанной ошибки или по нашему намерению, игнорируем
                 const wasCleanSuccess = this.successHandled || this.intentionalClose || this.errorHandled;
                 if (!wasCleanSuccess && event.code !== 1000 && this.callbacks.onError) {

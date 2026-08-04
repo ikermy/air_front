@@ -33,7 +33,6 @@ import React, { useEffect } from 'react';
 import { Spin, Result, Typography } from 'antd';
 import { CloseCircleOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
-import './OAuthCallback.css';
 
 const { Paragraph } = Typography;
 
@@ -49,15 +48,10 @@ export const OAuthError: React.FC<OAuthErrorProps> = ({ provider }) => {
   const { t } = useTranslation();
 
   useEffect(() => {
-    console.log(`[${provider.toUpperCase()} OAuth Error] Страница загружена`);
-
     // Получаем параметры из URL
     const urlParams = new URLSearchParams(window.location.search);
     const reason = urlParams.get('reason');
     const modelProvider = urlParams.get('provider'); // Для Google
-
-    console.log(`[${provider.toUpperCase()} OAuth Error] Reason:`, reason, 'Provider:', modelProvider);
-
     // Подготовка данных сообщения
     const messageData: any = {
       type: `${provider}_oauth_error`,
@@ -73,13 +67,10 @@ export const OAuthError: React.FC<OAuthErrorProps> = ({ provider }) => {
 
     // Отправляем сообщение в родительское окно
     if (window.opener && !window.opener.closed) {
-      console.log(`[${provider.toUpperCase()} OAuth Error] Отправляем postMessage в родительское окно`);
-
       window.opener.postMessage(messageData, window.location.origin);
 
       // Закрываем окно через 3 секунды (больше времени для чтения ошибки)
       setTimeout(() => {
-        console.log(`[${provider.toUpperCase()} OAuth Error] Закрываем окно`);
         window.close();
       }, 3000);
     } else {

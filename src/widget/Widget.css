@@ -24,7 +24,47 @@
 /*    --close-button-bg-hover: var(--error-color);*/
 /*}*/
 
-/* CSS переменные для виджета убраны - используем из App.css */
+:root {
+    --error-color: #ff0202;
+    --chat-window-border-light: #ccc;
+    --chat-window-border-dark: #444;
+    --input-bg-light: #ffffff;
+    --input-bg-dark: #333333;
+    --input-border-light: #ccc;
+    --input-border-dark: #555;
+    --button-bg-light: #f7ffe9;
+    --button-bg-dark: #e2ffb6;
+    --message-left-bg-light: #f4f4f4;
+    --message-left-bg-dark: #5c5c5c;
+    --message-right-bg-light: #f9ffdd;
+    --message-right-bg-dark: #395a00;
+    --error-message-bg-light: #ffe6e6;
+    --error-message-bg-dark: #663333;
+    --message-name-color-light: darkgray;
+    --message-name-color-dark: lightgray;
+}
+
+body.light {
+    --chat-window-border: var(--chat-window-border-light);
+    --input-bg: var(--input-bg-light);
+    --input-border: var(--input-border-light);
+    --button-bg: var(--button-bg-light);
+    --message-left-bg: var(--message-left-bg-light);
+    --message-right-bg: var(--message-right-bg-light);
+    --error-message-bg: var(--error-message-bg-light);
+    --message-name-color: var(--message-name-color-light);
+}
+
+body.dark {
+    --chat-window-border: var(--chat-window-border-dark);
+    --input-bg: var(--input-bg-dark);
+    --input-border: var(--input-border-dark);
+    --button-bg: var(--button-bg-dark);
+    --message-left-bg: var(--message-left-bg-dark);
+    --message-right-bg: var(--message-right-bg-dark);
+    --error-message-bg: var(--error-message-bg-dark);
+    --message-name-color: var(--message-name-color-dark);
+}
 
 .widget-cap {
     display: flex;

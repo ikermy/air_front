@@ -1,7 +1,6 @@
 import React, {useCallback, useEffect, useState} from 'react';
 import {useTranslation} from 'react-i18next';
 import {IoSend} from 'react-icons/io5';
-import './Transceiver.css';
 import {sendWidgetMessage, validateWidgetToken} from './widgetUtils';
 
 export interface TransceiverProps {

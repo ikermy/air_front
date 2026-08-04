@@ -1,7 +1,6 @@
 import React, {useState} from 'react';
 import axios from 'axios';
 import {useTranslation} from 'react-i18next';
-import './SimpleTransceiver.css';
 import {IoSend} from "react-icons/io5";
 
 

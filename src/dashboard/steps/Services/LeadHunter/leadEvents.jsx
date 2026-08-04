@@ -5,8 +5,6 @@ import {message, Spin, Button, Table, Badge, Tag, Alert, Empty} from "antd";
 import {BellOutlined, ReloadOutlined, SyncOutlined} from "@ant-design/icons";
 import {LeadBotEvents} from "./leadBotEvents";
 import {showErrorNotification, showNotification} from "../../../hotification/showNotification";
-import "../../../steps.css";
-import "../../CreateModel.css";
 
 
 const CAUSE_GROUP_COLORS = {
@@ -70,8 +68,6 @@ export function LeadEvents() {
 
                     service.setCallbacks({
                         onEvents: (newEvents, count) => {
-                            console.log(`Получено событий: ${count}`);
-
                             setEvents(prevEvents => {
                                 // Объединяем старые и новые события, убираем дубликаты
                                 const combinedEvents = [...prevEvents, ...newEvents];
@@ -271,7 +267,7 @@ export function LeadEvents() {
     if (loading) {
         return (
             <div className="dashboard-block" style={{ textAlign: 'center', padding: '50px' }}>
-                <Spin size="large" tip={t('loadingEvents') || "Загрузка событий..."} />
+                <Spin size="large" description={t('loadingEvents') || "Загрузка событий..."} />
             </div>
         );
     }

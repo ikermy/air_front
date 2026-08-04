@@ -4,7 +4,6 @@ import ThemeToggle from "../menu/ThemeToggle";
 import {Button} from "antd";
 import {useAuth} from "../AuthContext";
 import {useNavigate} from "react-router-dom";
-import './dash.css';
 import {RxExit} from "react-icons/rx";
 import {MenuOutlined} from "@ant-design/icons";
 import {useTranslation} from "react-i18next";
@@ -55,7 +54,7 @@ export const DashboardHeader = ({ setSiderCollapsed, siderCollapsed }) => {
                     danger
                     ghost
                     icon={<RxExit />}
-                    iconPosition="end"
+                    iconPlacement="end"
                     onClick={handleExit}
                 >
                     {t('headerLogout') || "Выход"}

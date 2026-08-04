@@ -10,6 +10,8 @@ services:
     restart: always
     environment:
       - NODE_ENV=production
+      - PORT=3000
+      - BACKEND_INTERNAL_URL=http://airbff:8080
       - LAND_URL=https://${DOMAIN}
     networks:
       - app_internal

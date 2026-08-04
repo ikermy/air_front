@@ -141,7 +141,6 @@ export class LeadWaAuth {
             };
 
             this.socket.onclose = (event) => {
-                console.log('WebSocket соединение закрыто', event.code, event.reason);
                 // Если закрытие произошло после успешной авторизации или по нашему намерению, игнорируем
                 const wasCleanSuccess = this.successHandled || this.intentionalClose;
                 if (!wasCleanSuccess && event.code !== 1000 && this.callbacks.onError) {

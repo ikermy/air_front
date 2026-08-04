@@ -177,6 +177,16 @@
     }
 }
 
+/* Интерактивные туры отключены на небольших экранах. */
+@media (max-width: 769px) {
+    .tour-controls,
+    .tour-float-button,
+    .ant-tour,
+    .ant-tour-mask {
+        display: none !important;
+    }
+}
+
 /* Цветовые варианты для разных типов туров - ТОЛЬКО для tour-controls */
 .tour-controls.tour-primary {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) ;

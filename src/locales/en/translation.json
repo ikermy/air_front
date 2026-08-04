@@ -1,4 +1,4 @@
-﻿{
+﻿﻿{
     "Yes":  "Yes",
     "No":  "No",
     "tguserBotReplyTextMessages": "Reply to text messages",
@@ -2608,5 +2608,13 @@
     "typesGPTTitle": "Language Model Selection",
     "typesGPTModelLabel": "Available Models",
     "typesGPTModelTip": "The list of available models is updated when the list is opened",
-    "tbotWebhookMode": "Telegram Bot WebHook Mode"
+    "tbotWebhookMode": "Telegram Bot WebHook Mode",
+    "mistralSttModel": "STT model", "mistralTtsModel": "TTS model", "mistralSttLanguage": "STT language", "mistralVoice": "Voice",
+    "mistralVoiceCustom": "Cloned", "mistralVoicePreset": "Preset", "mistralVoicePresetLabel": "Preset voice", "mistralVoiceCustomLabel": "Cloned voice",
+    "mistralCreateVoice": "Create a new cloned voice", "mistralEdit": "Edit", "mistralSave": "Save", "mistralCancel": "Cancel",
+    "mistralNewVoiceName": "New voice name", "mistralAudioSample": "Audio sample (WAV/MP3/FLAC/OGG/PCM)", "mistralChooseFile": "Choose file",
+    "mistralCreateClone": "Create clone", "mistralLanguageOptional": "Optional", "mistralMinRecording": "Recording must be at least 3 seconds",
+    "mistralRealtimeTitle": "Mistral realtime", "mistralRealtimeDesc": "Mistral Voxtral STT/TTS voice mode", "mistralRealtimeEnableLabel": "Enable voice mode",
+    "mistralPresetVoice": "Preset voice", "mistralCustomVoice": "Cloned voice", "mistralListen": "Listen", "mistralCreateNewClone": "Create a new cloned voice",
+    "mistralEditVoice": "Edit", "mistralName": "Name", "mistralLanguage": "Language", "mistralDescription": "Description"
 }

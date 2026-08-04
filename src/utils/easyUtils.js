@@ -9,7 +9,9 @@ export const getAuthToken = () => {
     return getCookie('accessToken') || localStorage.getItem('authToken');
 };
 
-export const getCssVariable = (variable, element = document.body) => {
+export const getCssVariable = (variable, element) => {
+    if (typeof document === 'undefined') return null;
+    element = element || document.body;
     // Проверяем, есть ли нужный класс на `element`
     const computedStyle = getComputedStyle(element);
     const value = computedStyle.getPropertyValue(variable).trim();

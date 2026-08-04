@@ -1,5 +1,4 @@
 import {CreateModel} from "./steps/CreateModel";
-import "./steps.css"
 import {Channels} from "./steps/Channals/Channels";
 import {Notifications} from "./steps/Notifications/Notifications";
 import {DialogList} from "./steps/Dialogs/DialogList";

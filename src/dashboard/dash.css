@@ -657,7 +657,13 @@
     transition: all 0.3s ease;
 }
 
-.exit-btn .ant-btn:hover {
+.exit-btn .ant-btn,
+.exit-btn .ant-btn .anticon {
+    color: #ff4d4f !important;
+}
+
+.exit-btn .ant-btn:hover,
+.exit-btn .ant-btn:hover .anticon {
     background-color: #ff4d4f !important;
     border-color: #ff4d4f !important;
     color: white !important;

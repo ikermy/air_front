@@ -1,6 +1,5 @@
 import React, {useEffect, useState} from "react";
 import {useSearchParams, useNavigate} from "react-router-dom";
-import './auth.css';
 import {CheckOutlined, LoadingOutlined, CloseCircleOutlined} from '@ant-design/icons';
 import {useAuth} from "../../AuthContext";
 

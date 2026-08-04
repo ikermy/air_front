@@ -80,7 +80,6 @@ export class AudioCapture {
         };
         this.sourceNode.connect(this.workletNode);
         this.workletNode.connect(this.audioContext.destination);
-        console.log('[AudioCapture] AudioWorklet active (Blob)');
         return;
       } catch (e) {
         console.warn('[AudioCapture] AudioWorklet failed, using ScriptProcessor:', e);
@@ -115,7 +114,6 @@ export class AudioCapture {
 
     this.sourceNode.connect(this.scriptNode);
     this.scriptNode.connect(this.audioContext.destination);
-    console.log('[AudioCapture] ScriptProcessor active (fallback)');
   }
 
   stop(): void {
@@ -134,8 +132,6 @@ export class AudioCapture {
 
     this.stream?.getTracks().forEach(t => t.stop());
     this.stream = null;
-
-    console.log('[AudioCapture] Stopped');
   }
 }
 

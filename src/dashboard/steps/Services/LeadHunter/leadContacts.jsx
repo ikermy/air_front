@@ -5,8 +5,6 @@ import {
     saveServiceContactsData,
     deleteAllServiceContacts,
 } from "./leadUtils";
-import "../../../steps.css";
-import "../../CreateModel.css";
 import {message, Spin, Button, Table, Badge, Modal, Form, Input, Upload, Row, Col, Card, Space, Typography, Tooltip} from 'antd';
 import {ContactsOutlined, PlusOutlined, DeleteOutlined, ExclamationCircleOutlined, UploadOutlined, MessageOutlined, SaveOutlined, CheckCircleOutlined} from "@ant-design/icons";
 import {showErrorNotification, showNotification} from "../../../hotification/showNotification";

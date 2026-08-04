@@ -9,15 +9,6 @@ const logWebVitals = (metric) => {
     poor: '#FF4E42'
   };
 
-  console.log(
-    `%c${name}`,
-    `color: ${colors[rating]}; font-weight: bold; font-size: 14px;`,
-    `\n  Значение: ${Math.round(value)}ms`,
-    `\n  Рейтинг: ${rating}`,
-    `\n  Delta: ${Math.round(delta)}ms`,
-    `\n  ID: ${id}`
-  );
-
   // Для production можно отправлять в аналитику
   if (process.env.NODE_ENV === 'production') {
     // Здесь можно добавить отправку в Google Analytics, Sentry и т.д.

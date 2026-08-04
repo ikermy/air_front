@@ -7,9 +7,6 @@ import {healthCheck, getCRMConfig, toggleCRMActive, deleteCRMConfig} from './crm
 import {showErrorNotification, showNotification, showWarningNotification} from '../../hotification/showNotification';
 import { getTourPanelState, setTourPanelState } from '../../../utils/cookieUtils';
 import { useTranslation } from 'react-i18next';
-import '../Channals/Chanels.css';
-import '../Channals/ChannelsModern.css';
-import '../Tour.css';
 
 export function CreateCRM() {
     const { t } = useTranslation();
@@ -85,8 +82,6 @@ export function CreateCRM() {
                             }
                         }];
                     });
-                } else {
-                    console.log('Конфигурация amoCRM не найдена или ошибка:', configResult.error);
                 }
             } catch (error) {
                 console.error('Ошибка при загрузке конфигураций CRM:', error);
@@ -98,19 +93,13 @@ export function CreateCRM() {
     const handleCRMSelect = async (crm) => {
         // Если выбирается amoCRM, сначала делаем healthCheck
         if (crm.key === 'amoCRM') {
-            console.log('Начинаем healthCheck для amoCRM...');
             const result = await healthCheck();
-            console.log('Результат healthCheck:', result);
-
             if (!result.ok) {
-                console.log('Показываем ошибку, т.к. result.ok =', result.ok);
                 showErrorNotification(
                     t("notifVerificationError") || 'Ошибка',
                     t("crmUnavailable") || 'Сервис CRM недоступен'
                 );
                 return; // Не добавляем CRM, если healthCheck не прошёл
-            } else {
-                console.log('HealthCheck успешен, статус:', result.status);
             }
         }
 
@@ -161,8 +150,6 @@ export function CreateCRM() {
                     newEnabledState ? (t("crmEnabledNotif") || "CRM включена") : (t("crmDisabledNotif") || "CRM выключена"),
                     newEnabledState ? (t("crmEnabledDesc", {name: crm.label}) || `CRM система ${crm.label} включена`) : (t("crmDisabledDesc", {name: crm.label}) || `CRM система ${crm.label} выключена`)
                 );
-
-                console.log(`CRM ${key} ${newEnabledState ? 'включена' : 'выключена'}`);
             } else {
                 showErrorNotification(
                     t("crmStatusChangeError") || "Ошибка изменения статуса",

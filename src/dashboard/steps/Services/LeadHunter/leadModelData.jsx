@@ -1,4 +1,4 @@
-﻿import {useEffect, useState} from "react";
+import {useEffect, useState} from "react";
 import {useTranslation} from 'react-i18next';
 import {Button, Form, Input, message, Spin, Modal, Alert, Typography, Select, Tooltip} from "antd";
 import {RobotOutlined, ExclamationCircleOutlined} from "@ant-design/icons";
@@ -8,8 +8,6 @@ import {
     createServiceModelData,
     serviceCheckHuntingModels
 } from "./leadUtils";
-import "../../../steps.css";
-import "../../CreateModel.css";
 import {showErrorNotification, showNotification} from "../../../hotification/showNotification";
 import {getProviderInfo} from "../../CreateModelFormElements/providersConfig";
 

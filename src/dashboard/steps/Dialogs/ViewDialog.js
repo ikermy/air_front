@@ -1,6 +1,5 @@
 import React, { useState, useRef, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import './ViewDialog.css';
 import { useAutoScroll } from "../../../utils/useAutoScroll";
 import { Calendar, Button, Modal, DatePicker, message } from 'antd';
 import {CheckCircleFilled, CloseCircleFilled, DownloadOutlined, ExclamationCircleOutlined, DeleteOutlined} from '@ant-design/icons';

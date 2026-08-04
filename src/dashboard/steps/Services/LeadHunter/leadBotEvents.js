@@ -62,7 +62,6 @@ export class LeadBotEvents {
             this.socket = serviceBotEventsWSS();
 
             this.socket.onopen = () => {
-                console.log('WebSocket соединение к серверу событий установлено');
                 this.reconnectAttempts = 0;
                 if (this.callbacks.onConnected) {
                     this.callbacks.onConnected();
@@ -89,8 +88,6 @@ export class LeadBotEvents {
             };
 
             this.socket.onclose = (event) => {
-                console.log('WebSocket соединение закрыто', event.code, event.reason);
-
                 if (this.callbacks.onDisconnected) {
                     this.callbacks.onDisconnected();
                 }
@@ -150,7 +147,6 @@ export class LeadBotEvents {
 
             case 'connection_closing':
                 // Сервер закрывает соединение
-                console.log('Сервер закрывает соединение');
                 this.intentionalClose = true;
                 break;
 
@@ -203,8 +199,6 @@ export class LeadBotEvents {
 
         this.reconnectAttempts++;
         const delay = this.reconnectDelay * this.reconnectAttempts;
-
-        console.log(`Попытка переподключения ${this.reconnectAttempts}/${this.maxReconnectAttempts} через ${delay}мс`);
 
         this.reconnectTimeout = setTimeout(async () => {
             try {

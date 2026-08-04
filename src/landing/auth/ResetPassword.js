@@ -2,9 +2,8 @@ import React, {useContext, useEffect, useState} from "react";
 import {useSearchParams, useNavigate} from "react-router-dom";
 import {handleError, handleResetPassSuccess} from "./notificationHandlers";
 import {message} from "antd";
-import './auth.css';
 import {CheckOutlined, LoadingOutlined, CloseCircleOutlined} from '@ant-design/icons';
-import {UserContext} from "../../index";
+import {UserContext} from "../../UserContext";
 import {ResetPass} from "./resetPass";
 
 function ResetPassword() {

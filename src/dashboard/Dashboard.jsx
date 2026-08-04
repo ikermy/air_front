@@ -11,7 +11,6 @@ import {
     CrownOutlined,
     CommentOutlined, DatabaseOutlined
 } from "@ant-design/icons";
-import "./dash.css";
 import {useNavigate, useLocation} from "react-router-dom";
 import {getUserDetails} from "./getUserDetails";
 import {dashboardContent} from "./dashboardContent";
@@ -22,7 +21,6 @@ import {GoLog} from "react-icons/go";
 import {GiConversation} from "react-icons/gi";
 import {DashboardHeader} from "./DashboardHeader";
 import {PiUserCircleDashedThin} from "react-icons/pi";
-import {trackVisitor} from "../utils/tracking";
 import {getOrSetUserId} from "../utils/getOrSetUserId";
 import {GrServices} from "react-icons/gr";
 import {useInstantNotifications} from "../hooks/useInstantNotifications";
@@ -55,11 +53,6 @@ export function Dashboard({handleError}) {
 
         return () => window.removeEventListener('resize', handleResize);
     }, []);
-
-    useEffect(() => {
-        // При заходе на dashboard
-        trackVisitor(userId, {minIntervalMs: 60000, event: 'main'});
-    }, [userId]);
 
     const {t} = useTranslation();
     const location = useLocation();
@@ -180,12 +173,12 @@ export function Dashboard({handleError}) {
 
         // TODO возмоно сделаю через SSE
         // Автоматическое обновление данных пользователя каждую минуту
-        const intervalId = setInterval(() => {
-            fetchData();
-        }, 30000); // 60000 мс = 1 минута
+        // const intervalId = setInterval(() => {
+        //     fetchData();
+        // }, 30000); // 60000 мс = 1 минута
 
         // Очистка интервала при размонтировании компонента
-        return () => clearInterval(intervalId);
+        // return () => clearInterval(intervalId);
     }, [refreshUserData]);
 
     // Передаем функцию refreshUserData в dashboardContent
@@ -237,7 +230,7 @@ export function Dashboard({handleError}) {
                                 size="small"
                                 styles={{body: {padding: '12px'}}}
                             >
-                                <Space direction="vertical" size={6} style={{width: '100%'}}>
+                                <Space orientation="vertical" size={6} style={{width: '100%'}}>
                                     {/* Профиль */}
                                     <div style={{
                                         display: 'flex',
@@ -376,7 +369,7 @@ export function Dashboard({handleError}) {
                                                         '75%': '#FBBF24',
                                                         '90%': '#F87171'
                                                     }}
-                                                    trailColor="rgba(255, 255, 255, 0.2)"
+                                                    railColor="rgba(255, 255, 255, 0.2)"
                                                     style={{width: '100%'}}
                                                 />
                                             </div>

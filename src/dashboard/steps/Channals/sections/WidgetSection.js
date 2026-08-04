@@ -121,7 +121,7 @@ export const WidgetSection = ({channel, selectedChannels, setSelectedChannels}) 
     };
     const colorValue = (key, fallback) => colors[key] || fallback;
 
-    return <Space direction="vertical" size="middle" style={{width: '100%'}}>
+    return <Space orientation="vertical" size="middle" style={{width: '100%'}}>
         <Alert
             message={script ? (t("widgetAddToSite") || "Добавьте виджет себе на сайт") : (t("widgetGetCode") || "Получите HTML код виджета")}
             description={script ? (t("widgetReadyDesc") || "Код виджета готов.") : (t("widgetGetCodeDesc") || "Настройте разрешённые сайты и срок работы виджета.")}

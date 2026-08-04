@@ -9,7 +9,6 @@ import {
     CreditCardOutlined,
     BugOutlined
 } from '@ant-design/icons';
-import './Documentation.css';
 
 const { Title, Paragraph, Text } = Typography;
 

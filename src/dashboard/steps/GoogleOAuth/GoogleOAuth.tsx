@@ -13,7 +13,6 @@ import {
   revokeGoogleToken
 } from './googleOAuthUtils';
 import { GoogleOAuthProps, GoogleAccountInfo } from './googleOAuthTypes';
-import './GoogleOAuth.css';
 import { useTranslation } from 'react-i18next';
 import {CgGoogle} from "react-icons/cg";
 import {FcGoogle} from "react-icons/fc";
@@ -439,7 +438,7 @@ export const GoogleOAuth: React.FC<GoogleOAuthProps> = ({
 
         {loading && !initialCheckDone ? (
             <div className="google-loading">
-              <Spin tip={t('loading') || 'Загрузка...'} />
+              <Spin description={t('loading') || 'Загрузка...'} />
             </div>
         ) : (
             <>

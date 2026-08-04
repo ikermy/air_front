@@ -1,7 +1,6 @@
 import React from 'react';
 import { useSpring, animated } from '@react-spring/web';
 import { useTheme } from '../ThemeContext';
-import './ThemeToggle.css';
 
 const MoonIcon = () => (
     <svg
