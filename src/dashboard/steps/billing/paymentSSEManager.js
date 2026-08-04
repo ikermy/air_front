@@ -1,5 +1,5 @@
 import { getCookie } from "../../../utils/cookieUtils";
-import { authFetch } from "../../../utils/easyUtils";
+import { authFetch, refreshToken } from "../../../utils/easyUtils";
 
 
 /**
@@ -24,6 +24,8 @@ export class PaymentSSEManager {
         this.maxReconnectAttempts = 5;
         this.reconnectDelay = 2000;
         this.currentOrderId = null;
+        this.statusCheckInProgress = false;
+        this.connectPromise = null;
     }
 
     /**
@@ -55,32 +57,56 @@ export class PaymentSSEManager {
      * Подключается к SSE потоку для отслеживания статуса платежа
      */
     async connect(orderId) {
-        try {
-            // Получаем токен из куки
-            const token = getCookie("accessToken");
-
-            if (!token) {
-                // Если токена нет, инициируем автоматический рефреш через validate (или напрямую)
-                // Но лучше просто выбросить ошибку — withTokenRefresh должен был сработать ранее
-                throw new Error('Не удалось получить действительный токен');
+        // Не создаём второе SSE-соединение для того же платежа.
+        if (this.currentOrderId === orderId && this.eventSource) {
+            if (this.eventSource.readyState === EventSource.OPEN ||
+                this.eventSource.readyState === EventSource.CONNECTING) {
+                return;
             }
+        }
 
-            // Закрываем предыдущее соединение если оно есть
-            this.disconnect();
-            this.currentOrderId = orderId;
-            this.eventSource = new EventSource(
-                `/v1/pay/payment-status-stream?token=${encodeURIComponent(token)}&orderId=${encodeURIComponent(orderId)}`
-            );
+        // Защита от параллельных вызовов connect() во время refreshToken().
+        if (this.connectPromise) {
+            return this.connectPromise;
+        }
 
-            this.setupEventListeners();
-
+        this.connectPromise = this._connect(orderId);
+        try {
+            await this.connectPromise;
         } catch (error) {
             console.error('Ошибка подключения к SSE:', error);
             this.callbacks.onError?.(
                 "Ошибка подключения к серверу",
                 "Переключаемся на резервный способ отслеживания платежа"
             );
+        } finally {
+            this.connectPromise = null;
         }
+    }
+
+    async _connect(orderId) {
+        let token = getCookie("accessToken");
+
+        if (!token) {
+            token = await refreshToken();
+        }
+
+        if (!token) {
+            throw new Error('Не удалось получить действительный токен');
+        }
+
+        // Пока обновлялся токен, другой вызов мог уже создать соединение.
+        if (this.currentOrderId === orderId && this.eventSource) {
+            return;
+        }
+
+        this.disconnect();
+        this.currentOrderId = orderId;
+        this.eventSource = new EventSource(
+            `/v1/pay/payment-status-stream?token=${encodeURIComponent(token)}&orderId=${encodeURIComponent(orderId)}`
+        );
+
+        this.setupEventListeners();
     }
 
     /**
@@ -139,6 +165,7 @@ export class PaymentSSEManager {
                 // Определяем текущий статус
                 const currentStatus = paymentData.currentStatus || paymentData.status;
                 this.callbacks.onStatusUpdate?.(currentStatus);
+                this.lastKnownStatus = currentStatus;
 
                 // Стартуем таймер по expiresAt, если он ещё не запущен и статус pending
                 if (currentStatus === 'pending' && paymentData.expiresAt && !this.timerRef) {
@@ -158,17 +185,10 @@ export class PaymentSSEManager {
             console.error('SSE connection error for order:', this.currentOrderId, error);
             this.isConnected = false;
 
-            // Проверяем состояние соединения
+            // EventSource сам переподключается в состоянии CONNECTING.
+            // Не создаём дополнительное соединение вручную.
             if (this.eventSource?.readyState === EventSource.CLOSED) {
                 this.callbacks.onConnectionClose?.();
-                this.attemptReconnect();
-            } else if (this.eventSource?.readyState === EventSource.CONNECTING) {
-                // Даем время на переподключение, если не подключится - попробуем переподключиться
-                setTimeout(() => {
-                    if (this.eventSource?.readyState !== EventSource.OPEN) {
-                        this.attemptReconnect();
-                    }
-                }, 3000); // Уменьшаем время ожидания до 3 секунд
             }
         };
 
@@ -336,6 +356,7 @@ export class PaymentSSEManager {
             // Определяем текущий статус
             const currentStatus = paymentData.currentStatus || paymentData.status;
             this.callbacks.onStatusUpdate?.(currentStatus);
+            this.lastKnownStatus = currentStatus;
 
             // Перезапускаем таймер если есть expiresAt
             if (paymentData.expiresAt) {
@@ -484,6 +505,11 @@ export class PaymentSSEManager {
      * Пытается переподключиться к серверу
      */
     attemptReconnect() {
+        // Не создаём второе соединение, если текущее ещё существует.
+        if (!this.currentOrderId || this.eventSource) {
+            return;
+        }
+
         if (this.reconnectAttempts >= this.maxReconnectAttempts) {
             console.error('Превышено максимальное количество попыток переподключения');
             return;
@@ -492,7 +518,7 @@ export class PaymentSSEManager {
         this.reconnectAttempts++;
 
         setTimeout(() => {
-            if (this.currentOrderId) {
+            if (this.currentOrderId && !this.eventSource) {
                 this.connect(this.currentOrderId);
             }
         }, this.reconnectDelay * this.reconnectAttempts); // Увеличиваем задержку с каждой попыткой
@@ -522,14 +548,6 @@ export class PaymentSSEManager {
                 return;
             }
 
-            // Если есть активность на сервере (логи показывают обновления),
-            // но мы не получаем данные более 30 секунд - принудительно переподключаемся
-            if (timeSinceLastData > 30000 && timeSinceLastHeartbeat < 60000) {
-                console.warn('Heartbeat active but no data updates, connection may be stale, reconnecting...');
-                this.attemptReconnect();
-                return;
-            }
-
             // Периодически проверяем статус через API если давно не было обновлений
             if (timeSinceLastData > 45000) {
                 this.checkPaymentStatusViaAPI();
@@ -538,11 +556,49 @@ export class PaymentSSEManager {
         }, 15000); // Проверяем каждые 15 секунд
     }
 
+    handleStatusFromAPI(paymentData) {
+        const currentStatus = paymentData.currentStatus || paymentData.status;
+
+        this.callbacks.onPaymentUpdate?.(paymentData);
+        this.callbacks.onStatusUpdate?.(currentStatus);
+        this.lastKnownStatus = currentStatus;
+        this.lastDataTime = Date.now();
+
+        switch (currentStatus) {
+            case 'confirmed':
+                this.callbacks.onNotification?.({
+                    type: 'success',
+                    title: 'Платёж подтверждён!',
+                    message: 'Ваша подписка успешно продлена'
+                });
+                this.callbacks.onPaymentComplete?.(true);
+                this.disconnect();
+                break;
+
+            case 'failed':
+            case 'expired':
+                this.callbacks.onPaymentComplete?.(false);
+                this.disconnect();
+                break;
+
+            case 'partial':
+                this.callbacks.onNotification?.({
+                    type: 'success',
+                    title: '🟡 Частичное поступление (API проверка)',
+                    message: `Получено ${paymentData.currentReceivedAmount || paymentData.receivedAmount || 0} из ${paymentData.amount} ${paymentData.currency}. Подтверждений: ${paymentData.currentConfirmations || 0}/12`,
+                    duration: 8
+                });
+                break;
+        }
+    }
+
     /**
      * Проверяет статус платежа через API (не polling, разовый запрос)
      */
     async checkPaymentStatusViaAPI() {
-        if (!this.currentOrderId) return;
+        if (!this.currentOrderId || this.statusCheckInProgress) return;
+
+        this.statusCheckInProgress = true;
 
         try {
             const response = await authFetch(
@@ -563,29 +619,19 @@ export class PaymentSSEManager {
 
                     if (currentStatus !== lastKnownStatus) {
 
-                        // Обновляем данные
-                        this.callbacks.onPaymentUpdate?.(paymentData);
-                        this.callbacks.onStatusUpdate?.(currentStatus);
-                        this.lastKnownStatus = currentStatus;
-                        this.lastDataTime = Date.now();
-
-                        // Показываем уведомление для изменений статуса
-                        if (currentStatus === 'partial') {
-                            this.callbacks.onNotification?.({
-                                type: 'success',
-                                title: "🟡 Частичное поступление (API проверка)",
-                                message: `Получено ${paymentData.currentReceivedAmount || paymentData.receivedAmount || 0} из ${paymentData.amount} ${paymentData.currency}. Подтверждений: ${paymentData.currentConfirmations || 0}/12`,
-                                duration: 8
-                            });
-                        }
+                        this.handleStatusFromAPI(paymentData);
 
                         // Принудительно переподключаемся для получения дальнейших обновлений
-                        this.attemptReconnect();
+                        if (currentStatus !== 'confirmed' && currentStatus !== 'failed' && currentStatus !== 'expired') {
+                            this.attemptReconnect();
+                        }
                     }
                 }
             }
         } catch (error) {
             console.warn('API status check failed:', error);
+        } finally {
+            this.statusCheckInProgress = false;
         }
     }
 

@@ -5,10 +5,14 @@ const nextConfig = {
   typescript: { ignoreBuildErrors: true },
   eslint: { ignoreDuringBuilds: true },
   async rewrites() {
-    if (process.env.NODE_ENV === "production") return [];
-    return [{ source: "/v1/:path*", destination: "/api/backend/v1/:path*" },
-      { source: "/track-visitor", destination: "/api/backend/track-visitor" }];
-  },
+    if (process.env.NODE_ENV !== "development") return [];
+
+    return {
+      beforeFiles: [
+        { source: "/v1/:path*", destination: "/api/backend/v1/:path*" },
+      ],
+    };
+  }
 };
 
 module.exports = nextConfig;

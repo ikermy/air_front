@@ -35,7 +35,7 @@
     "web-vitals": "^5.1.0"
   },
   "scripts": {
-    "dev": "next dev -p 3001",
+    "dev": "set NODE_TLS_REJECT_UNAUTHORIZED=0&& next dev -p 3001",
     "start": "next start -p 3001",
     "build": "next build",
     "build:widget": "webpack --config webpack.widget.config.js",

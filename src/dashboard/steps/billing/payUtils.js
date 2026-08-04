@@ -135,9 +135,9 @@ export const createCryptoPayment = async (currency, network, getCurrentPrice, ch
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    token: getAuthToken(),
                     currency: currency,
-                    amount: amount
+                    amount: amount,
+                    network: network,
                 })
             });
 
