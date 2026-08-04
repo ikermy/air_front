@@ -1,0 +1,47 @@
+import type { AppProps } from "next/app";
+import "../src/index.css";
+import "../src/App.css";
+import "../src/LanguageSwitcher.css";
+import "../src/Modal.css";
+import "../src/dashboard/dash.css";
+import "../src/dashboard/steps.css";
+import "../src/dashboard/hotification/style.css";
+import "../src/dashboard/steps/CreateModel.css";
+import "../src/dashboard/steps/DashboardOverview.css";
+import "../src/dashboard/steps/Tour.css";
+import "../src/dashboard/steps/billing/Billing.css";
+import "../src/dashboard/steps/Channals/Chanels.css";
+import "../src/dashboard/steps/Channals/ChannelsModern.css";
+import "../src/dashboard/steps/CreateModelFormElements/Espero.css";
+import "../src/dashboard/steps/CreateModelFormElements/ModelSelector.css";
+import "../src/dashboard/steps/Dev-tolls/SystemSettings.css";
+import "../src/dashboard/steps/Dialogs/DialogList.css";
+import "../src/dashboard/steps/Dialogs/ViewDialog.css";
+import "../src/dashboard/steps/GoogleOAuth/GoogleOAuth.css";
+import "../src/dashboard/steps/ModelTest/ModelTest.css";
+import "../src/dashboard/steps/Notifications/Notifications.css";
+import "../src/dashboard/steps/OAuth/OAuthCallback.css";
+import "../src/dashboard/steps/User-data/UserData.css";
+import "../src/dialog/ChatWindow.css";
+import "../src/dialog/SimpleTransceiver.css";
+import "../src/landing/AssistFeatures.css";
+import "../src/landing/DashboardDemo.css";
+import "../src/landing/Documentation.css";
+import "../src/landing/ExamplesCarousel.css";
+import "../src/landing/FooterSection.css";
+import "../src/landing/hero.css";
+import "../src/landing/LandingPage.css";
+import "../src/landing/MessengerFeatures.css";
+import "../src/landing/auth/auth.css";
+import "../src/landing/auth/HighZIndexModals.css";
+import "../src/landing/demochat/ChatDemoAssist.css";
+import "../src/landing/demochat/ChatWindowDemo.css";
+import "../src/menu/ThemeToggle.css";
+import "../src/menu/TopMenu.css";
+import "../src/widget/Transceiver.css";
+import "../src/widget/Widget.css";
+import "../src/widget/chat/ChatWidget.css";
+
+export default function NextApp({ Component, pageProps }: AppProps) {
+  return <Component {...pageProps} />;
+}
