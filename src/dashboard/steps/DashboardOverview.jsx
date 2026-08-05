@@ -201,9 +201,14 @@ const DashboardOverview = ({ userRole = null, onMenuChange = null }) => {
                                     <Title level={4} className="card-title">
                                         {section.title}
                                     </Title>
-                                    <Tag color={section.color} className="section-tag">
+                                    <Tag
+                                        className="section-tag"
+                                        color={section.color}
+                                        style={{ backgroundColor: section.color, color: "white" }}
+                                    >
                                         {section.key.toUpperCase()}
                                     </Tag>
+
                                 </div>
                             </div>
 
