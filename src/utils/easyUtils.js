@@ -116,6 +116,10 @@ export const apiLogout = async () => {
  */
 export const refreshToken = async () => {
     try {
+        console.debug('[Auth] refresh token request', {
+            url: '/v1/auth/token/refresh',
+            hasRefreshCookie: document.cookie.includes('MarusiaRefreshToken='),
+        });
         const response = await fetch(`/v1/auth/token/refresh`, {
             method: 'GET',
             headers: { 'Content-Type': 'application/json' },
@@ -124,12 +128,18 @@ export const refreshToken = async () => {
 
         if (response.ok) {
             const data = await response.json();
+            console.debug('[Auth] refresh token response', {
+                status: response.status,
+                hasAccessToken: Boolean(data?.s),
+            });
             if (data.s) {
                 const maxAge = process.env.REACT_APP_ACCESS_TOKEN_MAX_AGE || 900;
                 setCookie("accessToken", data.s, { maxAge, secure: true, sameSite: 'lax' });
                 return data.s;
             }
         }
+
+        console.warn('[Auth] refresh token failed', {status: response.status});
 
         // Если рефреш не удался (например, 401) — чистим всё и выходим
         await apiLogout();
@@ -222,6 +232,12 @@ export const withTokenRefresh = async (fetchFunction, ...args) => {
  */
 export const authFetch = async (url, options = {}) => {
     const performRequest = async (authToken) => {
+        console.debug('[Auth] authorized request', {
+            url,
+            method: options.method || 'GET',
+            hasAccessToken: Boolean(authToken),
+            tokenLength: authToken?.length || 0,
+        });
         const authOptions = {
             ...options,
             headers: {
@@ -229,7 +245,9 @@ export const authFetch = async (url, options = {}) => {
                 'Authorization': `Bearer ${authToken}`
             }
         };
-        return fetch(url, authOptions);
+        const response = await fetch(url, authOptions);
+        console.debug('[Auth] authorized response', {url, status: response.status});
+        return response;
     };
 
     return withTokenRefresh(performRequest);
