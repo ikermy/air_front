@@ -199,7 +199,6 @@ export const withTokenRefresh = async (fetchFunction, ...args) => {
 
             if (newToken) {
                 onRefreshed(newToken);
-                return fetchFunction(newToken, ...args);
             } else {
                 refreshSubscribers = [];
                 return response;
@@ -208,7 +207,7 @@ export const withTokenRefresh = async (fetchFunction, ...args) => {
 
         return new Promise((resolve) => {
             subscribeTokenRefresh(async (newToken) => {
-                resolve(newToken ? await fetchFunction(newToken, ...args) : response);
+                resolve(await fetchFunction(newToken, ...args));
             });
         });
     }
