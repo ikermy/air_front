@@ -1,5 +1,5 @@
 import CryptoJS from "crypto-js";
-import { getCookie, setCookie, deleteCookie } from './cookieUtils';
+import {deleteCookie, getCookie, setCookie} from './cookieUtils';
 
 /**
  * Безопасное получение токена доступа с поддержкой SSR и fallback на localStorage
@@ -114,41 +114,49 @@ export const apiLogout = async () => {
  * Принудительное обновление токена через Refresh Token (LTA)
  * Возвращает новый Access Token (STA) или null
  */
-export const refreshToken = async () => {
-    try {
-        console.debug('[Auth] refresh token request', {
-            url: '/v1/auth/token/refresh',
-            hasRefreshCookie: document.cookie.includes('MarusiaRefreshToken='),
-        });
-        const response = await fetch(`/v1/auth/token/refresh`, {
-            method: 'GET',
-            headers: { 'Content-Type': 'application/json' },
-            credentials: 'include', // Куки будут отправлены (MarusiaRefreshToken)
-        });
+// Один общий refresh-запрос на вкладку. Это важно при ротации refresh-token:
+// несколько одновременных запросов не должны использовать одну и ту же cookie.
+let refreshPromise = null;
 
-        if (response.ok) {
-            const data = await response.json();
-            console.debug('[Auth] refresh token response', {
-                status: response.status,
-                hasAccessToken: Boolean(data?.s),
-            });
-            if (data.s) {
-                const maxAge = process.env.REACT_APP_ACCESS_TOKEN_MAX_AGE || 900;
-                setCookie("accessToken", data.s, { maxAge, secure: true, sameSite: 'lax' });
-                return data.s;
-            }
-        }
-
-        console.warn('[Auth] refresh token failed', {status: response.status});
-
-        // Если рефреш не удался (например, 401) — чистим всё и выходим
-        await apiLogout();
-        return null;
-    } catch (error) {
-        console.error("Ошибка при обновлении токена:", error);
-        await apiLogout();
-        return null;
+export const refreshToken = () => {
+    if (refreshPromise) {
+        return refreshPromise;
     }
+
+    refreshPromise = (async () => {
+        try {
+            const response = await fetch(`/v1/auth/token/refresh`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include', // Куки будут отправлены (MarusiaRefreshToken)
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                if (data.s) {
+                    const maxAge = process.env.REACT_APP_ACCESS_TOKEN_MAX_AGE || 900;
+                    setCookie("accessToken", data.s, { maxAge, secure: true, sameSite: 'lax' });
+                    return data.s;
+                }
+            }
+
+            console.warn('[Auth] refresh token failed', {status: response.status});
+
+            // Если рефреш не удался (например, 401) — чистим всё и выходим
+            await apiLogout();
+            return null;
+        } catch (error) {
+            console.error("Ошибка при обновлении токена:", error);
+            await apiLogout();
+            return null;
+        } finally {
+            // Сбрасываем только после завершения запроса, чтобы все ожидающие
+            // вызовы получили тот же результат текущей операции.
+            refreshPromise = null;
+        }
+    })();
+
+    return refreshPromise;
 };
 
 let isRefreshing = false;
@@ -232,12 +240,6 @@ export const withTokenRefresh = async (fetchFunction, ...args) => {
  */
 export const authFetch = async (url, options = {}) => {
     const performRequest = async (authToken) => {
-        console.debug('[Auth] authorized request', {
-            url,
-            method: options.method || 'GET',
-            hasAccessToken: Boolean(authToken),
-            tokenLength: authToken?.length || 0,
-        });
         const authOptions = {
             ...options,
             headers: {
@@ -246,7 +248,6 @@ export const authFetch = async (url, options = {}) => {
             }
         };
         const response = await fetch(url, authOptions);
-        console.debug('[Auth] authorized response', {url, status: response.status});
         return response;
     };
 

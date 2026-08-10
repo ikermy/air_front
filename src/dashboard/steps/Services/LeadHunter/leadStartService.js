@@ -109,6 +109,18 @@ export class LeadStartService {
     handleStep(step, message, data) {
         if (!step) return;
 
+        // Демо-пользователям запуск сервиса недоступен.
+        if (step === 'user_is_demo') {
+            if (this.errorHandled) return;
+            this.errorHandled = true;
+            this.intentionalClose = true;
+            if (this.callbacks.onError) {
+                this.callbacks.onError('Сервис недоступен демо пользователям');
+            }
+            setTimeout(() => this.closeConnection(), 100);
+            return;
+        }
+
         // Инициализация и запуск сервиса
         if (this.callbacks.onServiceInit) {
             const initSteps = [

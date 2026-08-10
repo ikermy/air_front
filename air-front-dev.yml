@@ -13,7 +13,7 @@ services:
     environment:
       - PORT=80
       - HOSTNAME=0.0.0.0
-      - BACKEND_INTERNAL_URL=http://airbff:8080
+      - BACKEND_INTERNAL_URL=http://airorc:8080
       - LAND_URL=https://localhost
     develop:
       watch:

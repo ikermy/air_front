@@ -68,10 +68,8 @@ export function CreateService() {
                 const response = await AvailableServicesList();
                 if (!response.ok) return;
 
-                const services = await response.json();
-
-                // Если lead-haunter доступен, автоматически добавляем его
-                if (Array.isArray(services) && services.includes('lead-haunter')) {
+                const data = await response.json();
+                if (Array.isArray(data.services) && data.services.includes('lead-haunter')) {
                     // Проверяем доступность сервиса перед добавлением
                     const isAvailable = await checkServiceAvailable();
                     if (isAvailable) {

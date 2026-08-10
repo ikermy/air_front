@@ -209,7 +209,7 @@ export const TgUserBotSection = ({
                         description={
                             botName != null ? (
                                 <>
-                                    {t("tguserBotRunning") || "Сейчас ваш Telegram UserBot"}
+                                    {t("tguserBotRunning") || "Сейчас ваш Telegram UserBot"}{" "}
                                     <b>{botName}</b> {t("tguserBotInteracting") || "запущен и взаимодействует с Агентом."}
                                     {t("tguserBotReauth") || "Если требуется повторная авторизация, или вы хотите повторно создать канал Telegram UserBot, вам нужно удалить текущий канал."}
                                 </>

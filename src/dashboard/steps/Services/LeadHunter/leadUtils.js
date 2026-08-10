@@ -20,22 +20,22 @@ async function request(url, options = {}) {
 }
 
 export async function readServiceAccessTime() {
-    const { ok, status, data } = await request(`/v1/services/accounts/accesstime`, {
+    const response = await authFetch(`/v1/services/lead/accounts/accesstime`, {
         method: "GET",
         headers: {
             "Content-Type": "application/json",
         },
     });
 
-    if (!ok) {
-        console.error(`Ошибка при получении AccessTime: ${status}`);
+    if (!response.ok) {
+        console.error(`Ошибка при получении AccessTime: ${response.status}`);
         return null;
     }
-    return data;
+    return await response.json();
 }
 
 export const saveServiceAccessTime = async (data) => {
-    const { ok, status } = await request(`/v1/services/accounts/accesstime`, {
+    const response = await authFetch(`/v1/services/lead/accounts/accesstime`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
@@ -44,53 +44,55 @@ export const saveServiceAccessTime = async (data) => {
         body: JSON.stringify({ data }),
     });
 
-    if (!ok) {
-        console.error("Сервер вернул ошибку:", status);
+    if (!response.ok) {
+        console.error("Сервер вернул ошибку:", response.status);
         return false;
     }
     return true;
 }
 
 export async function readServiceModelData() {
-    const { ok, status, data } = await request(`/v1/services/model`, {
-        method: "GET",
+    const response = await authFetch('/v1/services/lead/model', {
+        method: 'GET',
         headers: {
-            "Content-Type": "application/json",
+            'Content-Type': 'application/json',
         },
+        credentials: 'include',
     });
 
-    if (!ok) {
-        console.error(`Ошибка при получении ModelData: ${status}`);
+    if (!response.ok) {
+        console.error(`Ошибка при получении ModelData: ${response.status}`);
         return null;
     }
-    return data;
+
+    return await response.json();
 }
 
 export async function serviceCheckHuntingModels() {
-    const { ok, status, data } = await request(`/v1/services/hunting-model`, {
+    const response = await authFetch(`/v1/services/lead/hunting-model`, {
         method: "GET",
         headers: {
             "Content-Type": "application/json",
         },
     });
 
-    if (!ok) {
-        console.error(`Ошибка при получении HuntingModels: ${status}`);
+    if (!response.ok) {
+        console.error(`Ошибка при получении HuntingModels: ${response.status}`);
         return null;
     }
-    return data;
+    return await response.json();
 }
 
 export async function deleteServiceModelData() {
-    const { ok, status } = await request(`/v1/services/model`, {
+    const response = await authFetch(`/v1/services/lead/model`, {
         method: "DELETE",
         headers: {
             "Content-Type": "application/json",
         },
     });
 
-    if (!ok) {
-        console.error(`Ошибка при запросе DeleteModel: ${status}`);
+    if (!response.ok) {
+        console.error(`Ошибка при запросе DeleteModel: ${response.status}`);
         return false;
     }
     return true;
@@ -105,7 +107,7 @@ export async function createServiceModelData(start, tg, modelId = null) {
         body.model_id = Number(modelId);
     }
 
-    const { ok, status, data } = await request(`/v1/services/model`, {
+    const response = await authFetch(`/v1/services/lead/model`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
@@ -114,8 +116,8 @@ export async function createServiceModelData(start, tg, modelId = null) {
         body: JSON.stringify(body),
     });
 
-    if (!ok) {
-        console.error("Сервер вернул ошибку:", status, data);
+    if (!response.ok) {
+        console.error("Сервер вернул ошибку:", `${response.status}`);
         return false;
     }
 
@@ -126,18 +128,18 @@ export async function readServiceContactsData() {
     // Пауза 500 мс перед перезагрузкой списка контактов
     await new Promise(resolve => setTimeout(resolve, 250));
 
-    const { ok, status, data } = await request(`/v1/services/contacts`, {
+    const response = await authFetch(`/v1/services/lead/contacts`, {
         method: "GET",
         headers: {
             "Content-Type": "application/json",
         },
     });
 
-    if (!ok) {
-        console.error(`Ошибка при получении ContactsData: ${status}`);
+    if (!response.ok) {
+        console.error(`Ошибка при получении ContactsData: ${response.status}`);
         return null;
     }
-    let result = data;
+    let result = await response.json();
     if (typeof result === 'string') {
         try { result = JSON.parse(result); } catch (e) {
             console.error('Ошибка при парсинге строки JSON:', e);
@@ -170,7 +172,7 @@ export async function saveServiceContactsData(contacts) {
     const contactsList = contacts?.map(c => c.Contact) || [];
     const payload = { contacts: contactsList };
 
-    const { ok, status, data, text } = await request(`/v1/services/contacts`, {
+    const response = await authFetch(`/v1/services/lead/contacts`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json",
@@ -179,60 +181,61 @@ export async function saveServiceContactsData(contacts) {
         body: JSON.stringify(payload),
     });
 
-    if (!ok) {
-        console.error("saveServiceContactsData - Сервер вернул ошибку:", status);
-        console.error("saveServiceContactsData - Response data:", data);
-        console.error("saveServiceContactsData - Response text:", text);
+    if (!response.ok) {
+        console.error("saveServiceContactsData - Сервер вернул ошибку:", `${response.status}`);
+        console.error("saveServiceContactsData - Response data:", await response.json());
+        console.error("saveServiceContactsData - Response text:", await response.text());
         return false;
     }
     return true;
 }
 
 export async function deleteServiceContact(contactId) {
-    const { ok, status } = await request(`/v1/services/contact/${encodeURIComponent(contactId)}`, {
+    const response = await authFetch(`/v1/services/lead/contact/${encodeURIComponent(contactId)}`, {
         method: "DELETE",
         headers: {
             "Content-Type": "application/json",
         },
     });
 
-    if (!ok) {
-        console.error(`Ошибка при запросе DeleteContact: ${status}`);
+    if (!response.ok) {
+        console.error(`Ошибка при запросе DeleteContact: ${response.status}`);
         return false;
     }
     return true;
 }
 
 export async function deleteAllServiceContacts() {
-    const url = `/v1/services/contacts`;
+    const url = `/v1/services/lead/contacts`;
 
-    const { ok, status } = await request(url, {
+    const response = await authFetch(url, {
         method: "DELETE",
         headers: {
             "Content-Type": "application/json",
         }
     });
 
-    if (!ok) {
-        console.error(`Ошибка при запросе DeleteAllContacts: ${status}`);
+    if (!response.ok) {
+        console.error(`Ошибка при запросе DeleteAllContacts: ${response.status}`);
         return false;
     }
     return true;
 }
 
 export async function readServiceContactDialogData(contact) {
-    const { ok, status, data } = await request(`/v1/services/dialog?contact=${encodeURIComponent(contact)}`, {
+    const response = await authFetch(`/v1/services/lead/dialog?contact=${encodeURIComponent(contact)}`, {
         method: "GET",
         headers: {
             "Content-Type": "application/json",
         },
     });
 
-    if (!ok) {
-        console.error(`Ошибка при получении диалога: ${status}`);
+    if (!response.ok) {
+        console.error(`Ошибка при получении диалога: ${response.status}`);
         return null;
     }
 
+    const data = await response.json();
     if (data == null) {
         console.warn('readServiceContactDialogData: пустой ответ', data);
         return null;
@@ -309,7 +312,7 @@ export async function readServiceContactDialogData(contact) {
 }
 
 export async function readServiceAllBotInfo() {
-    const url = `/v1/services/bots`;
+    const url = `/v1/services/lead/bots`;
     const options = {
         method: "GET",
         headers: {
@@ -317,22 +320,33 @@ export async function readServiceAllBotInfo() {
         },
     };
 
-    let { ok, status, data } = await request(url, options);
+    let response = await authFetch(url, options);
 
-    if (!ok && (status === 429 || status === 503)) {
+    if (!response.ok && (response.status === 429 || response.status === 503)) {
         await new Promise((r) => setTimeout(r, 600));
-        ({ ok, status, data } = await request(url, options));
+        response = await authFetch(url, options);
     }
 
-    if (!ok) {
-        console.error(`Ошибка при получении информации о ботах пользователя: ${status}`);
+    if (!response.ok) {
+        console.error(`Ошибка при получении информации о ботах пользователя: ${response.status}`);
         return null;
     }
-    return data;
+    const contentType = response.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+        console.error('Ответ списка ботов не является JSON');
+        return null;
+    }
+
+    try {
+        return await response.json();
+    } catch (error) {
+        console.error('Ошибка разбора ответа списка ботов:', error);
+        return null;
+    }
 }
 
 export const setServiceBotActive = async (botID, checked, provider) => {
-    const { ok, status } = await request(`/v1/services/dogs/bots/active`, {
+    const response = await authFetch(`/v1/services/lead/bots/active`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -340,16 +354,32 @@ export const setServiceBotActive = async (botID, checked, provider) => {
         body: JSON.stringify({ botid: botID, active: checked, provider: provider}),
     });
 
-    if (!ok) {
-        console.error('Ошибка при изменении статуса бота:', status);
-        return Promise.reject(new Error(`Ошибка ${status}`));
+    if (!response.ok) {
+        console.error('Ошибка при изменении статуса бота:', response.status);
+        return Promise.reject(new Error(`Ошибка ${response.status}`));
+    }
+    return true;
+};
+
+export const setServiceBotNull = async (botID, checked, provider) => {
+    const response = await authFetch(`/v1/services/lead/bots/null`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ botid: botID, provider: provider}),
+    });
+
+    if (!response.ok) {
+        console.error('Ошибка при изменении статуса бота:', response.status);
+        return Promise.reject(new Error(`Ошибка ${response.status}`));
     }
     return true;
 };
 
 export const serviceDeleteBot = async (botID, provider) => {
-    const { ok, status } = await request(
-`/v1/services/dogs/bots/${encodeURIComponent(provider)}/${encodeURIComponent(botID)}`,
+    const response = await authFetch(
+`/v1/services/lead/bots/${encodeURIComponent(provider)}/${encodeURIComponent(botID)}`,
         {
             method: 'DELETE',
             headers: {
@@ -358,15 +388,15 @@ export const serviceDeleteBot = async (botID, provider) => {
         }
     );
 
-    if (!ok) {
-        console.error('Ошибка при удалении бота:', status);
-        return Promise.reject(new Error(`Ошибка ${status}`));
+    if (!response.ok) {
+        console.error('Ошибка при удалении бота:', response.status);
+        return Promise.reject(new Error(`Ошибка ${response.status}`));
     }
     return true;
 };
 
 export const serviceBotAuthData = async (botID, provider) => {
-    const { ok, status, data } = await request(`/v1/services/dogs/bots/authdata`, {
+    const response = await authFetch(`/v1/services/lead/bots/authdata`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -374,63 +404,67 @@ export const serviceBotAuthData = async (botID, provider) => {
         body: JSON.stringify({ botid: botID, provider: provider }),
     });
 
-    if (!ok) {
-        console.error('Ошибка при получении данных авторизации бота:', status);
-        return Promise.reject(new Error(`Ошибка ${status}`));
+    if (!response.ok) {
+        console.error('Ошибка при получении данных авторизации бота:', response.status);
+        return Promise.reject(new Error(`Ошибка ${response.status}`));
     }
-    return data;
+    return await response.json();
 };
 
 export async function checkServiceInProcess() {
-    const { status } = await request(`/v1/services/status`, {
+    const response = await authFetch(`/v1/services/lead/status`, {
         method: "GET",
         headers: {
             "Content-Type": "application/json",
         },
     });
-    return status === 200;
-}
-
-export const startServiceWSS = () => {
-    if (typeof window === 'undefined') return null;
-    const wsUrl = `/v1/ws/leed-hunter/start`;
-    const wsToken = getAuthToken();
-    return new WebSocket(wsUrl, [wsToken]);
+    return response.status === 200;
 }
 
 export async function stopService() {
-    const { ok, status, text } = await request(`/v1/services/stop`, {
+    const response = await authFetch(`/v1/services/lead/stop`, {
         method: "GET",
         headers: {
             "Content-Type": "application/json",
         },
     });
 
-    if (!ok) {
-        const errorMessage = (text && text.trim()) || `HTTP ${status}`;
+    if (!response.ok) {
+        const errorMessage = (await response.text() && (await response.text()).trim()) || `HTTP ${response.status}`;
         console.error(`Ошибка при остановке сервиса:`, errorMessage);
         return { success: false, error: errorMessage };
     }
     return { success: true };
 }
 
+const leadWsUrl = (path) => process.env.NODE_ENV === 'development'
+    ? `wss://localhost${path}`
+    : path;
+
+export const startServiceWSS = () => {
+    if (typeof window === 'undefined') return null;
+    const wsUrl = leadWsUrl(`/v1/ws/lead/start`);
+    const wsToken = getAuthToken();
+    return new WebSocket(wsUrl, [wsToken]);
+}
+
 export const serviceTgAuthWSS = () => {
     if (typeof window === 'undefined') return null;
-    const wsUrl = `/v1/ws/tg-auth`;
+    const wsUrl = leadWsUrl(`/v1/ws/lead/tg-auth`);
     const wsToken = getAuthToken();
     return new WebSocket(wsUrl, [wsToken]);
 }
 
 export const serviceWaAuthWSS = () => {
     if (typeof window === 'undefined') return null;
-    const wsUrl = `/v1/ws/wa-auth`;
+    const wsUrl = leadWsUrl(`/v1/ws/lead/wa-auth`);
     const wsToken = getAuthToken();
     return new WebSocket(wsUrl, [wsToken]);
 }
 
 export const serviceBotEventsWSS = () => {
     if (typeof window === 'undefined') return null;
-    const wsUrl = `/v1/ws/service-events`;
+    const wsUrl = leadWsUrl(`/v1/ws/lead/events`);
     const wsToken = getAuthToken();
     return new WebSocket(wsUrl, [wsToken]);
 }
@@ -439,22 +473,22 @@ export async function readProxyData() {
     // Пауза 500 мс перед перезагрузкой списка контактов
     await new Promise(resolve => setTimeout(resolve, 250));
 
-    const { ok, status, data } = await request(`/v1/services/proxy`, {
+    const response = await authFetch(`/v1/services/lead/proxy`, {
         method: "GET",
         headers: {
             "Content-Type": "application/json",
         },
     });
 
-    if (!ok) {
-        console.error(`Ошибка при получении списка прокси: ${status}`);
+    if (!response.ok) {
+        console.error(`Ошибка при получении списка прокси: ${response.status}`);
         return null;
     }
-    return data;
+    return await response.json();
 }
 
 export const setServiceProxyActive = async (proxyID, checked) => {
-    const { ok, status } = await request(`/v1/services/proxy/active`, {
+    const response = await authFetch(`/v1/services/lead/proxy/active`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -462,9 +496,25 @@ export const setServiceProxyActive = async (proxyID, checked) => {
         body: JSON.stringify({ id: proxyID, active: checked }),
     });
 
-    if (!ok) {
-        console.error('Ошибка при изменении статуса прокси:', status);
-        return Promise.reject(new Error(`Ошибка ${status}`));
+    if (!response.ok) {
+        console.error('Ошибка при изменении статуса прокси:', response.status);
+        return Promise.reject(new Error(`Ошибка ${response.status}`));
+    }
+    return true;
+};
+
+export const setServiceProxyNull = async (proxyID) => {
+    const response = await authFetch(`/v1/services/lead/proxy/null`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id: proxyID }),
+    });
+
+    if (!response.ok) {
+        console.error('Ошибка при изменении статуса прокси:', response.status);
+        return Promise.reject(new Error(`Ошибка ${response.status}`));
     }
     return true;
 };
@@ -474,7 +524,7 @@ export const addServiceProxy = async (proxyAdr, proxyUsername = null, proxyPassw
     if (proxyUsername) body.usr = proxyUsername;
     if (proxyPassword) body.pass = proxyPassword;
 
-    const { ok, status } = await request(`/v1/services/proxy`, {
+    const response = await authFetch(`/v1/services/lead/proxy`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -482,9 +532,9 @@ export const addServiceProxy = async (proxyAdr, proxyUsername = null, proxyPassw
         body: JSON.stringify(body),
     });
 
-    if (!ok) {
-        console.error('Ошибка при добавлении прокси:', status);
-        return Promise.reject(new Error(`Ошибка ${status}`));
+    if (!response.ok) {
+        console.error('Ошибка при добавлении прокси:', response.status);
+        return Promise.reject(new Error(`Ошибка ${response.status}`));
     }
     return true;
 };
@@ -494,7 +544,7 @@ export const editServiceProxy = async (proxyId, proxyAdr, proxyUsername = null, 
     if (proxyUsername) body.usr = proxyUsername;
     if (proxyPassword) body.pass = proxyPassword;
 
-    const { ok, status } = await request(`/v1/services/proxy/${encodeURIComponent(proxyId)}`, {
+    const response = await authFetch(`/v1/services/lead/proxy/${encodeURIComponent(proxyId)}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -502,45 +552,45 @@ export const editServiceProxy = async (proxyId, proxyAdr, proxyUsername = null, 
         body: JSON.stringify(body),
     });
 
-    if (!ok) {
-        console.error('Ошибка при изменении прокси:', status);
-        return Promise.reject(new Error(`Ошибка ${status}`));
+    if (!response.ok) {
+        console.error('Ошибка при изменении прокси:', response.status);
+        return Promise.reject(new Error(`Ошибка ${response.status}`));
     }
     return true;
 };
 
 export const deleteServiceProxy = async (proxyId) => {
-    const { ok, status } = await request(`/v1/services/proxy/proxy/${encodeURIComponent(proxyId)}`, {
+    const response = await authFetch(`/v1/services/lead/proxy/proxy/${encodeURIComponent(proxyId)}`, {
         method: 'DELETE',
         headers: {
             'Content-Type': 'application/json',
         },
     });
 
-    if (!ok) {
-        console.error('Ошибка при удалении прокси:', status);
-        return Promise.reject(new Error(`Ошибка ${status}`));
+    if (!response.ok) {
+        console.error('Ошибка при удалении прокси:', response.status);
+        return Promise.reject(new Error(`Ошибка ${response.status}`));
     }
     return true;
 };
 
 export const deleteAllServiceProxy = async () => {
-    const { ok, status } = await request(`/v1/services/proxy/proxys`, {
+    const response = await authFetch(`/v1/services/lead/proxy/proxys`, {
         method: 'DELETE',
         headers: {
             'Content-Type': 'application/json',
         },
     });
 
-    if (!ok) {
-        console.error('Ошибка при удалении прокси:', status);
-        return Promise.reject(new Error(`Ошибка ${status}`));
+    if (!response.ok) {
+        console.error('Ошибка при удалении прокси:', response.status);
+        return Promise.reject(new Error(`Ошибка ${response.status}`));
     }
     return true;
 };
 
 export const saveServiceSetting = async (setting) => {
-    const { ok, status } = await request(`/v1/services/settings`, {
+    const response = await authFetch(`/v1/services/lead/settings`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
@@ -548,9 +598,9 @@ export const saveServiceSetting = async (setting) => {
         body: JSON.stringify({ set: setting }),
     });
 
-    if (!ok) {
-        console.error('Ошибка при сохранении настроек:', status);
-        return Promise.reject(new Error(`Ошибка ${status}`));
+    if (!response.ok) {
+        console.error('Ошибка при сохранении настроек:', response.status);
+        return Promise.reject(new Error(`Ошибка ${response.status}`));
     }
     return true;
 };
@@ -560,8 +610,8 @@ export const saveServiceSetting = async (setting) => {
  * @returns {Promise<boolean>} true если сервис доступен, false в противном случае
  */
 export async function checkServiceAvailable() {
-    const { ok, status } = await request(
-`/v1/services/availabl`,
+    const response = await authFetch(
+`/v1/services/lead/available`,
         {
             method: "GET",
             headers: {
@@ -570,8 +620,8 @@ export async function checkServiceAvailable() {
         }
     );
 
-    if (!ok || status !== 200) {
-        console.error(`Сервис недоступен: ${status}`);
+    if (!response.ok || response.status !== 200) {
+        console.error(`Сервис недоступен: ${response.status}`);
         return false;
     }
 

@@ -124,6 +124,25 @@ export const LeadHaunter = ({initial, value, onChange}) => {
                 </Paragraph>
 
                 <Paragraph style={{marginBottom: '16px'}}>
+                    <Typography.Text strong>{t("leadHunterTargetTitle") || "Достижение цели"}</Typography.Text>
+                </Paragraph>
+                <Paragraph
+                    code={true}
+                    style={{
+                        whiteSpace: 'pre-wrap',
+                        display: 'block',
+                        fontSize: '14px',
+                        padding: '12px',
+                        borderRadius: '6px',
+                        marginBottom: '16px'
+                    }}
+                >
+                    {t("leadHunterTarget1") || "Нужно добавить в промпт модели явную инструкцию что считать достижением цели"}{"\n"}
+                    {t("leadHunterTarget2") || "Например:"}{"\n"}
+                    {t("leadHunterTarget3") || "Если пользователь ответит - \"зелёный слон\" то вызови функцию lead_target"}{"\n"}
+                </Paragraph>
+
+                <Paragraph style={{marginBottom: '16px'}}>
                     <Typography.Text strong>{t("leadHunterSetup") || "Для корректной работы"}:</Typography.Text>
                 </Paragraph>
 

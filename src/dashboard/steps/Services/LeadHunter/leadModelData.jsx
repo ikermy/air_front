@@ -25,7 +25,12 @@ export function ServiceModelData({ isServiceRunning: isServiceRunningProp }) {
     const [deleteLoading, setDeleteLoading] = useState(false);
     const [huntingModels, setHuntingModels] = useState(null);
     const [selectedModelId, setSelectedModelId] = useState(null);
-    const { Text } = Typography;
+const { Text } = Typography;
+
+const getProviderLogoSrc = (provider) => {
+    const logo = getProviderInfo(provider).logo;
+    return typeof logo === 'string' ? logo : logo?.src || logo?.default || null;
+};
 
     const isServiceRunning = isServiceRunningProp || false;
 
@@ -33,7 +38,6 @@ export function ServiceModelData({ isServiceRunning: isServiceRunningProp }) {
         const loadModelData = async () => {
             try {
                 const data = await readServiceModelData();
-
                 if (data && Object.keys(data).length > 0) {
                     setModelData(data);
 
@@ -240,9 +244,9 @@ export function ServiceModelData({ isServiceRunning: isServiceRunningProp }) {
                             huntingModels.map((model) => (
                                 <Select.Option key={model.model_id} value={model.model_id}>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                {getProviderInfo(model.provider).logo && (
+                                                {getProviderLogoSrc(model.provider) && (
                                                     <img
-                                                        src={getProviderInfo(model.provider).logo}
+                                                        src={getProviderLogoSrc(model.provider)}
                                                         alt={getProviderInfo(model.provider).name}
                                                         style={{
                                                             width: '20px',
@@ -288,9 +292,9 @@ export function ServiceModelData({ isServiceRunning: isServiceRunningProp }) {
                         border: `2px solid ${getProviderInfo(modelData.provider).color}`,
                         gap: '12px'
                     }}>
-                        {getProviderInfo(modelData.provider).logo && (
+                        {getProviderLogoSrc(modelData.provider) && (
                             <img
-                                src={getProviderInfo(modelData.provider).logo}
+                                src={getProviderLogoSrc(modelData.provider)}
                                 alt={getProviderInfo(modelData.provider).name}
                                 style={{
                                     width: '40px',

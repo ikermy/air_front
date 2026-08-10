@@ -27,7 +27,7 @@ import {ServiceContactsData} from "./LeadHunter/leadContacts";
 import {LeadBots} from "./LeadHunter/leadBots";
 import {LeadEvents} from "./LeadHunter/leadEvents";
 import {LeadProxyData} from "./LeadHunter/leadProxyData";
-import {checkServiceInProcess, stopService} from "./LeadHunter/leadUtils";
+import {checkServiceInProcess, stopService, readServiceAllBotInfo} from "./LeadHunter/leadUtils";
 import {showNotification, showErrorNotification} from "../../hotification/showNotification";
 import {getTourPanelState, setTourPanelState} from "../../../utils/cookieUtils";
 import {LeadStartService} from "./LeadHunter/leadStartService";
@@ -63,6 +63,7 @@ export function LeadHunterService({ onServiceDeleted }) {
     const [isCheckingStatus, setIsCheckingStatus] = useState(true);
     const [isActionLoading, setIsActionLoading] = useState(false); // Новое состояние для блокировки кнопки
     const [startStatus, setStartStatus] = useState(''); // Текущий статус запуска
+    const [activeTelegramBots, setActiveTelegramBots] = useState(null);
 
     // Tour states
     const [tourVisible, setTourVisible] = useState(false);
@@ -98,6 +99,25 @@ export function LeadHunterService({ onServiceDeleted }) {
 
         checkStatus();
     }, [t]);
+
+    // Загружаем ботов независимо от того, открывалась ли вкладка «Боты».
+    // Иначе botsRef ещё пуст, пока вкладка не была посещена.
+    useEffect(() => {
+        let cancelled = false;
+        readServiceAllBotInfo()
+            .then((data) => {
+                if (cancelled) return;
+                const bots = Array.isArray(data?.bots) ? data.bots : [];
+                setActiveTelegramBots(bots.filter(bot =>
+                    String(bot.Provider || bot.provider || '').toLowerCase() === 'telegram' &&
+                    Number(bot.IsActive) === 1
+                ).length);
+            })
+            .catch(() => {
+                if (!cancelled) setActiveTelegramBots(0);
+            });
+        return () => { cancelled = true; };
+    }, []);
 
     // Обработчик смены вкладки
     const handleTabChange = (key) => {
@@ -681,8 +701,9 @@ export function LeadHunterService({ onServiceDeleted }) {
             >
                 {/* Предупреждение при отсутствии активных Telegram ботов */}
                 {(() => {
-                    const activeTelegramBots = botsRef.current?.getActiveTelegramBots?.() || [];
-                    if (activeTelegramBots.length === 0) {
+                    const refBots = botsRef.current?.getActiveTelegramBots?.();
+                    const botsCount = Array.isArray(refBots) ? refBots.length : activeTelegramBots;
+                    if (botsCount === 0) {
                         return (
                             <div style={{
                                 marginBottom: 16,

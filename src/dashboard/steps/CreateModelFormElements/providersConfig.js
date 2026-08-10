@@ -32,13 +32,13 @@ export const AI_PROVIDERS = [
 
 /**
  * Возвращает данные провайдера по его ключу/названию.
- * Поддерживает алиасы: mistralai -> mistral, gemini -> google.
+ * Поддерживает алиасы: openai -> openai, mistralai -> mistral, gemini -> google.
  * @param {string} providerName
  * @returns {{ key: string, name: string, logo: string|null, color: string, description: string }}
  */
 export const getProviderInfo = (providerName) => {
     const key = providerName?.toLowerCase().replace(/\s+/g, '');
-    const aliases = { mistralai: 'mistral', gemini: 'google' };
+    const aliases = { openai: 'openai', mistralai: 'mistral', gemini: 'google' };
     const resolved = aliases[key] || key;
     return AI_PROVIDERS.find(p => p.key === resolved) || {
         key: resolved || 'unknown',

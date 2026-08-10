@@ -123,25 +123,12 @@ export const checkPayAvailability = async () => {
 export const createCryptoPayment = async (currency, network, getCurrentPrice, checkPaymentServiceAvailability) => {
     let errorToThrow = null;
     try {
-        console.debug('[Payment] checking service availability', {
-            currency,
-            network,
-        });
         // Сначала проверяем доступность сервиса
         const isServiceAvailable = await checkPaymentServiceAvailability();
-        console.debug('[Payment] service availability result:', isServiceAvailable);
         if (!isServiceAvailable) {
             errorToThrow = new Error('Сервис оплаты недоступен');
         } else {
             const amount = getCurrentPrice();
-            console.debug('[Payment] create-payment request', {
-                url: '/v1/pay/create-payment',
-                method: 'POST',
-                currency,
-                network,
-                amount,
-                hasAccessToken: Boolean(document.cookie.match(/(?:^|;\s*)accessToken=/)),
-            });
 
             const response = await authFetch(`/v1/pay/create-payment`, {
                 method: 'POST',
@@ -153,13 +140,6 @@ export const createCryptoPayment = async (currency, network, getCurrentPrice, ch
                     amount: amount,
                     network: network,
                 })
-            });
-
-            console.debug('[Payment] create-payment response', {
-                status: response.status,
-                ok: response.ok,
-                contentType: response.headers.get('content-type'),
-                location: response.headers.get('location'),
             });
 
             if (!response.ok) {

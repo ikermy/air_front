@@ -595,7 +595,7 @@ export const ServiceContactsData = forwardRef(function ServiceContactsData(props
                     <Tooltip title={
                         <div style={{ fontSize: '12px', lineHeight: '1.5' }}>
                             <div style={{ marginBottom: '8px', fontWeight: 'bold' }}>{t('contactExamples') || 'Примеры контактов:'}</div>
-                            <div style={{ marginLeft: '12px', color: '#aaa' }}>
+                            <div style={{ marginLeft: '12px', color: 'black' }}>
                                 +79991234567<br/>
                                 89991234567<br/>
                                 +1-555-0123<br/>

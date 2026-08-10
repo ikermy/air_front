@@ -1,5 +1,6 @@
 import React, {useState, useEffect, useRef} from 'react';
 import {useTranslation} from 'react-i18next';
+import {useTheme} from '../../../ThemeContext';
 import {authFetch} from '../../../utils/easyUtils';
 import {DeleteDialogs} from './dialogsUtils';
 import {
@@ -49,6 +50,7 @@ const {Title, Text} = Typography;
 const {Option} = Select;
 
 export function DialogList() {
+    const {theme} = useTheme();
     const {t} = useTranslation();
     const [loading, setLoading] = useState(true);
     const [dialogs, setDialogs] = useState([]);
@@ -108,7 +110,7 @@ export function DialogList() {
                     showWarningNotification("Ошибка получения диалогов", "Токен не обновлен, необходимо повторно авторизоваться!");
                 }
             } catch (error) {
-                // setError(error.message);
+                console.error(error);
             } finally {
                 setLoading(false);
             }
@@ -463,7 +465,7 @@ export function DialogList() {
                                                                 e.stopPropagation();
                                                                 toggleSelectDialog(e, dialog.DialogId);
                                                             }}
-                                                                 style={{color: selectedDialogs.includes(dialog.DialogId) ? '#ff4d4f' : 'rgba(0,0,0,0.45)'}}>
+                                                                 style={{color: selectedDialogs.includes(dialog.DialogId) ? '#ff4d4f' : theme === 'dark' ? 'rgba(255,255,255,0.65)' : 'rgba(0,0,0,0.45)'}}>
                                                                 <DeleteOutlined/>
                                                             </div>
                                                         </div>
@@ -549,7 +551,7 @@ export function DialogList() {
                                                                 e.stopPropagation();
                                                                 toggleSelectDialog(e, dialog.DialogId);
                                                             }}
-                                                                 style={{color: selectedDialogs.includes(dialog.DialogId) ? '#ff4d4f' : 'rgba(0,0,0,0.45)'}}>
+                                                                 style={{color: selectedDialogs.includes(dialog.DialogId) ? '#ff4d4f' : theme === 'dark' ? 'rgba(255,255,255,0.65)' : 'rgba(0,0,0,0.45)'}}>
                                                                 <DeleteOutlined/>
                                                             </div>
                                                             <div className="list-statuses">

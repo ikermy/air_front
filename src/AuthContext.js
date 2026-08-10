@@ -16,8 +16,7 @@ export const AuthProvider = ({ children }) => {
 
     const login = (token) => {
         if (token) {
-            const maxAge = process.env.REACT_APP_ACCESS_TOKEN_MAX_AGE || 900;
-            setAccessToken(token, { maxAge, secure: true, sameSite: 'lax' });
+            setAccessToken(token, { secure: true, sameSite: 'lax' });
         }
         setIsAuthenticated(true);
     };

@@ -3,9 +3,11 @@ import {useTranslation} from 'react-i18next';
 import {message, Spin, Button, Table, Badge, Switch, Modal, Form, Input, QRCode, Alert, Card, InputNumber, Tooltip} from "antd";
 import {ApiOutlined, PlusOutlined, DeleteOutlined, ExclamationCircleOutlined, EditOutlined, QrcodeOutlined, SaveOutlined, SettingOutlined, InfoCircleOutlined} from "@ant-design/icons";
 import {FaTelegram, FaWhatsapp} from "react-icons/fa";
+import {TfiReload} from "react-icons/tfi";
 import {
     readServiceAllBotInfo,
     setServiceBotActive,
+    setServiceBotNull,
     serviceDeleteBot,
     serviceBotAuthData,
     saveServiceSetting
@@ -74,11 +76,14 @@ export const LeadBots = forwardRef((props, ref) => {
         }
         isBotsLoadingRef.current = true;
         try {
-            const data = await readServiceAllBotInfo();
-            if (data.bots && Array.isArray(data.bots) && data.bots.length > 0) {
+            const responseData = await readServiceAllBotInfo();
+            const data = responseData && typeof responseData === 'object'
+                ? responseData
+                : {};
+
+            if (Array.isArray(data.bots) && data.bots.length > 0) {
                 setBots(data.bots);
             } else {
-                // Если пришло null или не массив — ставим пустой список, чтобы не падать
                 setBots([]);
             }
 
@@ -464,6 +469,27 @@ export const LeadBots = forwardRef((props, ref) => {
         setIsDeleteModalOpen(true);
     };
 
+    const handleResetBot = async (bot) => {
+        try {
+            await setServiceBotNull(bot.BotId, false, getBotPlatform(bot));
+
+            setBots((prevBots) => prevBots.map((b) => (
+                b.BotId === bot.BotId
+                    ? {
+                        ...b,
+                        CanSend: 1,
+                        CanStart: 1,
+                        LastErrorAt: null,
+                        LastErrorCode: null,
+                        LastErrorGroup: null,
+                    }
+                    : b
+            )));
+        } catch (error) {
+            showErrorNotification(`Ошибка при сбросе бота: ${error.message}`);
+        }
+    };
+
     const handleDeleteConfirm = async () => {
         if (!selectedBot) {
             message.error(t("botLoadError") || 'Не выбран бот для удаления');
@@ -652,6 +678,8 @@ export const LeadBots = forwardRef((props, ref) => {
             render: (record) => (
                 <div style={{ display: 'flex', justifyContent: 'space-around' }}>
                     {record.IsActive === 1 ? (
+                        <>
+                        <TfiReload style={{color: '#52c41a', cursor: 'pointer', fontSize: '16px'}} onClick={() => handleResetBot(record)} title="Сбросить бота" />
                         <DeleteOutlined
                             style={{
                                 color: '#ff4d4f',
@@ -661,6 +689,7 @@ export const LeadBots = forwardRef((props, ref) => {
                             onClick={() => handleDeleteBot(record)}
                             title="Удалить бота"
                         />
+                        </>
                     ) : (
                         <>
                             <EditOutlined
@@ -1083,7 +1112,10 @@ export const LeadBots = forwardRef((props, ref) => {
                                     icon={<FaTelegram style={{ marginRight: '8px' }} />}
                                     size="large"
                                     onClick={() => setSelectedPlatform('telegram')}
-                                    style={{ flex: 1, color: 'black' }}
+                                    style={{
+                                        flex: 1,
+                                        color: selectedPlatform === 'telegram' ? 'black' : 'var(--text-color)'
+                                    }}
                                 >
                                     {t("botPlatformTelegram") || "Telegram"}
                                 </Button>
@@ -1092,7 +1124,10 @@ export const LeadBots = forwardRef((props, ref) => {
                                     icon={<FaWhatsapp style={{ marginRight: '8px' }} />}
                                     size="large"
                                     onClick={() => setSelectedPlatform('whatsapp')}
-                                    style={{ flex: 1, color: 'black' }}
+                                    style={{
+                                        flex: 1,
+                                        color: selectedPlatform === 'whatsapp' ? 'black' : 'var(--text-color)'
+                                    }}
                                 >
                                     {t("botPlatformWhatsapp") || "WhatsApp"}
                                 </Button>

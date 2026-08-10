@@ -1,4 +1,4 @@
-﻿﻿{
+﻿{
     "Yes":  "Yes",
     "No":  "No",
     "tguserBotReplyTextMessages": "Reply to text messages",
@@ -211,6 +211,10 @@
     "leadHunterCapability3":  "• Sending targeted messages",
     "leadHunterCapability4":  "• Analytics and reporting",
     "leadHunterSetup":  "For correct operation",
+    "leadHunterTargetTitle": "The goal",
+    "leadHunterTarget1": "We need to add explicit instructions to the model's prompt about what constitutes goal achievement.",
+    "leadHunterTarget2": "For example:",
+    "leadHunterTarget3": "If the user answers \"green elephant,\" then call the lead_target function.",
     "leadHunterSetupStep1":  "1. Configure search parameters in the model",
     "leadHunterSetupStep2":  "2. Specify lead filtering criteria",
     "leadHunterSetupStep3":  "3. Configure message templates",
@@ -1675,6 +1679,7 @@
     "proxyLoadingText":  "Loading proxies...",
     "proxySaveButton":  "Save",
     "proxyStatusError":  "Error",
+    "proxyStatusUnknown":  "Not checked",
     "proxyStatusIndicator":  "Status",
     "proxyStatusOff":  "Inactive",
     "proxyStatusOn":  "Active",

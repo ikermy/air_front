@@ -24,7 +24,9 @@ export function LeadViewDialog({ contact, visible, onClose }) {
                 return;
             }
 
-            let messagesArray = data.Messages;
+            // Ответ сервиса может иметь формат ReadDialog(mode="work") — Data,
+            // либо старый формат — Messages.
+            let messagesArray = data.Data ?? data.Messages;
 
             // Защита: сервер может вернуть массив JSON-строк
             if (Array.isArray(messagesArray) && messagesArray.length > 0 && typeof messagesArray[0] === 'string') {
@@ -44,23 +46,28 @@ export function LeadViewDialog({ contact, visible, onClose }) {
                 return;
             }
 
-            // Нормализуем каждый элемент к форме { content, type, uname, timestamp }
+            // Нормализуем сообщения по тем же правилам, что и ReadDialog(mode="work"):
+            // текст может находиться в message, message.message или быть самим message,
+            // а сторона определяется creator.
             const normalized = messagesArray.map((obj) => {
                 if (!obj || typeof obj !== 'object') return null;
-                // Формат: { creator, message: { message }, timestamp }
-                if (obj.creator !== undefined && obj.message) {
-                    const content = (typeof obj.message === 'string') ? obj.message : (obj.message.message || '');
-                    const type = (obj.creator === 1) ? 'assistant' : 'user';
-                    return { content, type, uname: obj.uname || obj.username || null, timestamp: obj.timestamp || obj.time || null };
-                }
-                // Формат: { content, type }
-                if (obj.content !== undefined && obj.type !== undefined) {
-                    return { content: obj.content, type: obj.type, uname: obj.uname || obj.username || null, timestamp: obj.timestamp || obj.time || null };
-                }
-                // fallback
-                const contentField = obj.message?.message || obj.text || obj.content || '';
-                const typeField = obj.type || (obj.from === 'agent' ? 'assistant' : 'user');
-                return { content: contentField, type: typeField, uname: obj.uname || obj.username || null, timestamp: obj.timestamp || obj.time || null };
+                let content = typeof obj.message === 'string'
+                    ? obj.message
+                    : (obj.message?.message || obj.message || obj.content || obj.text || '');
+                if (typeof content !== 'string') content = String(content);
+
+                const creator = Number(obj.creator);
+                const type = obj.type || (creator === 1 || obj.from === 'agent' ? 'assistant' : 'user');
+                const sendFiles = obj.send_files || obj.message?.action?.send_files ||
+                    obj.action?.send_files || obj.files || [];
+                return {
+                    content,
+                    type,
+                    creator,
+                    uname: obj.uname || obj.username || null,
+                    timestamp: obj.timestamp || obj.time || null,
+                    files: Array.isArray(sendFiles) ? sendFiles : []
+                };
             }).filter(Boolean);
 
             // Преобразуем в формат для отображения (как раньше)
@@ -69,8 +76,15 @@ export function LeadViewDialog({ contact, visible, onClose }) {
                 originalText: msg.content || '',
                 name: msg.type === 'assistant' ? 'Агент' : (msg.uname || contact?.Contact || 'Пользователь'),
                 type: msg.type,
-                side: msg.type === 'user' ? 'left' : 'right',
+                side: [2, 3, 5].includes(msg.creator)
+                    ? 'right'
+                    : ([1, 4, 6].includes(msg.creator) ? 'left' : (msg.type === 'assistant' ? 'right' : 'left')),
                 timestamp: msg.timestamp ? new Date(msg.timestamp) : (data.LastUsed ? new Date(data.LastUsed) : new Date()),
+                files: {
+                    images: msg.files.filter(file => file.type === 'photo' || file.type === 'image'),
+                    videos: msg.files.filter(file => file.type === 'video'),
+                    documents: msg.files.filter(file => file.type === 'doc' || file.type === 'document')
+                },
                 index: index
             }));
 

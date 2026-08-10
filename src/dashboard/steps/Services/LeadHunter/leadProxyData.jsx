@@ -1,9 +1,10 @@
 import {useEffect, useState, forwardRef, useImperativeHandle} from "react";
 import {useTranslation} from 'react-i18next';
-import {readProxyData, setServiceProxyActive, addServiceProxy, editServiceProxy, deleteServiceProxy, deleteAllServiceProxy} from "./leadUtils";
+import {readProxyData, setServiceProxyActive, setServiceProxyNull, addServiceProxy, editServiceProxy, deleteServiceProxy, deleteAllServiceProxy} from "./leadUtils";
 import { getAuthToken } from "../../../../utils/easyUtils";
 import {Spin, Table, Badge, Switch, Button, Modal, Form, Input, Upload, Tag, Tooltip, message} from 'antd';
 import {CloudServerOutlined, PlusOutlined, EditOutlined, DeleteOutlined, ExclamationCircleOutlined, UploadOutlined} from "@ant-design/icons";
+import {TfiReload} from "react-icons/tfi";
 import {showErrorNotification, showNotification} from "../../../hotification/showNotification";
 import { Title, Text, Paragraph } from "antd/lib/typography";
 
@@ -24,11 +25,26 @@ export const LeadProxyData = forwardRef((props, ref) => {
     const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
     const [isUploadLoading, setIsUploadLoading] = useState(false);
 
+    const normalizeProxyAddressPaste = (event) => {
+        const pastedValue = event.clipboardData.getData('text').trim();
+        const match = pastedValue.match(/^(\d{1,3}(?:\.\d{1,3}){3})\s*[-\s]+\s*(\d{1,5})$/);
+
+        if (!match) return;
+
+        const ip = match[1];
+        const port = Number(match[2]);
+        const validIp = ip.split('.').every((part) => Number(part) >= 0 && Number(part) <= 255);
+
+        if (validIp && port > 0 && port <= 65535) {
+            event.preventDefault();
+            form.setFieldsValue({addr: `${ip}:${port}`});
+        }
+    };
+
     const loadProxyData = async () => {
         setLoading(true);
         try {
             const data = await readProxyData();
-
             if (data && Array.isArray(data) && data.length > 0) {
                 setProxyList(data);
             } else {
@@ -381,18 +397,30 @@ export const LeadProxyData = forwardRef((props, ref) => {
         }
     };
 
-    const handleToggleProxy = async (proxyId, currentActive) => {
+    const handleToggleProxy = async (proxyId, nextActive) => {
         try {
-            const success = await setServiceProxyActive(proxyId, !currentActive);
+            await setServiceProxyActive(proxyId, nextActive);
 
             // Обновляем состояние прокси
             setProxyList((prevProxies) =>
-                prevProxies.map((p) => (p.id === proxyId ? { ...p, active: !currentActive ? 1 : 0 } : p))
+                prevProxies.map((p) => (p.id === proxyId ? { ...p, active: nextActive ? 1 : 0 } : p))
             );
 
-            showNotification(t("success") || 'Успешно', `${t("proxy") || "Прокси"} ${proxyId} ${t("success") || "успешно"} ${currentActive ? (t("proxyStatusOn") || 'активирован') : (t("proxyStatusOff") || 'деактивирован')}`);
+            showNotification(t("success") || 'Успешно', `${t("proxy") || "Прокси"} ${proxyId} ${t("success") || "успешно"} ${nextActive ? (t("proxyStatusOn") || 'активирован') : (t("proxyStatusOff") || 'деактивирован')}`);
         } catch (error) {
-            showErrorNotification(t("error") || 'Ошибка', `${t("error") || "Ошибка при"} ${currentActive ? t("proxyStatusOn") : t("proxyStatusOff") || `${currentActive ? 'активации' : 'деактивации'}`} ${t("proxy") || "прокси"}: ${error.message}`);
+            showErrorNotification(t("error") || 'Ошибка', `${t("error") || "Ошибка при"} ${nextActive ? t("proxyStatusOn") : t("proxyStatusOff") || `${nextActive ? 'активации' : 'деактивации'}`} ${t("proxy") || "прокси"}: ${error.message}`);
+        }
+    };
+
+    const handleResetProxy = async (proxy) => {
+        try {
+            await setServiceProxyNull(proxy.id);
+
+            setProxyList((prevProxies) => prevProxies.map((p) => (
+                p.id === proxy.id ? { ...p, pass: null, type: null } : p
+            )));
+        } catch (error) {
+            showErrorNotification(t("error") || 'Ошибка', `Ошибка при сбросе прокси: ${error.message}`);
         }
     };
 
@@ -422,7 +450,8 @@ export const LeadProxyData = forwardRef((props, ref) => {
             width: 90,
             render: (record) => {
                 let color = 'default';
-                let text = t("proxyStatusError") || 'unknown';
+                // let text = t("proxyStatusUnknown") || 'не проверен';
+                let text = '?';
 
                 if (record.type === 'error') {
                     color = 'red';
@@ -448,7 +477,7 @@ export const LeadProxyData = forwardRef((props, ref) => {
             render: (record) => (
                 <Switch
                     checked={record.active === 1}
-                    onChange={(checked) => handleToggleProxy(record, checked)}
+                    onChange={(checked) => handleToggleProxy(record.id, checked)}
                     checkedChildren={<span style={{color: "black"}}>{t("proxyStatusOn") || "Вкл"}</span>}
                     unCheckedChildren={<span style={{color: "black"}}>{t("proxyStatusOff") || "Выкл"}</span>}
                 />
@@ -475,6 +504,8 @@ export const LeadProxyData = forwardRef((props, ref) => {
             render: (text, record) => (
                 <div style={{ display: 'flex', justifyContent: 'space-around' }}>
                     {record.active === 1 ? (
+                        <>
+                        <TfiReload style={{color: '#52c41a', cursor: 'pointer', fontSize: '16px'}} onClick={() => handleResetProxy(record)} title="Сбросить прокси" />
                         <DeleteOutlined
                             style={{
                                 color: '#ff4d4f',
@@ -484,6 +515,7 @@ export const LeadProxyData = forwardRef((props, ref) => {
                             onClick={() => handleDeleteProxy(record)}
                             title={t("proxyDeleteTooltip") || "Удалить прокси"}
                         />
+                        </>
                     ) : (
                         <>
                             <EditOutlined
@@ -662,6 +694,7 @@ export const LeadProxyData = forwardRef((props, ref) => {
                         <Input
                             placeholder={t("proxyAddressPlaceholder") || "123.123.123.123:4567"}
                             size="large"
+                            onPaste={normalizeProxyAddressPaste}
                         />
                     </Form.Item>
                     <Form.Item
@@ -742,6 +775,7 @@ export const LeadProxyData = forwardRef((props, ref) => {
                         <Input
                             placeholder={t("proxyAddressPlaceholder") || "45.144.222.118:509"}
                             size="large"
+                            onPaste={normalizeProxyAddressPaste}
                         />
                     </Form.Item>
                     <Form.Item
