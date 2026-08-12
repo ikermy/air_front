@@ -38,6 +38,7 @@ jobs:
           push: true
           build-args: |
             LAND_URL=https://${{ vars.DOMAIN }}
+            NEXT_PUBLIC_GRPC_HOST=https://${{ vars.DOMAIN }}:50443
           tags: ${{ env.REGISTRY }}/${{ github.repository_owner }}/airfront:prod
   deploy:
     needs: build-and-push
