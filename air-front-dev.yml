@@ -5,6 +5,7 @@ services:
       dockerfile: Dockerfile
       args:
         LAND_URL: https://localhost
+        NEXT_PUBLIC_GRPC_HOST: https://localhost:50443
     image: airfront
     container_name: airfront
     ports:

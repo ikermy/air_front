@@ -1,14 +1,15 @@
 import {GrServices} from "react-icons/gr";
 import React, {useState} from "react";
-import {Button, Dropdown, Typography, Empty} from 'antd';
-import {PlusOutlined, DownOutlined} from '@ant-design/icons';
+import {Button, Dropdown, Typography, Empty, Popconfirm} from 'antd';
+import {PlusOutlined, DownOutlined, PhoneOutlined, DeleteOutlined} from '@ant-design/icons';
 import {useTranslation} from 'react-i18next';
 import {showNotification, showErrorNotification} from "../../hotification/showNotification";
-import {AvailableServicesList, AddService as AddServiceAPI} from "./serviceUtils";
+import {AvailableServicesList, AddService as AddServiceAPI, DelService} from "./serviceUtils";
 import {checkServiceAvailable} from "./LeadHunter/leadUtils.js";
 import {LeadHunterService} from "./addLeadHunter";
 import {useEffect} from "react";
 import {FaPersonCirclePlus } from "react-icons/fa6";
+import {VoiceCallService} from "./VoiceCallService";
 
 // Компонент кнопки добавления сервиса
 const AddServiceButton = ({availableServices, onServiceSelect}) => {
@@ -45,6 +46,7 @@ const AddServiceButton = ({availableServices, onServiceSelect}) => {
 export function CreateService() {
     const {t} = useTranslation();
     const [isServiceAdded, setIsServiceAdded] = useState(false);
+    const [isVoiceCallAdded, setIsVoiceCallAdded] = useState(false);
     // Доступные сервисы для добавления
     const [availableServices, setAvailableServices] = useState([
         {
@@ -52,13 +54,12 @@ export function CreateService() {
             label: t("leadHunterService") || "Лидогенератор",
             // icon: <GrServices/>,
             icon: <FaPersonCirclePlus  />,
-        }
-        // ,
-        // {
-        //     key: "test",
-        //     label: "Test Service",
-        //     icon: <GrServices/>,
-        // }
+        },
+        {
+            key: "voice-call",
+            label: t("voiceCallService") || "Voice calls",
+            icon: <PhoneOutlined />,
+        },
     ]);
 
     // Проверка доступных сервисов при монтировании компонента
@@ -84,6 +85,10 @@ export function CreateService() {
                         }
                     }
                 }
+                if (Array.isArray(data.services) && data.services.includes('voice-call')) {
+                    setIsVoiceCallAdded(true);
+                    setAvailableServices(prev => prev.filter(s => s.key !== 'voice-call'));
+                }
                 // Если lead-haunter НЕ найден на сервере, НЕ удаляем его из списка
                 // Оставляем возможность добавить вручную через кнопку
             } catch (error) {
@@ -95,22 +100,24 @@ export function CreateService() {
     }, [t]);
 
     // Обработчик удаления сервиса
-    const handleServiceDeleted = () => {
-        setIsServiceAdded(false);
-        // Возвращаем leadhunter в список доступных сервисов
-        setAvailableServices([
-            {
-                key: "leadhunter",
-                label: t("leadHunterService") || "Лидогенератор",
-                icon: <FaPersonCirclePlus />,
-            }
-            // ,
-            // {
-            //     key: "test",
-            //     label: t("leadHunterService") || "test",
-            //     icon: <GrServices />,
-            // }
-        ]);
+    const handleServiceDeleted = (service = "lead-haunter") => {
+        if (service === "lead-haunter") setIsServiceAdded(false);
+        if (service === "voice-call") setIsVoiceCallAdded(false);
+        const restored = service === "lead-haunter"
+            ? { key: "leadhunter", label: t("leadHunterService") || "Лидогенератор", icon: <FaPersonCirclePlus /> }
+            : { key: "voice-call", label: t("voiceCallService") || "Voice calls", icon: <PhoneOutlined /> };
+        setAvailableServices(prev => prev.some(item => item.key === restored.key) ? prev : [...prev, restored]);
+    };
+
+    const deleteService = async (service) => {
+        try {
+            const response = await DelService(service);
+            if (!response.ok) throw new Error("delete failed");
+            handleServiceDeleted(service);
+            showNotification(t("success") || "Успешно", t("serviceDeleted") || "Сервис успешно удалён");
+        } catch {
+            showErrorNotification(t("error") || "Ошибка", t("serviceDeleteError") || "Не удалось удалить сервис");
+        }
     };
 
     // Обработчик выбора сервиса из списка
@@ -139,6 +146,17 @@ export function CreateService() {
                     t("error") || 'Ошибка',
                     t("serviceCheckError") || 'Ошибка при проверке сервиса'
                 );
+            }
+        } else if (key === "voice-call") {
+            try {
+                const addResp = await AddServiceAPI("voice-call");
+                if (addResp.ok) {
+                    setIsVoiceCallAdded(true);
+                    setAvailableServices(prev => prev.filter(s => s.key !== "voice-call"));
+                    showNotification(t("success") || "Успешно", t("serviceAdded") || "Сервис успешно добавлен");
+                }
+            } catch (error) {
+                showErrorNotification(t("error") || "Ошибка", t("serviceCheckError") || "Ошибка при проверке сервиса");
             }
         }
     };
@@ -185,6 +203,28 @@ export function CreateService() {
                         </div>
 
                         <LeadHunterService onServiceDeleted={handleServiceDeleted}/>
+                    </div>
+                )}
+
+                {isVoiceCallAdded && (
+                    <div style={{ marginTop: 24, position: "relative" }}>
+                        <Popconfirm
+                            title={t("serviceDelete") || "Удалить сервис?"}
+                            description={t("serviceDeleteConfirmText") || "Вы уверены, что хотите удалить сервис?"}
+                            okText={t("yes") || "Да"}
+                            cancelText={t("cancel") || "Отмена"}
+                            onConfirm={() => deleteService("voice-call")}
+                        >
+                            <div
+                                title={t("serviceDelete") || "Удалить сервис"}
+                                style={{ position: "absolute", top: 0, right: 0, cursor: "pointer", fontSize: 20, color: "#ff4d4f", zIndex: 10, padding: 8, borderRadius: 4, transition: "all 0.3s" }}
+                                onMouseEnter={(event) => { event.currentTarget.style.backgroundColor = "#fff1f0"; event.currentTarget.style.transform = "scale(1.1)"; }}
+                                onMouseLeave={(event) => { event.currentTarget.style.backgroundColor = "transparent"; event.currentTarget.style.transform = "scale(1)"; }}
+                            >
+                                <DeleteOutlined />
+                            </div>
+                        </Popconfirm>
+                        <VoiceCallService />
                     </div>
                 )}
             </div>

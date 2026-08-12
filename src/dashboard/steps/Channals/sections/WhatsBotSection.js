@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from "react";
-import {Alert, Button, Modal, QRCode} from "antd";
+import {Alert, Button, Modal, QRCode, Switch} from "antd";
 import {ContactsModal} from "../ContactsModal";
 import {showErrorNotification, showNotification} from "../../../hotification/showNotification";
 import {getBotName} from "../chUtils";
@@ -68,6 +68,33 @@ export const WhatsBotSection = ({
         showNotification(
             t("whatsBotSettingsChanged") || "Настройки изменены",
             t("whatsBotAfterSaveSelected") || "После сохранения Агент будет взаимодействовать только с выбранными контактами"
+        );
+    };
+
+    // Настройки ответа WhatsApp-бота хранятся в формате, который ожидает backend:
+    // AllowText, AllowCall и Uids.
+    const parseChannelData = (data) => {
+        try {
+            const parsed = typeof data === 'string' ? JSON.parse(data) : (data || {});
+            return {
+                ...parsed,
+                AllowText: parsed.AllowText ?? true,
+                AllowCall: parsed.AllowCall ?? true,
+            };
+        } catch {
+            return {AllowText: true, AllowCall: true};
+        }
+    };
+
+    const parsedChannelData = parseChannelData(channel.data);
+
+    const handleOptionToggle = (optionKey) => (checked) => {
+        setSelectedChannels(
+            selectedChannels.map((ch) =>
+                ch.key === channel.key
+                    ? {...ch, data: JSON.stringify({...parsedChannelData, [optionKey]: checked})}
+                    : ch
+            )
         );
     };
     // Вспомогательный компонент для отображения состояния при генерации QR-кода
@@ -204,6 +231,28 @@ export const WhatsBotSection = ({
                         }
                         type={channel.contacts ? "success" : "warning"}
                     />
+                    <div style={{display: "flex", flexDirection: "column", gap: 8, marginTop: 8, paddingLeft: 16}}>
+                        <div style={{display: "flex", alignItems: "center", gap: 8, justifyContent: "flex-end"}}>
+                            <span>{t("tguserBotReplyTextMessages") || "Отвечать на текстовые сообщения"}</span>
+                            <Switch
+                                checked={parsedChannelData.AllowText}
+                                onChange={handleOptionToggle('AllowText')}
+                                disabled={!channel.isEnabled}
+                                checkedChildren={<span style={{color: "black"}}>{t('Yes')}</span>}
+                                unCheckedChildren={<span style={{color: "black"}}>{t('No')}</span>}
+                            />
+                        </div>
+                        <div style={{display: "flex", alignItems: "center", gap: 8, justifyContent: "flex-end"}}>
+                            <span>{t("tguserBotReplyVoiceCalls") || "Отвечать на голосовые вызовы"}</span>
+                            <Switch
+                                checked={parsedChannelData.AllowCall}
+                                onChange={handleOptionToggle('AllowCall')}
+                                disabled={!channel.isEnabled}
+                                checkedChildren={<span style={{color: "black"}}>{t('Yes')}</span>}
+                                unCheckedChildren={<span style={{color: "black"}}>{t('No')}</span>}
+                            />
+                        </div>
+                    </div>
                 </div>
                 <ContactsModal
                     visible={isContactsModalVisible}

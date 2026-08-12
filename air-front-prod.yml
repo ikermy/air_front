@@ -5,6 +5,7 @@ services:
       dockerfile: Dockerfile
       args:
         LAND_URL: https://${DOMAIN}
+        NEXT_PUBLIC_GRPC_HOST: https://${DOMAIN}:50443
     image: ${DOCKER_IMAGE}
     container_name: airfront
     restart: always

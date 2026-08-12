@@ -4,6 +4,8 @@ WORKDIR /app
 
 ARG LAND_URL=https://localhost
 ENV LAND_URL=${LAND_URL}
+ARG NEXT_PUBLIC_GRPC_HOST=https://localhost:50443
+ENV NEXT_PUBLIC_GRPC_HOST=${NEXT_PUBLIC_GRPC_HOST}
 
 COPY package*.json ./
 RUN --mount=type=cache,target=/root/.npm \
