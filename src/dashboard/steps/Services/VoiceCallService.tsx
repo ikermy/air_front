@@ -258,7 +258,7 @@ export function VoiceCallService(): React.ReactElement {
                             ]}
                             style={{width: "66%"}}
                         >
-                            <Input placeholder={telegram ? "@my_group" : t("voiceCallTargetPlaceholder")} size="large"/>
+                            <Input placeholder={telegram ? "@pavel" : t("voiceCallTargetPlaceholder")} size="large"/>
                         </Form.Item>;
                     }}
                 </Form.Item>

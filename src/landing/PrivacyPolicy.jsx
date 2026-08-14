@@ -125,7 +125,7 @@ const PrivacyPolicy = () => {
                 По вопросам, связанным с обработкой персональных данных, вы можете связаться с нами:
             </Typography.Paragraph>
             <Typography.Paragraph>
-                - Email: info@info-bot.online
+                - Email: info@kermy.org
             </Typography.Paragraph>
             <Typography.Paragraph>
                 - Адрес: Marysya AI, 123456, Амстердам, Нидерланды, ул. Примерная, д. 1

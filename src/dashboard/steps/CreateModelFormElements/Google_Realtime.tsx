@@ -343,7 +343,7 @@ export const Google_Realtime: React.FC<GoogleRealtimeProps> = ({
                     <div className="espero-form-item">
                         <div className="espero-switch-container">
                             <div className="espero-switch-label">
-                                {t("googleRealtimeOutputTranscriptionLabel") || "Транскрибировать речь модели (субтитры)"}
+                                {t("googleRealtimeOutputTranscriptionLabel") || "Транскрибировать речь модели TTS"}
                                 <Tooltip title={t("googleRealtimeOutputTranscriptionTip") || "Генерировать текст одновременно с голосом модели — для отображения субтитров. По умолчанию: выключено"}>
                                     <InfoCircleOutlined style={{ color: "#999", marginLeft: 6 }} />
                                 </Tooltip>

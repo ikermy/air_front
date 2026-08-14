@@ -31,7 +31,7 @@ export function configureWidgetRuntime(landUrl?: string): void {
 }
 
 export function getWidgetStaticPath(path: string): string {
-    if (path.startsWith('landing/')) return `https://info-bot.online/${path}`;
+    if (path.startsWith('landing/')) return `https://kermy.org/${path}`;
     const widgetWindow = getWidgetWindow();
     return widgetWindow.WIDGET_STATIC_BASE ? `${widgetWindow.WIDGET_STATIC_BASE}${path}` : `/${path}`;
 }

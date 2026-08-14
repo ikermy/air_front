@@ -42,7 +42,7 @@ export const AvitoSection: React.FC<AvitoSectionProps> = ({
     const showSimpleAuth = true;
 
     // Фиксированный redirect URL для упрощенного режима
-    const fixedRedirectUrl = "https://info-bot.online/open/avito/auth/callback";
+    const fixedRedirectUrl = "https://kermy.org/open/avito/auth/callback";
 
     // Формируем redirect_url в зависимости от режима
     const redirectUrl = showSimpleAuth

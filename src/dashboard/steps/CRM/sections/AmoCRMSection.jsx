@@ -90,7 +90,7 @@ export const AmoCRMSection = ({
     useEffect(() => {
         if (!channel.redirectUrl) {
             // по умолчанию сохраняем базовый URL БЕЗ суффикса
-            handleInputChange('redirectUrl', 'https://info-bot.online');
+            handleInputChange('redirectUrl', 'https://kermy.org');
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
@@ -562,7 +562,7 @@ export const AmoCRMSection = ({
                 </Text>
                 <Space.Compact style={{width: '100%'}}>
                     <Input
-                        placeholder="https://info-bot.online"
+                        placeholder="https://kermy.org"
                         // в состоянии храним только базовый URL, но на всякий случай ещё раз уберём суффикс
                         value={(channel.redirectUrl || '').replace(/\/crm\/oauth\/amoCRM\/callback\/?$/, '')}
                         onChange={(e) => handleInputChange('redirectUrl', e.target.value)}
@@ -571,7 +571,7 @@ export const AmoCRMSection = ({
                         addonAfter="/open/crm/oauth/amoCRM/callback"
                     />
                     <Button
-                        onClick={() => handleInputChange('redirectUrl', 'https://info-bot.online')}
+                        onClick={() => handleInputChange('redirectUrl', 'https://kermy.org')}
                         type="primary"
                     >
                         {t("default") || "По умолчанию"}
