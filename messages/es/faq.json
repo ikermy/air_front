@@ -1,0 +1,49 @@
+{
+  "eyebrow": "Preguntas",
+  "title": "Preguntas frecuentes",
+  "lead": "Respuestas breves a lo que más se pregunta: cómo funciona el cifrado, qué pagas exactamente y qué puedes desplegar en tu propio equipo.",
+  "moreTitle": "¿No encuentras tu pregunta?",
+  "moreCta": "Pregunta en el chat de la comunidad",
+  "items": {
+    "masterkey": {
+      "q": "¿Cómo funciona el cifrado MasterKey y por qué no veis mis datos?",
+      "a": "La clave de cifrado se deriva de tu contraseña MasterKey y solo tú tienes acceso a ella: no la guardamos y no podemos recuperar tus datos. Las claves de API, los tokens de los canales y el historial de conversaciones llegan a la base de datos ya cifrados con AES-GCM, así que sin tu clave son un conjunto de bytes sin más. La otra cara de un esquema honesto: si olvidas la contraseña MasterKey, el acceso a los datos cifrados se pierde de forma definitiva."
+    },
+    "logging": {
+      "q": "Decís que no registráis mis datos, ¿entonces para qué sirve el servicio air_logger?",
+      "a": "Son cosas distintas. air_logger recoge eventos y errores técnicos: arranque y parada de los servicios, códigos de respuesta, tiempos de espera agotados y fallos de conexión; sin eso es imposible saber si la plataforma funciona bien. El contenido de las conversaciones, los textos de los mensajes y las transcripciones de las llamadas, los contactos de tus clientes, las claves y los tokens nunca llegan a los registros: en producción los servicios no escriben datos de usuario ni siquiera para depurar. Todo ello se puede comprobar en el código abierto."
+    },
+    "price": {
+      "q": "¿Por qué pagar $1 al mes si el proyecto es de código abierto?",
+      "a": "Es el pago por los recursos del servidor y el trabajo del desarrollador, no por los tokens de IA. Ese dólar cubre tiempo de CPU y memoria para tus bots, tráfico, almacenamiento, copias de seguridad y el desarrollo continuo del proyecto. Los tokens los pagas directamente al proveedor con tus propias claves: ahí no hay ningún recargo nuestro. Y si tienes tu propio equipo, la opción self-hosted es gratuita siempre."
+    },
+    "providers": {
+      "q": "¿Qué proveedores de IA se admiten de serie?",
+      "a": "OpenAI, Google Gemini y Mistral, con tus propias claves según el modelo BYOK. La clave se añade en el panel y se guarda cifrada, mientras que las peticiones van directas al proveedor y se facturan en tu cuenta. Puedes cambiar de modelo o de proveedor cuando quieras, sin quedar atado a ninguno."
+    },
+    "whatsapp": {
+      "q": "¿Hace falta GraphAPI para que funcione el bot de WhatsApp?",
+      "a": "No. El servicio air_whatsbot utiliza una conexión directa, así que no necesitas cuenta de empresa de Meta, ni aprobación de plantillas de mensajes, ni el propio GraphAPI. Basta con autorizar un número: el bot responde en los chats y puede recibir y realizar llamadas de voz."
+    },
+    "voice": {
+      "q": "¿Se puede clonar una voz y llamar desde Telegram y WhatsApp?",
+      "a": "Sí. De la voz en Telegram se encarga air_tguserbot y en WhatsApp air_whatsbot; se admiten tanto llamadas entrantes como salientes. El agente habla en tiempo real con una latencia mínima y su timbre se puede definir mediante clonación de voz."
+    },
+    "dataExport": {
+      "q": "¿Qué pasa con mis datos si dejo de pagar o me paso a self-hosted?",
+      "a": "La suscripción paga el hardware, no el acceso a tus datos. Las conversaciones, las claves y la configuración se guardan cifradas y siguen siendo tuyas, y puedes trasladarlas a tu propia instalación porque self-hosted funciona con el mismo código abierto y el mismo formato de almacenamiento. Descifrarlos solo puedes tú: la clave se deriva de tu contraseña MasterKey."
+    },
+    "selfhosted": {
+      "q": "¿Cómo despliego AiR en mi propio servidor?",
+      "a": "Necesitas Docker y una red docker compartida; después los servicios se levantan con docker compose. Los comandos exactos y las variables de entorno varían según el servicio: las instrucciones actualizadas están siempre en el README de cada repositorio. Todos los microservicios de la familia air_ están publicados en GitHub bajo licencia MIT. La versión self-hosted no tiene funciones recortadas ni requiere suscripción."
+    },
+    "byok": {
+      "q": "¿Qué es BYOK y por qué es imposible un recargo sobre los tokens?",
+      "a": "BYOK significa que conectas tus propias claves de los proveedores de IA y las peticiones van directas a ellos, facturadas en tu cuenta. Nosotros no revendemos tokens, así que técnicamente no hay dónde colocar un recargo. No hace falta que nos creas: el gasto se ve en la facturación de tu proveedor y el código está abierto para que lo revises."
+    },
+    "integrations": {
+      "q": "¿Con qué canales y servicios funciona la plataforma?",
+      "a": "Canales: Telegram, WhatsApp, Avito y un widget de chat para cualquier sitio web. Entre los servicios externos se integran Google Calendar y Google Sheets, CRM de terceros mediante marusia_crm y los pagos con criptomonedas a través de Bybit. Cada canal es un microservicio independiente, así que puedes montar justo el conjunto que necesites."
+    }
+  }
+}

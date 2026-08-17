@@ -1,0 +1,296 @@
+/* Лента диалога — демонстрация продуктового UI, поэтому цвета берутся
+   из theme-aware --air-demo-*, а не из всегда-тёмных --air-console-*. */
+
+.wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+}
+
+.feed {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  height: 340px;
+  overflow-y: auto;
+  padding: 16px;
+  border: 1px solid var(--air-demo-border);
+  border-radius: var(--air-radius);
+  background: var(--air-demo-bg);
+  scrollbar-width: thin;
+  scrollbar-color: var(--air-demo-border) transparent;
+}
+
+.feed::-webkit-scrollbar {
+  width: 8px;
+}
+
+.feed::-webkit-scrollbar-thumb {
+  background: var(--air-demo-border);
+  border-radius: 4px;
+}
+
+.placeholder {
+  margin: auto;
+  font-family: var(--air-font-mono);
+  font-size: 12px;
+  color: var(--air-demo-muted);
+  text-align: center;
+}
+
+.row {
+  display: flex;
+  min-width: 0;
+}
+
+.row[data-outgoing='true'] {
+  justify-content: flex-end;
+}
+
+/* --- Аватар --- */
+.avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 9px;
+  border: 1px solid var(--air-demo-border);
+  background: var(--air-demo-bg-elevated);
+  color: var(--air-demo-muted);
+}
+
+/* Заливка и рамка — лайм с низкой альфой (работает на обоих фонах),
+   а вот сама иконка — demo-accent: лайм на белом даёт 1.3:1. */
+.avatar[data-role='ai'] {
+  border-color: color-mix(in srgb, var(--air-brand) 40%, transparent);
+  background: color-mix(in srgb, var(--air-brand) 15%, transparent);
+  color: var(--air-demo-accent);
+}
+
+.avatar[data-role='operator'] {
+  border-color: color-mix(in srgb, var(--air-go) 45%, transparent);
+  background: color-mix(in srgb, var(--air-go) 16%, transparent);
+  color: var(--air-demo-info);
+}
+
+.author {
+  font-family: var(--air-font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--air-demo-muted);
+}
+
+/* antd красит бабл своими токенами, поэтому фон и цвет приходится
+   перебивать. Важно: перебиваем на theme-aware токены — раньше здесь
+   были всегда-тёмные console-токены, из-за чего пузыри оставались
+   тёмными даже при светлой теме. */
+.bubbleContent {
+  background: var(--air-demo-bg-elevated) !important;
+  border-color: var(--air-demo-border) !important;
+  color: var(--air-demo-text) !important;
+  font-size: 13.5px;
+  line-height: 1.6;
+  max-width: 100%;
+}
+
+.row[data-outgoing='true'] .bubbleContent {
+  background: color-mix(in srgb, var(--air-brand) 13%, var(--air-demo-bg-elevated)) !important;
+  border-color: color-mix(in srgb, var(--air-brand) 30%, transparent) !important;
+}
+
+.plain {
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Реплика, оборванная собеседником в realtime-звонке. */
+.cut {
+  color: var(--air-demo-warn);
+  font-weight: 600;
+}
+
+/* Курсор набора: имитация дельт реального агента. */
+.caret {
+  display: inline-block;
+  width: 7px;
+  height: 14px;
+  margin-left: 2px;
+  vertical-align: text-bottom;
+  background: var(--air-demo-accent);
+  animation: blink 1s steps(2, start) infinite;
+}
+
+@keyframes blink {
+  50% {
+    opacity: 0;
+  }
+}
+
+.markdown {
+  color: var(--air-demo-text);
+  font-size: 13.5px;
+}
+
+.markdown :global(pre),
+.markdown :global(code) {
+  font-family: var(--air-font-mono);
+  font-size: 12px;
+}
+
+.markdown :global(a) {
+  color: var(--air-demo-accent);
+}
+
+.markdown :global(ul),
+.markdown :global(ol) {
+  padding-left: 18px;
+  margin: 6px 0;
+}
+
+.markdown :global(table) {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12.5px;
+}
+
+.markdown :global(th),
+.markdown :global(td) {
+  border: 1px solid var(--air-demo-border);
+  padding: 5px 8px;
+  text-align: left;
+}
+
+/* --- Вызов инструмента --- */
+.toolRow {
+  min-width: 0;
+}
+
+/* ThoughtChain берёт цвет текста из токена antd — подменяем его локально,
+   иначе в светлой теме остался бы светлый текст на светлом фоне. */
+.chain {
+  --ant-color-text: var(--air-demo-text);
+  --ant-color-text-description: var(--air-demo-muted);
+  --ant-color-text-secondary: var(--air-demo-muted);
+  color: var(--air-demo-text);
+  font-size: 13px;
+}
+
+.toolContent {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--air-demo-border);
+  background: var(--air-demo-bg);
+  color: var(--air-demo-text);
+  font-family: var(--air-font-mono);
+  font-size: 11.5px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-x: auto;
+}
+
+/* --- Индикатор «агент печатает» --- */
+.typing {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 2px;
+}
+
+.typing span {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--air-demo-muted);
+  animation: bounce 1.2s ease-in-out infinite;
+}
+
+.typing span:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.typing span:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes bounce {
+  0%,
+  60%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.45;
+  }
+  30% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
+}
+
+/* --- Системный лог --- */
+.log {
+  padding: 12px 14px;
+  border: 1px solid var(--air-demo-border);
+  border-radius: var(--air-radius);
+  background: var(--air-demo-bg-elevated);
+}
+
+.logTitle {
+  display: block;
+  margin-bottom: 8px;
+  font-family: var(--air-font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--air-demo-muted);
+}
+
+.logList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 132px;
+  overflow-y: auto;
+}
+
+.logEmpty,
+.logItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-family: var(--air-font-mono);
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--air-demo-muted);
+}
+
+.logItem[data-tone='success'] {
+  color: var(--air-demo-accent);
+}
+
+.logItem[data-tone='accent'] {
+  color: var(--air-demo-info);
+}
+
+.logItem[data-tone='warn'] {
+  color: var(--air-demo-warn);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .caret,
+  .typing span {
+    animation: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .feed {
+    height: 300px;
+  }
+}

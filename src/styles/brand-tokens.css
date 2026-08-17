@@ -1,0 +1,186 @@
+/* =============================================================
+   AiR — брендовые токены лендинга.
+   Источник палитры: src/App.css (:root --main-color-dark и др.).
+   Значения продублированы намеренно: App.css грузится только
+   в Pages Router (_app.tsx) и недоступен из app/ (App Router).
+   При изменении фирменных цветов правим ОБА файла.
+   Все токены префиксованы --air- => не пересекаются с дашбордом.
+   ============================================================= */
+
+:root {
+  /* --- Фирменный лайм (из App.css) --- */
+  --air-brand: #c8fb77;        /* --main-color-dark  — фирменный */
+  --air-brand-soft: #eaffbb;   /* --main-color-light — бледная заливка */
+  --air-brand-deep: #20401a;   /* --midle-color-dark — тёмно-зелёная поверхность */
+  --air-brand-pale: #f9ffea;   /* --midle-color-ligth */
+  --air-brand-vivid: #bcf844;  /* --try-color */
+
+  /* --- Ссылки (из App.css) --- */
+  --air-link-dark: #8ac51e;
+  --air-link-dark-hover: #a8f817;
+  --air-link-light: #5f8300;
+  --air-link-light-hover: #8ac51e;
+
+  /* --- Второй голос: Go-циан. Только dev-контекст:
+         код, схема микросервисов, терминал --- */
+  --air-go: #00add8;
+  --air-go-soft: #7fe3f5;
+  --air-go-deep: #036c86;
+
+  /* --- Статусы (из App.css) --- */
+  --air-error: #ff0202;
+  --air-warning: #ff9d00;
+  --air-success: #49ff49;
+
+  /* --- Геометрия --- */
+  --air-radius: 10px;          /* --border-radius */
+  --air-radius-lg: 18px;
+  --air-radius-xl: 28px;
+
+  /* --- Типографика --- */
+  --air-font-sans: ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+    Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --air-font-mono: ui-monospace, 'SF Mono', SFMono-Regular, Menlo, Monaco,
+    Consolas, 'Liberation Mono', 'Courier New', monospace;
+
+  /* --- Ритм --- */
+  --air-section-py: clamp(64px, 9vw, 128px);
+  --air-container: 1200px;
+  --air-gutter: clamp(16px, 4vw, 32px);
+
+  /* --- Консольные острова: блоки кода и технические схемы
+         остаются тёмными в ОБЕИХ темах — тёмный листинг на светлой
+         странице привычен. Поэтому токены не переопределяются.
+         Используют: CodeBlock, схема в Security, мокап в HeroVisual, Economics,
+         глобальный класс .air-console.
+         ДЛЯ ДЕМО-ПОВЕРХНОСТЕЙ (playground) СМ. --air-demo-* НИЖЕ. --- */
+  --air-console-bg: #0d1117;
+  --air-console-bg-elevated: #161b22;
+  --air-console-border: #26312b;
+  --air-console-text: #d7e3d0;
+  --air-console-muted: #8b9a86;
+}
+
+/* =============================================================
+   ТЁМНАЯ ТЕМА — база проекта и значение по умолчанию.
+   Двойной селектор: [data-theme] для App Router,
+   body.dark — для совместимости с Pages Router / дашбордом.
+   ============================================================= */
+[data-theme='dark'],
+body.dark {
+  --air-bg: #121212;              /* --bg-color-dark */
+  --air-bg-elevated: #181c17;     /* графит с лёгким зелёным подмесом */
+  --air-bg-sunken: #0c0f0b;
+  --air-surface: #1b201a;
+  --air-surface-hover: #232a20;
+
+  --air-text: #ffffff;            /* --text-color-dark */
+  --air-text-secondary: #b9c4b2;
+  --air-text-muted: #7f8c7a;
+
+  --air-border: #2a3326;
+  --air-border-strong: #3d4a37;
+
+  /* Акцент: лайм читается на графите с контрастом 15.6:1 —
+     пригоден и для текста, и для крупных элементов. */
+  --air-accent: var(--air-brand);
+  --air-accent-text: var(--air-brand);
+  --air-accent-hover: #d8ff96;
+  --air-accent-contrast: #0e1a06;  /* текст НА лаймовой заливке */
+
+  --air-link: var(--air-link-dark);
+  --air-link-hover: var(--air-link-dark-hover);
+
+  /* Свечение — сердце «лайм-кибер» эстетики. Только в тёмной. */
+  --air-glow: 0 0 0 1px rgba(200, 251, 119, 0.18),
+              0 0 32px rgba(200, 251, 119, 0.14);
+  --air-glow-strong: 0 0 0 1px rgba(200, 251, 119, 0.35),
+                     0 0 60px rgba(200, 251, 119, 0.28);
+  --air-shadow: 0 18px 48px rgba(0, 0, 0, 0.55);
+  --air-shadow-sm: 0 6px 18px rgba(0, 0, 0, 0.4);
+
+  --air-grid-line: rgba(200, 251, 119, 0.07);
+  --air-mesh-a: rgba(200, 251, 119, 0.16);
+  --air-mesh-b: rgba(0, 173, 216, 0.12);
+
+  /* --- Демо-поверхности playground ---
+     В отличие от --air-console-* эти токены СЛЕДУЮТ ТЕМЕ: playground
+     показывает продуктовый UI (чат, панель звонка), а не листинг кода.
+     Значения здесь ПОБАЙТОВО равны --air-console-*, чтобы тёмная тема
+     не изменилась после перевода playground на новый набор. --- */
+  --air-demo-bg: #0d1117;
+  --air-demo-bg-elevated: #161b22;
+  --air-demo-border: #26312b;
+  --air-demo-text: #d7e3d0;
+  --air-demo-muted: #8b9a86;
+  /* Акцент ДЛЯ ТЕКСТА и иконок внутри демо. На графите лайм даёт 15.6:1. */
+  --air-demo-accent: var(--air-brand);
+  --air-demo-info: var(--air-go-soft);
+  --air-demo-warn: var(--air-warning);
+  /* Заливка сгенерированной картинки-котика. */
+  --air-demo-art: var(--air-brand);
+
+  color-scheme: dark;
+}
+
+/* =============================================================
+   СВЕТЛАЯ ТЕМА.
+   Сатурированного лайма для текста здесь нет: #c8fb77 на белом
+   даёт ~1.3:1. Поэтому акцент-для-текста = олива #5f8300 (4.5:1, AA),
+   а сам лайм работает заливкой и хайлайтом.
+   ============================================================= */
+[data-theme='light'],
+body.light {
+  --air-bg: #ffffff;              /* --bg-color-light */
+  --air-bg-elevated: #f7faf2;
+  --air-bg-sunken: #eef3e6;
+  --air-surface: #ffffff;
+  --air-surface-hover: var(--air-brand-pale);
+
+  --air-text: #101410;
+  --air-text-secondary: #47523f;
+  --air-text-muted: #6d7a66;
+
+  --air-border: #dfe7d4;
+  --air-border-strong: #c2d1b0;
+
+  --air-accent: var(--air-brand);        /* заливка */
+  --air-accent-text: var(--air-link-light); /* текст/иконки — AA */
+  --air-accent-hover: #d8ff96;
+  --air-accent-contrast: #20401a;        /* текст НА лаймовой заливке (8.9:1) */
+
+  --air-link: var(--air-link-light);
+  --air-link-hover: var(--air-link-light-hover);
+
+  /* В светлой теме неон превращается в грязь — вместо свечения мягкие тени. */
+  --air-glow: 0 1px 2px rgba(32, 64, 26, 0.06),
+              0 8px 24px rgba(32, 64, 26, 0.08);
+  --air-glow-strong: 0 2px 4px rgba(32, 64, 26, 0.08),
+                     0 16px 40px rgba(32, 64, 26, 0.14);
+  --air-shadow: 0 18px 48px rgba(32, 64, 26, 0.12);
+  --air-shadow-sm: 0 6px 18px rgba(32, 64, 26, 0.08);
+
+  --air-grid-line: rgba(32, 64, 26, 0.06);
+  --air-mesh-a: rgba(200, 251, 119, 0.5);
+  --air-mesh-b: rgba(0, 173, 216, 0.12);
+
+  /* --- Демо-поверхности playground в светлой теме ---
+     Порядок слоёв инвертирован относительно тёмной темы и это намеренно:
+     там «elevated» светлее фона, здесь — темнее, иначе поднятые элементы
+     (шапка консоли, пузыри, лог) слились бы с белым фоном. --- */
+  --air-demo-bg: #ffffff;
+  --air-demo-bg-elevated: #f2f6ea;
+  --air-demo-border: #dbe4cf;
+  --air-demo-text: #101410;
+  --air-demo-muted: #6d7a66;
+  /* Лайм на белом — 1.3:1, текстом непригоден. Здесь акцент-для-текста
+     — олива (4.5:1, AA). Сам лайм остаётся только заливкой. */
+  --air-demo-accent: var(--air-link-light);
+  --air-demo-info: var(--air-go-deep);
+  /* Силуэт кота лаймом на белом фоне растворяется — берём оливу. */
+  --air-demo-art: var(--air-link-light);
+  /* #ff9d00 на белом — ~2.2:1, поэтому для текста взят тёмный янтарь. */
+  --air-demo-warn: #9a5b00;
+
+  color-scheme: light;
+}

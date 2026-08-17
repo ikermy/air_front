@@ -1,0 +1,276 @@
+/* Панель фазы — часть демо продуктового UI, поэтому следует теме
+   через --air-demo-*, а не всегда-тёмные --air-console-*. */
+
+.panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--air-demo-border);
+  border-radius: var(--air-radius);
+  background: var(--air-demo-bg-elevated);
+  min-height: 92px;
+}
+
+.panel[data-idle='true'] {
+  align-items: center;
+  justify-content: center;
+}
+
+.idle {
+  font-family: var(--air-font-mono);
+  font-size: 12px;
+  color: var(--air-demo-muted);
+  text-align: center;
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.iconBox {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: 11px;
+  border: 1px solid color-mix(in srgb, var(--air-brand) 32%, transparent);
+  background: color-mix(in srgb, var(--air-brand) 14%, transparent);
+  color: var(--air-demo-accent);
+}
+
+.meta {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex-grow: 1;
+}
+
+.phaseName {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--air-demo-text);
+}
+
+.phaseHint {
+  font-family: var(--air-font-mono);
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--air-demo-muted);
+}
+
+.pulse {
+  width: 9px;
+  height: 9px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: var(--air-demo-muted);
+}
+
+/* Точка — заливка, но на белом фоне чистый лайм практически не виден,
+   поэтому берём demo-accent (в тёмной он равен лайму). */
+.pulse[data-live='true'] {
+  background: var(--air-demo-accent);
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--air-demo-accent) 60%, transparent);
+  animation: pulse 1.8s ease-out infinite;
+}
+
+@keyframes pulse {
+  70% {
+    box-shadow: 0 0 0 9px transparent;
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+  }
+}
+
+/* --- Чек-лист настройки Lead Hunter --- */
+.setup {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.setupItem {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 9px;
+  border: 1px solid var(--air-demo-border);
+  border-radius: 9px;
+  background: var(--air-demo-bg);
+  transition: border-color 0.25s ease;
+}
+
+.setupItem[data-lit='true'] {
+  border-color: color-mix(in srgb, var(--air-brand) 34%, transparent);
+}
+
+.setupIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  border-radius: 7px;
+  border: 1px solid var(--air-demo-border);
+  color: var(--air-demo-muted);
+}
+
+.setupItem[data-lit='true'] .setupIcon {
+  border-color: color-mix(in srgb, var(--air-brand) 40%, transparent);
+  background: color-mix(in srgb, var(--air-brand) 14%, transparent);
+  color: var(--air-demo-accent);
+}
+
+.setupText {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+
+.setupName {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--air-demo-text);
+}
+
+.setupValue {
+  font-family: var(--air-font-mono);
+  font-size: 10.5px;
+  line-height: 1.4;
+  color: var(--air-demo-muted);
+}
+
+/* --- Мокап сайта с виджетом --- */
+.site {
+  border: 1px solid var(--air-demo-border);
+  border-radius: var(--air-radius);
+  background: var(--air-demo-bg);
+  overflow: hidden;
+}
+
+.siteBar {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--air-demo-border);
+  background: var(--air-demo-bg-elevated);
+}
+
+.siteDots {
+  display: inline-flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+.siteDots i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--air-demo-border);
+}
+
+.siteUrl {
+  font-family: var(--air-font-mono);
+  font-size: 10px;
+  color: var(--air-demo-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sitePage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 12px;
+  min-height: 116px;
+}
+
+.siteTitle {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--air-demo-text);
+}
+
+.siteLine {
+  height: 5px;
+  border-radius: 3px;
+  background: var(--air-demo-border);
+}
+
+.siteLine[data-w='90'] {
+  width: 90%;
+}
+
+.siteLine[data-w='70'] {
+  width: 70%;
+}
+
+.siteCards {
+  display: flex;
+  gap: 6px;
+  margin-top: 3px;
+}
+
+.siteCard {
+  flex: 1;
+  height: 30px;
+  border-radius: 6px;
+  border: 1px solid var(--air-demo-border);
+  background: var(--air-demo-bg-elevated);
+}
+
+/* Пузырь виджета в углу «страницы» — там же, где он живёт на реальном сайте. */
+.siteBubble {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: var(--air-brand);
+  color: var(--air-brand-deep);
+}
+
+.siteBubble[data-live='true'] {
+  animation: bubble 2.4s ease-in-out infinite;
+}
+
+@keyframes bubble {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--air-brand) 55%, transparent);
+  }
+  60% {
+    box-shadow: 0 0 0 10px transparent;
+  }
+}
+
+.wave {
+  padding: 6px 2px 2px;
+}
+
+/* Полный стоп анимаций: пользователь просил меньше движения. */
+@media (prefers-reduced-motion: reduce) {
+  .pulse[data-live='true'],
+  .siteBubble[data-live='true'] {
+    animation: none;
+  }
+}

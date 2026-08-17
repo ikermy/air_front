@@ -1,0 +1,49 @@
+{
+  "eyebrow": "FAQ",
+  "title": "Frequently asked questions",
+  "lead": "The short answers to what people ask most: how the encryption works, what you actually pay for, and what you can run on your own hardware.",
+  "moreTitle": "Question not covered here?",
+  "moreCta": "Ask in the community chat",
+  "items": {
+    "masterkey": {
+      "q": "How does MasterKey encryption work and why can't you see my data?",
+      "a": "The encryption key is derived from your MasterKey password and is available only to you — we never store it and cannot restore your data. API keys, channel tokens and conversation history reach the database already encrypted with AES-GCM, so without your key they are just a blob of bytes. The flip side of an honest scheme: if you forget your MasterKey password, access to the encrypted data is lost for good."
+    },
+    "logging": {
+      "q": "You say you do not log my data — then what is the air_logger service for?",
+      "a": "They are two different things. air_logger collects events and technical errors: service start and stop, response codes, timeouts, connection failures — without those you cannot tell whether the platform is healthy. Conversation content, message bodies and call transcripts, customer contacts, keys and tokens never reach the logs: in production the services do not write user data even for debugging. You can verify all of it in the open source code."
+    },
+    "price": {
+      "q": "Why pay $1 per month if the project is open source?",
+      "a": "It pays for server resources and the developer's work, not for AI tokens. The dollar covers CPU time and memory for your bots, traffic, storage, backups and continued development of the project. Tokens are paid directly to the provider with your own keys — there is no markup from us. And if you have your own hardware, the self-hosted option is always free."
+    },
+    "providers": {
+      "q": "Which AI providers are supported out of the box?",
+      "a": "OpenAI, Google Gemini and Mistral — with your own keys, following the BYOK model. You add a key in the dashboard where it is stored encrypted, and requests go straight to the provider and are billed to your account. You can switch models or providers at any time, with no vendor lock-in."
+    },
+    "whatsapp": {
+      "q": "Do I need GraphAPI to run the WhatsApp bot?",
+      "a": "No. The air_whatsbot service uses a direct connection, so there is no need for a Meta business account, message template review, or GraphAPI itself. Authorising a phone number is enough: the bot replies in chats and can receive and place voice calls."
+    },
+    "voice": {
+      "q": "Can I clone a voice and make calls from Telegram and WhatsApp?",
+      "a": "Yes. Voice in Telegram is handled by air_tguserbot and in WhatsApp by air_whatsbot; both incoming and outgoing calls are supported. The agent speaks in real time with minimal latency, and its timbre can be set through voice cloning."
+    },
+    "dataExport": {
+      "q": "What happens to my data if I stop paying or move to self-hosted?",
+      "a": "The subscription pays for hardware, not for access to your data. Conversations, keys and settings are stored encrypted and remain yours, and they can be moved to your own installation because self-hosted runs on the same open source code and the same storage format. Only you can decrypt them: the key is derived from your MasterKey password."
+    },
+    "selfhosted": {
+      "q": "How do I deploy AiR on my own server?",
+      "a": "You need Docker and a shared docker network, after which the services come up via docker compose. The exact commands and environment variables differ per service — the up-to-date instructions always live in the README of that specific repository. Every microservice of the air_ family is published on GitHub under the MIT license. Self-hosted has no stripped-down features and requires no subscription."
+    },
+    "byok": {
+      "q": "What is BYOK and why is a markup on tokens impossible?",
+      "a": "BYOK means you plug in your own AI provider keys and requests go straight to them, billed to your account. We never resell tokens, so there is technically nowhere for a markup to appear. You don't have to take our word for it: the spending is visible in your provider's billing, and the code itself is open for inspection."
+    },
+    "integrations": {
+      "q": "Which channels and services does the platform work with?",
+      "a": "Channels: Telegram, WhatsApp, Avito and a chat widget for any website. External services include Google Calendar and Google Sheets, third-party CRMs through marusia_crm, and crypto payments through Bybit. Every channel is a separate microservice, so you assemble exactly the set your task needs."
+    }
+  }
+}

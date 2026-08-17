@@ -1,0 +1,54 @@
+{
+  "eyebrow": "Economía honesta",
+  "title": "Qué paga exactamente tu dólar",
+  "lead": "No ganamos nada con tus peticiones a la IA. La suscripción cubre solo la infraestructura y el trabajo en el proyecto: los tokens los pagas directamente al proveedor con tus propias claves.",
+  "covered": {
+    "title": "Incluido en $1 al mes",
+    "caption": "Recursos del servidor y trabajo del desarrollador",
+    "server": {
+      "title": "Recursos del servidor",
+      "text": "Tiempo de CPU y memoria para tus bots, el orquestador y las colas de tareas."
+    },
+    "traffic": {
+      "title": "Tráfico y conexiones",
+      "text": "Conexiones permanentes de mensajería, webhooks y sesiones de voz en tiempo real."
+    },
+    "storage": {
+      "title": "Almacenamiento y base de datos",
+      "text": "MinIO para archivos multimedia, MariaDB para las conversaciones y copias de seguridad periódicas."
+    },
+    "dev": {
+      "title": "Trabajo del desarrollador",
+      "text": "Actualizaciones, nuevos canales e integraciones, corrección de errores y respuestas a tus dudas."
+    }
+  },
+  "direct": {
+    "title": "Se paga directamente al proveedor",
+    "caption": "Con tus claves, sin pasar por nuestra cuenta",
+    "keys": {
+      "title": "Tus propias claves API",
+      "text": "OpenAI, Google Gemini, Mistral: conectas tus claves con el modelo BYOK."
+    },
+    "tokens": {
+      "title": "Tokens y peticiones",
+      "text": "Se cargan a tu cuenta del proveedor según su tarifa. Nuestra comisión es cero."
+    },
+    "models": {
+      "title": "Elección de modelos",
+      "text": "Cambia de modelo o de proveedor cuando quieras: no te atamos a un único proveedor."
+    },
+    "limits": {
+      "title": "Tus límites",
+      "text": "Defines tú mismo las cuotas y los presupuestos mensuales en la consola del proveedor."
+    }
+  },
+  "formula": {
+    "label": "Cómo se calcula",
+    "platform": "$1 / mes = servidor + tráfico + almacenamiento + desarrollo",
+    "tokens": "Tokens de IA = tu factura del proveedor, 0% de recargo"
+  },
+  "proof": {
+    "title": "No hay dónde esconder un recargo",
+    "text": "El código fuente es abierto bajo licencia MIT. Cualquiera puede comprobar que las peticiones van directamente al proveedor con tu clave y que la clave de cifrado se deriva de tu contraseña MasterKey y queda fuera de nuestro alcance. Aquí la confianza se verifica, no se declara."
+  }
+}

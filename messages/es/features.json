@@ -1,0 +1,45 @@
+{
+  "eyebrow": "Funciones",
+  "title": "Cuatro razones para ejecutar tus agentes en AiR",
+  "lead": "Privacidad, voz en tiempo real, clientes desde los mensajeros y desde tu propia web, y control total sobre tu gasto en IA.",
+  "encryption": {
+    "tag": "AES-GCM",
+    "title": "Cifrado con MasterKey",
+    "desc": "La clave de cifrado se deriva de tu contraseña MasterKey y solo tú tienes acceso a ella. No almacenamos esa clave y no podemos recuperar tus datos.",
+    "points": {
+      "a": "Todo lo que se guarda: claves, tokens y conversaciones",
+      "b": "En producción los servicios no registran tus datos",
+      "c": "Solo tú conoces la contraseña: no existe el «restablecer con soporte»"
+    }
+  },
+  "realtime": {
+    "tag": "air_tguserbot · air_whatsbot",
+    "title": "Voz en tiempo real y clonación",
+    "desc": "Llamadas entrantes y salientes dentro de los propios mensajeros. Los agentes de voz responden con una latencia mínima.",
+    "points": {
+      "a": "Llamadas en Telegram — air_tguserbot",
+      "b": "WhatsApp sin GraphAPI — air_whatsbot",
+      "c": "Clonación de voz acorde a tu marca"
+    }
+  },
+  "leads": {
+    "tag": "air_lead-hunter",
+    "title": "Búsqueda automática de leads",
+    "desc": "El agente busca clientes de forma programada en Telegram y WhatsApp y los cualifica por voz o por texto. El flujo entrante llega directamente desde tu web.",
+    "points": {
+      "a": "Se ejecuta según calendario, sin lanzarlo a mano",
+      "b": "Widget de chat para cualquier web — air_widget",
+      "c": "Transferencia a un operador humano — air_operator"
+    }
+  },
+  "byok": {
+    "tag": "OpenAI · Gemini · Mistral",
+    "title": "Tus propias claves de API (BYOK)",
+    "desc": "Pagas directamente al proveedor de IA con tus propias claves. El dólar al mes cubre solo la infraestructura.",
+    "points": {
+      "a": "Sin recargo sobre los tokens: es estructuralmente imposible",
+      "b": "Cambia de proveedor sin migración",
+      "c": "Los límites y la facturación siguen de tu lado"
+    }
+  }
+}

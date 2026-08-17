@@ -2,6 +2,7 @@ import React, {useEffect, useState} from "react";
 import {useSearchParams, useNavigate} from "react-router-dom";
 import {CheckOutlined, LoadingOutlined, CloseCircleOutlined} from '@ant-design/icons';
 import {useAuth} from "../../AuthContext";
+import {goToLanding} from "../../utils/goToLanding";
 
 function EmailConfirm() {
     const [status, setStatus] = useState("loading");
@@ -27,26 +28,26 @@ function EmailConfirm() {
                         setStatus("success");
                         setTimeout(() => {
                             setShowLoginForm(true)
-                            navigate("/")
+                            goToLanding('login')
                         }, 3000);
 
                     } else {
                         setStatus("error");
                         setTimeout(() => {
-                            navigate("/");
+                            goToLanding('login');
                         }, 5000);
                     }
                 } catch (error) {
                     console.error("Ошибка подтверждения email:", error);
                     setStatus("error");
                     setTimeout(() => {
-                        navigate("/");
+                        goToLanding('login');
                     }, 5000);
                 }
             } else {
                 setStatus("error");
                 setTimeout(() => {
-                    navigate("/");
+                    goToLanding('login');
                 }, 5000);
             }
         }

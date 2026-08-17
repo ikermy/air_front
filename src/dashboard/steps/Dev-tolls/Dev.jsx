@@ -3,6 +3,7 @@ import {Card, Form, Input, Descriptions, Spin, Button, Modal, Typography} from "
 import {useTranslation} from 'react-i18next';
 import {showErrorNotification, showNotification} from "../../hotification/showNotification";
 import {useNavigate} from "react-router-dom";
+import {goToLanding} from "../../../utils/goToLanding";
 import {useAuth} from "../../../AuthContext";
 import {encryptPassword, getKey} from "../../../utils/easyUtils";
 import {UserContext} from "../../../UserContext";
@@ -70,7 +71,8 @@ export const Dev = () => {
             // Удаление cookie MarusiaRefreshToken
             document.cookie = "MarusiaRefreshToken=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;";
             logout();
-            navigate("/");
+            // Выход на лендинг: он в App Router, клиентская навигация туда не доведёт.
+            goToLanding();
         } catch (e) {
             showErrorNotification(t("devSessionKeyError") || "Ошибка создания SessionKey", e);
         }

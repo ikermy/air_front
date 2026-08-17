@@ -1,0 +1,129 @@
+.section {
+  position: relative;
+}
+
+.head {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+  max-width: 720px;
+  margin-bottom: clamp(32px, 4vw, 52px);
+}
+
+.lead {
+  margin: 0;
+}
+
+/* --- Сетка карточек --- */
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: clamp(16px, 2vw, 22px);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Reveal рендерится как <li>: снимаем маркер и растягиваем на высоту ячейки */
+.grid > li {
+  list-style: none;
+  height: 100%;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  height: 100%;
+  padding: clamp(22px, 2.6vw, 30px);
+  border: 1px solid var(--air-border);
+  border-radius: var(--air-radius-lg);
+  background: var(--air-surface);
+  transition: border-color 0.24s ease, transform 0.24s ease,
+    box-shadow 0.24s ease;
+}
+
+.card:hover {
+  border-color: color-mix(in srgb, var(--air-accent) 55%, var(--air-border));
+  transform: translateY(-3px);
+  box-shadow: var(--air-glow);
+}
+
+.iconBox {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 14px;
+  /* Заливка — сам лайм с низкой альфой: работает в обеих темах.
+     Иконка — accent-text, поэтому в светлой теме это олива (AA), а не лайм. */
+  background: color-mix(in srgb, var(--air-brand) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--air-accent) 34%, transparent);
+  color: var(--air-accent-text);
+  flex-shrink: 0;
+}
+
+.tag {
+  font-family: var(--air-font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--air-text-muted);
+}
+
+.cardTitle {
+  margin: 0;
+  font-size: clamp(1.0625rem, 1.5vw, 1.25rem);
+  line-height: 1.25;
+  color: var(--air-text);
+}
+
+.cardDesc {
+  margin: 0;
+  font-size: 14.5px;
+  line-height: 1.6;
+  color: var(--air-text-secondary);
+}
+
+/* --- Список пунктов --- */
+.points {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  list-style: none;
+  margin: 6px 0 0;
+  padding: 14px 0 0;
+  width: 100%;
+  border-top: 1px solid var(--air-border);
+}
+
+.point {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--air-text-secondary);
+}
+
+.pointIcon {
+  color: var(--air-accent-text);
+  flex-shrink: 0;
+  margin-top: 3px;
+}
+
+@media (min-width: 720px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1180px) {
+  .grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}

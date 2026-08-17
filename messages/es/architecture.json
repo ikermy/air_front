@@ -1,0 +1,49 @@
+{
+  "eyebrow": "Arquitectura · Open Source",
+  "title": "13 microservicios que puedes desplegar tú mismo",
+  "lead": "AiR no es un monolito: es una familia de servicios independientes escritos en Go. Cada uno vive en su propio repositorio con licencia MIT, así que puedes leer el código, sustituir cualquier componente o desplegar toda la plataforma en tu propio hardware.",
+  "layers": {
+    "core": {
+      "name": "Núcleo",
+      "hint": "Lógica común y enrutado de peticiones"
+    },
+    "channel": {
+      "name": "Canales",
+      "hint": "Donde hablas con tus clientes"
+    },
+    "service": {
+      "name": "Servicios",
+      "hint": "Escenarios de negocio sobre el núcleo"
+    },
+    "infra": {
+      "name": "Infraestructura",
+      "hint": "Observabilidad y operación"
+    }
+  },
+  "services": {
+    "air_common": "Biblioteca común para todos los microservicios de IA: contratos, modelos de datos y utilidades reutilizables.",
+    "air_orchestrator": "El orquestador principal: recibe los eventos de los canales, consulta al proveedor de IA y reparte las respuestas.",
+    "air_tgbot": "Bot de Telegram en modo polling o webhook, con entrega en streaming de la respuesta mientras se genera.",
+    "air_tguserbot": "Bot de usuario de Telegram: recibe y realiza llamadas de voz desde tu propia cuenta.",
+    "air_whatsbot": "Bot de usuario de WhatsApp sin GraphAPI: conexión directa y llamadas de voz.",
+    "air_widget": "Widget de chat para cualquier web: una línea de código y tienes un operador de IA completo.",
+    "air_avito": "Bot que responde en los chats de Avito y gestiona las consultas de los anuncios automáticamente.",
+    "air_operator": "Transfiere la conversación a un operador humano y de vuelta. Funciona con todos los tipos de bot.",
+    "air_lead-hunter": "Búsqueda programada de leads en Telegram y WhatsApp, incluidas las llamadas de voz salientes.",
+    "air_payment": "Acepta pagos en criptomoneda de los usuarios a través de Bybit.",
+    "marusia_crm": "Integración con CRMs externos: las conversaciones y los leads llegan a tu sistema de ventas.",
+    "air_front": "Frontend en React / Next.js: el panel de control de modelos, canales de comunicación y servicios.",
+    "air_logger": "Registro de eventos con modo multiusuario y soporte para el recolector de logs Loki."
+  },
+  "quickstart": {
+    "label": "Inicio rápido",
+    "title": "Desplegarlo es sencillo",
+    "text": "La versión self-hosted no es una edición recortada: el mismo cifrado MasterKey, los mismos canales y las mismas llamadas. La única diferencia es de quién es el hardware que soporta la carga.",
+    "note": "Necesitas Docker y tus propias claves API de proveedores de IA.",
+    "exampleBadge": "Ejemplo",
+    "readme": "Cada servicio tiene su propio conjunto de comandos y variables de entorno. Las instrucciones actualizadas están en el README de cada repositorio.",
+    "readmeCta": "Ver los repositorios en GitHub",
+    "copy": "Copiar",
+    "copied": "Copiado"
+  }
+}

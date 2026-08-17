@@ -1,0 +1,33 @@
+{
+  "eyebrow": "Apoyo al proyecto",
+  "title": "Apoya el desarrollo",
+  "lead": "AiR se desarrolla como un proyecto abierto. Tu apoyo ayuda a pagar los servidores, añadir nuevos canales y mantener el código libre.",
+  "disclaimer": "Se trata de una donación voluntaria. No otorga funciones adicionales, no afecta a tu plan y no es el pago de una suscripción.",
+  "paypal": {
+    "title": "PayPal",
+    "hint": "Pago único en dólares estadounidenses.",
+    "amountLabel": "Importe del apoyo",
+    "amountAria": "Importe del apoyo en dólares estadounidenses",
+    "presetAria": "Elegir el importe de {amount} dólares",
+    "loading": "El formulario de PayPal se carga cuando este bloque aparece en pantalla.",
+    "surfaceNote": "El formulario de PayPal funciona en una ventana segura y siempre usa una apariencia clara.",
+    "thanks": "¡Gracias por apoyar el proyecto!",
+    "error": "No se ha podido completar el pago. Inténtalo de nuevo.",
+    "minHint": "El importe mínimo es ${min}"
+  },
+  "crypto": {
+    "title": "Criptomonedas",
+    "hint": "Cualquier importe a través de nuestro servicio air_payment.",
+    "soon": "Muy pronto",
+    "pay": "Apoyar con criptomonedas",
+    "note": "Ahora mismo estamos ampliando air_payment: muy pronto podrás indicar cualquier importe.",
+    "networkTitle": "Elige una red conveniente para transferir USDT",
+    "amountHint": "El importe de la donación puede ser cualquiera."
+  },
+  "other": {
+    "title": "También puedes ayudar sin dinero",
+    "star": "Dar una estrella a los repositorios en GitHub",
+    "issue": "Informar de un error o proponer una función",
+    "share": "Habla del proyecto a tus colegas"
+  }
+}

@@ -8,9 +8,11 @@ import {handleError} from "./landing/auth/notificationHandlers";
 import {message, Spin} from "antd";
 import {useNotificationInit} from "./dashboard/hotification/showNotification";
 import { useAppPreloader } from "./utils/useAppPreloader";
+import { goToLanding } from "./utils/goToLanding";
 
 // Lazy loading для маршрутов
 const Home = lazy(() => import("./Home"));
+const LoginPage = lazy(() => import("./auth/LoginPage"));
 const EmailConfirm = lazy(() => import("./landing/auth/EmailConfirm"));
 const ResetPassword = lazy(() => import("./landing/auth/ResetPassword"));
 const Dashboard = lazy(() => import("./dashboard/Dashboard"));
@@ -50,7 +52,10 @@ const ProtectedRoute = ({ children }) => {
 
     useEffect(() => {
         if (!isAuthenticated) {
-            navigate("/")
+            // Лендинг живёт в App Router — клиентская навигация react-router
+            // туда не доведёт. Уходим полной загрузкой и просим лендинг
+            // сразу открыть модалку входа.
+            goToLanding('login');
         }
     }, [isAuthenticated, navigate]);
 
@@ -85,6 +90,7 @@ function App() {
                                 )}
 
                                 <Route path="/" element={<Home />} />
+                                <Route path="/login" element={<LoginPage />} />
                                 <Route path="/confirm" element={<EmailConfirm />} />
                                 <Route path="/reset" element={<ResetPassword />} />
 

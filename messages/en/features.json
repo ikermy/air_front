@@ -1,0 +1,45 @@
+{
+  "eyebrow": "Features",
+  "title": "Four reasons to run your agents on AiR",
+  "lead": "Privacy, real-time voice, customers from messengers and from your own website, and full control over what you spend on AI.",
+  "encryption": {
+    "tag": "AES-GCM",
+    "title": "MasterKey encryption",
+    "desc": "The encryption key is derived from your MasterKey password and available only to you. We do not store that key and cannot recover your data.",
+    "points": {
+      "a": "Every stored record — keys, tokens, conversations",
+      "b": "In production the services never log your data",
+      "c": "Only you know the password — there is no “reset via support”"
+    }
+  },
+  "realtime": {
+    "tag": "air_tguserbot · air_whatsbot",
+    "title": "Real-time voice and cloning",
+    "desc": "Inbound and outbound calls right inside the messengers. Voice agents answer with minimal latency.",
+    "points": {
+      "a": "Telegram calls — air_tguserbot",
+      "b": "WhatsApp without GraphAPI — air_whatsbot",
+      "c": "Voice cloning that matches your brand"
+    }
+  },
+  "leads": {
+    "tag": "air_lead-hunter",
+    "title": "Automated lead discovery",
+    "desc": "The agent searches for clients on a schedule across Telegram and WhatsApp, then qualifies them by voice or text. The inbound flow comes straight from your website.",
+    "points": {
+      "a": "Runs on a schedule, no manual trigger",
+      "b": "Chat widget for any website — air_widget",
+      "c": "Handover to a human — air_operator"
+    }
+  },
+  "byok": {
+    "tag": "OpenAI · Gemini · Mistral",
+    "title": "Bring your own API keys (BYOK)",
+    "desc": "You pay the AI provider directly with your own keys. The $1 per month covers infrastructure only.",
+    "points": {
+      "a": "No token markup — and it is structurally impossible",
+      "b": "Switch providers without migration",
+      "c": "Limits and billing stay on your side"
+    }
+  }
+}

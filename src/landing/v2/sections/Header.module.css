@@ -1,0 +1,168 @@
+.header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  border-bottom: 1px solid transparent;
+  transition: background 0.25s ease, border-color 0.25s ease,
+    backdrop-filter 0.25s ease;
+}
+
+.header[data-scrolled='true'] {
+  background: color-mix(in srgb, var(--air-bg) 82%, transparent);
+  backdrop-filter: saturate(160%) blur(14px);
+  -webkit-backdrop-filter: saturate(160%) blur(14px);
+  border-bottom-color: var(--air-border);
+}
+
+.inner {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  height: 68px;
+}
+
+/* --- Логотип --- */
+.logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--air-text);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.logo:hover {
+  color: var(--air-text);
+}
+
+.logoMark {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  border: 1px solid var(--air-accent);
+  background: color-mix(in srgb, var(--air-brand) 12%, transparent);
+}
+
+.logoDot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--air-accent);
+  box-shadow: var(--air-glow);
+}
+
+.logoText {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 2px;
+  font-size: 17px;
+  letter-spacing: -0.02em;
+}
+
+.logoSlash {
+  color: var(--air-accent-text);
+}
+
+.logoSub {
+  font-family: var(--air-font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--air-text-muted);
+}
+
+/* --- Навигация --- */
+.nav {
+  display: none;
+  align-items: center;
+  gap: 4px;
+  margin-inline: auto;
+}
+
+.navLink {
+  position: relative;
+  padding: 7px 12px;
+  border-radius: 8px;
+  color: var(--air-text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.navLink:hover {
+  color: var(--air-text);
+  background: var(--air-surface-hover);
+}
+
+/* --- Правый блок --- */
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+
+.cta {
+  display: none !important;
+}
+
+/* Вторичная по весу кнопка: не должна конкурировать с главным CTA */
+.signIn {
+  display: none !important;
+  color: var(--air-text-secondary) !important;
+  font-weight: 600 !important;
+}
+
+.signIn:hover {
+  color: var(--air-text) !important;
+  background: var(--air-surface-hover) !important;
+}
+
+.burger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  border: 1px solid var(--air-border);
+  background: transparent;
+  color: var(--air-text);
+  cursor: pointer;
+}
+
+.drawerNav {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.drawerLink {
+  padding: 12px 4px;
+  border-bottom: 1px solid var(--air-border);
+  color: var(--air-text);
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.drawerLink:last-of-type {
+  margin-bottom: 16px;
+}
+
+@media (min-width: 900px) {
+  .nav {
+    display: flex;
+  }
+
+  .cta,
+  .signIn {
+    display: inline-flex !important;
+  }
+
+  .burger {
+    display: none;
+  }
+}

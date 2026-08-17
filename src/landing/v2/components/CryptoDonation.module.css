@@ -1,0 +1,7 @@
+.button { height: 46px !important; border-radius: 12px !important; font-size: 14.5px !important; }
+.form { display: flex; flex-direction: column; gap: 12px; margin-top: 18px; }
+.selected { border-color: var(--air-accent) !important; box-shadow: 0 0 0 1px var(--air-accent); }
+.result { display: flex; flex-direction: column; align-items: center; gap: 16px; margin-top: 16px; }
+.result code { max-width: 100%; overflow-wrap: anywhere; text-align: center; color: var(--air-text-secondary); }
+.details { display: flex; flex-direction: column; align-items: center; gap: 8px; text-align: center; }
+.details span { color: var(--air-text-secondary); font-size: 13px; }

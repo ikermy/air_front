@@ -1,0 +1,62 @@
+{
+  "meta": {
+    "title": "AiR — open-source AI agent platform with privacy and realtime voice",
+    "description": "Open-source AI agent platform: bots for Telegram, WhatsApp and Avito, realtime voice calls, bring your own API keys. $1/mo covers server resources — zero markup on AI tokens.",
+    "ogAlt": "AiR — open-source AI agent platform"
+  },
+  "nav": {
+    "features": "Features",
+    "playground": "Playground",
+    "architecture": "Architecture",
+    "security": "Security",
+    "pricing": "Pricing",
+    "faq": "FAQ",
+    "docs": "Docs",
+    "github": "GitHub",
+    "skipToContent": "Skip to content",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu",
+    "toggleTheme": "Toggle theme",
+    "changeLanguage": "Change language"
+  },
+  "cta": {
+    "signIn": "Sign in",
+    "tryFree": "Start 30 days free",
+    "tryFreeShort": "Start free",
+    "selfHost": "Deploy Open Source",
+    "dashboard": "Open dashboard",
+    "support": "Support the project"
+  },
+  "hero": {
+    "eyebrow": "Open Source · MIT",
+    "titleLine1": "Open-Source AI Agents",
+    "titleAccent": "with honest encryption",
+    "titleLine2": "Privacy, open source and realtime voice",
+    "lead": "Run smart bots on Telegram, WhatsApp and Avito, or embed a chat widget straight into your own website. Make calls with voice cloning and plug in your own API keys.",
+    "leadStrong": "$1 per month pays for server resources and the developer's work — not for AI tokens: those you pay the provider directly with your own keys.",
+    "noCard": "No credit card required",
+    "openSource": "Source code is open — verify it yourself",
+    "callIncoming": "Incoming call",
+    "callAgent": "AI agent answering",
+    "callChannel": "Telegram · Realtime",
+    "callStatus": "Connection established",
+    "visualAlt": "Demo of a voice AI agent answering an incoming call"
+  },
+  "trust": {
+    "title": "Why you can trust us",
+    "markupValue": "0%",
+    "markupLabel": "markup on AI provider tokens",
+    "accessValue": "0%",
+    "accessLabel": "access to your data",
+    "openValue": "100%",
+    "openLabel": "open source, MIT licensed",
+    "priceValue": "$1",
+    "priceLabel": "per month — infrastructure only",
+    "trialValue": "30",
+    "trialLabel": "days free, no card",
+    "note": "The encryption key is derived from your MasterKey password and available only to you. We never store it and cannot recover your data.",
+    "channelsTitle": "Channels and integrations",
+    "providersTitle": "AI providers",
+    "providersHint": "You connect your own API keys. Tokens are paid to the provider directly — we add no markup."
+  }
+}

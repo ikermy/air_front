@@ -1,0 +1,536 @@
+.section {
+  position: relative;
+}
+
+.head {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+  max-width: 720px;
+  margin-bottom: clamp(32px, 4vw, 52px);
+}
+
+.lead {
+  margin: 0;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: clamp(18px, 2.2vw, 24px);
+  align-items: start;
+}
+
+/* =============================================================
+   Консольная панель со схемой.
+
+   Панель — «остров»: фон всегда тёмный (--air-demo-*), поэтому
+   ВНУТРИ неё акцент берётся из --air-brand, а не из --air-accent-text.
+   В светлой теме --air-accent-text = олива (#5f8300) и на #0d1117
+   она читалась бы плохо; лайм же даёт 15.6:1 в обоих случаях.
+   ============================================================= */
+
+.panelCell {
+  min-width: 0;
+}
+
+.panel {
+  height: 100%;
+  overflow: hidden;
+  border: 1px solid var(--air-demo-border);
+  border-radius: var(--air-radius-lg);
+  background: var(--air-demo-bg);
+  color: var(--air-demo-text);
+}
+
+.panelHead {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px 11px 16px;
+  border-bottom: 1px solid var(--air-demo-border);
+  background: var(--air-demo-bg-elevated);
+}
+
+.dots {
+  display: inline-flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--air-demo-border);
+}
+
+.dot[data-tone='a'] {
+  background: color-mix(in srgb, var(--air-error) 55%, transparent);
+}
+
+.dot[data-tone='b'] {
+  background: color-mix(in srgb, var(--air-warning) 60%, transparent);
+}
+
+.dot[data-tone='c'] {
+  background: color-mix(in srgb, var(--air-demo-accent) 65%, transparent);
+}
+
+.panelTitle {
+  font-family: var(--air-font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--air-demo-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.panelBadge {
+  margin-left: auto;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--air-demo-accent) 32%, transparent);
+  background: color-mix(in srgb, var(--air-demo-accent) 10%, transparent);
+  font-family: var(--air-font-mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--air-demo-accent);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.panelBody {
+  padding: clamp(20px, 2.4vw, 28px);
+}
+
+.flowTitle {
+  margin: 0 0 18px;
+  font-family: var(--air-font-mono);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--air-demo-muted);
+}
+
+/* --- Графическая цепочка --- */
+.pipeline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 18px 4px 22px;
+}
+
+.node {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(42px, 9vw, 54px);
+  height: clamp(42px, 9vw, 54px);
+  border-radius: 16px;
+  border: 1px solid color-mix(in srgb, var(--air-demo-accent) 34%, transparent);
+  background: color-mix(in srgb, var(--air-demo-accent) 9%, transparent);
+  color: var(--air-demo-accent);
+  flex-shrink: 0;
+}
+
+/* Свечение уместно всегда: подложка панели тёмная в обеих темах */
+.nodeGlow {
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  box-shadow: 0 0 26px color-mix(in srgb, var(--air-demo-accent) 22%, transparent);
+  pointer-events: none;
+}
+
+.link {
+  flex: 1 1 auto;
+  min-width: 18px;
+  display: block;
+}
+
+.linkSvg {
+  display: block;
+  width: 100%;
+  height: 12px;
+}
+
+.linkLine {
+  stroke: color-mix(in srgb, var(--air-demo-accent) 38%, transparent);
+  stroke-width: 1.5;
+  stroke-dasharray: 4 4;
+}
+
+.linkArrow {
+  fill: none;
+  stroke: color-mix(in srgb, var(--air-demo-accent) 58%, transparent);
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+/* --- Текстовые шаги --- */
+.steps {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  list-style: none;
+  margin: 0;
+  padding: 18px 0 0;
+  border-top: 1px solid var(--air-demo-border);
+}
+
+.step {
+  display: flex;
+  gap: 13px;
+}
+
+.stepIndex {
+  font-family: var(--air-font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.5;
+  color: color-mix(in srgb, var(--air-demo-accent) 72%, transparent);
+  flex-shrink: 0;
+}
+
+.stepText {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.stepTitle {
+  font-size: 14.5px;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--air-demo-text);
+}
+
+.stepDesc {
+  font-family: var(--air-font-sans);
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--air-demo-muted);
+}
+
+/* =============================================================
+   Боковая колонка — обычные поверхности, поэтому здесь
+   акцент идёт через --air-accent-text (в светлой теме — олива, AA).
+   ============================================================= */
+
+.aside {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(14px, 1.8vw, 18px);
+  min-width: 0;
+}
+
+/* =============================================================
+   Полноширинный ряд карточек под схемой.
+
+   Зачем: раньше все карточки стояли одной колонкой справа от
+   консольной панели. Колонка была сильно выше панели,
+   и под панелью оставалась большая дыра; с четвёртой карточкой
+   разрыв стал бы ещё заметнее. Теперь рядом со схемой стоит
+   только «Что шифруется», а остальные три уехали вниз в ряд.
+   Информация не удалена — только перераспределена.
+   ============================================================= */
+.wide {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: clamp(14px, 1.8vw, 18px);
+  margin-top: clamp(14px, 1.8vw, 18px);
+}
+
+/* Reveal — прямой ребёнок сетки, поэтому тянем его, а не карточку:
+   иначе карточке нечего растягивать по высоте. */
+.wideCell {
+  display: flex;
+  min-width: 0;
+}
+
+.wideCell > .card {
+  width: 100%;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  padding: clamp(20px, 2.4vw, 26px);
+  border: 1px solid var(--air-border);
+  border-radius: var(--air-radius-lg);
+  background: var(--air-surface);
+  transition: border-color 0.24s ease;
+}
+
+.card:hover {
+  border-color: color-mix(in srgb, var(--air-accent) 45%, var(--air-border));
+}
+
+.cardTitle {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin: 0 0 14px;
+  font-size: clamp(1rem, 1.4vw, 1.125rem);
+  line-height: 1.3;
+  color: var(--air-text);
+}
+
+.cardTitleIcon {
+  color: var(--air-accent-text);
+  flex-shrink: 0;
+}
+
+.cardDesc {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--air-text-secondary);
+}
+
+/* --- Что шифруется --- */
+
+/* Подпись над списком: явно помечает пункты как примеры,
+   чтобы список не читался как исчерпывающий перечень. */
+.examplesLabel {
+  display: block;
+  margin: 16px 0 10px;
+  font-family: var(--air-font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--air-text-muted);
+}
+
+/* В растянутой карточке список забирает остаток высоты и распределяет
+   пункты ровно, чтобы внизу не оставалось провала. */
+.encList {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  flex: 1;
+  justify-content: center;
+}
+
+/* --- Логирование: события да, содержимое нет --- */
+.logGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin: 14px 0 0;
+}
+
+.logCol {
+  padding: 12px 14px;
+  border: 1px solid var(--air-border);
+  border-radius: var(--air-radius);
+  background: var(--air-bg-elevated);
+}
+
+/* Зелёная кромка — что пишется, предупреждающая — что не пишется никогда. */
+.logCol[data-tone='yes'] {
+  border-left: 2px solid color-mix(in srgb, var(--air-accent) 60%, transparent);
+}
+
+.logCol[data-tone='no'] {
+  border-left: 2px solid color-mix(in srgb, var(--air-warning) 55%, transparent);
+}
+
+.logHead {
+  margin: 0 0 5px;
+  font-family: var(--air-font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--air-text-muted);
+}
+
+.logText {
+  margin: 0;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--air-text-secondary);
+}
+
+@media (min-width: 560px) {
+  .logGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.encItem {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 11px 13px;
+  border: 1px solid var(--air-border);
+  border-radius: var(--air-radius);
+  background: var(--air-bg-elevated);
+}
+
+.encIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--air-demo-accent) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--air-accent) 30%, transparent);
+  color: var(--air-accent-text);
+  flex-shrink: 0;
+}
+
+.encText {
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--air-text-secondary);
+  min-width: 0;
+}
+
+.encLock {
+  margin-left: auto;
+  color: var(--air-accent-text);
+  flex-shrink: 0;
+}
+
+/* --- Право на удаление данных --- */
+.eraseList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.eraseItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--air-text-secondary);
+}
+
+.eraseCheck {
+  margin-top: 3px;
+  color: var(--air-accent-text);
+  flex-shrink: 0;
+}
+
+/* Прижата к низу: в ряду равновысоких карточек оговорка
+   должна стоять на одной линии, а не вслед за списком. */
+.eraseNote {
+  margin: 14px 0 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--air-border);
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--air-text-muted);
+}
+
+/* --- Ссылка на код --- */
+.verifyLink {
+  display: inline-flex;
+  align-self: flex-start;
+  align-items: center;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 16px;
+  padding: 10px 16px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--air-accent) 40%, var(--air-border));
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--air-accent-text);
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+}
+
+.verifyLink:hover {
+  border-color: var(--air-accent);
+  background: color-mix(in srgb, var(--air-demo-accent) 12%, transparent);
+  color: var(--air-accent-text);
+}
+
+.verifyArrow {
+  transition: transform 0.2s ease;
+}
+
+.verifyLink:hover .verifyArrow {
+  transform: translate(2px, -2px);
+}
+
+/* --- Предупреждение про потерю MasterKey --- */
+.note {
+  display: flex;
+  gap: 11px;
+  margin: clamp(14px, 1.8vw, 18px) 0 0;
+  padding: 14px 16px;
+  border-radius: var(--air-radius-lg);
+  border: 1px solid color-mix(in srgb, var(--air-warning) 30%, var(--air-border));
+  background: color-mix(in srgb, var(--air-warning) 7%, transparent);
+}
+
+.noteIcon {
+  color: var(--air-warning);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.noteText {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--air-text-secondary);
+}
+
+@media (min-width: 720px) {
+  /* Две колонки: третья карточка растягивается на всю ширину,
+     чтобы не оставалось полупустой ячейки. */
+  .wide {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .wideCell:last-child {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (min-width: 1040px) {
+  /* stretch, а не start: теперь справа одна карточка, и она должна
+     добирать высоту по панели — именно рассогласованные высоты
+     оставляли пустоту. Панель к этому готова: у неё height: 100%. */
+  .grid {
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+    align-items: stretch;
+  }
+
+  /* На десктопе все три карточки встают в один равновысокий ряд.
+
+     grid-column обязателен: .wide — прямой ребёнок .grid, то есть
+     попадает в ЕЁ двухколоночную раскладку и без этого занимает
+     только первую колонку (~55% ширины) — именно поэтому
+     карточки сбивались в столбик у левого края. */
+  .wide {
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .wideCell:last-child {
+    grid-column: auto;
+  }
+}

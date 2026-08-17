@@ -1,0 +1,193 @@
+.section {
+  position: relative;
+  padding-block: clamp(40px, 5vw, 68px);
+  border-block: 1px solid var(--air-border);
+  background: var(--air-bg-elevated);
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  background: var(--air-border);
+  border: 1px solid var(--air-border);
+  border-radius: var(--air-radius-lg);
+  overflow: hidden;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 22px 18px;
+  background: var(--air-bg);
+  transition: background 0.2s ease;
+}
+
+.stat:hover {
+  background: var(--air-surface-hover);
+}
+
+.statValue {
+  font-family: var(--air-font-mono);
+  font-size: clamp(1.75rem, 3.4vw, 2.5rem);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--air-accent-text);
+  text-align: center;
+}
+
+.statLabel {
+  font-size: 13.5px;
+  line-height: 1.45;
+  color: var(--air-text-secondary);
+}
+
+/* Плашка про MasterKey — здесь она подпирает цифру «0% доступа» */
+.note {
+  display: flex;
+  gap: 11px;
+  margin-top: 22px;
+  padding: 14px 17px;
+  border-radius: var(--air-radius-lg);
+  border: 1px solid color-mix(in srgb, var(--air-accent) 26%, var(--air-border));
+  background: color-mix(in srgb, var(--air-brand) 7%, transparent);
+}
+
+.noteIcon {
+  color: var(--air-accent-text);
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.noteText {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--air-text-secondary);
+}
+
+/* =============================================================
+   Интеграции.
+
+   Две группы вместо одного плоского списка: AI-провайдеры
+   терялись среди каналов и хранилищ, хотя несут ключевое
+   сообщение продукта — BYOK.
+   ============================================================= */
+.groups {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: clamp(16px, 2vw, 22px);
+  margin-top: 34px;
+}
+
+.group {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: clamp(18px, 2.2vw, 24px);
+  border: 1px solid var(--air-border);
+  border-radius: var(--air-radius-lg);
+  background: var(--air-bg);
+}
+
+/* Группа провайдеров выделена акцентной кромкой и подложкой. */
+.groupProviders {
+  border-color: color-mix(in srgb, var(--air-accent) 34%, var(--air-border));
+  background: color-mix(in srgb, var(--air-brand) 6%, transparent);
+}
+
+.groupLabel {
+  font-family: var(--air-font-mono);
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--air-text-muted);
+  text-align: center;
+}
+
+.groupProviders .groupLabel {
+  color: var(--air-accent-text);
+}
+
+.groupHint {
+  max-width: 46ch;
+  margin: 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--air-text-secondary);
+  text-align: center;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 9px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.chip,
+.chipFeatured {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 15px;
+  border-radius: 999px;
+  border: 1px solid var(--air-border);
+  background: var(--air-bg);
+  color: var(--air-text-secondary);
+  font-size: 13.5px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
+}
+
+.chipFeatured {
+  border-color: color-mix(in srgb, var(--air-accent) 40%, var(--air-border));
+  background: var(--air-bg);
+  color: var(--air-text);
+  font-weight: 600;
+}
+
+.chip:hover,
+.chipFeatured:hover {
+  border-color: var(--air-accent);
+  color: var(--air-text);
+  transform: translateY(-2px);
+}
+
+/* Иконки монохромные (currentColor), поэтому цвет задаётся здесь
+   и одинаково работает в обеих темах. */
+.chipIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  color: var(--air-accent-text);
+}
+
+.chipName {
+  line-height: 1;
+}
+
+@media (min-width: 760px) {
+  .stats {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1040px) {
+  /* Каналов девять, провайдеров три — отсюда неравные доли,
+     иначе в правой колонке оставалась бы пустота. */
+  .groups {
+    grid-template-columns: minmax(0, 1.65fr) minmax(0, 1fr);
+    align-items: stretch;
+  }
+}

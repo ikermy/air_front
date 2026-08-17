@@ -1,0 +1,33 @@
+{
+  "eyebrow": "Project support",
+  "title": "Support the development",
+  "lead": "AiR is built as an open project. Your support helps pay for servers, add new channels and keep the code free.",
+  "disclaimer": "This is a voluntary donation. It grants no additional features, does not affect your plan and is not a subscription payment.",
+  "paypal": {
+    "title": "PayPal",
+    "hint": "One-time payment in US dollars.",
+    "amountLabel": "Support amount",
+    "amountAria": "Support amount in US dollars",
+    "presetAria": "Choose the amount of {amount} dollars",
+    "loading": "The PayPal form loads once this block appears on screen.",
+    "surfaceNote": "The PayPal form runs in a secure frame and always uses a light appearance.",
+    "thanks": "Thank you for supporting the project!",
+    "error": "The payment could not be completed. Please try again.",
+    "minHint": "Minimum amount is ${min}"
+  },
+  "crypto": {
+    "title": "Cryptocurrency",
+    "hint": "Any amount through our own air_payment service.",
+    "soon": "Coming soon",
+    "pay": "Support with crypto",
+    "note": "air_payment is being extended right now: choosing any amount will be available shortly.",
+    "networkTitle": "Choose a convenient network to transfer USDT",
+    "amountHint": "The donation amount can be any value."
+  },
+  "other": {
+    "title": "You can help without money too",
+    "star": "Star the repositories on GitHub",
+    "issue": "Report a bug or suggest a feature",
+    "share": "Tell your colleagues about the project"
+  }
+}

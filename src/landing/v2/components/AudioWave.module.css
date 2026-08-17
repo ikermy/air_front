@@ -1,0 +1,27 @@
+.wave {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  height: 44px;
+  width: 100%;
+}
+
+.bar {
+  flex: 1 1 auto;
+  max-width: 5px;
+  min-height: 3px;
+  border-radius: 999px;
+  background: linear-gradient(
+    to top,
+    var(--air-brand-vivid),
+    var(--air-brand)
+  );
+  transform-origin: center;
+  /* height задаётся инлайном из JS/SSR — CSS отвечает только за сглаживание */
+  transition: height 0.09s linear;
+}
+
+.wave[data-animated='false'] .bar {
+  opacity: 0.55;
+}

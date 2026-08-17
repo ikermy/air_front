@@ -1,0 +1,86 @@
+/*
+ * Страница входа в дашборд.
+ *
+ * Живёт в Pages Router (SPA), поэтому опирается на переменные темы из
+ * src/App.css (body.light / body.dark), а НЕ на токены --air-* нового
+ * лендинга: те объявлены только в app/globals.css и сюда не доходят.
+ * Все селекторы заскоуплены под .login-page — глобальных правил нет,
+ * иначе они утекли бы в дашборд через общий pages/_app.tsx.
+ */
+
+.login-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 16px;
+  box-sizing: border-box;
+  background: var(--bg-color);
+  color: var(--text-color);
+}
+
+.login-page__card {
+  width: 100%;
+  max-width: 440px;
+  padding: 32px 28px 28px;
+  box-sizing: border-box;
+  border: 1px solid var(--input-border);
+  border-radius: var(--border-radius);
+  background: var(--dialog-list-bg);
+  box-shadow: 0 18px 48px var(--shadow-color);
+}
+
+.login-page__back,
+.login-page__switch {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--link-color);
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.login-page__back:hover,
+.login-page__switch:hover {
+  color: var(--link-hover-color);
+}
+
+.login-page__title {
+  margin: 18px 0 6px;
+  font-size: 24px;
+  line-height: 1.2;
+  color: var(--text-color);
+}
+
+.login-page__subtitle {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--message-name-color);
+}
+
+/* Формы переиспользуются из модалок и несут класс .sub-modal
+   с фиксированной шириной 400px — внутри карточки она лишняя. */
+.login-page__form {
+  margin-top: 20px;
+}
+
+.login-page__form .sub-modal {
+  width: 100%;
+  padding: 0;
+}
+
+.login-page__switch {
+  display: block;
+  margin: 4px auto 0;
+}
+
+@media (max-width: 480px) {
+  .login-page__card {
+    padding: 24px 18px 20px;
+  }
+
+  .login-page__title {
+    font-size: 21px;
+  }
+}

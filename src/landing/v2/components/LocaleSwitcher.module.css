@@ -1,0 +1,22 @@
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 34px;
+  padding: 0 11px;
+  border-radius: 999px;
+  border: 1px solid var(--air-border);
+  background: transparent;
+  color: var(--air-text-secondary);
+  font-family: var(--air-font-mono);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease;
+}
+
+.trigger:hover {
+  color: var(--air-accent-text);
+  border-color: var(--air-accent);
+}

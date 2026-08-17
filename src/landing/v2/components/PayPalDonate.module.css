@@ -1,0 +1,145 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* --- Выбор суммы --- */
+
+.amountBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.amountLabel {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--air-text-secondary);
+}
+
+.presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.preset {
+  min-width: 62px;
+  height: 38px;
+  padding: 0 14px;
+  border: 1px solid var(--air-border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--air-text-secondary);
+  font-family: var(--air-font-mono);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.18s ease, color 0.18s ease,
+    background-color 0.18s ease, transform 0.18s ease;
+}
+
+.preset:hover {
+  color: var(--air-accent-text);
+  border-color: var(--air-accent);
+  transform: translateY(-1px);
+}
+
+.preset[data-active='true'] {
+  background: var(--air-accent);
+  border-color: var(--air-accent);
+  color: var(--air-accent-contrast);
+}
+
+.input {
+  width: 100%;
+  max-width: 220px;
+}
+
+.minHint {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+  color: var(--air-warning);
+}
+
+/* --- Светлый остров под iframe PayPal ---
+   Кнопки рендерит сам PayPal внутри iframe: наши CSS-переменные туда
+   не проникают, а тёмного оформления у них нет. Поэтому подложка всегда
+   светлая и собрана на theme-независимых брендовых токенах — в тёмной теме
+   это читается как намеренный «светлый остров», а не как артефакт. */
+
+.surface {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  border: 1px solid color-mix(in srgb, var(--air-brand-deep) 18%, transparent);
+  border-radius: var(--air-radius-lg);
+  background: var(--air-brand-pale);
+}
+
+/* Высота зарезервирована заранее: кнопки PayPal приезжают асинхронно,
+   без резерва их появление сдвигало бы вёрстку (CLS). */
+.slot {
+  min-height: 152px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.placeholder {
+  margin: 0;
+  text-align: center;
+  font-size: 13px;
+  line-height: 1.55;
+  color: color-mix(in srgb, var(--air-brand-deep) 72%, transparent);
+}
+
+.surfaceNote {
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  margin: 0;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: color-mix(in srgb, var(--air-brand-deep) 68%, transparent);
+}
+
+.surfaceNote svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* --- Статусы --- */
+
+.success,
+.error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 11px 14px;
+  border-radius: var(--air-radius);
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.success {
+  border: 1px solid color-mix(in srgb, var(--air-accent) 42%, transparent);
+  background: color-mix(in srgb, var(--air-brand) 12%, transparent);
+  color: var(--air-accent-text);
+}
+
+.error {
+  border: 1px solid color-mix(in srgb, var(--air-error) 42%, transparent);
+  background: color-mix(in srgb, var(--air-error) 8%, transparent);
+  color: var(--air-error);
+}
+
+.success svg,
+.error svg {
+  flex-shrink: 0;
+}

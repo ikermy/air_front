@@ -1,0 +1,54 @@
+{
+  "eyebrow": "Honest economics",
+  "title": "What exactly your dollar pays for",
+  "lead": "We make no money on your AI requests. The subscription covers infrastructure and work on the project only — tokens are paid to the provider directly, with your own keys.",
+  "covered": {
+    "title": "Included in $1 per month",
+    "caption": "Server resources and developer time",
+    "server": {
+      "title": "Server resources",
+      "text": "CPU time and memory for your bots, the orchestrator and task queues."
+    },
+    "traffic": {
+      "title": "Traffic and connections",
+      "text": "Persistent messenger connections, webhooks and real-time voice sessions."
+    },
+    "storage": {
+      "title": "Storage and database",
+      "text": "MinIO for media files, MariaDB for conversations, regular backups."
+    },
+    "dev": {
+      "title": "Developer time",
+      "text": "Updates, new channels and integrations, bug fixes and answers to your questions."
+    }
+  },
+  "direct": {
+    "title": "Paid to the provider directly",
+    "caption": "With your keys — bypassing our account",
+    "keys": {
+      "title": "Bring your own API keys",
+      "text": "OpenAI, Google Gemini, Mistral — you connect your own keys under the BYOK model."
+    },
+    "tokens": {
+      "title": "Tokens and requests",
+      "text": "Charged to your provider account at their rate. Our commission is zero."
+    },
+    "models": {
+      "title": "Choice of models",
+      "text": "Switch model or provider whenever you like: we never lock you to a single vendor."
+    },
+    "limits": {
+      "title": "Your limits",
+      "text": "You set quotas and monthly budgets yourself in the provider's console."
+    }
+  },
+  "formula": {
+    "label": "How it adds up",
+    "platform": "$1 / mo = server + traffic + storage + development",
+    "tokens": "AI tokens = your provider bill, 0% markup"
+  },
+  "proof": {
+    "title": "There is nowhere to hide a markup",
+    "text": "The source code is open under the MIT license. Anyone can verify that requests go straight to the provider with your key, and that the encryption key is derived from your MasterKey password and stays out of our reach. Here trust is verified, not declared."
+  }
+}

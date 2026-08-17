@@ -1,0 +1,49 @@
+{
+  "eyebrow": "Architecture · Open Source",
+  "title": "13 microservices you can run yourself",
+  "lead": "AiR is not a monolith — it is a family of independent Go services. Each one lives in its own MIT-licensed repository, so you can read the code, replace any component, or deploy the whole platform on your own hardware.",
+  "layers": {
+    "core": {
+      "name": "Core",
+      "hint": "Shared logic and request routing"
+    },
+    "channel": {
+      "name": "Channels",
+      "hint": "Where you meet your customers"
+    },
+    "service": {
+      "name": "Services",
+      "hint": "Business scenarios on top of the core"
+    },
+    "infra": {
+      "name": "Infrastructure",
+      "hint": "Observability and operations"
+    }
+  },
+  "services": {
+    "air_common": "Shared library for every AI microservice: contracts, data models and reusable utilities.",
+    "air_orchestrator": "The main orchestrator: receives channel events, calls the AI provider and routes the responses back.",
+    "air_tgbot": "Telegram Bot running in polling or webhook mode, streaming the answer as it is generated.",
+    "air_tguserbot": "Telegram user-bot: receives and places voice calls from your own account.",
+    "air_whatsbot": "WhatsApp user-bot without GraphAPI — a direct connection with voice call support.",
+    "air_widget": "Chat widget for any website: one snippet of code and you have a full AI operator.",
+    "air_avito": "Bot that answers Avito chats and handles listing enquiries automatically.",
+    "air_operator": "Hands a conversation over to a human operator and back. Works with every bot type.",
+    "air_lead-hunter": "Scheduled lead discovery across Telegram and WhatsApp, including outbound voice calls.",
+    "air_payment": "Accepts crypto payments from users through Bybit.",
+    "marusia_crm": "Integration with external CRMs, so conversations and leads land in your sales system.",
+    "air_front": "React / Next.js frontend — the control panel for models, communication channels and services.",
+    "air_logger": "Event logging with multi-tenant support and a Loki-compatible collector."
+  },
+  "quickstart": {
+    "label": "Quick start",
+    "title": "Self-hosting is straightforward",
+    "text": "The self-hosted build is not a stripped-down edition: same MasterKey encryption, same channels, same calls. The only difference is whose hardware carries the load.",
+    "note": "Requires Docker and your own AI provider API keys.",
+    "exampleBadge": "Example",
+    "readme": "Every service has its own set of commands and environment variables. The up-to-date instructions live in the README of that specific repository.",
+    "readmeCta": "Browse the repositories on GitHub",
+    "copy": "Copy",
+    "copied": "Copied"
+  }
+}

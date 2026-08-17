@@ -1,0 +1,151 @@
+/* Артефакты живут внутри «консольного острова»: он тёмный в обеих темах,
+   поэтому цвета берём из theme-aware demo-токенов. */
+
+/* --- Сгенерированное изображение --- */
+.imageCard {
+  margin: 8px 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.imageFrame {
+  width: 100%;
+  max-width: 230px;
+  border: 1px solid var(--air-demo-border);
+  border-radius: var(--air-radius);
+  background: var(--air-demo-bg);
+  overflow: hidden;
+}
+
+.catSvg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.catBody {
+  fill: color-mix(in srgb, var(--air-brand) 78%, transparent);
+}
+
+.catEar {
+  fill: color-mix(in srgb, var(--air-brand-deep) 70%, var(--air-demo-bg));
+}
+
+.catEye {
+  fill: var(--air-demo-bg);
+}
+
+.catNose {
+  fill: color-mix(in srgb, var(--air-brand-deep) 80%, var(--air-demo-bg));
+}
+
+.catStroke {
+  stroke: color-mix(in srgb, var(--air-brand) 70%, transparent);
+}
+
+.imageCaption {
+  font-family: var(--air-font-mono);
+  font-size: 10.5px;
+  color: var(--air-demo-muted);
+}
+
+/* --- Отправленный файл --- */
+.fileCard {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+  padding: 10px 12px;
+  max-width: 300px;
+  border: 1px solid var(--air-demo-border);
+  border-radius: var(--air-radius);
+  background: var(--air-demo-bg);
+}
+
+.fileIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: 9px;
+  border: 1px solid color-mix(in srgb, var(--air-brand) 35%, transparent);
+  background: color-mix(in srgb, var(--air-brand) 13%, transparent);
+  color: var(--air-brand);
+}
+
+.fileMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+  flex-grow: 1;
+}
+
+.fileName {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--air-demo-text);
+  word-break: break-word;
+}
+
+.fileSize {
+  font-family: var(--air-font-mono);
+  font-size: 10.5px;
+  color: var(--air-demo-muted);
+}
+
+.fileAction {
+  flex-shrink: 0;
+  color: var(--air-demo-muted);
+}
+
+/* --- Строка Google Sheets --- */
+.sheetCard {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--air-demo-border);
+  border-radius: var(--air-radius);
+  background: var(--air-demo-bg);
+  overflow-x: auto;
+}
+
+.sheetHead {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--air-font-mono);
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--air-brand);
+}
+
+.sheetTable {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11.5px;
+}
+
+.sheetTable th,
+.sheetTable td {
+  padding: 5px 8px;
+  border: 1px solid var(--air-demo-border);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.sheetTable th {
+  font-family: var(--air-font-mono);
+  font-weight: 600;
+  color: var(--air-demo-muted);
+}
+
+.sheetTable td {
+  color: var(--air-demo-text);
+}

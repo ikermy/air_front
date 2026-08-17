@@ -1,0 +1,203 @@
+{
+  "eyebrow": "Escenarios de demostración",
+  "title": "Vea cómo trabajan los agentes",
+  "lead": "Cinco escenarios muestran la plataforma con ejemplos reales: una conversación con el cliente y llamadas a herramientas externas, llamadas de voz entrantes y salientes, búsqueda de leads y un widget de chat en su propia web.",
+  "demoBadge": "Escenario de demostración",
+  "disclaimer": "Es un escenario grabado de antemano, no un agente en vivo. Una ejecución real necesita sus propias claves de API del proveedor de IA, así que no es posible en una landing — de este modo no gastamos ni sus tokens ni los de nadie.",
+  "replay": "Repetir",
+  "tabsAria": "Elegir escenario de demostración",
+  "feedAria": "Hilo de conversación del escenario",
+  "feedEmpty": "El escenario empieza cuando el bloque aparece en pantalla",
+  "logAria": "Registro del sistema del escenario",
+  "logTitle": "Registro del sistema",
+  "logEmpty": "Esperando eventos…",
+  "roles": {
+    "user": "Cliente",
+    "ai": "Agente IA",
+    "operator": "Operador",
+    "caller": "Interlocutor"
+  },
+  "phases": {
+    "idle": "Esperando eventos",
+    "ringing": "Llamada entrante",
+    "connected": "Llamada conectada",
+    "summary": "Llamada finalizada",
+    "dialing": "Marcando",
+    "configuring": "Servicio configurado",
+    "working": "Los bots mantienen conversaciones",
+    "goal": "Objetivo alcanzado",
+    "site": "Web del cliente"
+  },
+  "phaseHints": {
+    "idle": "El panel mostrará el estado de la llamada o del servicio",
+    "ringing": "air_tguserbot responde la llamada",
+    "connected": "La latencia de respuesta ronda los 300 ms",
+    "summary": "Resumen guardado en el historial",
+    "dialing": "Llamada saliente desde su propia cuenta",
+    "configuring": "Contactos, bots, proxies, horario y modelo",
+    "working": "Las conversaciones avanzan por la lista de contactos",
+    "goal": "Lead caliente entregado",
+    "site": "Widget integrado con una sola línea de código"
+  },
+  "leadSetup": {
+    "contacts": {
+      "name": "Lista de contactos",
+      "value": "importada desde un archivo"
+    },
+    "bots": {
+      "name": "Bots de Telegram y WhatsApp",
+      "value": "varias cuentas"
+    },
+    "proxy": {
+      "name": "Proxies",
+      "value": "una dirección por bot"
+    },
+    "schedule": {
+      "name": "Horario",
+      "value": "lun–vie, 10:00–19:00"
+    },
+    "model": {
+      "name": "Modelo y objetivo",
+      "value": "modo Lead Hunter"
+    }
+  },
+  "widgetMock": {
+    "url": "kotofey.example / comida-para-gatos",
+    "title": "Tienda de mascotas «Kotofey»"
+  },
+  "artifacts": {
+    "catAlt": "Imagen estilizada de un gato generada por el agente",
+    "catCaption": "imagen generada por el agente",
+    "sheetTitle": "Google Sheets · Solicitudes",
+    "sheetCol1": "Cliente",
+    "sheetCol2": "Solicitud",
+    "sheetCol3": "Estado"
+  },
+  "tabs": {
+    "text": {
+      "name": "Agente de texto",
+      "desc": "Una conversación en Telegram: el agente responde por deltas, llama por su cuenta a las herramientas que necesita — genera una imagen, envía la lista de precios, reserva una cita de peluquería — y pasa el chat a una persona cuando llega al límite de sus competencias."
+    },
+    "voice": {
+      "name": "Llamada entrante",
+      "desc": "Una llamada entrante de Telegram respondida por voz en tiempo real. El mismo modo funciona en WhatsApp — sin GraphAPI, mediante conexión directa."
+    },
+    "outbound": {
+      "name": "Llamada saliente",
+      "desc": "Usted indica un número o alias y elige el canal — Telegram o WhatsApp. Durante la llamada ve la transcripción del interlocutor y de las respuestas del modelo; si lo interrumpe, el agente calla a media frase."
+    },
+    "lead": {
+      "name": "Búsqueda de leads",
+      "desc": "Usted sube una lista de contactos, levanta varios bots de Telegram y WhatsApp con sus propios proxies, define horario y objetivo. A partir de ahí los bots conversan solos y entregan un lead caliente en cuanto se alcanza el objetivo."
+    },
+    "widget": {
+      "name": "Widget en la web",
+      "desc": "El widget de chat se integra en su web con una sola línea de código. El mismo agente y el mismo historial — solo que el cliente se queda en su página en lugar de irse a un mensajero."
+    }
+  },
+  "scenarios": {
+    "text": {
+      "e1": "Conexión con Telegram establecida · polling",
+      "e2": "Contacto creado en el CRM, conversación vinculada",
+      "e3": "Escalado: se ha incorporado un operador humano",
+      "e4": "Historial y objetivo enviados al CRM",
+      "e5": "Conversación guardada cifrada",
+      "operatorName": "Olga · operadora",
+      "m1": "¡Hola! Busco comida para un gatito de 3 meses. ¿Qué me recomienda?",
+      "m2": "¡Hola! Me llamo Vasilich y soy el experto en gatos de la casa 🐱\n\nPara un gatito de tres meses elija comida con la etiqueta **kitten**: lleva más proteína y calcio.\n\n| Comida | Peso | Precio |\n| --- | --- | --- |\n| Murchella Kitten | 1,5 kg | 10 € |\n| Lapki Junior | 2 kg | 13 € |\n\nLas dos están disponibles.",
+      "m3": "¿Y cómo es esa Murchella? Enséñeme una imagen.",
+      "m4": "Así es nuestro gato de la marca, el del paquete. Es bien llamativo, no tiene pérdida 🙂",
+      "m5": "Perfecto. Mándeme la lista completa y resérvenos peluquería para el sábado.",
+      "m6": "Le he enviado la lista de precios con todo el catálogo.\n\nLa peluquería queda confirmada: **sábado, 12:00**, con Lena. Le aviso una hora antes.",
+      "m7": "Una cosa más: quiero devolver un saco de comida abierto, el gatito no se lo come.",
+      "m8": "Hola, soy Olga. Veo toda la conversación, no hace falta que repita nada. Aceptamos el paquete abierto como excepción si han pasado menos de 14 días. Tramito la devolución hoy mismo.",
+      "t1": {
+        "title": "image.generate",
+        "desc": "Generación de una imagen a partir de la descripción",
+        "content": "{\n  \"prompt\": \"gato del paquete de comida «Murchella», estilo de marca\",\n  \"size\": \"512x512\"\n}\n\n→ status: ok"
+      },
+      "t2": {
+        "title": "files.send_document",
+        "desc": "Envío de la lista de precios al chat",
+        "content": "{\n  \"file\": \"price-march.pdf\",\n  \"channel\": \"telegram\"\n}\n\n→ delivered: true",
+        "file": {
+          "name": "Lista de precios «Kotofey» · marzo.pdf",
+          "size": "PDF · 240 KB"
+        }
+      },
+      "t3": {
+        "title": "calendar.create_event",
+        "desc": "Reserva de peluquería en Google Calendar",
+        "content": "{\n  \"service\": \"Peluquería · gato\",\n  \"start\": \"2025-03-15T12:00:00+03:00\",\n  \"groomer\": \"Lena\",\n  \"reminder\": \"1h\"\n}\n\n→ event_id: evt_5c1a77\n→ status: confirmed"
+      },
+      "t4": {
+        "title": "Comprobación de los límites de competencia",
+        "desc": "Devolver un paquete abierto exige la decisión de una persona",
+        "content": "solicitud: devolución de paquete abierto\npolítica: lo decide un empleado\nacceso del agente: solo gestión de pedidos\n\n→ decisión: escalar a air_operator"
+      }
+    },
+    "voice": {
+      "e1": "Llamada entrante · Telegram",
+      "e2": "Voz clonada a partir de su muestra",
+      "e3": "Comprobando huecos libres en la agenda",
+      "e4": "Reserva creada, resumen de la llamada guardado",
+      "m1": "Cat café «Murchalnya», ¡buenos días! Me llamo Anna, ¿en qué puedo ayudarle?",
+      "m2": "¡Hola! Quería reservar una mesa para el fin de semana, seremos cuatro.",
+      "m3": "Por supuesto. El sábado hay hueco a las 14:00 y a las 17:30; el domingo, a partir de las 12:00. ¿Qué prefiere?",
+      "m4": "El sábado, a las cinco y media.",
+      "m5": "Le he reservado el sábado a las 17:30, mesa para cuatro junto a la ventana de los gatos. Le enviaré un recordatorio por Telegram una hora antes. ¡Que tenga buen día!"
+    },
+    "outbound": {
+      "e1": "Llamada saliente · Telegram · +7 900 ***-**-14",
+      "e2": "Llamada conectada · transcripción activada",
+      "e3": "El interlocutor interrumpió — respuesta cortada, el agente escucha",
+      "e4": "Llamada finalizada, transcripción guardada",
+      "m1": "¡Buenos días! Le llamo de la clínica veterinaria «Murchalnya». Le recuerdo que a Barsik le toca la revacunación.",
+      "m2": "Ah, sí, es verdad. Se me había ido por completo.",
+      "m3": "No pasa nada. Tenemos huecos el jueves por la mañana y el viernes después de…",
+      "m4": "El viernes mejor, por la tarde si puede ser.",
+      "m5": "El viernes por la tarde tenemos las 18:00 y las 19:30. ¿Cuál le viene mejor?",
+      "m6": "A las seis me va bien.",
+      "m7": "Barsik queda citado el viernes a las 18:00 con la doctora Smirnova. Traiga su cartilla de vacunación. ¡Hasta luego!"
+    },
+    "lead": {
+      "e1": "480 contactos importados desde un archivo",
+      "e2": "Bots de Telegram y WhatsApp activos · cuentas de usuario, no la Bot API",
+      "e3": "A cada bot se le ha asignado su propio proxy",
+      "e4": "Horario: lun–vie, 10:00–19:00",
+      "e5": "Modelo con soporte de Lead Hunter seleccionado y objetivo definido",
+      "e6": "Contacto +7 900 ***-**-27 · estado: en curso",
+      "e7": "Estado del contacto: objetivo alcanzado",
+      "e8": "Lead caliente entregado · conversación adjunta completa",
+      "m1": "¡Buenas tardes! Ayudamos a automatizar la gestión de solicitudes que llegan por mensajería. ¿Le resulta interesante?",
+      "m2": "Puede ser. ¿Cuánto cuesta y cuánto tarda la implantación?",
+      "m3": "El precio depende del volumen. ¿Cuántas solicitudes gestionan al día y cuántas personas se encargan?",
+      "m4": "Unas 200 al día, con tres comerciales. Hablémoslo, páseme un contacto.",
+      "m5": "Perfecto, le paso con un compañero: se pondrá en contacto en menos de una hora con un cálculo para su volumen.",
+      "t1": {
+        "title": "Comprobación del objetivo",
+        "desc": "Las reglas de cualificación se fijaron al configurar el modelo",
+        "content": "volumen: 200 solicitudes/día → por encima del umbral (50)\nproceso actual: manual       → necesidad confirmada\npidió contacto: sí           → objetivo de la conversación\n\n→ estado del contacto: success\n→ decisión: entregar como lead caliente"
+      }
+    },
+    "widget": {
+      "e1": "Widget cargado en la página web",
+      "e2": "Contacto y conversación enviados al CRM",
+      "e3": "Conversación guardada cifrada",
+      "m1": "¡Hola! ¿Tienen rascadores para gatos grandes? Mi maine coon está destrozando el sofá.",
+      "m2": "¡Hola! Mi pésame para el sofá 🙂\n\nPara un maine coon conviene un modelo a partir de **90 cm**: si no, el gato no se estira del todo y sigue con los muebles.\n\n- Torre «Jungla», 120 cm — 49 €\n- Poste «Sisal Maxi», 95 cm — 32 €\n\nAmbos aguantan hasta 15 kg.",
+      "m3": "Me quedo con la «Jungla». Le dejo mi correo, mándeme la factura: irina@example.com",
+      "m4": "Factura enviada a su correo, es válida durante tres días.\n\nEl envío en la ciudad es **gratuito**, se lo llevamos pasado mañana. No necesita montaje, llega listo para usar.",
+      "t1": {
+        "title": "sheets.append_row",
+        "desc": "Solicitud añadida a una tabla de Google Sheets",
+        "content": "{\n  \"sheet\": \"Solicitudes · marzo\",\n  \"client\": \"Irina\",\n  \"item\": \"Torre «Jungla», 120 cm\",\n  \"email\": \"irina@example.com\"\n}\n\n→ row: 217\n→ status: ok",
+        "row": {
+          "client": "Irina",
+          "item": "Torre «Jungla», 120 cm",
+          "status": "Nueva"
+        }
+      }
+    }
+  }
+}

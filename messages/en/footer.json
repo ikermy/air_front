@@ -1,0 +1,18 @@
+{
+  "tagline": "An open source AI agent platform: bots across messengers, real-time voice calls, and encryption whose key belongs to you alone.",
+  "githubOrg": "All repositories",
+  "support": "Support the project",
+  "reposAria": "Project repositories on GitHub",
+  "layers": {
+    "core": "Core",
+    "channel": "Channels",
+    "service": "Services",
+    "infra": "Infrastructure"
+  },
+  "rights": "All rights reserved.",
+  "legalAria": "Legal information",
+  "license": "{license} License",
+  "privacy": "Privacy policy",
+  "faq": "Questions and answers",
+  "disclaimer": "AiR is an open source project. The subscription pays for server resources and the developer's work, not for AI provider tokens — those are paid directly to the provider with your own keys. Donations are voluntary and grant no additional features. Telegram, WhatsApp, Avito, Google, OpenAI, Mistral and Bybit are trademarks of their respective owners and are referenced solely to indicate compatibility."
+}

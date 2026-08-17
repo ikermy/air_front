@@ -32,6 +32,7 @@ import "../src/landing/FooterSection.css";
 import "../src/landing/hero.css";
 import "../src/landing/LandingPage.css";
 import "../src/landing/MessengerFeatures.css";
+import "../src/auth/LoginPage.css";
 import "../src/landing/auth/auth.css";
 import "../src/landing/auth/HighZIndexModals.css";
 import "../src/landing/demochat/ChatDemoAssist.css";

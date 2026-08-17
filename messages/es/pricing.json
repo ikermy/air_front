@@ -1,0 +1,42 @@
+{
+  "eyebrow": "Precios",
+  "title": "Condiciones simples y honestas",
+  "lead": "El mismo código abierto en todas las opciones. La única diferencia es quién pone el hardware.",
+  "recommended": "Recomendado",
+  "perMonth": "al mes",
+  "forever": "para siempre",
+  "voluntary": "voluntario",
+  "anyAmount": "Cualquier importe",
+  "selfHosted": {
+    "name": "Self-Hosted",
+    "description": "Lo despliegas tú mismo. Control total sobre tus datos y tu hardware.",
+    "cta": "Desplegar desde GitHub",
+    "f1": "Código fuente completo, licencia {license}",
+    "f2": "Periodo de prueba ilimitado",
+    "f3": "Cifrado MasterKey",
+    "f4": "Tus propias claves API (BYOK)",
+    "f5": "Todos los tipos de bots y llamadas de voz",
+    "f6": "Alojamiento: tu propio equipo"
+  },
+  "cloud": {
+    "name": "Cloud Standard",
+    "description": "Nos ocupamos de los servidores, las actualizaciones y las copias de seguridad.",
+    "cta": "Empezar {days} días gratis",
+    "f1": "Todo lo de Self-Hosted",
+    "f2": "{days} días gratis, sin tarjeta",
+    "f3": "Alojamiento y soporte en nuestro equipo",
+    "f4": "Actualizaciones sin DevOps propio",
+    "f5": "Copias de seguridad y monitorización",
+    "f6": "0% de recargo sobre los tokens de los proveedores de IA"
+  },
+  "support": {
+    "name": "Apoyar el proyecto",
+    "description": "Una aportación voluntaria al desarrollo del código abierto.",
+    "cta": "Apoyar el proyecto",
+    "f1": "El importe que elijas",
+    "f2": "PayPal, criptomonedas — muy pronto",
+    "f3": "No otorga funciones adicionales",
+    "f4": "Acelera el desarrollo del código abierto"
+  },
+  "note": "El precio es fijo y no depende del número de bots, conversaciones o llamadas. Los tokens de los proveedores de IA siempre se pagan directamente con tus claves."
+}

@@ -1,0 +1,285 @@
+.section {
+  position: relative;
+  background: var(--air-bg);
+}
+
+.head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  max-width: 780px;
+  margin-inline: auto;
+  text-align: center;
+}
+
+.head h2 {
+  margin: 0;
+}
+
+/* --- Две колонки: что покрывает $1 и что уходит провайдеру --- */
+
+.columns {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+  margin-top: clamp(32px, 4vw, 52px);
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+  height: 100%;
+  padding: clamp(20px, 2.6vw, 30px);
+  border: 1px solid var(--air-border);
+  border-radius: var(--air-radius-xl);
+  background: var(--air-bg-elevated);
+}
+
+/* Колонка подписки — фирменный лайм */
+.columnIncluded {
+  border-color: color-mix(in srgb, var(--air-accent) 34%, var(--air-border));
+  box-shadow: var(--air-glow);
+}
+
+/* Колонка провайдера — второй голос, Go-циан: это dev-контекст */
+.columnDirect {
+  border-color: color-mix(in srgb, var(--air-go) 26%, var(--air-border));
+}
+
+.columnHead {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--air-border);
+}
+
+.columnTitle {
+  margin: 0;
+  font-size: clamp(1.0625rem, 1.7vw, 1.25rem);
+  font-weight: 700;
+  color: var(--air-text);
+}
+
+.columnCaption {
+  margin-top: 4px;
+  font-size: 13px;
+  line-height: 1.45;
+  color: var(--air-text-muted);
+}
+
+.price {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+  padding: 10px 14px;
+  border-radius: var(--air-radius);
+  background: var(--air-accent);
+  color: var(--air-accent-contrast);
+  flex-shrink: 0;
+}
+
+.priceValue {
+  font-family: var(--air-font-mono);
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.priceUnit {
+  font-family: var(--air-font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  opacity: 0.75;
+}
+
+.byok {
+  display: inline-flex;
+  align-items: center;
+  padding: 13px 14px;
+  border-radius: var(--air-radius);
+  border: 1px solid color-mix(in srgb, var(--air-go) 45%, transparent);
+  background: color-mix(in srgb, var(--air-go) 12%, transparent);
+  color: var(--air-go);
+  font-family: var(--air-font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+/* В светлой теме чистый #00add8 на светлом фоне недобирает контраст */
+:global([data-theme='light']) .byok {
+  color: var(--air-go-deep);
+  border-color: color-mix(in srgb, var(--air-go-deep) 40%, transparent);
+  background: color-mix(in srgb, var(--air-go) 10%, transparent);
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.item {
+  display: flex;
+  gap: 13px;
+}
+
+.itemIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid color-mix(in srgb, var(--air-accent) 30%, var(--air-border));
+  background: color-mix(in srgb, var(--air-demo-accent) 9%, transparent);
+  color: var(--air-accent-text);
+  flex-shrink: 0;
+}
+
+.itemIconGo {
+  border-color: color-mix(in srgb, var(--air-go) 30%, var(--air-border));
+  background: color-mix(in srgb, var(--air-go) 10%, transparent);
+  color: var(--air-go);
+}
+
+:global([data-theme='light']) .itemIconGo {
+  color: var(--air-go-deep);
+}
+
+.itemBody {
+  min-width: 0;
+}
+
+.itemTitle {
+  margin: 0 0 3px;
+  font-size: 14.5px;
+  font-weight: 650;
+  line-height: 1.35;
+  color: var(--air-text);
+}
+
+.itemText {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--air-text-secondary);
+}
+
+/* --- Формула: консольный остров, тёмный в обеих темах --- */
+
+.formula {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 20px;
+  padding: clamp(18px, 2.2vw, 24px);
+  border: 1px solid var(--air-demo-border);
+  border-radius: var(--air-radius-lg);
+  background: var(--air-demo-bg);
+  color: var(--air-demo-text);
+}
+
+.formulaLabel {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--air-demo-muted);
+}
+
+.formulaRows {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+.formulaRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: clamp(12.5px, 1.5vw, 14.5px);
+  line-height: 1.5;
+  color: var(--air-demo-text);
+  overflow-wrap: anywhere;
+}
+
+.formulaRow svg {
+  color: var(--air-demo-accent);
+  flex-shrink: 0;
+}
+
+/* --- Вывод про проверяемое доверие --- */
+
+.proof {
+  display: flex;
+  gap: 16px;
+  margin-top: 20px;
+  padding: clamp(20px, 2.4vw, 26px);
+  border-radius: var(--air-radius-xl);
+  border: 1px solid color-mix(in srgb, var(--air-accent) 28%, var(--air-border));
+  background: color-mix(in srgb, var(--air-demo-accent) 7%, transparent);
+}
+
+.proofIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--air-accent);
+  color: var(--air-accent-contrast);
+  flex-shrink: 0;
+}
+
+.proofTitle {
+  margin: 0 0 6px;
+  font-size: clamp(1rem, 1.6vw, 1.1875rem);
+  font-weight: 700;
+  color: var(--air-text);
+}
+
+.proofText {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--air-text-secondary);
+}
+
+.proofBadge {
+  display: inline-block;
+  margin-top: 12px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  border: 1px solid var(--air-border-strong);
+  background: var(--air-bg);
+  color: var(--air-accent-text);
+  font-family: var(--air-font-mono);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+@media (min-width: 880px) {
+  .columns {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .formula {
+    flex-direction: row;
+    align-items: center;
+    gap: 28px;
+  }
+
+  .formulaLabel {
+    flex-shrink: 0;
+  }
+}

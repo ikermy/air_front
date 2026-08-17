@@ -1,0 +1,42 @@
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  padding: 0;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  line-height: 0;
+}
+
+.track {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  width: 48px;
+  height: 26px;
+  padding: 3px;
+  border-radius: 999px;
+  border: 1px solid var(--air-border);
+  background: var(--air-bg-sunken);
+  transition: background 0.25s ease, border-color 0.25s ease;
+}
+
+.toggle:hover .track {
+  border-color: var(--air-accent);
+}
+
+.thumb {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--air-accent);
+  color: var(--air-accent-contrast);
+  transition: transform 0.28s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.track[data-mode='dark'] .thumb {
+  transform: translateX(22px);
+}

@@ -3,6 +3,7 @@ import {MailOutlined} from '@ant-design/icons';
 import {Button, Form, Input} from 'antd';
 import { useNavigate } from "react-router-dom";
 import {UserContext} from "../../UserContext";
+import {goToLanding} from "../../utils/goToLanding";
 import i18n from "i18next";
 
 
@@ -56,7 +57,7 @@ export function RestoreMail({setMainModalOpen, handleSuccess, handleError, handl
                 if (!confirm) setMainModalOpen(false);
                 handleSuccess();
                 setTimeout(() => {
-                    navigate("/");
+                    goToLanding('login');
                 }, 5000);
                 break;
 

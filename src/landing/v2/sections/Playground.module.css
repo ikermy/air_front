@@ -1,0 +1,62 @@
+.section {
+  position: relative;
+  background: var(--air-bg-elevated);
+  border-block: 1px solid var(--air-border);
+}
+
+.inner {
+  position: relative;
+}
+
+.head {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+  max-width: 760px;
+  margin-bottom: clamp(28px, 3.5vw, 44px);
+}
+
+.lead {
+  margin: 0;
+}
+
+/**
+ * Высота скелета повторяет высоту собранного тела
+ * (вкладки + консоль + подпись), иначе после подгрузки
+ * чанка страница дёрнулась бы — это прямой вклад в CLS.
+ */
+.skeleton {
+  height: 612px;
+  border-radius: var(--air-radius-lg);
+  border: 1px solid var(--air-border);
+  background: linear-gradient(
+    100deg,
+    var(--air-surface) 30%,
+    var(--air-surface-hover) 50%,
+    var(--air-surface) 70%
+  );
+  background-size: 220% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 140% 0;
+  }
+  100% {
+    background-position: -40% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .skeleton {
+    height: 720px;
+  }
+}

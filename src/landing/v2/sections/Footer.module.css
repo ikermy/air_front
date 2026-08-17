@@ -1,0 +1,223 @@
+.footer {
+  position: relative;
+  border-top: 1px solid var(--air-border);
+  background: var(--air-bg-elevated);
+  padding-block: clamp(48px, 6vw, 76px) 28px;
+}
+
+.top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 40px;
+}
+
+/* --- Бренд --- */
+.brand {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+.logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 700;
+  color: var(--air-text);
+}
+
+.logoMark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  border: 1px solid var(--air-accent);
+  background: color-mix(in srgb, var(--air-brand) 12%, transparent);
+}
+
+.logoDot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--air-accent);
+  box-shadow: var(--air-glow);
+}
+
+.logoText {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 2px;
+  font-size: 17px;
+  letter-spacing: -0.02em;
+}
+
+.logoSlash {
+  color: var(--air-accent-text);
+}
+
+.logoSub {
+  font-family: var(--air-font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--air-text-muted);
+}
+
+.tagline {
+  max-width: 42ch;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--air-text-secondary);
+}
+
+.brandLinks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 9px;
+  margin-top: 2px;
+}
+
+.pill,
+.pillAccent {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 36px;
+  padding: 0 14px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  transition: border-color 0.2s ease, color 0.2s ease, transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.pill {
+  border: 1px solid var(--air-border);
+  color: var(--air-text-secondary);
+}
+
+.pill:hover {
+  color: var(--air-accent-text);
+  border-color: var(--air-accent);
+  transform: translateY(-2px);
+}
+
+/* Единственная «залитая» ссылка — призыв поддержать проект */
+.pillAccent {
+  border: 1px solid var(--air-accent);
+  background: var(--air-accent);
+  color: var(--air-accent-contrast);
+}
+
+.pillAccent:hover {
+  color: var(--air-accent-contrast);
+  transform: translateY(-2px);
+  box-shadow: var(--air-glow);
+}
+
+/* --- Репозитории --- */
+.repos {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 28px 20px;
+  min-width: 0;
+}
+
+.repoGroup {
+  min-width: 0;
+}
+
+.groupTitle {
+  margin-bottom: 12px;
+  font-family: var(--air-font-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--air-text-muted);
+}
+
+.linkList {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.repoLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--air-text-secondary);
+  font-size: 13.5px;
+}
+
+.repoLink:hover {
+  color: var(--air-accent-text);
+}
+
+.repoName {
+  font-family: var(--air-font-mono);
+  word-break: break-word;
+}
+
+/* --- Низ --- */
+.bottom {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 40px;
+  padding-top: 22px;
+  border-top: 1px solid var(--air-border);
+}
+
+.copy {
+  font-size: 13px;
+  color: var(--air-text-muted);
+}
+
+.legal {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 18px;
+}
+
+.legalLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--air-text-secondary);
+}
+
+.legalLink:hover {
+  color: var(--air-accent-text);
+}
+
+.disclaimer {
+  margin-top: 16px;
+  max-width: 92ch;
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--air-text-muted);
+}
+
+@media (min-width: 720px) {
+  .repos {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1040px) {
+  .top {
+    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.55fr);
+    gap: 56px;
+  }
+}

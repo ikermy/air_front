@@ -1,0 +1,62 @@
+{
+  "meta": {
+    "title": "AiR — plataforma abierta de agentes de IA con privacidad y voz en tiempo real",
+    "description": "Plataforma de agentes de IA de código abierto: bots para Telegram, WhatsApp y Avito, llamadas de voz en tiempo real, usa tus propias claves API. $1/mes cubre los recursos del servidor, sin recargo sobre los tokens de IA.",
+    "ogAlt": "AiR — plataforma abierta de agentes de IA"
+  },
+  "nav": {
+    "features": "Funciones",
+    "playground": "Demo",
+    "architecture": "Arquitectura",
+    "security": "Seguridad",
+    "pricing": "Precios",
+    "faq": "Preguntas",
+    "docs": "Documentación",
+    "github": "GitHub",
+    "skipToContent": "Ir al contenido",
+    "openMenu": "Abrir menú",
+    "closeMenu": "Cerrar menú",
+    "toggleTheme": "Cambiar tema",
+    "changeLanguage": "Cambiar idioma"
+  },
+  "cta": {
+    "signIn": "Iniciar sesión",
+    "tryFree": "Empieza 30 días gratis",
+    "tryFreeShort": "Empezar gratis",
+    "selfHost": "Desplegar Open Source",
+    "dashboard": "Ir al dashboard",
+    "support": "Apoyar el proyecto"
+  },
+  "hero": {
+    "eyebrow": "Open Source · MIT",
+    "titleLine1": "Agentes de IA de código abierto",
+    "titleAccent": "con cifrado honesto",
+    "titleLine2": "Privacidad, código abierto y voz en tiempo real",
+    "lead": "Lanza bots inteligentes en Telegram, WhatsApp y Avito, o integra un widget de chat directamente en tu propia web. Realiza llamadas con clonación de voz y conecta tus propias claves API.",
+    "leadStrong": "$1 al mes paga los recursos del servidor y el trabajo del desarrollador, no los tokens de IA: esos los pagas directamente al proveedor con tus propias claves.",
+    "noCard": "Sin tarjeta de crédito",
+    "openSource": "El código es abierto: compruébalo tú mismo",
+    "callIncoming": "Llamada entrante",
+    "callAgent": "El agente de IA responde",
+    "callChannel": "Telegram · Tiempo real",
+    "callStatus": "Conexión establecida",
+    "visualAlt": "Demostración de un agente de voz con IA atendiendo una llamada entrante"
+  },
+  "trust": {
+    "title": "Por qué puedes confiar en nosotros",
+    "markupValue": "0%",
+    "markupLabel": "de recargo sobre los tokens de IA",
+    "accessValue": "0%",
+    "accessLabel": "de acceso a tus datos",
+    "openValue": "100%",
+    "openLabel": "código abierto, licencia MIT",
+    "priceValue": "$1",
+    "priceLabel": "al mes — solo infraestructura",
+    "trialValue": "30",
+    "trialLabel": "días gratis, sin tarjeta",
+    "note": "La clave de cifrado se deriva de tu contraseña MasterKey y solo tú la conoces. No la almacenamos y no podemos recuperar tus datos.",
+    "channelsTitle": "Canales e integraciones",
+    "providersTitle": "Proveedores de IA",
+    "providersHint": "Conecta tus propias claves API. Los tokens se pagan directamente al proveedor: no añadimos ningún recargo."
+  }
+}

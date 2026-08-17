@@ -12,6 +12,7 @@ import {
     CommentOutlined, DatabaseOutlined
 } from "@ant-design/icons";
 import {useNavigate, useLocation} from "react-router-dom";
+import {goToLanding} from "../utils/goToLanding";
 import {getUserDetails} from "./getUserDetails";
 import {dashboardContent} from "./dashboardContent";
 import {useTranslation} from "react-i18next";
@@ -154,7 +155,9 @@ export function Dashboard({handleError}) {
 
             if (data.status === "error") {
                 handleError();
-                navigate("/");
+                // Сессия невалидна — выбрасываем на лендинг. Он в App Router,
+                // поэтому нужна полная загрузка, а не navigate() из react-router.
+                goToLanding();
             } else {
                 setUserData(data);
             }

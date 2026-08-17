@@ -1,0 +1,102 @@
+/* Консольный остров. Фон/границы берутся из --air-demo-* и НЕ зависят
+   от темы: код выглядит одинаково в светлой и тёмной. */
+
+.wrap {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid var(--air-demo-border);
+  border-radius: var(--air-radius-lg);
+  background: var(--air-demo-bg);
+  color: var(--air-demo-text);
+}
+
+.head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px 10px 16px;
+  border-bottom: 1px solid var(--air-demo-border);
+  background: var(--air-demo-bg-elevated);
+}
+
+.label {
+  font-family: var(--air-font-mono);
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--air-demo-muted);
+}
+
+.lang {
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--air-demo-border);
+  font-family: var(--air-font-mono);
+  font-size: 11px;
+  color: var(--air-go-soft);
+}
+
+.copyBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-left: auto;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--air-demo-border);
+  background: transparent;
+  color: var(--air-demo-text);
+  font-family: var(--air-font-sans);
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.18s ease, color 0.18s ease, background 0.18s ease;
+}
+
+.copyBtn:hover {
+  border-color: var(--air-demo-accent);
+  color: var(--air-demo-accent);
+}
+
+/* Успех подсвечиваем фирменным лаймом: на #0d1117 он максимально читаем. */
+.copyBtn[data-copied='true'] {
+  border-color: var(--air-demo-accent);
+  color: var(--air-demo-accent);
+  background: color-mix(in srgb, var(--air-demo-accent) 12%, transparent);
+}
+
+.pre {
+  margin: 0;
+  padding: 16px 18px;
+  overflow-x: auto;
+  font-family: var(--air-font-mono);
+  font-size: 13.5px;
+  line-height: 1.75;
+}
+
+.line {
+  display: block;
+  white-space: pre;
+}
+
+/* Декоративный prompt: не выделяется мышью и отсутствует в буфере обмена. */
+.prompt {
+  color: var(--air-go-soft);
+  user-select: none;
+  margin-right: 10px;
+}
+
+.cmd {
+  color: var(--air-demo-text);
+}
+
+@media (max-width: 520px) {
+  .label {
+    display: none;
+  }
+
+  .pre {
+    font-size: 12.5px;
+  }
+}

@@ -4,6 +4,7 @@ import ThemeToggle from "../menu/ThemeToggle";
 import {Button} from "antd";
 import {useAuth} from "../AuthContext";
 import {useNavigate} from "react-router-dom";
+import {goToLanding} from "../utils/goToLanding";
 import {RxExit} from "react-icons/rx";
 import {MenuOutlined} from "@ant-design/icons";
 import {useTranslation} from "react-i18next";
@@ -15,7 +16,10 @@ export const DashboardHeader = ({ setSiderCollapsed, siderCollapsed }) => {
 
     const handleExit = async () => {
         await logout();
-        navigate("/", { state: { loggedOut: true } });
+        // Лендинг живёт в App Router — туда нельзя попасть клиентской
+        // навигацией react-router, нужна полная загрузка документа.
+        // Флаг loggedOut больше не нужен: новый лендинг не дёргает автологин.
+        goToLanding();
     };
 
     // Функция для показа/скрытия меню

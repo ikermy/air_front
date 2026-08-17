@@ -1,0 +1,42 @@
+{
+  "eyebrow": "Pricing",
+  "title": "Simple and honest terms",
+  "lead": "The very same open source code in every option. The only difference is who provides the hardware.",
+  "recommended": "Recommended",
+  "perMonth": "per month",
+  "forever": "forever",
+  "voluntary": "voluntary",
+  "anyAmount": "Any amount",
+  "selfHosted": {
+    "name": "Self-Hosted",
+    "description": "Deploy it yourself. Full control over your data and your hardware.",
+    "cta": "Deploy from GitHub",
+    "f1": "Full source code, {license} license",
+    "f2": "Unlimited trial period",
+    "f3": "MasterKey encryption",
+    "f4": "Your own API keys (BYOK)",
+    "f5": "Every bot type and voice calls",
+    "f6": "Hosting — your own hardware"
+  },
+  "cloud": {
+    "name": "Cloud Standard",
+    "description": "We take care of servers, updates and backups.",
+    "cta": "Start {days} days free",
+    "f1": "Everything from Self-Hosted",
+    "f2": "{days} days free, no card required",
+    "f3": "Hosting and support on our hardware",
+    "f4": "Updates without your own DevOps",
+    "f5": "Backups and monitoring",
+    "f6": "0% markup on AI provider tokens"
+  },
+  "support": {
+    "name": "Support the project",
+    "description": "A voluntary contribution to open source development.",
+    "cta": "Support the project",
+    "f1": "Any amount you choose",
+    "f2": "PayPal, cryptocurrency — coming soon",
+    "f3": "Grants no additional features",
+    "f4": "Speeds up open source development"
+  },
+  "note": "The price is fixed and does not depend on the number of bots, conversations or calls. AI provider tokens are always paid directly with your own keys."
+}

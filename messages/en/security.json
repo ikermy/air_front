@@ -1,0 +1,55 @@
+{
+  "eyebrow": "Security",
+  "title": "Privacy you can verify",
+  "lead": "We are not asking you to take our word for it. The encryption scheme is described below, and its implementation lives in a public repository — read the code and check it yourself.",
+  "encryptedTitle": "What exactly gets encrypted",
+  "encryptedLead": "Nothing reaches the database in plain form: every piece of user data we store is encrypted, not just a hand-picked set of fields.",
+  "encryptedExamples": "For example",
+  "encrypted": {
+    "keys": "API keys of AI providers",
+    "tokens": "Channel and integration tokens",
+    "dialogs": "Conversation history with your clients",
+    "2fa": "Two-factor authentication keys"
+  },
+  "loggingTitle": "Logs without your data",
+  "loggingDesc": "In production the services never write user data to the logs — not even for debugging.",
+  "loggingYesTitle": "Goes to the log",
+  "loggingYes": "Events and technical errors: service start and stop, response codes, timeouts, connection failures. That is exactly what air_logger handles.",
+  "loggingNoTitle": "Never goes there",
+  "loggingNo": "Conversation content, message bodies and call transcripts, customer contacts, API keys and tokens.",
+  "eraseTitle": "Erase everything — in one click",
+  "eraseDesc": "The decision is yours and yours alone. You can wipe everything from your dashboard at any time — after that nothing of yours is left in the database.",
+  "eraseItemsLabel": "What gets erased",
+  "erase": {
+    "models": "Models and all their settings",
+    "channels": "Communication channels and integrations",
+    "dialogs": "Conversations and the entire message history",
+    "profile": "Personal details, subscriptions and preferences"
+  },
+  "eraseNote": "Erasure is irreversible: the data cannot be restored afterwards — not even by us.",
+  "panelTitle": "air_common · crypto",
+  "flowTitle": "How the data flows",
+  "flow": {
+    "step1": {
+      "title": "MasterKey password",
+      "desc": "You choose it yourself. We never store it in plain form and cannot look it up."
+    },
+    "step2": {
+      "title": "KDF · key derivation",
+      "desc": "The encryption key is derived from the password deterministically. The password cannot be reconstructed back from it."
+    },
+    "step3": {
+      "title": "AES-GCM",
+      "desc": "Symmetric encryption with integrity protection: tampered data will not silently decrypt."
+    },
+    "step4": {
+      "title": "Storage",
+      "desc": "Only ciphertext reaches the database. Without your key it is just a blob of bytes."
+    }
+  },
+  "verifyTitle": "Trust that is verifiable, not declared",
+  "verifyDesc": "Open source is not marketing here, it is a control mechanism: there is simply nowhere to hide data access or a hidden markup inside a repository anyone can read.",
+  "verifyCta": "Read the code on GitHub",
+  "note": "The flip side of an honest scheme: if you forget your MasterKey password, access to the encrypted data is lost. Neither we nor anyone else can restore it.",
+  "diagramAlt": "Encryption scheme: MasterKey password, key derivation, AES-GCM encryption and ciphertext stored in the database"
+}

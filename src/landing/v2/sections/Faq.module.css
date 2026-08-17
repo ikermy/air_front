@@ -1,0 +1,172 @@
+.section {
+  position: relative;
+  background: var(--air-bg);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 36px;
+  align-items: start;
+}
+
+/* --- Левая колонка --- */
+.aside {
+  min-width: 0;
+}
+
+.asideInner {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.title {
+  margin-top: 2px;
+}
+
+.lead {
+  max-width: 46ch;
+}
+
+.contact {
+  display: inline-flex;
+  align-items: center;
+  gap: 13px;
+  margin-top: 6px;
+  padding: 14px 17px;
+  border-radius: var(--air-radius-lg);
+  border: 1px solid var(--air-border);
+  background: var(--air-bg-elevated);
+  color: var(--air-text);
+  transition: border-color 0.2s ease, transform 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.contact:hover {
+  color: var(--air-text);
+  border-color: var(--air-accent);
+  transform: translateY(-2px);
+  box-shadow: var(--air-glow);
+}
+
+.contactIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+  border-radius: 11px;
+  /* Заливка фирменным лаймом — контрастный текст поверх неё */
+  background: var(--air-accent);
+  color: var(--air-accent-contrast);
+}
+
+.contactText {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.contactTitle {
+  font-size: 14.5px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.contactSub {
+  font-family: var(--air-font-mono);
+  font-size: 12px;
+  color: var(--air-accent-text);
+}
+
+/* --- Аккордеон --- */
+.list {
+  min-width: 0;
+}
+
+.collapse {
+  border-radius: var(--air-radius-lg);
+}
+
+/* :global нужен, потому что элементы панелей рендерит rc-collapse
+   внутри собственной разметки — CSS-модуль до них иначе не достанет. */
+.collapse :global(.ant-collapse-item) {
+  border: 1px solid var(--air-border);
+  border-radius: var(--air-radius-lg) !important;
+  background: var(--air-bg-elevated);
+  margin-bottom: 10px;
+  overflow: hidden;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.collapse :global(.ant-collapse-item:last-child) {
+  margin-bottom: 0;
+}
+
+.collapse :global(.ant-collapse-item:hover) {
+  border-color: var(--air-border-strong);
+}
+
+.collapse :global(.ant-collapse-item-active) {
+  border-color: var(--air-accent);
+  background: var(--air-surface);
+  box-shadow: var(--air-glow);
+}
+
+.itemHeader {
+  align-items: center !important;
+  padding: 18px 20px !important;
+}
+
+.itemTitle {
+  font-size: 15.5px;
+  font-weight: 600;
+  line-height: 1.45;
+  color: var(--air-text);
+  text-wrap: pretty;
+}
+
+.itemBody {
+  padding: 0 20px 20px !important;
+}
+
+.answer {
+  font-size: 14.5px;
+  line-height: 1.65;
+  color: var(--air-text-secondary);
+  max-width: 68ch;
+}
+
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  flex-shrink: 0;
+  border-radius: 9px;
+  border: 1px solid var(--air-border);
+  color: var(--air-text-secondary);
+  transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+}
+
+.toggle[data-active='true'] {
+  border-color: var(--air-accent);
+  background: var(--air-accent);
+  color: var(--air-accent-contrast);
+}
+
+@media (min-width: 960px) {
+  .grid {
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+    gap: 56px;
+  }
+
+  .asideInner {
+    position: sticky;
+    top: 96px;
+  }
+}

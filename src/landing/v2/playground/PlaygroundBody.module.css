@@ -1,0 +1,176 @@
+.root {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* --- Переключатель вкладок --- */
+.tabsRow {
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+}
+
+.tabsRow::-webkit-scrollbar {
+  display: none;
+}
+
+.tabs {
+  min-width: max-content;
+}
+
+.tabLabel {
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+/* --- Корпус демо ---
+   Раньше здесь висел глобальный .air-console, который жёстко задаёт
+   тёмный фон в обеих темах. Playground — это продуктовый UI, а не листинг
+   кода, поэтому оформление переехало сюда и следует теме. */
+.console {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--air-demo-border);
+  border-radius: var(--air-radius-lg);
+  background: var(--air-demo-bg);
+  color: var(--air-demo-text);
+  font-family: var(--air-font-mono);
+}
+
+.chrome {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--air-demo-border);
+  background: var(--air-demo-bg-elevated);
+}
+
+.dots {
+  display: inline-flex;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.dots i {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--air-demo-border);
+}
+
+.chromeTitle {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  flex-grow: 1;
+  min-width: 0;
+}
+
+.service {
+  font-family: var(--air-font-mono);
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--air-demo-border);
+  color: var(--air-demo-muted);
+  white-space: nowrap;
+}
+
+.demoBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--air-demo-warn) 45%, transparent);
+  background: color-mix(in srgb, var(--air-demo-warn) 14%, transparent);
+  color: var(--air-demo-warn);
+  font-family: var(--air-font-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* --- Прогресс сценария --- */
+.progress {
+  height: 2px;
+  background: var(--air-demo-border);
+  overflow: hidden;
+}
+
+/* demo-accent, а не brand: лайм на светлой полосе практически не виден. */
+.progress span {
+  display: block;
+  height: 100%;
+  background: var(--air-demo-accent);
+  transform-origin: left center;
+  transition: transform 0.35s ease;
+}
+
+/* --- Тело --- */
+.body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 14px;
+  padding: 14px;
+  background: var(--air-demo-bg);
+}
+
+.feedCol,
+.sideCol {
+  min-width: 0;
+}
+
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-top: 1px solid var(--air-demo-border);
+  background: var(--air-demo-bg-elevated);
+}
+
+.caption {
+  flex: 1 1 320px;
+  min-width: 0;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--air-demo-muted);
+}
+
+/* antd красит кнопку своими токенами, поэтому цвет приходится
+   перебивать. Теперь перебиваем на theme-aware токены, а не на тёмные. */
+.replay {
+  flex-shrink: 0;
+  background: transparent !important;
+  border-color: var(--air-demo-border) !important;
+  color: var(--air-demo-text) !important;
+}
+
+.replay:hover:not(:disabled) {
+  border-color: var(--air-demo-accent) !important;
+  color: var(--air-demo-accent) !important;
+}
+
+.replay:disabled {
+  opacity: 0.45;
+}
+
+.disclaimer {
+  font-size: 12.5px;
+  line-height: 1.6;
+  color: var(--air-text-muted);
+}
+
+@media (min-width: 900px) {
+  .body[data-with-phase='true'] {
+    grid-template-columns: minmax(0, 1fr) 268px;
+  }
+}

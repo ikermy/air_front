@@ -4,6 +4,7 @@ import {Alert, Button, Collapse, Form, Input} from 'antd';
 import {encryptPassword, getKey} from "../../utils/easyUtils";
 import {useNavigate} from "react-router-dom";
 import {useAuth} from "../../AuthContext";
+import {goToLanding} from "../../utils/goToLanding";
 import {useTranslation} from "react-i18next";
 
 
@@ -53,7 +54,7 @@ export function ResetPass({userId, email, token, handleSuccess, handleError}) {
                     break;
                 default:
                     handleError();
-                    setTimeout(() => { setShowLoginForm(true); navigate("/"); }, 5000);
+                    setTimeout(() => { setShowLoginForm(true); goToLanding('login'); }, 5000);
             }
 
             const encryptedPassword = await encryptPassword(values.password, result.key);
@@ -67,7 +68,7 @@ export function ResetPass({userId, email, token, handleSuccess, handleError}) {
             switch (sendResp) {
                 case "ok":
                     handleSuccess();
-                    setTimeout(() => { setShowLoginForm(true); navigate("/"); }, 3000);
+                    setTimeout(() => { setShowLoginForm(true); goToLanding('login'); }, 3000);
                     break;
                 case "bad_key":
                     form.setFields([{
@@ -83,12 +84,12 @@ export function ResetPass({userId, email, token, handleSuccess, handleError}) {
                     break;
                 default:
                     handleError();
-                    setTimeout(() => { setShowLoginForm(true); navigate("/"); }, 5000);
+                    setTimeout(() => { setShowLoginForm(true); goToLanding('login'); }, 5000);
             }
         } catch (error) {
             console.error("Ошибка шифрования пароля:", error);
             handleError();
-            setTimeout(() => { setShowLoginForm(true); navigate("/"); }, 5000);
+            setTimeout(() => { setShowLoginForm(true); goToLanding('login'); }, 5000);
         }
     };
 

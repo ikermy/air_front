@@ -1,0 +1,55 @@
+{
+  "eyebrow": "Seguridad",
+  "title": "Privacidad que puedes verificar",
+  "lead": "No te pedimos que nos creas. El esquema de cifrado se describe aquí abajo y su implementación está en un repositorio público: puedes leer el código y comprobarlo tú mismo.",
+  "encryptedTitle": "Qué se cifra exactamente",
+  "encryptedLead": "A la base de datos no llega nada en claro: se cifran todos los datos de usuario que se guardan, no solo unos campos elegidos.",
+  "encryptedExamples": "Por ejemplo",
+  "encrypted": {
+    "keys": "Claves de API de los proveedores de IA",
+    "tokens": "Tokens de canales e integraciones",
+    "dialogs": "Historial de conversaciones con tus clientes",
+    "2fa": "Claves de autenticación de dos factores"
+  },
+  "loggingTitle": "Registros sin tus datos",
+  "loggingDesc": "En modo producción los servicios no escriben datos de usuario en los registros, ni siquiera para depurar.",
+  "loggingYesTitle": "Sí se registra",
+  "loggingYes": "Eventos y errores técnicos: arranque y parada de los servicios, códigos de respuesta, tiempos de espera agotados y fallos de conexión. De eso se encarga air_logger.",
+  "loggingNoTitle": "Nunca se registra",
+  "loggingNo": "El contenido de las conversaciones, los textos de los mensajes y las transcripciones de las llamadas, los contactos de tus clientes, las claves de API y los tokens.",
+  "eraseTitle": "Borrarlo todo, en un clic",
+  "eraseDesc": "La decisión es tuya y solo tuya. Puedes borrarlo todo desde tu panel en cualquier momento: después no queda nada tuyo en la base de datos.",
+  "eraseItemsLabel": "Qué se borra",
+  "erase": {
+    "models": "Los modelos y todos sus ajustes",
+    "channels": "Los canales de comunicación y las integraciones",
+    "dialogs": "Las conversaciones y todo el historial de mensajes",
+    "profile": "Los datos personales, las suscripciones y las preferencias"
+  },
+  "eraseNote": "El borrado es irreversible: después no se pueden recuperar los datos, tampoco nosotros.",
+  "panelTitle": "air_common · crypto",
+  "flowTitle": "Recorrido de los datos",
+  "flow": {
+    "step1": {
+      "title": "Contraseña MasterKey",
+      "desc": "La eliges tú. No la guardamos en claro y no podemos consultarla."
+    },
+    "step2": {
+      "title": "KDF · derivación de clave",
+      "desc": "La clave de cifrado se deriva de la contraseña de forma determinista. La contraseña no se puede reconstruir a partir de ella."
+    },
+    "step3": {
+      "title": "AES-GCM",
+      "desc": "Cifrado simétrico con control de integridad: los datos manipulados no se descifran en silencio."
+    },
+    "step4": {
+      "title": "Almacenamiento",
+      "desc": "A la base de datos solo llega el texto cifrado. Sin tu clave es un conjunto de bytes sin más."
+    }
+  },
+  "verifyTitle": "Confianza verificable, no declarada",
+  "verifyDesc": "Aquí el código abierto no es marketing, es un mecanismo de control: en un repositorio que cualquiera puede leer no hay dónde esconder un acceso a los datos ni un recargo oculto.",
+  "verifyCta": "Ver el código en GitHub",
+  "note": "La otra cara de un esquema honesto: si olvidas tu contraseña MasterKey, pierdes el acceso a los datos cifrados. Ni nosotros ni nadie podrá recuperarlos.",
+  "diagramAlt": "Esquema de cifrado: contraseña MasterKey, derivación de clave, cifrado AES-GCM y texto cifrado almacenado en la base de datos"
+}
