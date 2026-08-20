@@ -126,6 +126,7 @@
     "PolicyModal-NoThirdParty":  "Мы",
     "PolicyModal-NoThirdPartyShare":  "передаём ваши данные третьим лицам",
     "PolicyModal-CanDelete":  "Вы можете удалить свои данные и модели в любой момент — мы их безвозвратно уничтожим.",
+    "PolicyModal-EncryptedData":  "Ваши данные хранятся в зашифрованном виде — расшифровать их можете только вы.",
     "PolicyModal-InShort":  "В двух словах:",
     "PolicyModal-YourDataYours":  "ваши данные — ваши. Мы их храним только для того, чтобы ваш агент работал, и больше ни для чего.",
     "PolicyModal-ReadFull":  "Ознакомьтесь с",

@@ -126,6 +126,7 @@
     "PolicyModal-NoThirdParty":  "Nosotros",
     "PolicyModal-NoThirdPartyShare":  "compartimos sus datos con terceros",
     "PolicyModal-CanDelete":  "Puede eliminar sus datos y modelos en cualquier momento: los destruiremos permanentemente.",
+    "PolicyModal-EncryptedData":  "Sus datos se almacenan cifrados; solo usted puede descifrarlos.",
     "PolicyModal-InShort":  "En resumen:",
     "PolicyModal-YourDataYours":  "sus datos son suyos. Los almacenamos solo para que su agente funcione, y nada más.",
     "PolicyModal-ReadFull":  "Lea el",

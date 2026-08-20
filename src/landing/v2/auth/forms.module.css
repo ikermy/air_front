@@ -5,6 +5,62 @@
   flex-direction: column;
 }
 
+.languagePicker {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin: -8px 0 14px;
+  color: var(--air-text-muted);
+  font-size: 12px;
+}
+
+.languageLabel {
+  white-space: nowrap;
+}
+
+.languageSwitcher {
+  position: relative;
+}
+
+.languageButton,
+.languageOption {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 0;
+  border-radius: 8px;
+  color: var(--air-text-secondary);
+  background: transparent;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+}
+
+.languageButton { padding: 4px 7px; }
+.languageButton:hover,
+.languageOption:hover { background: var(--air-surface-hover); color: var(--air-text); }
+
+.languageFlag { width: 20px; height: 14px; object-fit: cover; border-radius: 2px; }
+
+.languageMenu {
+  position: absolute;
+  top: calc(100% + 5px);
+  right: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 108px;
+  padding: 5px;
+  border: 1px solid var(--air-border);
+  border-radius: 10px;
+  background: var(--air-bg-elevated);
+  box-shadow: var(--air-shadow);
+}
+
+.languageOption { width: 100%; padding: 6px 7px; text-align: left; }
+
 .submit {
   height: 46px !important;
   border-radius: 12px !important;

@@ -15,12 +15,14 @@ import { LoginForm } from './LoginForm';
 import { RegisterForm } from './RegisterForm';
 import { RestoreForm } from './RestoreForm';
 import { TRIAL_DAYS } from '../config/site';
+import { PolicyModal } from '../../auth/PolicyModals';
 
 export type AuthMode = 'login' | 'register' | 'restore';
 
-interface AuthModalValue {
+export interface AuthModalValue {
   openAuth: (mode: AuthMode) => void;
   closeAuth: () => void;
+  openPrivacy: () => void;
   mode: AuthMode | null;
 }
 
@@ -28,9 +30,10 @@ const AuthModalContext = createContext<AuthModalValue>({
   openAuth: () => {},
   closeAuth: () => {},
   mode: null,
+  openPrivacy: () => {},
 });
 
-export const useAuthModal = () => useContext(AuthModalContext);
+export const useAuthModal = (): AuthModalValue => useContext(AuthModalContext);
 
 /** Допустимые значения ?auth= — всё остальное игнорируем. */
 const QUERY_MODES: AuthMode[] = ['login', 'register', 'restore'];
@@ -47,9 +50,11 @@ const QUERY_MODES: AuthMode[] = ['login', 'register', 'restore'];
 export function AuthModalProvider({ children }: { children: React.ReactNode }) {
   const t = useTranslations('auth');
   const [mode, setMode] = useState<AuthMode | null>(null);
+  const [privacyOpen, setPrivacyOpen] = useState(false);
 
   const openAuth = useCallback((next: AuthMode) => setMode(next), []);
   const closeAuth = useCallback(() => setMode(null), []);
+  const openPrivacy = useCallback(() => setPrivacyOpen(true), []);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -72,8 +77,8 @@ export function AuthModalProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const value = useMemo<AuthModalValue>(
-    () => ({ openAuth, closeAuth, mode }),
-    [openAuth, closeAuth, mode]
+    () => ({ openAuth, closeAuth, openPrivacy, mode }),
+    [openAuth, closeAuth, openPrivacy, mode]
   );
 
   const titles: Record<AuthMode, string> = {
@@ -116,6 +121,10 @@ export function AuthModalProvider({ children }: { children: React.ReactNode }) {
         {mode === 'register' && <RegisterForm onSwitchToLogin={() => setMode('login')} />}
         {mode === 'restore' && <RestoreForm onSwitchToLogin={() => setMode('login')} />}
       </AuthModal>
+      <PolicyModal
+        isOpen={privacyOpen}
+        onClose={() => setPrivacyOpen(false)}
+      />
     </AuthModalContext.Provider>
   );
 }

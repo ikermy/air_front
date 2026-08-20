@@ -1,0 +1,17 @@
+.privacy-policy {
+  box-sizing: border-box;
+  min-height: 100vh;
+  padding: 32px max(20px, 5vw);
+  color: var(--air-text, #1f2937);
+  background: var(--air-bg, #fff);
+  line-height: 1.6;
+}
+
+.privacy-policy h2,
+.privacy-policy h3 {
+  color: var(--air-text, #111827);
+}
+
+@media (max-width: 480px) {
+  .privacy-policy { padding: 24px 16px; }
+}

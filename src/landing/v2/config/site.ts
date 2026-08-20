@@ -3,7 +3,7 @@
 export const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '') || 'https://kermy.org';
 
-export const GITHUB_ORG = 'https://github.com/ikermy';
+export const GITHUB_ORG = 'https://github.com/ikermy/air_orchestrator';
 
 /** Чат сообщества в Telegram. */
 export const TELEGRAM_CHAT = 'https://t.me/marusia_dev';

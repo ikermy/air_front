@@ -1,5 +1,5 @@
-import ClientApp from "../src/ClientAppOnly";
+import PrivacyPolicy from "../src/landing/PrivacyPolicy";
 
 export default function PrivacyPolicyRoute() {
-  return <ClientApp />;
+  return <PrivacyPolicy />;
 }

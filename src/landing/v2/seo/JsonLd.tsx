@@ -50,7 +50,7 @@ export function JsonLd({ locale, name, description, url, faq }: Props) {
       operatingSystem: 'Web, Docker, Linux',
       url,
       description,
-      license: `https://opensource.org/licenses/${LICENSE}`,
+      license: '/license',
       isAccessibleForFree: true,
       softwareHelp: GITHUB_ORG,
       offers: {

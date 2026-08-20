@@ -2,6 +2,10 @@ import OpenAILogo from '../../../assets/img/openai-logo.svg';
 import MistralAILogo from '../../../assets/img/mistral-ai-logo.png';
 import GeminiLogo from '../../../assets/img/gemini-logo.png';
 
+// В зависимости от сборщика импорт SVG может быть URL-строкой или объектом
+// asset-модуля с полем `src`/`default`.
+const assetUrl = (asset) => asset?.src || asset?.default || asset;
+
 /**
  * Единый список AI-провайдеров проекта.
  * Импортируйте AI_PROVIDERS или getProviderInfo везде, где нужны данные о провайдерах.
@@ -10,21 +14,21 @@ export const AI_PROVIDERS = [
     {
         key: 'openai',
         name: 'OpenAI',
-        logo: OpenAILogo,
+        logo: assetUrl(OpenAILogo),
         color: '#10a37f',
         description: 'ChatGPT, GPT-4, GPT-5',
     },
     {
         key: 'mistral',
         name: 'MistralAI',
-        logo: MistralAILogo,
+        logo: assetUrl(MistralAILogo),
         color: '#f88500',
         description: 'Voxtral, Magistral, Mistral',
     },
     {
         key: 'google',
         name: 'Gemini',
-        logo: GeminiLogo,
+        logo: assetUrl(GeminiLogo),
         color: '#1092ff',
         description: 'Gemini 3 Pro, Nano Banana',
     },

@@ -1,7 +1,10 @@
 import React, {useEffect} from 'react';
 import ReactDOM from 'react-dom';
 import {ConfigProvider, Modal, Typography} from 'antd';
-import {useTranslation} from 'react-i18next';
+import {useLocale} from 'next-intl';
+import ru from '../../locales/ru/translation.json';
+import en from '../../locales/en/translation.json';
+import es from '../../locales/es/translation.json';
 
 // Настроим глобальный z-index для всех модальных окон Ant Design
 if (typeof window !== 'undefined') {
@@ -12,7 +15,9 @@ if (typeof window !== 'undefined') {
 
 // Компонент для модального окна политики конфиденциальности
 export function PolicyModal({ isOpen, onClose }) {
-    const {t} = useTranslation();
+    const locale = useLocale();
+    const translations = {ru, en, es}[locale] || ru;
+    const t = (key) => translations[key] || key;
 
     useEffect(() => {
         if (isOpen) {
@@ -34,7 +39,6 @@ export function PolicyModal({ isOpen, onClose }) {
             footer={null}
             width={700}
             centered
-            mask={true}
             mask={{ closable: true }}
             wrapClassName="regform-policy-modal-portal"
             style={{ zIndex: 30000 }}
@@ -65,11 +69,15 @@ export function PolicyModal({ isOpen, onClose }) {
             </ul>
 
             <Typography.Paragraph>
+                🔐 <em><strong>{t('PolicyModal-EncryptedData') || "Ваши данные хранятся в зашифрованном виде — расшифровать их можете только вы."}</strong></em>
+            </Typography.Paragraph>
+
+            <Typography.Paragraph>
                 💬 <em>{t('PolicyModal-InShort') || "В двух словах:"}</em> {t('PolicyModal-YourDataYours') || "ваши данные — ваши. Мы их храним только для того, чтобы ваш агент работал, и больше ни для чего."}
             </Typography.Paragraph>
 
             <Typography.Paragraph>
-                {t('PolicyModal-ReadFull') || "Ознакомьтесь с"} <a href="/privacy-policy" target="_blank">{t('PolicyModal-FullText') || "полным текстом политики конфиденциальности"}</a>.
+                {t('PolicyModal-ReadFull') || "Ознакомьтесь с"} <a href="/privacy-policy" target="_blank" rel="noopener noreferrer">{t('PolicyModal-FullText') || "полным текстом политики конфиденциальности"}</a>.
             </Typography.Paragraph>
         </Modal>,
         document.body
@@ -78,7 +86,9 @@ export function PolicyModal({ isOpen, onClose }) {
 
 // Компонент для модального окна демо-доступа
 export function DemoModal({ isOpen, onClose }) {
-    const {t} = useTranslation();
+    const locale = useLocale();
+    const translations = {ru, en, es}[locale] || ru;
+    const t = (key) => translations[key] || key;
 
     useEffect(() => {
         if (isOpen) {
@@ -100,7 +110,6 @@ export function DemoModal({ isOpen, onClose }) {
             footer={null}
             width={700}
             centered
-            mask={true}
             mask={{ closable: true }}
             wrapClassName="regform-demo-modal-portal"
             style={{ zIndex: 30000 }}

@@ -68,6 +68,7 @@ export const UserData = () => {
     const [userData, setUserData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [languageLoading, setLanguageLoading] = useState(false);
 
     // Состояния для редактирования
     const [editModalVisible, setEditModalVisible] = useState(false);
@@ -317,6 +318,36 @@ export const UserData = () => {
     const getLanguageName = (langId) => {
         const languages = {1: 'Русский', 2: 'English', 3: 'Español'};
         return languages[langId] || 'Русский';
+    };
+
+    const getLanguageCode = (langId) => ({1: 'ru', 2: 'en', 3: 'es'}[langId] || 'ru');
+
+    const handleLanguageChange = async (newLanguage) => {
+        const languageIds = {ru: 1, en: 2, es: 3};
+        if (!languageIds[newLanguage] || newLanguage === getLanguageCode(userData?.Lang)) return;
+
+        try {
+            setLanguageLoading(true);
+            const response = await authFetch(`/v1/user/language`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({language: newLanguage})
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! Status: ${response.status}`);
+            }
+
+            setUserData(prev => ({...prev, Lang: languageIds[newLanguage]}));
+            message.success(t("userDataUpdated") || 'Данные успешно обновлены');
+        } catch (error) {
+            message.error(t("userDataUpdateError") || 'Ошибка при обновлении данных');
+            console.error('Error updating language:', error);
+        } finally {
+            setLanguageLoading(false);
+        }
     };
 
     // const messagesUsagePercent = userData.Subscription ?
@@ -947,12 +978,18 @@ export const UserData = () => {
                                                 <br/>
                                                 <Text>{getLanguageName(userData?.Lang)}</Text>
                                             </div>
-                                            <Button
-                                                icon={<EditOutlined/>}
+                                            <Select
+                                                style={{ maxWidth: 60 }}
                                                 size="small"
-                                                onClick={() => handleEdit('language', userData?.Lang)}
+                                                value={getLanguageCode(userData?.Lang)}
+                                                onChange={handleLanguageChange}
+                                                loading={languageLoading}
                                                 title={t("userEditLanguage") || "Изменить язык"}
-                                                disabled={true}
+                                                options={[
+                                                    {value: 'ru', label: 'RU'},
+                                                    {value: 'en', label: 'EN'},
+                                                    {value: 'es', label: 'ES'},
+                                                ]}
                                             />
                                         </div>
 

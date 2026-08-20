@@ -126,6 +126,7 @@
     "PolicyModal-NoThirdParty":  "We",
     "PolicyModal-NoThirdPartyShare":  "share your data with third parties",
     "PolicyModal-CanDelete":  "You can delete your data and models at any time — we will permanently destroy them.",
+    "PolicyModal-EncryptedData":  "Your data is stored in encrypted form — only you can decrypt it.",
     "PolicyModal-InShort":  "In short:",
     "PolicyModal-YourDataYours":  "your data is yours. We store it only so that your agent works, and nothing more.",
     "PolicyModal-ReadFull":  "Read the",

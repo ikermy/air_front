@@ -106,7 +106,7 @@ export function Footer() {
           <nav className={styles.legal} aria-label={t('legalAria')}>
             <a
               className={styles.legalLink}
-              href={`https://opensource.org/licenses/${LICENSE}`}
+            href="/license"
               target="_blank"
               rel="noopener noreferrer"
             >

@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { App, Button, Form, Input, Switch } from 'antd';
 import { CheckCircle2, LockKeyhole, Mail, User } from 'lucide-react';
 import { getOrSetUserId } from '../../../utils/getOrSetUserId';
 import { register as registerRequest } from './authApi';
+import { useAuthModal } from './AuthModalContext';
 import styles from './forms.module.css';
 
 interface Props {
@@ -21,6 +22,13 @@ interface FormValues {
   demo: boolean;
 }
 
+const REGISTER_LANGUAGES = [
+  { value: 'ru', label: 'Русский' },
+  { value: 'en', label: 'English' },
+  { value: 'es', label: 'Español' },
+] as const;
+type RegisterLanguage = (typeof REGISTER_LANGUAGES)[number]['value'];
+
 /**
  * Регистрация. Правила пароля и порядок запросов повторяют
  * src/landing/auth/RegForm.js: сначала check-email (он же отдаёт ключ
@@ -30,6 +38,26 @@ export function RegisterForm({ onSwitchToLogin }: Props) {
   const t = useTranslations('auth');
   const locale = useLocale();
   const { message } = App.useApp();
+  const { openPrivacy } = useAuthModal();
+  const initialLanguage: RegisterLanguage = REGISTER_LANGUAGES.some(({ value }) => value === locale)
+    ? (locale as RegisterLanguage)
+    : 'ru';
+  const [language, setLanguage] = useState<RegisterLanguage>(initialLanguage);
+  const [languageMenuOpen, setLanguageMenuOpen] = useState(false);
+  const languageSwitcherRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!languageMenuOpen) return;
+
+    const handleOutsideClick = (event: MouseEvent) => {
+      if (!languageSwitcherRef.current?.contains(event.target as Node)) {
+        setLanguageMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, [languageMenuOpen]);
   const [form] = Form.useForm<FormValues>();
 
   const [submitting, setSubmitting] = useState(false);
@@ -52,7 +80,7 @@ export function RegisterForm({ onSwitchToLogin }: Props) {
         email: values.email,
         password: values.password,
         demo: Boolean(values.demo),
-        language: locale,
+        language,
       });
 
       switch (result.status) {
@@ -98,6 +126,41 @@ export function RegisterForm({ onSwitchToLogin }: Props) {
         onFinish={onFinish}
         requiredMark={false}
       >
+        <div className={styles.languagePicker}>
+          <span className={styles.languageLabel}>{t('register.languageDefault')}:</span>
+          <div ref={languageSwitcherRef} className={styles.languageSwitcher}>
+            <button
+              type="button"
+              className={styles.languageButton}
+              onClick={() => setLanguageMenuOpen((open) => !open)}
+              aria-label="Выбрать язык по умолчанию"
+              aria-expanded={languageMenuOpen}
+            >
+              <img src={`/flags/${language}.png`} alt="" className={styles.languageFlag} />
+              {language.toUpperCase()}
+            </button>
+            {languageMenuOpen && (
+              <div className={styles.languageMenu} role="menu">
+                {REGISTER_LANGUAGES.filter(({ value }) => value !== language).map(({ value, label }) => (
+                  <button
+                    key={value}
+                    type="button"
+                    className={styles.languageOption}
+                    onClick={() => {
+                      setLanguage(value);
+                      setLanguageMenuOpen(false);
+                    }}
+                    role="menuitem"
+                  >
+                    <img src={`/flags/${value}.png`} alt="" className={styles.languageFlag} />
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
         <Form.Item
           name="name"
           rules={[
@@ -183,8 +246,10 @@ export function RegisterForm({ onSwitchToLogin }: Props) {
             <a
               className={styles.policyLink}
               href="/privacy-policy"
-              target="_blank"
-              rel="noopener noreferrer"
+              onClick={(event) => {
+                event.preventDefault();
+                openPrivacy();
+              }}
             >
               {t('register.policyLink')}
             </a>
