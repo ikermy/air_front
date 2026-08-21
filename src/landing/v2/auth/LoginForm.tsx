@@ -53,10 +53,10 @@ export function LoginForm({ onSwitchToRegister, onSwitchToRestore }: Props) {
     return undefined;
   }, [totpToken]);
 
-  const finishLogin = (token: string) => {
+  const finishLogin = (token: string, warnings: { warn2FA: boolean; warnMasterKey: boolean }) => {
     persistAccessToken(token);
     // Дашборд в Pages Router — нужна полная загрузка документа.
-    goToDashboard();
+    goToDashboard(warnings);
   };
 
   const onFinish = async (values: FormValues) => {
@@ -71,7 +71,10 @@ export function LoginForm({ onSwitchToRegister, onSwitchToRestore }: Props) {
 
       switch (result.status) {
         case 'permit':
-          finishLogin(result.token);
+          finishLogin(result.token, {
+            warn2FA: !result.totpEnabled,
+            warnMasterKey: !result.master,
+          });
           break;
         case 'totp_required':
           setTotpCode('');

@@ -57,12 +57,13 @@ export function Dashboard({handleError}) {
 
     const {t} = useTranslation();
     const location = useLocation();
+    const queryWarnings = new URLSearchParams(location.search);
     const [userData, setUserData] = useState(null);
     const [selectedMenu, setSelectedMenu] = useState("start");
 
     // Показываем предупреждение о 2FA и MasterKey если пришли с соответствующими флагами
     useEffect(() => {
-        if (location.state?.warn2FA) {
+        if (location.state?.warn2FA || queryWarnings.get('warn2FA') === '1') {
             showWarningNotification(
                 t('AuthForm-TotpWarningTitle') || '⚠️ Защитите аккаунт',
                 <span>
@@ -74,7 +75,7 @@ export function Dashboard({handleError}) {
                 </span>
             );
         }
-        if (location.state?.warnMasterKey) {
+        if (location.state?.warnMasterKey || queryWarnings.get('warnMasterKey') === '1') {
             showWarningNotification(
                 t('AuthForm-MasterKeyWarningTitle') || '🔑 Ключ шифрования не создан',
                 <span>

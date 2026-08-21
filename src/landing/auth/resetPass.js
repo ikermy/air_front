@@ -46,15 +46,10 @@ export function ResetPass({userId, email, token, handleSuccess, handleError}) {
     const onFinish = async (values) => {
         try {
             const result = await getKey({userId});
-            switch (result.status) {
-                case "error":
-                    handleError();
-                    break;
-                case "ok":
-                    break;
-                default:
-                    handleError();
-                    setTimeout(() => { setShowLoginForm(true); goToLanding('login'); }, 5000);
+            if (result.status !== "ok") {
+                handleError();
+                setTimeout(() => { setShowLoginForm(true); goToLanding('login'); }, 5000);
+                return;
             }
 
             const encryptedPassword = await encryptPassword(values.password, result.key);
@@ -68,7 +63,11 @@ export function ResetPass({userId, email, token, handleSuccess, handleError}) {
             switch (sendResp) {
                 case "ok":
                     handleSuccess();
-                    setTimeout(() => { setShowLoginForm(true); goToLanding('login'); }, 3000);
+                    // Сообщение об успехе должно быть видно до открытия формы входа.
+                    setTimeout(() => {
+                        setShowLoginForm(true);
+                        goToLanding('login');
+                    }, 3500);
                     break;
                 case "bad_key":
                     form.setFields([{

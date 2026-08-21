@@ -70,7 +70,7 @@ function LoginPage() {
         <button
           type="button"
           className="login-page__back"
-          onClick={goToLanding}
+          onClick={() => goToLanding()}
         >
           ← На главную
         </button>

@@ -50,9 +50,12 @@ export function persistAccessToken(token: string): void {
  * Дашборд живёт в Pages Router, лендинг — в App Router. Клиентская навигация
  * эту границу не пересекает, поэтому нужна полная загрузка документа.
  */
-export function goToDashboard(): void {
+export function goToDashboard(warnings?: { warn2FA?: boolean; warnMasterKey?: boolean }): void {
   if (typeof window === 'undefined') return;
-  window.location.assign('/dashboard');
+  const query = new URLSearchParams();
+  if (warnings?.warn2FA) query.set('warn2FA', '1');
+  if (warnings?.warnMasterKey) query.set('warnMasterKey', '1');
+  window.location.assign(`/dashboard${query.toString() ? `?${query}` : ''}`);
 }
 
 /** Шаг 1: пароль шифруется сессионным ключом, затем уходит на /v1/auth/login. */

@@ -101,16 +101,12 @@ const DashboardOverview = ({ userRole = null, onMenuChange = null }) => {
         },
         {
             key: 'services',
-            title: t('dashboardOverviewServicesTitle') || 'Поиск лидов',
+            title: t('devServices') || 'Сервисы',
             icon: <GrServices />,
-            description: t('dashboardOverviewServicesDesc') || 'Автоматический поиск и обработка потенциальных клиентов',
+            description: t('Services_description') ||'Уникальный функционал предоставляемый платформой',
             features: [
-                t('dashboardOverviewServicesFeature1') || 'Настройка AI-модели для поиска',
-                t('dashboardOverviewServicesFeature2') || 'Управление списком контактов',
-                t('dashboardOverviewServicesFeature3') || 'Расписание рассылок',
-                t('dashboardOverviewServicesFeature4') || 'Статистика и аналитика результатов',
-                t('dashboardOverviewServicesFeature5') || 'Настройка ботов и прокси',
-                t('dashboardOverviewServicesFeature6') || 'События и триггеры'
+                t('Services_f1') ||'Автоматический поиск и обработка потенциальных клиентов агентами по списку контактов в WhatsApp и Telegram',
+                t('Services_description_f1') ||'Голосовые звонки агентом на любые номера WhatsApp и Telegram в том числе с клонированием голоса',
             ],
             color: '#13c2c2'
         },

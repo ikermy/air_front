@@ -32,13 +32,14 @@ function Home() {
                 t("emailConfirmSuccessDesc", {email: email || ''})
             );
 
-            // Открываем форму входа
-            setShowLoginForm(true);
+            // Сначала даём пользователю увидеть уведомление, затем открываем вход.
+            setTimeout(() => setShowLoginForm(true), 3000);
 
             // Очищаем параметры из URL
             searchParams.delete('confirm');
             searchParams.delete('email');
             setSearchParams(searchParams, {replace: true});
+
 
         } else if (confirmStatus === 'error') {
             // Обработка ошибок подтверждения email
