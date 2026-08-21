@@ -1,49 +1,19 @@
 import React, {useEffect, useState} from "react";
-import {useSearchParams, useNavigate} from "react-router-dom";
+import {useSearchParams} from "react-router-dom";
 import {CheckOutlined, LoadingOutlined, CloseCircleOutlined} from '@ant-design/icons';
-import {useAuth} from "../../AuthContext";
 import {goToLanding} from "../../utils/goToLanding";
 
 function EmailConfirm() {
     const [status, setStatus] = useState("loading");
     const [searchParams] = useSearchParams();
-    const navigate = useNavigate();
-    const { setShowLoginForm } = useAuth();
 
     useEffect(() => {
-        const confirmEmail = async () => {
+        const confirmEmail = () => {
             const key = searchParams.get("key");
             if (key) {
-
-                try {
-                    const response = await fetch(`/v1/auth/email/confirm?key=${key}`, {
-                        method: "GET",
-                        headers: {
-                            "Accept": "application/json"
-                        }
-                    });
-                    const data = await response.json();
-
-                    if (response.ok && data.status === "success") {
-                        setStatus("success");
-                        setTimeout(() => {
-                            setShowLoginForm(true)
-                            goToLanding('login')
-                        }, 3000);
-
-                    } else {
-                        setStatus("error");
-                        setTimeout(() => {
-                            goToLanding('login');
-                        }, 5000);
-                    }
-                } catch (error) {
-                    console.error("Ошибка подтверждения email:", error);
-                    setStatus("error");
-                    setTimeout(() => {
-                        goToLanding('login');
-                    }, 5000);
-                }
+                // Endpoint confirms the email and redirects to /?confirm=...
+                // where Home displays the result. Do not fetch it as JSON.
+                window.location.replace(`/v1/auth/email/confirm?key=${encodeURIComponent(key)}`);
             } else {
                 setStatus("error");
                 setTimeout(() => {
@@ -53,7 +23,7 @@ function EmailConfirm() {
         }
 
         confirmEmail();
-    }, [searchParams, navigate, setShowLoginForm]);
+    }, [searchParams]);
 
     return (
         <div className="confirmation-container">
