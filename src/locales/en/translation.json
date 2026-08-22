@@ -2201,6 +2201,8 @@
   "userMasterKeySaveWarning": "Save this key right now! It will never be shown again.",
   "userMasterKeyCopied": "Key copied",
   "userMasterKeySaved": "I have saved the key",
+  "userMasterKeyProgressTitle": "Creating encryption key",
+  "userMasterKeyProcessing": "Generating and encrypting...",
   "copy": "Copy",
   "mkPasswordRequired": "Enter password",
   "mkCreateError": "Error creating encryption key",

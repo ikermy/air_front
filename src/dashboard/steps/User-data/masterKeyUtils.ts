@@ -40,12 +40,20 @@ export async function createMasterKey(
     const token = getAuthToken();
 
     return new Promise((resolve, reject) => {
-        const url = new URL(`/v1/ws/create-master-key`);
+        // WebSocket не поддерживает относительные URL, а URL('/v1/...')
+        // без base выбрасывает `Invalid URL` до создания соединения.
+        const wsPath = '/v1/ws/create-master-key';
+        // Next dev server rewrites HTTP requests but does not proxy WebSocket
+        // upgrades. Use the local HTTPS Envoy directly during development.
+        const wsUrl = window.location.port === '3001'
+            ? `wss://localhost${wsPath}`
+            : `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}${wsPath}`;
+        const url = new URL(wsUrl);
         url.searchParams.append('respId', respId.toString());
         url.searchParams.append('pass', encryptedPassword);
-        if (token) url.searchParams.append('token', token);
 
-        const socket = new WebSocket(url.toString());
+        // The backend accepts the bearer token as the WebSocket subprotocol.
+        const socket = token ? new WebSocket(url.toString(), [token]) : new WebSocket(url.toString());
 
         socket.onmessage = (event) => {
             try {
@@ -71,6 +79,12 @@ export async function createMasterKey(
         };
 
         socket.onclose = (event) => {
+            // Код 1000 (Normal Closure) означает штатное завершение после
+            // отправки результата создания MasterKey, а не ошибку.
+            if (event.code === 1000) {
+                return;
+            }
+
             if (!event.wasClean) {
                 reject(new Error(`Соединение закрыто: ${event.reason || event.code}`));
             }

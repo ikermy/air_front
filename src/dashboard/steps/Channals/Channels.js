@@ -29,7 +29,29 @@ import {
 } from "./chUtils";
 import {useTranslation} from "react-i18next";
 import {AvitoSection} from "./sections/AvitoSection";
-import {getModelData} from "../CreateModelFormElements/modUtils";
+import {checkHayModel} from "../CreateModelFormElements/modUtils";
+
+// Сервер может вернуть пустые данные как {}, "{}", пустую строку или null.
+// Объекты и строки нужно проверять по содержимому, а не только по truthiness.
+const hasChannelData = (data) => {
+    if (data === null || data === undefined) return false;
+
+    if (typeof data === "string") {
+        const value = data.trim();
+        if (!value) return false;
+
+        try {
+            return hasChannelData(JSON.parse(value));
+        } catch {
+            return true;
+        }
+    }
+
+    if (Array.isArray(data)) return data.length > 0;
+    if (typeof data === "object") return Object.keys(data).length > 0;
+
+    return true;
+};
 
 
 export const Channels = () => {
@@ -103,7 +125,7 @@ export const Channels = () => {
     const [isGeneratingQRCode, setIsGeneratingQRCode] = useState(false);
     const [showQRCode, setShowQRCode] = useState(false);
     const [isLoadingContacts, setIsLoadingContacts] = useState(false);
-    const [contactsLoadingStatus, setContactsLoadingStatus] = useState({ message: '', progress: 0 });
+    const [contactsLoadingStatus, setContactsLoadingStatus] = useState({message: '', progress: 0});
 
     const [authService, setAuthService] = useState(null);
     const [qrCodeUrl, setQrCodeUrl] = useState('');
@@ -130,20 +152,9 @@ export const Channels = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
     const fetchChannelData = useCallback(async () => {
         try {
-            // Получаем данные о модели
-            // Сначала из локального хранилища
-            let modelDataResult
-            const stored = localStorage.getItem("userModel");
-            if (stored === 'true') {
-                modelDataResult = true
-            } else {
-                // TODO создать отдельный маршрут для проверки существоаания моделей!
-                modelDataResult = await getModelData()
-            }
-            if (
-                modelDataResult &&
-                (typeof modelDataResult !== 'object' || Object.keys(modelDataResult).length > 0)
-            ) {
+            // Проверяем наличие модели без загрузки всех её данных.
+            const modelCheckResult = await checkHayModel();
+            if (modelCheckResult.success && modelCheckResult.status === true) {
                 setModelData(true);
 
                 // Получаем данные о каналах
@@ -213,7 +224,7 @@ export const Channels = () => {
                     const newSelectedChannels = [];
 
                     // Обработка Telegram бота
-                    if (channelsData.tgbot && channelsData.tgbot.data) {
+                    if (channelsData.tgbot && hasChannelData(channelsData.tgbot.data)) {
                         const tgChannel = newAvailableChannels.find(ch => ch.key === "tbot");
                         if (tgChannel) {
                             const index = newAvailableChannels.indexOf(tgChannel);
@@ -241,7 +252,7 @@ export const Channels = () => {
                     }
 
                     // Обработка виджета
-                    if (channelsData.widget && channelsData.widget.data) {
+                    if (channelsData.widget && hasChannelData(channelsData.widget.data)) {
                         const widgetChannel = newAvailableChannels.find(ch => ch.key === "widg");
                         if (widgetChannel) {
                             const index = newAvailableChannels.indexOf(widgetChannel);
@@ -268,7 +279,7 @@ export const Channels = () => {
                     }
 
                     // Обработка WhatsApp UserBot
-                    if (channelsData.whatsbot && channelsData.whatsbot.data) {
+                    if (channelsData.whatsbot && hasChannelData(channelsData.whatsbot.data)) {
                         const whatsChannel = newAvailableChannels.find(ch => ch.key === "whatsbot");
                         if (whatsChannel) {
                             const index = newAvailableChannels.indexOf(whatsChannel);
@@ -322,7 +333,7 @@ export const Channels = () => {
                         }
                     }
 
-                    if (channelsData.tguserbot && channelsData.tguserbot.data) {
+                    if (channelsData.tguserbot && hasChannelData(channelsData.tguserbot.data)) {
                         let uidsArray = [];
                         let tokenDataString = '';
                         let options = {text: true, call: true};
@@ -377,7 +388,7 @@ export const Channels = () => {
                     }
 
                     // Обработка Instagram Bot НЕВЕРНАЯ ТЕСТОВАЯ РЕАЛИЗАЦИЯ!!!
-                    if (channelsData.insta && channelsData.insta.data) {
+                    if (channelsData.insta && hasChannelData(channelsData.insta.data)) {
                         const instaChannel = newAvailableChannels.find(ch => ch.key === "insta");
                         if (instaChannel) {
                             const index = newAvailableChannels.indexOf(instaChannel);
@@ -432,7 +443,7 @@ export const Channels = () => {
                     }
 
                     // Обработка Avito Bot
-                    if (channelsData.avito && channelsData.avito.data) {
+                    if (channelsData.avito && hasChannelData(channelsData.avito.data)) {
                         const avitoChannel = newAvailableChannels.find(ch => ch.key === "avito");
                         if (avitoChannel) {
                             const index = newAvailableChannels.indexOf(avitoChannel);
@@ -500,24 +511,9 @@ export const Channels = () => {
         fetchDataAsync();
     }, [fetchChannelData]);
 
-    useEffect(() => {
-        const checkModel = async () => {
-            try {
-                const data = await getModelData();
-                if (data != null) {
-                    setModelData(true);
-                }
-            } catch (error) {
-                console.error("Ошибка получения данных модели:", error);
-            }
-        };
-
-        checkModel();
-    }, []);
-
     if (loading) {
         return <div className="notifications-loading">
-            <Spin size="large" />
+            <Spin size="large"/>
             <Text className="loading-text">
                 Загрузка данных...
             </Text>
@@ -647,7 +643,6 @@ export const Channels = () => {
 
             // Начинаем процесс авторизации
             await service.startAuthentication({
-                // userId: parseInt(localStorage.getItem("userId") || "0"),
                 appId: channel.appId,
                 appHash: channel.appHash,
                 phone: channel.phone,
@@ -716,7 +711,7 @@ export const Channels = () => {
     const handleGetTgContacts = async () => {
         try {
             setIsLoadingContacts(true);
-            setContactsLoadingStatus({ message: 'Инициализация...', progress: 0 });
+            setContactsLoadingStatus({message: 'Инициализация...', progress: 0});
 
             const response = await telegramGetContact(
                 (progressData) => {
@@ -774,7 +769,7 @@ export const Channels = () => {
             );
         } catch (error) {
             console.error('Ошибка при получении контактов:', error);
-            setContactsLoadingStatus({ message: `Ошибка: ${error.message}`, progress: 0 });
+            setContactsLoadingStatus({message: `Ошибка: ${error.message}`, progress: 0});
             showErrorNotification(t("error") || "Ошибка", t("channelContactsError") || "Не удалось получить контакты, попробуйте позже");
 
             // Важно: выбрасываем ошибку дальше, чтобы openContactsModal знал о неудаче
@@ -783,7 +778,7 @@ export const Channels = () => {
             setIsLoadingContacts(false);
             // Очищаем статус через небольшую задержку
             setTimeout(() => {
-                setContactsLoadingStatus({ message: '', progress: 0 });
+                setContactsLoadingStatus({message: '', progress: 0});
             }, 2000);
         }
     };
@@ -791,7 +786,7 @@ export const Channels = () => {
     const handleGetWaContacts = async () => {
         try {
             setIsLoadingContacts(true);
-            setContactsLoadingStatus({ message: 'Инициализация...', progress: 0 });
+            setContactsLoadingStatus({message: 'Инициализация...', progress: 0});
 
             const response = await whatsappGetContact(
                 (progressData) => {
@@ -831,7 +826,7 @@ export const Channels = () => {
             );
         } catch (error) {
             console.error('Ошибка при получении контактов WhatsApp:', error);
-            setContactsLoadingStatus({ message: `Ошибка: ${error.message}`, progress: 0 });
+            setContactsLoadingStatus({message: `Ошибка: ${error.message}`, progress: 0});
             // showErrorNotification("Ошибка", "Не удалось получить контакты WhatsApp, попробуйте позже");
 
             // Важно: выбрасываем ошибку дальше, чтобы handleOpenContactsModal знал о неудаче
@@ -840,7 +835,7 @@ export const Channels = () => {
             setIsLoadingContacts(false);
             // Очищаем статус через небольшую задержку
             setTimeout(() => {
-                setContactsLoadingStatus({ message: '', progress: 0 });
+                setContactsLoadingStatus({message: '', progress: 0});
             }, 2000);
         }
     };
@@ -949,14 +944,14 @@ export const Channels = () => {
     // Простая обёртка, блокирует переключатель на 2 секунды
     // javascript
     const handleToggleWithDisable = async (key) => {
-        setSwitchDisabled(prev => ({ ...prev, [key]: true }));
+        setSwitchDisabled(prev => ({...prev, [key]: true}));
         try {
             await toggleSwitch(key);
         } catch (e) {
             // toggleSwitch уже показывает уведомления об ошибках, если нужно — можно обработать дополнительно
         } finally {
             // разблокируем сразу после завершения toggleSwitch
-            setSwitchDisabled(prev => ({ ...prev, [key]: false }));
+            setSwitchDisabled(prev => ({...prev, [key]: false}));
         }
     };
 
@@ -1055,7 +1050,7 @@ export const Channels = () => {
     return (
         <div className="create-model-container">
             <div className="section-title" ref={channelsHeaderRef}>
-                <GlobalOutlined />
+                <GlobalOutlined/>
                 {t("channels") || "Каналы связи"}
             </div>
             <div className="section-description">
@@ -1067,7 +1062,7 @@ export const Channels = () => {
                     <div className="channels-modern">
                         {!modelData ? (
                             <div className="no-model-state-modern">
-                                <AndroidOutlined className="no-model-icon-modern" />
+                                <AndroidOutlined className="no-model-icon-modern"/>
                                 <Typography.Title level={3} className="no-model-title-modern">
                                     {t("modelNotCreated") || "Модель агента не создана"}
                                 </Typography.Title>
@@ -1079,7 +1074,7 @@ export const Channels = () => {
                             <>
                                 {/* Кнопка создания канала */}
                                 {availableChannels.length > 0 && (
-                                    <div style={{ marginTop: '16px' }} ref={addChannelRef}>
+                                    <div style={{marginTop: '16px'}} ref={addChannelRef}>
                                         <AddChannel
                                             availableChannels={availableChannels}
                                             onChannelSelect={handleChannelSelect}
@@ -1094,7 +1089,7 @@ export const Channels = () => {
                                             {t("channelsConfigured") || "Настроенные каналы"}
                                         </Typography.Title>
                                         <Typography.Text type="secondary">
-                                            {t("channelsTotal", { count: selectedChannels.length }) || `Всего каналов: ${selectedChannels.length}`}
+                                            {t("channelsTotal", {count: selectedChannels.length}) || `Всего каналов: ${selectedChannels.length}`}
                                         </Typography.Text>
                                     </div>
                                 </div>
@@ -1109,22 +1104,27 @@ export const Channels = () => {
                                                     <Card className="channel-card-modern">
                                                         <div className="channel-card-header-modern">
                                                             <div className="channel-info-modern">
-                                                                <div className={`channel-icon-modern ${channel.isEnabled ? 'enabled' : ''}`}>
+                                                                <div
+                                                                    className={`channel-icon-modern ${channel.isEnabled ? 'enabled' : ''}`}>
                                                                     {channel.icon}
                                                                 </div>
-                                                                <Typography.Title level={5} className="channel-title-modern">
+                                                                <Typography.Title level={5}
+                                                                                  className="channel-title-modern">
                                                                     {channel.label}
                                                                 </Typography.Title>
                                                             </div>
                                                             <div className="channel-status-switch-modern">
-                                                                <Typography.Text style={{ marginRight: 8 }}>{t("channelStatus") || "Статус:"}</Typography.Text>
+                                                                <Typography.Text
+                                                                    style={{marginRight: 8}}>{t("channelStatus") || "Статус:"}</Typography.Text>
                                                                 <Switch
                                                                     checked={channel.isEnabled && !!channel.data}
                                                                     // onChange={() => toggleSwitch(channel.key)}
                                                                     onChange={() => handleToggleWithDisable(channel.key)}
                                                                     disabled={!channel.data || !!switchDisabled[channel.key]}
-                                                                    checkedChildren={<span style={{color: "black"}}>{t("channelEnabled") || "Включен"}</span>}
-                                                                    unCheckedChildren={<span style={{color: "black"}}>{t("channelDisabled") || "Выключен"}</span>}
+                                                                    checkedChildren={<span
+                                                                        style={{color: "black"}}>{t("channelEnabled") || "Включен"}</span>}
+                                                                    unCheckedChildren={<span
+                                                                        style={{color: "black"}}>{t("channelDisabled") || "Выключен"}</span>}
                                                                 />
                                                             </div>
                                                         </div>
@@ -1232,12 +1232,14 @@ export const Channels = () => {
                                                         onClick={() => toggleExpand(channel.key)}
                                                     >
                                                         <div className="list-item-left-modern">
-                                                            <div className={`list-channel-icon ${channel.isEnabled ? 'enabled' : ''}`}>
+                                                            <div
+                                                                className={`list-channel-icon ${channel.isEnabled ? 'enabled' : ''}`}>
                                                                 {channel.icon}
                                                             </div>
                                                             <div className="list-item-info-modern">
                                                                 <div className="list-item-header-modern">
-                                                                    <Typography.Text strong>{channel.label}</Typography.Text>
+                                                                    <Typography.Text
+                                                                        strong>{channel.label}</Typography.Text>
                                                                 </div>
                                                                 <Typography.Text type="secondary">
                                                                     {channel.data ? t("channelConfigured") || "Настроен и готов к использованию" : t("channelRequiresSetup") || "Требует настройки"}
@@ -1280,18 +1282,10 @@ export const Channels = () => {
                                                     <Typography.Text type="secondary">
                                                         {t("channelsNotCreated") || "Каналы не созданы"}
                                                     </Typography.Text>
-                                                    <br />
+                                                    <br/>
                                                     <Typography.Text type="secondary">
                                                         {t("channelsAddChannels") || "Добавьте каналы для взаимодействия с пользователями"}
                                                     </Typography.Text>
-                                                    {availableChannels.length > 0 && (
-                                                        <div style={{ marginTop: 16 }}>
-                                                            <AddChannel
-                                                                availableChannels={availableChannels}
-                                                                onChannelSelect={handleChannelSelect}
-                                                            />
-                                                        </div>
-                                                    )}
                                                 </div>
                                             }
                                         />
@@ -1304,7 +1298,7 @@ export const Channels = () => {
                                     onCancel={handleCancelRemove}
                                     className="channels-modal"
                                     maskClassName="blur-modal-mask"
-                                    mask={{ closable: false }}
+                                    mask={{closable: false}}
                                     zIndex={20000}
                                     footer={[
                                         <Button key="cancel" onClick={handleCancelRemove}>
@@ -1333,7 +1327,7 @@ export const Channels = () => {
                 {tourPanelVisible && (
                     <div className="tour-controls tour-primary">
                         <div className="tour-controls-header">
-                            <PlayCircleOutlined className="tour-controls-icon" />
+                            <PlayCircleOutlined className="tour-controls-icon"/>
                             <h3 className="tour-controls-title">
                                 {t("channelsTourTitle") || "Интерактивный обзор"}
                             </h3>
@@ -1357,7 +1351,10 @@ export const Channels = () => {
                             <div className="tour-progress">
                                 <div className="tour-progress-step">
                                     <span className="tour-progress-step-text">
-                                        {t("channelsTourStep", { current: current + 1, total: steps.length }) || `Шаг ${current + 1} из ${steps.length}`}
+                                        {t("channelsTourStep", {
+                                            current: current + 1,
+                                            total: steps.length
+                                        }) || `Шаг ${current + 1} из ${steps.length}`}
                                     </span>
                                 </div>
                                 <div className="tour-progress-bar">
@@ -1405,7 +1402,7 @@ export const Channels = () => {
             />
 
             <FloatButton
-                icon={<QuestionCircleOutlined />}
+                icon={<QuestionCircleOutlined/>}
                 tooltip={t("channelsTourGuide") || "Начать обзор каналов связи"}
                 onClick={showTourPanel}
                 className="tour-float-button"

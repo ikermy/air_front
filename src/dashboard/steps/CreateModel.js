@@ -233,10 +233,6 @@ export const CreateModel = ({onMenuChange}) => {
                             gpttype: providerData.use_model_name?.gpttype || null,
                             realtime_gpttype: providerData.use_model_name?.realtime || null,
                         });
-
-                        if (typeof window !== 'undefined') {
-                            localStorage.setItem("userModel", "true");
-                        }
                     } else {
                         // Нет активного провайдера или данных - показываем предупреждение
                         showWarningNotification(t("modelNotCreated") || "Модель Агента не создана", t("createModelSelectProvider") || "Выберите провайдера и создайте модель");
@@ -560,10 +556,6 @@ export const CreateModel = ({onMenuChange}) => {
             // Обновляем данные после сохранения
             await refreshModelsData();
 
-            // Если это было создание новой модели, обновляем modelData
-            if (isCreatingNew && typeof window !== 'undefined') {
-                localStorage.setItem("userModel", "true");
-            }
         } else {
             showErrorNotification(
                 modelData ? (t("createModelUpdateError") || "Ошибка обновления") : (t("createModelSaveError") || "Ошибка сохранения"),
@@ -622,7 +614,21 @@ export const CreateModel = ({onMenuChange}) => {
                 setSelectedMenu={onMenuChange}
             />
 
-            <div className="tour-layout">
+            {!modelData && !selectedProvider && (
+                <div style={{
+                    padding: '12px',
+                    marginBottom: '16px',
+                    background: '#fff7e6',
+                    border: '1px solid #ffd591',
+                    borderRadius: '4px',
+                    color: '#d48806'
+                }}>
+                    {t("createModelSelectProviderWarning") || "⚠️ Выберите провайдера AI модели выше, чтобы начать создание"}
+                </div>
+            )}
+
+            {(modelData || selectedProvider) && (
+                <div className="tour-layout">
                 <div className="tour-content">
                     <Spin spinning={providerLoading}
                           description={t("createModelProviderLoadingTip") || "Загрузка данных провайдера..."}>
@@ -644,18 +650,18 @@ export const CreateModel = ({onMenuChange}) => {
                                     {t("createModelBasicInfoNote") || "Имя модели не влияет на промпт, но помогает идентифицировать агента в получаемых уведомлениях."}
                                 </div>
 
-                                {!modelData && !selectedProvider && (
-                                    <div style={{
-                                        padding: '12px',
-                                        marginBottom: '16px',
-                                        background: '#fff7e6',
-                                        border: '1px solid #ffd591',
-                                        borderRadius: '4px',
-                                        color: '#d48806'
-                                    }}>
-                                        {t("createModelSelectProviderWarning") || "⚠️ Выберите провайдера AI модели выше, чтобы начать создание"}
-                                    </div>
-                                )}
+                                {/*{!modelData && !selectedProvider && (*/}
+                                {/*    <div style={{*/}
+                                {/*        padding: '12px',*/}
+                                {/*        marginBottom: '16px',*/}
+                                {/*        background: '#fff7e6',*/}
+                                {/*        border: '1px solid #ffd591',*/}
+                                {/*        borderRadius: '4px',*/}
+                                {/*        color: '#d48806'*/}
+                                {/*    }}>*/}
+                                {/*        {t("createModelSelectProviderWarning") || "⚠️ Выберите провайдера AI модели выше, чтобы начать создание"}*/}
+                                {/*    </div>*/}
+                                {/*)}*/}
 
                                 <Form.Item
                                     name="name"
@@ -1034,7 +1040,8 @@ export const CreateModel = ({onMenuChange}) => {
                         </div>
                     </div>
                 )}
-            </div>
+                </div>
+            )}
 
             <Tour
                 open={tourVisible}

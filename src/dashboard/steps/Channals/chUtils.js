@@ -186,7 +186,6 @@ export const readChannelData = async () => {
 
                 // Получение данных из ответа
                 const data = await response.json();
-
                 // Сохраняем в кэш
                 readChannelDataCache = data;
                 readChannelDataCacheTimestamp = Date.now();
@@ -276,7 +275,11 @@ export async function restartActiveChannels(onMessage) {
 
     return new Promise((resolve, reject) => {
         try {
-            const wsUrl = `/v1/ws/restart`;
+            const wsPath = '/v1/ws/restart';
+            const wsUrl = window.location.port === '3001'
+                ? `wss://localhost${wsPath}`
+                : `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}${wsPath}`;
+
             const ws = new WebSocket(wsUrl, [validToken]);
 
             ws.onopen = () => {

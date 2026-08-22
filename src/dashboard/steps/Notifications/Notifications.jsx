@@ -24,7 +24,7 @@ import {
     sendVerifCode
 } from "./notificationUtils";
 import {restartActiveChannels, chAvailable} from "../Channals/chUtils";
-import {getModelData} from "../CreateModelFormElements/modUtils";
+import {checkHayModel} from "../CreateModelFormElements/modUtils";
 
 const {Text, Title} = Typography;
 
@@ -224,15 +224,9 @@ export const Notifications = () => {
     useEffect(() => {
         const fetchNotifications = async () => {
             try {
-                // Получаем данные о модели
-                // Сначала из локального хранилища
-                let modelDataResult
-                if (localStorage.getItem("userModel")) {
-                    modelDataResult = true
-                } else {
-                    modelDataResult = await getModelData()
-                }
-                if (modelDataResult) {
+                // Проверяем наличие модели без загрузки всех её данных.
+                const modelCheckResult = await checkHayModel();
+                if (modelCheckResult.success && modelCheckResult.status === true) {
                     setModelData(true);
 
                     // Получаем данные о каналах

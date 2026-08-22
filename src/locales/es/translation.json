@@ -2201,6 +2201,8 @@
     "userMasterKeySaveWarning":  "¡Guarde esta clave ahora mismo! Nunca volverá a mostrarse.",
     "userMasterKeyCopied":  "Clave copiada",
     "userMasterKeySaved":  "He guardado la clave",
+    "userMasterKeyProgressTitle":  "Creación de la clave de cifrado",
+    "userMasterKeyProcessing":  "Generando y cifrando...",
     "copy":  "Copiar",
     "mkPasswordRequired":  "Introduzca la contraseña",
     "mkCreateError":  "Error al crear la clave de cifrado",

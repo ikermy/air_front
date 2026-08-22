@@ -451,9 +451,6 @@ export const saveModelData = async ({
         const result = await response.json();
 
         if (response.ok && (result.message === "ok" || result.status === "ok")) {
-            if (!isUpdate) {
-                localStorage.setItem("userModel", "true");
-            }
             return { status: "ok" };
         }
 
@@ -514,6 +511,31 @@ export async function checkDemo(): Promise<CheckDemoResult> {
         return { success: true, status: result.status };
     } catch (error: unknown) {
         console.error("Ошибка при проверке демо статуса:", error);
+        return { success: false, error: error instanceof Error ? error.message : String(error) };
+    }
+}
+
+// ─── checkHayModel ────────────────────────────────────────────────────────────────
+// CheckDemoResult тот же самый ответ BOOL поэтому так
+export async function checkHayModel(): Promise<CheckDemoResult> {
+    try {
+        const response = await authFetch(`/v1/model/fast-chek`, {
+            method: "GET",
+            headers: {
+                "Content-Type": "application/json",
+            },
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            console.error(`Ошибка при проверке наличия модели: ${response.status}`, errorData);
+            return { success: false, error: errorData.error || `HTTP ${response.status}` };
+        }
+
+        const result = await response.json();
+        return { success: true, status: result.status };
+    } catch (error: unknown) {
+        console.error("Ошибка при проверке наличия модели:", error);
         return { success: false, error: error instanceof Error ? error.message : String(error) };
     }
 }

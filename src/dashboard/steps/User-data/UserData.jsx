@@ -418,9 +418,16 @@ export const UserData = () => {
             setDeleteComplete(false);
 
             const token = getAuthToken();
-            const wsUrl = `/v1/ws/delete-all`;
-            const wsUrlWithToken = `${wsUrl}`;
-            wsRef.current = new WebSocket(wsUrlWithToken, [token]);
+            // WebSocket не поддерживает относительные URL.
+            const wsPath = '/v1/ws/delete-all';
+            // Next dev server rewrites HTTP requests but does not proxy WebSocket
+            // upgrades. Use the local HTTPS Envoy directly during development.
+            const wsUrl = window.location.port === '3001'
+                ? `wss://localhost${wsPath}`
+                : `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}${wsPath}`;
+            wsRef.current = token
+                ? new WebSocket(wsUrl, [token])
+                : new WebSocket(wsUrl);
 
             // Обработчик открытия соединения
             wsRef.current.onopen = () => {

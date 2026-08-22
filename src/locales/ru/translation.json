@@ -2197,6 +2197,8 @@
     "userMasterKeySaveWarning":  "Сохраните этот ключ прямо сейчас! Он больше никогда не будет показан.",
     "userMasterKeyCopied":  "Ключ скопирован",
     "userMasterKeySaved":  "Я сохранил ключ",
+    "userMasterKeyProgressTitle":  "Создание ключа шифрования",
+    "userMasterKeyProcessing":  "Выполняется генерация и шифрование...",
     "copy":  "Копировать",
     "mkPasswordRequired":  "Введите пароль",
     "mkCreateError":  "Ошибка создания ключа шифрования",

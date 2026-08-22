@@ -18,6 +18,7 @@ import { Footer } from '../../src/landing/v2/sections/Footer';
 import { JsonLd } from '../../src/landing/v2/seo/JsonLd';
 import { buildFaqEntries } from '../../src/landing/v2/sections/faqData';
 import { SITE_URL } from '../../src/landing/v2/config/site';
+import { EmailConfirmationNotice } from '../../src/landing/v2/auth/EmailConfirmationNotice';
 
 export default async function LandingPage({
   params,
@@ -43,6 +44,7 @@ export default async function LandingPage({
 
   return (
     <>
+      <EmailConfirmationNotice />
       <JsonLd
         locale={locale}
         name={t('title')}

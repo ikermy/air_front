@@ -67,7 +67,16 @@ export const DeleteModel = ({onModelDeleted, selectedProvider}) => {
                 return;
             }
 
-            const wsUrl = `/v1/ws/delete-model`;
+            // const wsUrl = `/v1/ws/delete-model`;
+            // WebSocket не поддерживает относительные URL, а URL('/v1/...')
+            // без base выбрасывает `Invalid URL` до создания соединения.
+            const wsPath = '/v1/ws/delete-model';
+            // Next dev server rewrites HTTP requests but does not proxy WebSocket
+            // upgrades. Use the local HTTPS Envoy directly during development.
+            const wsUrl = window.location.port === '3001'
+                ? `wss://localhost${wsPath}`
+                : `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}${wsPath}`;
+            const url = new URL(wsUrl);
             const providerParam = selectedProvider ? `?provider=${selectedProvider}` : '';
             const wsUrlWithToken = `${wsUrl}${providerParam}`;
             wsRef.current = new WebSocket(wsUrlWithToken, [token]);
@@ -113,8 +122,6 @@ export const DeleteModel = ({onModelDeleted, selectedProvider}) => {
                         );
                         setDeleteProgressVisible(false);
 
-                        // Сохраняем в localStorage что модель удалена и вызываем callback
-                        localStorage.setItem("userModel", false);
                         if (onModelDeleted) onModelDeleted();
                     }, 3000);
                 } else {
