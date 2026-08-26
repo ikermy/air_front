@@ -192,7 +192,7 @@ export function ScenarioFeed({ emitted, finished, reducedMotion }: Props) {
         ) : null}
       </div>
 
-      {/* Системный лог: то, что в проде писал бы air_logger. */}
+      {/* Системный лог: то, что в проде писал бы air-logger. */}
       <div className={styles.log} aria-label={t('logAria')} role="status">
         <span className={styles.logTitle}>{t('logTitle')}</span>
         <ul className={styles.logList}>

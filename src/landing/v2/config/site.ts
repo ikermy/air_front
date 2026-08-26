@@ -3,7 +3,8 @@
 export const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '') || 'https://kermy.org';
 
-export const GITHUB_ORG = 'https://github.com/ikermy/air_orchestrator';
+export const GITHUB_ORG = 'https://github.com/ikermy';
+export const GITHUB_ORC = 'https://github.com/ikermy/air_orchestrator';
 
 /** Чат сообщества в Telegram. */
 export const TELEGRAM_CHAT = 'https://t.me/marusia_dev';
@@ -22,7 +23,7 @@ export interface ServiceMeta {
 
 /** Микросервисы семейства air_. Описания — в messages/*.json. */
 export const SERVICES: ServiceMeta[] = [
-  { id: 'air_common', repo: `${GITHUB_ORG}/air_common`, layer: 'core' },
+  { id: 'air-common', repo: `${GITHUB_ORG}/air-common`, layer: 'core' },
   { id: 'air_orchestrator', repo: `${GITHUB_ORG}/air_orchestrator`, layer: 'core' },
   { id: 'air_tgbot', repo: `${GITHUB_ORG}/air_tgbot`, layer: 'channel' },
   { id: 'air_tguserbot', repo: `${GITHUB_ORG}/air_tguserbot`, layer: 'channel' },
@@ -34,9 +35,9 @@ export const SERVICES: ServiceMeta[] = [
   { id: 'air_payment', repo: `${GITHUB_ORG}/air_payment`, layer: 'service' },
   { id: 'marusia_crm', repo: `${GITHUB_ORG}/marusia_crm`, layer: 'service' },
   // Панель управления — прикладной слой поверх ядра, а не инфраструктура:
-  // рядом с air_logger («наблюдаемость и эксплуатация») она читалась бы неверно.
+  // рядом с air-logger («наблюдаемость и эксплуатация») она читалась бы неверно.
   { id: 'air_front', repo: `${GITHUB_ORG}/air_front`, layer: 'service' },
-  { id: 'air_logger', repo: `${GITHUB_ORG}/air_logger`, layer: 'infra' },
+  { id: 'air-logger', repo: `${GITHUB_ORG}/air-logger`, layer: 'infra' },
 ];
 
 export const PRICE_MONTHLY_USD = 1;

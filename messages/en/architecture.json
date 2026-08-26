@@ -21,7 +21,7 @@
     }
   },
   "services": {
-    "air_common": "Shared library for every AI microservice: contracts, data models and reusable utilities.",
+    "air-common": "Shared library for every AI microservice: contracts, data models and reusable utilities.",
     "air_orchestrator": "The main orchestrator: receives channel events, calls the AI provider and routes the responses back.",
     "air_tgbot": "Telegram Bot running in polling or webhook mode, streaming the answer as it is generated.",
     "air_tguserbot": "Telegram user-bot: receives and places voice calls from your own account.",
@@ -33,7 +33,7 @@
     "air_payment": "Accepts crypto payments from users through Bybit.",
     "marusia_crm": "Integration with external CRMs, so conversations and leads land in your sales system.",
     "air_front": "React / Next.js frontend — the control panel for models, communication channels and services.",
-    "air_logger": "Event logging with multi-tenant support and a Loki-compatible collector."
+    "air-logger": "Event logging with multi-tenant support and a Loki-compatible collector."
   },
   "quickstart": {
     "label": "Quick start",

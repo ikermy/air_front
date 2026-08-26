@@ -28,7 +28,7 @@ type Layer = (typeof LAYERS)[number];
 
 /** Иконка на узел. Ключ — id сервиса из SERVICES. */
 const ICONS: Record<string, LucideIcon> = {
-  air_common: Library,
+  'air-common': Library,
   air_orchestrator: Boxes,
   air_tgbot: Bot,
   air_tguserbot: PhoneCall,
@@ -40,7 +40,7 @@ const ICONS: Record<string, LucideIcon> = {
   air_payment: Wallet,
   marusia_crm: Database,
   air_front: MonitorSmartphone,
-  air_logger: ScrollText,
+  'air-logger': ScrollText,
 };
 
 /**

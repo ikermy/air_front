@@ -10,8 +10,8 @@
       "a": "La clave de cifrado se deriva de tu contraseña MasterKey y solo tú tienes acceso a ella: no la guardamos y no podemos recuperar tus datos. Las claves de API, los tokens de los canales y el historial de conversaciones llegan a la base de datos ya cifrados con AES-GCM, así que sin tu clave son un conjunto de bytes sin más. La otra cara de un esquema honesto: si olvidas la contraseña MasterKey, el acceso a los datos cifrados se pierde de forma definitiva."
     },
     "logging": {
-      "q": "Decís que no registráis mis datos, ¿entonces para qué sirve el servicio air_logger?",
-      "a": "Son cosas distintas. air_logger recoge eventos y errores técnicos: arranque y parada de los servicios, códigos de respuesta, tiempos de espera agotados y fallos de conexión; sin eso es imposible saber si la plataforma funciona bien. El contenido de las conversaciones, los textos de los mensajes y las transcripciones de las llamadas, los contactos de tus clientes, las claves y los tokens nunca llegan a los registros: en producción los servicios no escriben datos de usuario ni siquiera para depurar. Todo ello se puede comprobar en el código abierto."
+      "q": "Decís que no registráis mis datos, ¿entonces para qué sirve el servicio air-logger?",
+      "a": "Son cosas distintas. air-logger recoge eventos y errores técnicos: arranque y parada de los servicios, códigos de respuesta, tiempos de espera agotados y fallos de conexión; sin eso es imposible saber si la plataforma funciona bien. El contenido de las conversaciones, los textos de los mensajes y las transcripciones de las llamadas, los contactos de tus clientes, las claves y los tokens nunca llegan a los registros: en producción los servicios no escriben datos de usuario ni siquiera para depurar. Todo ello se puede comprobar en el código abierto."
     },
     "price": {
       "q": "¿Por qué pagar $1 al mes si el proyecto es de código abierto?",

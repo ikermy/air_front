@@ -10,8 +10,8 @@
       "a": "The encryption key is derived from your MasterKey password and is available only to you — we never store it and cannot restore your data. API keys, channel tokens and conversation history reach the database already encrypted with AES-GCM, so without your key they are just a blob of bytes. The flip side of an honest scheme: if you forget your MasterKey password, access to the encrypted data is lost for good."
     },
     "logging": {
-      "q": "You say you do not log my data — then what is the air_logger service for?",
-      "a": "They are two different things. air_logger collects events and technical errors: service start and stop, response codes, timeouts, connection failures — without those you cannot tell whether the platform is healthy. Conversation content, message bodies and call transcripts, customer contacts, keys and tokens never reach the logs: in production the services do not write user data even for debugging. You can verify all of it in the open source code."
+      "q": "You say you do not log my data — then what is the air-logger service for?",
+      "a": "They are two different things. air-logger collects events and technical errors: service start and stop, response codes, timeouts, connection failures — without those you cannot tell whether the platform is healthy. Conversation content, message bodies and call transcripts, customer contacts, keys and tokens never reach the logs: in production the services do not write user data even for debugging. You can verify all of it in the open source code."
     },
     "price": {
       "q": "Why pay $1 per month if the project is open source?",

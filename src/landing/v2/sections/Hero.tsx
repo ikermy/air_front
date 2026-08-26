@@ -6,7 +6,7 @@ import { Button } from 'antd';
 import { CheckCircle2, Github, Sparkles, Wallet } from 'lucide-react';
 import { HeroVisual } from './HeroVisual';
 import { useAuthModal } from '../auth/AuthModalContext';
-import { GITHUB_ORG } from '../config/site';
+import {GITHUB_ORC, GITHUB_ORG} from '../config/site';
 import styles from './Hero.module.css';
 import {HeroGitStat} from "./HeroGitStat";
 
@@ -58,7 +58,7 @@ export function Hero() {
             </Button>
             <Button
               size="large"
-              href={GITHUB_ORG}
+              href={GITHUB_ORC}
               target="_blank"
               rel="noopener noreferrer"
               icon={<Github size={17} />}

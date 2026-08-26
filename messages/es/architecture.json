@@ -21,7 +21,7 @@
     }
   },
   "services": {
-    "air_common": "Biblioteca común para todos los microservicios de IA: contratos, modelos de datos y utilidades reutilizables.",
+    "air-common": "Biblioteca común para todos los microservicios de IA: contratos, modelos de datos y utilidades reutilizables.",
     "air_orchestrator": "El orquestador principal: recibe los eventos de los canales, consulta al proveedor de IA y reparte las respuestas.",
     "air_tgbot": "Bot de Telegram en modo polling o webhook, con entrega en streaming de la respuesta mientras se genera.",
     "air_tguserbot": "Bot de usuario de Telegram: recibe y realiza llamadas de voz desde tu propia cuenta.",
@@ -33,7 +33,7 @@
     "air_payment": "Acepta pagos en criptomoneda de los usuarios a través de Bybit.",
     "marusia_crm": "Integración con CRMs externos: las conversaciones y los leads llegan a tu sistema de ventas.",
     "air_front": "Frontend en React / Next.js: el panel de control de modelos, canales de comunicación y servicios.",
-    "air_logger": "Registro de eventos con modo multiusuario y soporte para el recolector de logs Loki."
+    "air-logger": "Registro de eventos con modo multiusuario y soporte para el recolector de logs Loki."
   },
   "quickstart": {
     "label": "Inicio rápido",

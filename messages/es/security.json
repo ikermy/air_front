@@ -14,7 +14,7 @@
   "loggingTitle": "Registros sin tus datos",
   "loggingDesc": "En modo producción los servicios no escriben datos de usuario en los registros, ni siquiera para depurar.",
   "loggingYesTitle": "Sí se registra",
-  "loggingYes": "Eventos y errores técnicos: arranque y parada de los servicios, códigos de respuesta, tiempos de espera agotados y fallos de conexión. De eso se encarga air_logger.",
+  "loggingYes": "Eventos y errores técnicos: arranque y parada de los servicios, códigos de respuesta, tiempos de espera agotados y fallos de conexión. De eso se encarga air-logger.",
   "loggingNoTitle": "Nunca se registra",
   "loggingNo": "El contenido de las conversaciones, los textos de los mensajes y las transcripciones de las llamadas, los contactos de tus clientes, las claves de API y los tokens.",
   "eraseTitle": "Borrarlo todo, en un clic",
@@ -27,7 +27,7 @@
     "profile": "Los datos personales, las suscripciones y las preferencias"
   },
   "eraseNote": "El borrado es irreversible: después no se pueden recuperar los datos, tampoco nosotros.",
-  "panelTitle": "air_common · crypto",
+  "panelTitle": "air-common · crypto",
   "flowTitle": "Recorrido de los datos",
   "flow": {
     "step1": {

@@ -36,9 +36,7 @@ export function Footer() {
           {/* --- Бренд --- */}
           <div className={styles.brand}>
             <span className={styles.logo}>
-              <span className={styles.logoMark} aria-hidden>
-                <span className={styles.logoDot} />
-              </span>
+              <img className={styles.logoMark} src="/air-logo.svg" alt="" aria-hidden />
               <span className={styles.logoText}>
                 AiR<span className={styles.logoSlash}>/</span>
                 <span className={styles.logoSub}>marusia_ai</span>

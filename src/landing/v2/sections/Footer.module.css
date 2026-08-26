@@ -28,14 +28,10 @@
 }
 
 .logoMark {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
+  display: block;
   width: 30px;
   height: 30px;
-  border-radius: 9px;
-  border: 1px solid var(--air-accent);
-  background: color-mix(in srgb, var(--air-brand) 12%, transparent);
+  object-fit: contain;
 }
 
 .logoDot {

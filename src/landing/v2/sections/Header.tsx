@@ -36,9 +36,7 @@ export function Header() {
     <header className={styles.header} data-scrolled={scrolled}>
       <div className={`air-container ${styles.inner}`}>
         <a href="#top" className={styles.logo} aria-label="AiR">
-          <span className={styles.logoMark} aria-hidden>
-            <span className={styles.logoDot} />
-          </span>
+          <img className={styles.logoMark} src="/air-logo.svg" alt="" aria-hidden />
           <span className={styles.logoText}>
             AiR<span className={styles.logoSlash}>/</span>
             <span className={styles.logoSub}>marusia_ai</span>

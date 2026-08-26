@@ -14,7 +14,7 @@
   "loggingTitle": "Logs without your data",
   "loggingDesc": "In production the services never write user data to the logs — not even for debugging.",
   "loggingYesTitle": "Goes to the log",
-  "loggingYes": "Events and technical errors: service start and stop, response codes, timeouts, connection failures. That is exactly what air_logger handles.",
+  "loggingYes": "Events and technical errors: service start and stop, response codes, timeouts, connection failures. That is exactly what air-logger handles.",
   "loggingNoTitle": "Never goes there",
   "loggingNo": "Conversation content, message bodies and call transcripts, customer contacts, API keys and tokens.",
   "eraseTitle": "Erase everything — in one click",
@@ -27,7 +27,7 @@
     "profile": "Personal details, subscriptions and preferences"
   },
   "eraseNote": "Erasure is irreversible: the data cannot be restored afterwards — not even by us.",
-  "panelTitle": "air_common · crypto",
+  "panelTitle": "air-common · crypto",
   "flowTitle": "How the data flows",
   "flow": {
     "step1": {
