@@ -2630,7 +2630,7 @@
   "apiKeyRevokeConfirmTitle": "Delete API Key?",
   "apiKeyRevokeConfirmOk": "Delete",
   "apiKeyRevokeConfirmDesc": "The API Key for this provider will be deleted. Continue?",
-  "devOperatorsBot": "Telegram Bot for operator mode?",
+  "devOperatorsBot": "Telegram Bot for operator mode",
   "typesGPTDesc": "Select a specific provider model to use.",
   "typesGPTTitle": "Language Model Selection",
   "typesGPTModelLabel": "Available Models",

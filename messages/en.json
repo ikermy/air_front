@@ -40,7 +40,8 @@
     "callAgent": "AI agent answering",
     "callChannel": "Telegram · Realtime",
     "callStatus": "Connection established",
-    "visualAlt": "Demo of a voice AI agent answering an incoming call"
+    "visualAlt": "Demo of a voice AI agent answering an incoming call",
+    "githubStats": "GitHub statistics"
   },
   "trust": {
     "title": "Why you can trust us",

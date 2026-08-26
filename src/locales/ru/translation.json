@@ -2623,7 +2623,7 @@
     "apiKeyRevokeConfirmTitle":  "Удалить API Key?",
     "apiKeyRevokeConfirmOk":  "Удалить",
     "apiKeyRevokeConfirmDesc":  "API Key для провайдера будет удалён. Продолжить?",
-    "devOperatorsBot":  "Telegram Bot бля операторского режима?",
+    "devOperatorsBot":  "Telegram Bot бля операторского режима",
     "typesGPTDesc": "Выберите конкретную модель провайдера для использования.",
     "typesGPTTitle": "Выбор языковой модели",
     "typesGPTModelLabel": "Доступные модели",

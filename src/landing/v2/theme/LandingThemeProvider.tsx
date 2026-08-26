@@ -87,7 +87,7 @@ export function LandingThemeProvider({ initialMode, children }: Props) {
   return (
     <LandingThemeContext.Provider value={value}>
       <ConfigProvider theme={getThemeConfig(mode)}>
-        <AntdApp component={false}>{children}</AntdApp>
+        <AntdApp component="div">{children}</AntdApp>
       </ConfigProvider>
     </LandingThemeContext.Provider>
   );

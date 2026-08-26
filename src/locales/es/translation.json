@@ -2630,7 +2630,7 @@
     "apiKeyRevokeConfirmTitle":  "¿Eliminar API Key?",
     "apiKeyRevokeConfirmOk":  "Eliminar",
     "apiKeyRevokeConfirmDesc":  "La API Key del proveedor será eliminada. ¿Continuar?",
-    "devOperatorsBot": "¿Bot de Telegram para modo operador?",
+    "devOperatorsBot": "¿Bot de Telegram para modo operador",
     "typesGPTDesc": "Seleccione un modelo específico del proveedor para usar.",
     "typesGPTTitle": "Selección de modelo de lenguaje",
     "typesGPTModelLabel": "Modelos disponibles",

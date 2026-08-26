@@ -152,6 +152,12 @@
   width: 100%;
 }
 
+.gitStat {
+  width: 100%;
+  max-width: 520px;
+  margin: 24px auto 0;
+}
+
 @media (min-width: 1024px) {
   .grid {
     grid-template-columns: minmax(0, 1.08fr) minmax(0, 0.92fr);

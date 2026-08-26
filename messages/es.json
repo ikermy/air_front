@@ -40,7 +40,8 @@
     "callAgent": "El agente de IA responde",
     "callChannel": "Telegram · Tiempo real",
     "callStatus": "Conexión establecida",
-    "visualAlt": "Demostración de un agente de voz con IA atendiendo una llamada entrante"
+    "visualAlt": "Demostración de un agente de voz con IA atendiendo una llamada entrante",
+    "githubStats": "Estadísticas de GitHub"
   },
   "trust": {
     "title": "Por qué puedes confiar en nosotros",

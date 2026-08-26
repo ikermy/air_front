@@ -8,6 +8,7 @@ import { HeroVisual } from './HeroVisual';
 import { useAuthModal } from '../auth/AuthModalContext';
 import { GITHUB_ORG } from '../config/site';
 import styles from './Hero.module.css';
+import {HeroGitStat} from "./HeroGitStat";
 
 /**
  * Текст первого экрана всё равно приходит в HTML: клиентские
@@ -89,6 +90,9 @@ export function Hero() {
 
         <div className={styles.visual}>
           <HeroVisual />
+          <div className={styles.gitStat}>
+            <HeroGitStat />
+          </div>
         </div>
       </div>
     </section>
