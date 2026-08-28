@@ -501,8 +501,8 @@ export const Mistral_Realtime: React.FC<MistralRealtimeProps> = ({
                         <Form.Item name="languages" label={t("mistralLanguage") || "Язык"}><Input/></Form.Item>
                         <Form.Item name="description" label={t("mistralDescription") || "Описание"}><Input.TextArea rows={2}/></Form.Item>
                         <Form.Item name="tags" label="Tags"><Input/></Form.Item>
-                        <Space><Button onClick={() => editForm.submit()} type="primary" loading={editLoading}>Сохранить</Button><Button
-                            onClick={() => setEditVoiceId(null)}>Отмена</Button></Space>
+                        <Space><Button onClick={() => editForm.submit()} type="primary" loading={editLoading}>{t("save") || "Сохранить"}</Button><Button
+                            onClick={() => setEditVoiceId(null)}>{t("cancel") || "Отмена"}</Button></Space>
                     </Form>}
                     <Collapse
                         ghost
@@ -512,17 +512,17 @@ export const Mistral_Realtime: React.FC<MistralRealtimeProps> = ({
                             key: "create-clone",
                             label: t("mistralCreateNewClone") || "Создать новый клонированный голос",
                             children: <Form form={cloneForm} component="div" layout="vertical" onFinish={cloneVoice}>
-                        <Form.Item name="name" label="Имя нового голоса" rules={[{required: true}]}><Input/></Form.Item>
+                        <Form.Item name="name" label={t("mistralNewVoiceName") || "Имя нового голоса"} rules={[{required: true}]}><Input/></Form.Item>
                         <Form.Item name="languages" label={t("mistralLanguage") || "Язык"}><Input placeholder="en"/></Form.Item>
-                        <Form.Item name="gender" label="Пол">
-                            <Select placeholder="Выберите пол">
+                        <Form.Item name="gender" label={t("mistralGender") || "Пол"}>
+                            <Select placeholder={t("mistralChooseGender") || "Выберите пол"}>
                                 <Select.Option value="male">Male</Select.Option>
                                 <Select.Option value="female">Female</Select.Option>
                                 <Select.Option value="neutral">Neutral</Select.Option>
                             </Select>
                         </Form.Item>                        <Form.Item name="description" label={t("mistralDescription") || "Описание"}><Input.TextArea rows={2}/></Form.Item>
                         <Form.Item name="tags" label="Tags"><Input placeholder="support, warm"/></Form.Item>
-                        <Form.Item label="Аудиосэмпл (WAV/MP3/FLAC/OGG/PCM)">
+                        <Form.Item label={t("mistralAudioSample") || "Аудиосэмпл (WAV/MP3/FLAC/OGG/PCM)"}>
                             <Upload
                                 beforeUpload={() => false}
                                 maxCount={1}
@@ -530,16 +530,16 @@ export const Mistral_Realtime: React.FC<MistralRealtimeProps> = ({
                                 onChange={({fileList: next}) => setFileList(next)}
                                 accept=".wav,.mp3,.flac,.ogg,.pcm"
                             >
-                                <Button icon={<UploadOutlined/>} disabled={recording}>Выбрать файл</Button>
+                                <Button icon={<UploadOutlined/>} disabled={recording}>{t("mistralChooseFile") || "Выбрать файл"}</Button>
                             </Upload>
                             <Button onClick={recording ? stopRecording : startRecording} danger={recording}
                                     style={{marginTop: 8}}>
                                 {recording ? `Остановить запись (${recordingSeconds}/10 с)` : "Записать с микрофона"}
                             </Button>
                             {!recording && recordingSeconds > 0 && recordingSeconds < 3 &&
-                                <div>Минимальная длительность записи — 3 секунды</div>}
+                                <div>{t("mistralMinRecording") || "Минимальная длительность записи — 3 секунды"}</div>}
                         </Form.Item>
-                        <Button onClick={() => cloneForm.submit()} type="primary" loading={cloneLoading}>Создать clone</Button>
+                        <Button onClick={() => cloneForm.submit()} type="primary" loading={cloneLoading}>{t("mistralCreateClone") || "Создать клон"}</Button>
                             </Form>
                         }]}
                     />
@@ -547,8 +547,7 @@ export const Mistral_Realtime: React.FC<MistralRealtimeProps> = ({
                                                                onClick={() => {
                                                                    setCloneFormOpen(true);
                                                                    void deleteVoice(config.voice_clone!.profile_id);
-                                                               }}>Удалить
-                        выбранный custom voice</Button>}
+                                                               }}>{t("mistralDeleteSelectedVoice") || "Удалить выбранный клонированный голос"}</Button>}
                 </>}
             </>}
         </Space>}

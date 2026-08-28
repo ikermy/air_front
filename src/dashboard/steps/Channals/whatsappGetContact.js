@@ -6,8 +6,12 @@ export const whatsappGetContact = async (onProgress = null, t = null) => {
 
     const makeWebSocketRequest = async (authToken) => {
         return new Promise((resolve, reject) => {
+            const wsPath = '/v1/ws/whats/contacts';
+            const wsUrl = window.location.port === '3001'
+                ? `wss://localhost${wsPath}`
+                : `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}${wsPath}`;
             // Токен передается в URL, а не в сообщении
-            const ws = new WebSocket(`/v1/ws/whats/contacts`, [authToken]);
+            const ws = new WebSocket(wsUrl, [authToken]);
             let timeoutId;
             let contacts = [];
             let isCompleted = false;

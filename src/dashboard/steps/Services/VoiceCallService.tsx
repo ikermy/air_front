@@ -23,6 +23,7 @@ import {
 } from "./VoiceCalls/voiceCallGrpc";
 
 const retryDelays = [1000, 2000, 5000, 10000, 30000];
+const maxRetries = 3;
 
 export function VoiceCallService(): React.ReactElement {
     const {t} = useTranslation();
@@ -59,42 +60,77 @@ export function VoiceCallService(): React.ReactElement {
         return raw || t("voiceCallGenericError");
     };
 
+    const isCallNotFound = (e: any): boolean =>
+        e?.code === grpc.Code.NotFound ||
+        e?.code === "NOT_FOUND" ||
+        (typeof e?.message === "string" && e.message.toLowerCase().includes("call not found"));
+
+    const finalizeCall = (finalStatus: "ended" | "error", errorMessage = "") => {
+        if (retryTimerRef.current) {
+            clearTimeout(retryTimerRef.current);
+            retryTimerRef.current = null;
+        }
+        callEndedRef.current = true;
+        streamRef.current?.close();
+        streamRef.current = null;
+        callRef.current = null;
+        sequenceRef.current = -1;
+        setCallId(null);
+        setStatus(finalStatus);
+        if (errorMessage) setError(errorMessage);
+    };
+
     const openStream = (id: string, afterSequence: number) => {
         const current = callRef.current;
         if (!current || current.id !== id || callEndedRef.current) return;
+        if (retryTimerRef.current) {
+            clearTimeout(retryTimerRef.current);
+            retryTimerRef.current = null;
+        }
         streamRef.current?.close();
         streamRef.current = subscribeCallEvents(id, afterSequence, handleEvent, (code, raw) => {
             if (!callRef.current || callRef.current.id !== id || callEndedRef.current) return;
-            if (isRetryableGrpcCode(code)) {
-                const delay = retryDelays[Math.min(retryIndexRef.current++, retryDelays.length - 1)];
-                retryTimerRef.current = setTimeout(() => openStream(id, Math.max(0, sequenceRef.current)), delay);
-            } else {
-                setError(errorText(code, raw));
-                setStatus("error");
+            if (code === grpc.Code.NotFound || (typeof raw === "string" && raw.toLowerCase().includes("call not found"))) {
+                finalizeCall("ended");
+                return;
             }
+            if (isRetryableGrpcCode(code) && retryIndexRef.current < maxRetries) {
+                const delay = retryDelays[Math.min(retryIndexRef.current, retryDelays.length - 1)];
+                retryIndexRef.current++;
+                retryTimerRef.current = setTimeout(() => openStream(id, Math.max(0, sequenceRef.current)), delay);
+                return;
+            }
+            finalizeCall("error", errorText(code, raw));
         });
     };
+
+    const normalizeRole = (role: string): "client" | "model" =>
+        role === "user" || role === "client" ? "client" : "model";
 
     const handleEvent = (event: VoiceCallEvent) => {
         if (event.sequence <= sequenceRef.current) return;
         sequenceRef.current = event.sequence;
-        if (event.type === "CALL_CONNECTED") setStatus("connected");
-        if (event.type === "INPUT_TRANSCRIPT_DELTA") appendTranscriptDelta("client", event.delta);
-        if (event.type === "INPUT_TRANSCRIPT_DONE") completeTranscript("client", event.text);
-        if (event.type === "RESPONSE_TEXT_DELTA") {
-            const text = event.delta || event.text;
-            if (text.trim().toLowerCase() === "пользователь перебил ответ") markInterrupted();
-            else appendTranscriptDelta("model", text);
+
+        if (event.type === "call") {
+            if (event.phase === "connected") setStatus("connected");
+            if (event.phase === "ended") finalizeCall("ended");
+            return;
         }
-        if (event.type === "RESPONSE_DONE") completeTranscript("model", event.text);
-        if (event.type === "ERROR") setError(event.error || t("voiceCallGenericError"));
-        if (event.type === "CALL_ENDED") {
-            callEndedRef.current = true;
-            streamRef.current?.close();
-            streamRef.current = null;
-            callRef.current = null;
-            setCallId(null);
-            setStatus("ended");
+
+        if (event.type === "transcript") {
+            if (event.phase === "delta") appendTranscriptDelta(normalizeRole(event.role), event.delta || event.text || "");
+            if (event.phase === "done") completeTranscript(normalizeRole(event.role), event.text || "");
+            return;
+        }
+
+        if (event.type === "error") {
+            setError(event.error || event.text || t("voiceCallGenericError"));
+            return;
+        }
+
+        if (event.type === "interrupted") {
+            markInterrupted();
+            return;
         }
     };
 
@@ -125,7 +161,12 @@ export function VoiceCallService(): React.ReactElement {
         setStatus("ending");
         try {
             await hangupCall(current.id);
+            finalizeCall("ended");
         } catch (e: any) {
+            if (isCallNotFound(e)) {
+                finalizeCall("ended");
+                return;
+            }
             setError(errorText(e.code, e.message));
             setStatus("error");
         }
@@ -168,7 +209,7 @@ export function VoiceCallService(): React.ReactElement {
             if (index < 0) return messages;
             const targetIndex = messages.length - 1 - index;
             return messages.map((message, currentIndex) => currentIndex === targetIndex
-                ? {...message, notice: "пользователь перебил ответ"} : message);
+                ? {...message, notice: t("voiceCallUserInterrupted")} : message);
         });
     };
 

@@ -1,5 +1,5 @@
 import React, {useState, useEffect, useCallback} from "react";
-import {Layout, Menu, Progress, Card, Typography, Space, Tag} from "antd";
+import {Layout, Menu, Progress, Card, Typography, Avatar, Flex, Divider, Tooltip} from "antd";
 import {
     AndroidOutlined,
     NotificationOutlined,
@@ -7,8 +7,6 @@ import {
     DollarOutlined,
     UserOutlined,
     WalletOutlined,
-    CalendarOutlined,
-    CrownOutlined,
     CommentOutlined, DatabaseOutlined
 } from "@ant-design/icons";
 import {useNavigate, useLocation} from "react-router-dom";
@@ -21,7 +19,6 @@ import {FaDev, FaHouseUser, FaTelegramPlane, FaWhatsapp, FaInstagram} from "reac
 import {GoLog} from "react-icons/go";
 import {GiConversation} from "react-icons/gi";
 import {DashboardHeader} from "./DashboardHeader";
-import {PiUserCircleDashedThin} from "react-icons/pi";
 import {getOrSetUserId} from "../utils/getOrSetUserId";
 import {GrServices} from "react-icons/gr";
 import {useInstantNotifications} from "../hooks/useInstantNotifications";
@@ -194,31 +191,44 @@ export function Dashboard({handleError}) {
     const getRoleColor = (role) => {
         switch (role) {
             case 'Developer':
-                return 'purple';
+                return '#B57BFF';
             case 'Demo':
-                return 'red';
+                return '#FF7A7A';
             case 'Service':
-                return 'gold';
+                return '#FBBF24';
             case 'User':
-                return 'blue';
+                return '#60A5FA';
             default:
-                return 'white';
+                return '#FFFFFF';
         }
     };
 
-    // Функция для получения иконки роли
-    const getRoleIcon = (role) => {
-        switch (role) {
-            case 'Developer':
-                return <FaDev/>;
-            case 'Demo':
-                return <PiUserCircleDashedThin/>;
-            case 'Service':
-                return <CrownOutlined/>;
-            default:
-                return <UserOutlined/>;
-        }
-    };
+    const channelItems = [
+        {key: 'Telegram_bot', label: 'Telegram Bot', icon: <FaTelegramPlane style={{fontSize: 13, color: '#fff'}}/>, background: 'linear-gradient(135deg, #3B82F6, #2563EB)', borderColor: 'rgba(37, 99, 235, 0.5)', boxShadow: '0 3px 8px rgba(37, 99, 235, 0.3)'},
+        {key: 'Telegram_user', label: 'Telegram', icon: <FaTelegramPlane style={{fontSize: 13, color: '#fff'}}/>, background: 'linear-gradient(135deg, #0EA5E9, #0284C7)', borderColor: 'rgba(2, 132, 199, 0.5)', boxShadow: '0 3px 8px rgba(2, 132, 199, 0.3)'},
+        {key: 'WhatsApp', label: 'WhatsApp', icon: <FaWhatsapp style={{fontSize: 13, color: '#fff'}}/>, background: 'linear-gradient(135deg, #10B981, #059669)', borderColor: 'rgba(5, 150, 105, 0.5)', boxShadow: '0 3px 8px rgba(5, 150, 105, 0.3)'},
+        {key: 'Widget', label: 'Виджет', icon: <CommentOutlined style={{fontSize: 13, color: '#fff'}}/>, background: 'linear-gradient(135deg, #8B5CF6, #7C3AED)', borderColor: 'rgba(124, 58, 237, 0.5)', boxShadow: '0 3px 8px rgba(124, 58, 237, 0.3)'},
+        {key: 'Instagram', label: 'Instagram', icon: <FaInstagram style={{fontSize: 13, color: '#fff'}}/>, background: 'linear-gradient(135deg, #EC4899, #DB2777)', borderColor: 'rgba(219, 39, 119, 0.5)', boxShadow: '0 3px 8px rgba(219, 39, 119, 0.3)'},
+        {key: 'Avito', label: 'Avito', icon: <AvitoIcon size={15} style={{color: '#fff'}}/>, background: 'linear-gradient(135deg, #3B82F6, #2563EB)', borderColor: 'rgba(37, 99, 235, 0.5)', boxShadow: '0 3px 8px rgba(37, 99, 235, 0.3)'}
+    ];
+
+    const activeChannels = userData ? channelItems.filter((ch) => userData[ch.key] === 1) : [];
+
+    const hasSubscription = !!userData?.EndDate;
+    const subscriptionTitle = hasSubscription
+        ? `${t('dashboardSubscription')}: ${userData.EndDate}`
+        : `${t('dashboardSubscription')}: ${t('dashboardAbsent')}`;
+
+    const subscriptionColor = (() => {
+        if (!hasSubscription) return '#9CA3AF';
+        const end = new Date(`${userData.EndDate}T00:00:00`);
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const daysLeft = Math.ceil((end.getTime() - today.getTime()) / 86400000);
+        if (daysLeft < 0) return '#EF4444';
+        if (daysLeft < 7) return '#FBBF24';
+        return '#34D399';
+    })();
 
     return (
         <>
@@ -234,328 +244,152 @@ export function Dashboard({handleError}) {
                                 size="small"
                                 styles={{body: {padding: '12px'}}}
                             >
-                                <Space orientation="vertical" size={6} style={{width: '100%'}}>
-                                    {/* Профиль */}
-                                    <div style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: 4,
-                                        padding: '6px',
-                                        background: 'rgba(255, 255, 255, 0.15)',
-                                        borderRadius: '8px',
-                                        backdropFilter: 'blur(10px)',
-                                        border: '1px solid rgba(255, 255, 255, 0.25)'
-                                    }}>
-                                        <div style={{
-                                            width: 36,
-                                            height: 36,
-                                            borderRadius: '50%',
-                                            background: 'rgba(255, 255, 255, 0.25)',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center'
-                                        }}>
-                                            <UserOutlined style={{fontSize: 20, color: '#fff'}}/>
-                                        </div>
-                                        <div style={{flex: 1, minWidth: 0}}>
-                                            <Text strong style={{
-                                                fontSize: 13,
-                                                display: 'block',
-                                                lineHeight: 1.3,
-                                                color: '#fff'
-                                            }}>
+                                <Flex vertical gap={12}>
+                                    {/* Профиль + статус подписки */}
+                                    <Flex align="center" gap={10}>
+                                        {!showSimpleAuth ? (
+                                            <Tooltip placement="right" title={subscriptionTitle}>
+                                                <span className="avatar-wrap">
+                                                    <Avatar
+                                                        size={40}
+                                                        icon={<UserOutlined style={{fontSize: 20, color: '#fff'}}/>}
+                                                        style={{
+                                                            background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0.15))',
+                                                            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)'
+                                                        }}
+                                                    />
+                                                    <span className="avatar-status-dot" style={{
+                                                        background: subscriptionColor
+                                                    }}/>
+                                                </span>
+                                            </Tooltip>
+                                        ) : (
+                                            <Avatar
+                                                size={40}
+                                                icon={<UserOutlined style={{fontSize: 20, color: '#fff'}}/>}
+                                                style={{
+                                                    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0.15))',
+                                                    flexShrink: 0,
+                                                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)'
+                                                }}
+                                            />
+                                        )}
+                                        <Flex vertical gap={3} style={{flex: 1, minWidth: 0, overflow: 'hidden'}}>
+                                            <Text strong ellipsis style={{fontSize: 13, lineHeight: 1.3, color: '#fff'}}>
                                                 {userData.Name}
                                             </Text>
-                                            <Tag
-                                                size="small"
-                                                color={getRoleColor(userData.RoleName)}
-                                                icon={getRoleIcon(userData.RoleName)}
-                                                style={{margin: '3px 0 0 0', fontSize: 10}}
-                                            >
-                                                {t(userData.RoleName.toLowerCase())}
-                                            </Tag>
-                                        </div>
-                                    </div>
+                                            <Flex align="center" gap={5} style={{minWidth: 0, overflow: 'hidden'}}>
+                                                <span style={{
+                                                    width: 6,
+                                                    height: 6,
+                                                    borderRadius: '50%',
+                                                    background: getRoleColor(userData.RoleName),
+                                                    boxShadow: `0 0 6px ${getRoleColor(userData.RoleName)}`,
+                                                    flexShrink: 0
+                                                }}/>
+                                                <Text ellipsis style={{fontSize: 11, lineHeight: 1.2, color: 'rgba(255, 255, 255, 0.82)'}}>
+                                                    {t(userData.RoleName.toLowerCase())}
+                                                </Text>
+                                            </Flex>
+                                        </Flex>
+                                    </Flex>
 
                                     {/* Баланс */}
-                                    {!showSimpleAuth && userData.Balance !== null && userData.Balance !== undefined && (
-                                        <div style={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: 4,
-                                            padding: '6px 10px',
-                                            background: 'linear-gradient(90deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.5))',
-                                            borderRadius: '8px',
-                                            border: '1px solid rgba(16, 185, 129, 0.7)'
-                                        }}>
-                                            <WalletOutlined style={{fontSize: 16, color: '#34D399'}}/>
-                                            <Text style={{
-                                                fontSize: 11,
-                                                color: 'rgba(255, 255, 255, 0.9)',
-                                                fontWeight: 500
-                                            }}>{t('dashboardBalance') || "Баланс"}:</Text>
-                                            <Text strong style={{
-                                                fontSize: 13,
-                                                marginLeft: 'auto',
-                                                color: '#fff',
-                                                fontWeight: 700
-                                            }}>
-                                                {userData.Balance} {userData.CurrencyName}
-                                            </Text>
-                                        </div>
-                                    )}
+                                    {/*{!showSimpleAuth && userData.Balance !== null && userData.Balance !== undefined && (*/}
+                                    {/*    <div style={{*/}
+                                    {/*        display: 'flex',*/}
+                                    {/*        alignItems: 'center',*/}
+                                    {/*        gap: 4,*/}
+                                    {/*        padding: '6px 10px',*/}
+                                    {/*        background: 'linear-gradient(90deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.5))',*/}
+                                    {/*        borderRadius: '8px',*/}
+                                    {/*        border: '1px solid rgba(16, 185, 129, 0.7)'*/}
+                                    {/*    }}>*/}
+                                    {/*        <WalletOutlined style={{fontSize: 16, color: '#34D399'}}/>*/}
+                                    {/*        <Text style={{*/}
+                                    {/*            fontSize: 11,*/}
+                                    {/*            color: 'rgba(255, 255, 255, 0.9)',*/}
+                                    {/*            fontWeight: 500*/}
+                                    {/*        }}>{t('dashboardBalance') || "Баланс"}:</Text>*/}
+                                    {/*        <Text strong style={{*/}
+                                    {/*            fontSize: 13,*/}
+                                    {/*            marginLeft: 'auto',*/}
+                                    {/*            color: '#fff',*/}
+                                    {/*            fontWeight: 700*/}
+                                    {/*        }}>*/}
+                                    {/*            {userData.Balance} {userData.CurrencyName}*/}
+                                    {/*        </Text>*/}
+                                    {/*    </div>*/}
+                                    {/*)}*/}
 
-                                    {/* Подписка */}
-                                    {!showSimpleAuth && (
-                                        <div style={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: 4,
-                                            padding: '6px 10px',
-                                            background: userData.EndDate
-                                                ? 'linear-gradient(90deg, rgba(59, 130, 246, 0.7), rgba(37, 99, 235, 0.5))'
-                                                : 'linear-gradient(90deg, rgba(107, 114, 128, 0.7), rgba(75, 85, 99, 0.5))',
-                                            borderRadius: '8px',
-                                            border: userData.EndDate
-                                                ? '1px solid rgba(59, 130, 246, 1)'
-                                                : '1px solid rgba(107, 114, 128, 1)'
-                                        }}>
-                                            <CalendarOutlined style={{
-                                                fontSize: 16,
-                                                color: userData.EndDate ? '#60A5FA' : '#9CA3AF'
-                                            }}/>
-                                            <Text style={{
-                                                fontSize: 11,
-                                                color: 'rgba(255, 255, 255, 0.9)',
-                                                fontWeight: 500
-                                            }}>
-                                                {userData.EndDate ? (t('dashboardUntil') || "До") : (t('dashboardSubscription') || "Подписка")}
-                                            </Text>
-                                            <Text strong style={{
-                                                fontSize: 12,
-                                                marginLeft: 'auto',
-                                                color: '#fff',
-                                                fontWeight: 700
-                                            }}>
-                                                {userData.EndDate || (t('dashboardAbsent') || "отсутствует")}
-                                            </Text>
-                                        </div>
-                                    )}
+                                    {/* Хранилище */}
+                                    {!showSimpleAuth && (() => {
+                                        const toMB = (bytes) => (bytes || 0) / (1024 * 1024);
+                                        const fmtMB = (mb) => mb >= 1024 ? `${(mb / 1024).toFixed(1)} Gb` : `${Math.round(mb)} Mb`;
+                                        const usedMB = toMB(userData.StorageUsed);
+                                        const limitMB = toMB(userData.StorageLimit);
+                                        const percent = limitMB ? Math.min(100, Math.round((usedMB / limitMB) * 100)) : 0;
+                                        const isCritical = percent >= 90;
 
-                                    {/* Сообщения */}
-                                    {!showSimpleAuth && (
-                                        <div style={{
-                                            padding: '6px 8px',
-                                            background: 'linear-gradient(90deg, rgba(245, 158, 11, 0.18), rgba(217, 119, 6, 0.5))',
-                                            borderRadius: '8px',
-                                            border: '1px solid rgba(245, 158, 11, 0.7)'
-                                        }}>
-                                            <div style={{
-                                                display: 'flex',
-                                                flexDirection: 'column',
-                                                gap: 4,
-                                                marginBottom: 6
-                                            }}>
-                                                <div style={{display: 'flex', alignItems: 'center', gap: 6}}>
-                                                    <DatabaseOutlined style={{fontSize: 14, color: '#FCD34D'}}/>
-                                                    <Text strong
-                                                          style={{fontSize: 12, color: '#fff', marginLeft: 'auto'}}>
-                                                        {userData.StorageUsed || 0}/{userData.StorageLimit || 0}
-                                                    </Text>
-                                                </div>
+                                        return (
+                                            <>
+                                                <Divider style={{margin: 0, borderColor: 'rgba(255, 255, 255, 0.14)'}}/>
+                                                <Flex vertical gap={6} style={{width: '100%'}}>
+                                                    <Flex align="center" justify="space-between" style={{width: '100%'}}>
+                                                        <Flex align="center" gap={6}>
+                                                            <span className="user-hint-icon" style={{background: 'rgba(245, 158, 11, 0.22)'}}>
+                                                                <DatabaseOutlined style={{fontSize: 13, color: '#FCD34D'}}/>
+                                                            </span>
+                                                            <Text style={{fontSize: 11, color: 'rgba(255, 255, 255, 0.75)'}}>
+                                                                {t('userStorage')}
+                                                            </Text>
+                                                        </Flex>
+                                                        <Text strong style={{fontSize: 11, color: isCritical ? '#FCA5A5' : '#FDE68A'}}>
+                                                            {percent}%
+                                                        </Text>
+                                                    </Flex>
 
-                                                <Progress
-                                                    percent={userData.StorageLimit ? Math.round((userData.StorageUsed / userData.StorageLimit) * 100) : 0}
-                                                    size="small"
-                                                    showInfo={false}
-                                                    strokeColor={{
-                                                        '0%': '#34D399',
-                                                        '75%': '#FBBF24',
-                                                        '90%': '#F87171'
-                                                    }}
-                                                    railColor="rgba(255, 255, 255, 0.2)"
-                                                    style={{width: '100%'}}
-                                                />
-                                            </div>
-                                        </div>
-                                    )}
+                                                    <Progress
+                                                        percent={percent}
+                                                        size="small"
+                                                        showInfo={false}
+                                                        strokeColor={isCritical ? '#F87171' : '#FBBF24'}
+                                                        railColor="rgba(255, 255, 255, 0.2)"
+                                                        style={{width: '100%'}}
+                                                    />
+                                                    <Flex align="center" justify="space-between" style={{width: '100%'}}>
+                                                        <Text style={{fontSize: 10, color: 'rgba(255, 255, 255, 0.55)'}}>
+                                                            {fmtMB(usedMB)}
+                                                        </Text>
+                                                        <Text style={{fontSize: 10, color: 'rgba(255, 255, 255, 0.55)'}}>
+                                                            {fmtMB(limitMB)}
+                                                        </Text>
+                                                    </Flex>
+                                                </Flex>
+                                            </>
+                                        );
+                                    })()}
 
                                     {/* Каналы */}
-                                    {(userData.Telegram_bot === 1 || userData.Telegram_user === 1 || userData.WhatsApp === 1 || userData.Widget === 1 || userData.Instagram === 1) && (
-                                        <div style={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'space-around',
-                                            marginTop: 4,
-                                            gap: 2,
-                                            flexWrap: 'wrap'
-                                        }}>
-                                            {/* Telegram Bot */}
-                                            {userData.Telegram_bot === 1 && (
-                                                <div style={{
-                                                    display: 'flex',
-                                                    flexDirection: 'column',
-                                                    alignItems: 'center'
-                                                }}>
-                                                    <div style={{
-                                                        width: 28,
-                                                        height: 28,
-                                                        borderRadius: '6px',
-                                                        background: 'linear-gradient(135deg, #3B82F6, #2563EB)',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
-                                                        border: '2px solid rgba(37, 99, 235, 0.5)',
-                                                        boxShadow: '0 3px 8px rgba(37, 99, 235, 0.3)',
-                                                        transition: 'all 0.3s ease'
-                                                    }}>
-                                                        <FaTelegramPlane style={{
-                                                            fontSize: 14,
-                                                            color: '#fff'
-                                                        }}/>
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            {/* Telegram User */}
-                                            {userData.Telegram_user === 1 && (
-                                                <div style={{
-                                                    display: 'flex',
-                                                    flexDirection: 'column',
-                                                    alignItems: 'center'
-                                                }}>
-                                                    <div style={{
-                                                        width: 28,
-                                                        height: 28,
-                                                        borderRadius: '6px',
-                                                        background: 'linear-gradient(135deg, #0EA5E9, #0284C7)',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
-                                                        border: '2px solid rgba(2, 132, 199, 0.5)',
-                                                        boxShadow: '0 3px 8px rgba(2, 132, 199, 0.3)',
-                                                        transition: 'all 0.3s ease'
-                                                    }}>
-                                                        <FaTelegramPlane style={{
-                                                            fontSize: 14,
-                                                            color: '#fff'
-                                                        }}/>
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            {/* WhatsApp */}
-                                            {userData.WhatsApp === 1 && (
-                                                <div style={{
-                                                    display: 'flex',
-                                                    flexDirection: 'column',
-                                                    alignItems: 'center'
-                                                }}>
-                                                    <div style={{
-                                                        width: 28,
-                                                        height: 28,
-                                                        borderRadius: '6px',
-                                                        background: 'linear-gradient(135deg, #10B981, #059669)',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
-                                                        border: '2px solid rgba(5, 150, 105, 0.5)',
-                                                        boxShadow: '0 3px 8px rgba(5, 150, 105, 0.3)',
-                                                        transition: 'all 0.3s ease'
-                                                    }}>
-                                                        <FaWhatsapp style={{
-                                                            fontSize: 14,
-                                                            color: '#fff'
-                                                        }}/>
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            {/* Widget */}
-                                            {userData.Widget === 1 && (
-                                                <div style={{
-                                                    display: 'flex',
-                                                    flexDirection: 'column',
-                                                    alignItems: 'center'
-                                                }}>
-                                                    <div style={{
-                                                        width: 28,
-                                                        height: 28,
-                                                        borderRadius: '6px',
-                                                        background: 'linear-gradient(135deg, #8B5CF6, #7C3AED)',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
-                                                        border: '2px solid rgba(124, 58, 237, 0.5)',
-                                                        boxShadow: '0 3px 8px rgba(124, 58, 237, 0.3)',
-                                                        transition: 'all 0.3s ease'
-                                                    }}>
-                                                        <CommentOutlined style={{
-                                                            fontSize: 14,
-                                                            color: '#fff'
-                                                        }}/>
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            {/* Instagram */}
-                                            {userData.Instagram === 1 && (
-                                                <div style={{
-                                                    display: 'flex',
-                                                    flexDirection: 'column',
-                                                    alignItems: 'center'
-                                                }}>
-                                                    <div style={{
-                                                        width: 28,
-                                                        height: 28,
-                                                        borderRadius: '6px',
-                                                        background: 'linear-gradient(135deg, #EC4899, #DB2777)',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
-                                                        border: '2px solid rgba(219, 39, 119, 0.5)',
-                                                        boxShadow: '0 3px 8px rgba(219, 39, 119, 0.3)',
-                                                        transition: 'all 0.3s ease'
-                                                    }}>
-                                                        <FaInstagram style={{
-                                                            fontSize: 14,
-                                                            color: '#fff'
-                                                        }}/>
-                                                    </div>
-                                                </div>
-                                            )}
-
-                                            {/* Avito */}
-                                            {userData.Avito === 1 && (
-                                                <div style={{
-                                                    display: 'flex',
-                                                    flexDirection: 'column',
-                                                    alignItems: 'center'
-                                                }}>
-                                                    <div style={{
-                                                        width: 28,
-                                                        height: 28,
-                                                        borderRadius: '6px',
-                                                        background: 'linear-gradient(135deg, #3B82F6, #2563EB)',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
-                                                        border: '2px solid rgba(37, 99, 235, 0.5)',
-                                                        boxShadow: '0 3px 8px rgba(37, 99, 235, 0.3)',
-                                                        transition: 'all 0.3s ease'
-                                                    }}>
-                                                        <AvitoIcon style={{
-                                                            fontSize: 14,
-                                                            color: '#fff'
-                                                        }}
-                                                                   size={15}
-                                                        />
-                                                    </div>
-                                                </div>
-                                            )}
-                                        </div>
+                                    {activeChannels.length > 0 && (
+                                        <>
+                                            <Divider style={{margin: 0, borderColor: 'rgba(255, 255, 255, 0.14)'}}/>
+                                            <Flex align="center" justify="center" gap={4} wrap>
+                                                {activeChannels.map((ch) => (
+                                                    <Tooltip key={ch.key} title={ch.label} placement="bottom">
+                                                        <span className="dashboard-channel-icon" style={{
+                                                            background: ch.background,
+                                                            borderColor: ch.borderColor,
+                                                            boxShadow: ch.boxShadow
+                                                        }}>
+                                                            {ch.icon}
+                                                        </span>
+                                                    </Tooltip>
+                                                ))}
+                                            </Flex>
+                                        </>
                                     )}
-                                </Space>
+                                </Flex>
                             </Card>
                         </div>
                     )}

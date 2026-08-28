@@ -38,7 +38,10 @@ export class WhatsAuthServive {
 
     connectWebSocket(token) {
         if (typeof window === 'undefined') return;
-        const wsUrl = `/v1/ws/whats`;
+        const wsPath = '/v1/ws/whats';
+        const wsUrl = window.location.port === '3001'
+            ? `wss://localhost${wsPath}`
+            : `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}${wsPath}`;
 
         this.socket = new WebSocket(wsUrl, [token]);
 

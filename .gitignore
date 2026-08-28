@@ -10,6 +10,9 @@ help.txt
 # testing
 /coverage
 
+#kilo
+.kilo
+
 # production
 /build
 /dist/

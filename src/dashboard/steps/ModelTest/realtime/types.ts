@@ -55,27 +55,35 @@ export interface RealtimeResponseResult {
   sentAt?: number;
 }
 
+export type RealtimeEventType =
+    | 'ready'
+    | 'transcript'
+    | 'response'
+    | 'speech'
+    | 'token_usage'
+    | 'audio_stop'
+    | 'error';
+
+export type RealtimeEventRole = 'user' | 'assistant';
+
+export type RealtimeEventPhase =
+    | 'delta'
+    | 'done'
+    | 'started'
+    | 'stopped';
+
 /**
- * Все события от сервера.
+ * Все события от сервера (пост-миграция).
  *
- * OpenAI:  binary → transcript_delta → token_usage → response_done
- *          binary → transcript_delta → token_usage → assist{files,...}
- * Google:  binary → transcript_delta → response_done
- *          audio_stop (barge-in / конец реплики ассистента)
+ * Поток ответа: binary → transcript(delta) → token_usage → response(done)
+ * Поток ввода:  binary → transcript(user/delta) → transcript(user/done)
  */
 export interface RealtimeEvent {
-  type:
-      | 'ready'
-      | 'transcript_delta'
-      | 'input_transcript_done'
-      | 'response_done'
-      | 'token_usage'
-      | 'assist'
-      | 'speech_started'   // OpenAI VAD: пользователь начал говорить
-      | 'speech_stopped'   // OpenAI VAD: пользователь замолчал
-      | 'audio_stop'       // Google: остановить воспроизведение (barge-in или конец реплики)
-      | 'error';
+  type: RealtimeEventType;
+  role?: RealtimeEventRole;
+  phase?: RealtimeEventPhase;
   text?: string;
+  delta?: string;
   error?: string;
   usage?: RealtimeTokenUsage;
   message?: string;

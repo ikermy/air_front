@@ -1366,6 +1366,7 @@
     "voiceCallNotFound": "No se encontró la llamada o ya ha finalizado.",
     "voiceCallBackendUnavailable": "El servicio de llamadas no está disponible temporalmente.",
     "voiceCallGenericError": "No se pudo completar la operación de llamada.",
+    "voiceCallUserInterrupted": "El usuario interrumpió la respuesta",
     "leadHunterUnavailable":  "El servicio Lead Hunter no está disponible",
     "serviceAdded":  "Servicio agregado exitosamente",
     "serviceStart":  "Iniciar Servicio",
@@ -2643,7 +2644,7 @@
     "mistralCreateClone": "Crear clon", "mistralLanguageOptional": "Opcional", "mistralMinRecording": "La grabación debe durar al menos 3 segundos",
     "mistralRealtimeTitle": "Mistral realtime", "mistralRealtimeDesc": "Modo de voz Mistral Voxtral STT/TTS", "mistralRealtimeEnableLabel": "Activar modo de voz",
     "mistralPresetVoice": "Voz preestablecida", "mistralCustomVoice": "Voz clonada", "mistralListen": "Escuchar", "mistralCreateNewClone": "Crear una nueva voz clonada",
-    "mistralEditVoice": "Editar", "mistralName": "Nombre", "mistralLanguage": "Idioma", "mistralDescription": "Descripción",
+    "mistralEditVoice": "Editar", "mistralDeleteSelectedVoice": "Eliminar voz clonada seleccionada", "mistralName": "Nombre", "mistralLanguage": "Idioma", "mistralDescription": "Descripción",
     "mistralGender": "Género", "mistralChooseGender": "Elija el género", "mistralMale": "Masculino", "mistralFemale": "Femenino", "mistralNeutral": "Neutral", "mistralTags": "Etiquetas",
     "mistralStopRecording": "Detener grabación", "mistralRecordMicrophone": "Grabar desde el micrófono", "mistralSelectAudio": "Elija un archivo de audio", "mistralUnsupportedAudio": "Formato de audio no compatible",
     "mistralFileTooLarge": "El archivo de audio no debe superar 25 MB", "mistralRecordingTooShort": "La grabación debe durar al menos 3 segundos", "mistralVoiceCreated": "Voz creada", "mistralVoiceDeleted": "Voz eliminada", "mistralVoiceUpdated": "Datos de voz actualizados", "mistralMicrophoneUnsupported": "El micrófono no es compatible con el navegador", "mistralTagsPlaceholder": "support, warm"

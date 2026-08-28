@@ -270,8 +270,8 @@ const voice: Scenario = {
  *
  * Партитура повторяет реальный поток gRPC-событий из
  * dashboard/steps/Services/VoiceCallService.tsx:
- *   starting → CALL_CONNECTED → INPUT_TRANSCRIPT_* (речь абонента)
- *   → RESPONSE_TEXT_* (ответ модели) → CALL_ENDED.
+ *   starting → call/connected → transcript/* (речь абонента)
+ *   → transcript/assistant/* (ответ модели) → call/ended.
  *
  * Перебивание показано намеренно: в реальном коде есть отдельная ветка
  * markInterrupted(), и это самая честная демонстрация того, что звонок

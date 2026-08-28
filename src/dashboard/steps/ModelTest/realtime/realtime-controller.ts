@@ -7,11 +7,10 @@
  *   idle → connecting → ready → listening ⇄ speaking
  *        ↘ error (любой момент) → idle (через 3с)
  *
- * Протокол событий от сервера:
- *   OpenAI:  binary → transcript_delta → token_usage → response_done
- *            binary → transcript_delta → token_usage → assist{files,...}
- *   Google:  binary → transcript_delta → response_done
- *            audio_stop (barge-in: остановить воспроизведение, вернуться в listening)
+ * Протокол событий от сервера (пост-миграция):
+ *   binary → transcript/delta → token_usage → response/done
+ *   ввод:   binary → transcript(user/delta) → transcript(user/done)
+ *   audio_stop (barge-in: остановить воспроизведение, вернуться в listening)
  */
 
 import {
@@ -46,15 +45,16 @@ export class RealtimeController {
   private ws       = new RealtimeWebSocket();
   private errorTimer: ReturnType<typeof setTimeout> | null = null;
 
-  private transcriptBuffer   = '';
+  private transcriptBuffer      = '';
+  private userTranscriptBuffer  = '';
   private pendingTokenUsage: RealtimeTokenUsage | undefined = undefined;
   private firstAudioAt:      number | undefined = undefined;
   private responseDoneAt:    number | undefined = undefined;
   private sentAt:            number | undefined = undefined;
   /**
-   * true после response_done/assist/speech_started/input_transcript_done —
-   * означает что следующий бинарный фрейм начинает НОВЫЙ ответ.
-   * При этом нужно flush() чтобы прервать старое воспроизведение.
+   * true после response/done — означает что следующий бинарный фрейм
+   * начинает НОВЫЙ ответ. При этом нужно flush() чтобы прервать старое
+   * воспроизведение.
    */
   private _expectingNewResponse = false;
 
@@ -128,18 +128,30 @@ export class RealtimeController {
         }
         break;
 
-      case 'transcript_delta':
-        if (event.text) {
-          this.transcriptBuffer += event.text;
-          this.onTranscriptDelta(event.text);
+      case 'transcript':
+        if (event.phase === 'delta') {
+          const delta = event.delta ?? event.text ?? '';
+
+          if (event.role === 'user') {
+            this.userTranscriptBuffer += delta;
+          } else if (event.role === 'assistant') {
+            this.transcriptBuffer += delta;
+            this.onTranscriptDelta(delta);
+          }
+        }
+
+        if (event.phase === 'done' && event.role === 'user') {
+          if (event.text) this.onInputTranscript(event.text);
+          this.sentAt = Date.now();
+          this.firstAudioAt = undefined;
+          // НЕ выставляем _expectingNewResponse — это делает speech / audio_stop
         }
         break;
 
-      case 'input_transcript_done':
-        if (event.text) this.onInputTranscript(event.text);
-        this.sentAt = Date.now();
-        this.firstAudioAt = undefined;
-        // НЕ выставляем _expectingNewResponse — это делает speech_started / audio_stop
+      case 'response':
+        if (event.phase === 'done') {
+          this._finishResponse(event);
+        }
         break;
 
       case 'token_usage':
@@ -147,10 +159,6 @@ export class RealtimeController {
           this.pendingTokenUsage = event.usage;
           this.onTokenUsage(event.usage);
         }
-        break;
-
-      case 'response_done':
-        this._finishResponse(event);
         break;
 
         /**
@@ -166,40 +174,38 @@ export class RealtimeController {
       case 'audio_stop':
         this.player.flush();
         this._expectingNewResponse = true;
-        this.transcriptBuffer  = '';
-        this.pendingTokenUsage = undefined;
-        this.firstAudioAt      = undefined;
+        this.transcriptBuffer     = '';
+        this.userTranscriptBuffer = '';
+        this.pendingTokenUsage    = undefined;
+        this.firstAudioAt         = undefined;
         this.onSpeechStarted();   // сброс streaming bubble в UI
         this._setState('listening');
         break;
 
         /**
-         * OpenAI VAD: пользователь начал говорить.
+         * VAD: пользователь начал говорить.
          * У Google аналогом является audio_stop.
          */
-      case 'speech_started':
-        if (this.provider === 'google') {
-          // Google не должен слать speech_started, но на всякий случай
-          // обрабатываем как audio_stop
-          this.player.flush();
+      case 'speech':
+        if (event.phase === 'started') {
+          if (this.provider === 'google') {
+            // Google не должен слать speech_started, но на всякий случай
+            // обрабатываем как audio_stop
+            this.player.flush();
+          }
+          this.transcriptBuffer      = '';
+          this.userTranscriptBuffer  = '';
+          this.pendingTokenUsage     = undefined;
+          this.firstAudioAt          = undefined;
+          // flush произойдёт при первом бинарном фрейме нового ответа
+          this._expectingNewResponse = true;
+          this.onSpeechStarted();
+          this._setState('listening');
+        } else if (event.phase === 'stopped') {
+          this.sentAt = Date.now();
+          this.firstAudioAt = undefined;
+          console.log('[RealtimeController] speech/stopped → ждём ответа');
         }
-        this.transcriptBuffer      = '';
-        this.pendingTokenUsage     = undefined;
-        this.firstAudioAt          = undefined;
-        // flush произойдёт при первом бинарном фрейме нового ответа
-        this._expectingNewResponse = true;
-        this.onSpeechStarted();
-        this._setState('listening');
-        break;
-
-      case 'speech_stopped':
-        this.sentAt = Date.now();
-        this.firstAudioAt = undefined;
-        console.log('[RealtimeController] speech_stopped → ждём ответа');
-        break;
-
-      case 'assist':
-        this._finishResponse(event);
         break;
 
       case 'error':
@@ -236,6 +242,7 @@ export class RealtimeController {
     this.onResponseDone(result);
 
     this.transcriptBuffer      = '';
+    this.userTranscriptBuffer  = '';
     this.pendingTokenUsage     = undefined;
     this.firstAudioAt          = undefined;
     this.responseDoneAt        = undefined;
@@ -273,6 +280,7 @@ export class RealtimeController {
     this.ws.close();
     this.player.destroy();
     this.transcriptBuffer      = '';
+    this.userTranscriptBuffer  = '';
     this.pendingTokenUsage     = undefined;
     this.firstAudioAt          = undefined;
     this.responseDoneAt        = undefined;

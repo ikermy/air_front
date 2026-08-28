@@ -1,9 +1,13 @@
 // package: calls.v1
-// file: src/dashboard/steps/Services/VoiceCalls/calls.proto
+// file: calls.proto
 
 import * as jspb from "google-protobuf";
+import * as google_protobuf_struct_pb from "google-protobuf/google/protobuf/struct_pb";
 
 export class StartOutgoingCallRequest extends jspb.Message {
+  getUserId(): number;
+  setUserId(value: number): void;
+
   getProvider(): CallProviderMap[keyof CallProviderMap];
   setProvider(value: CallProviderMap[keyof CallProviderMap]): void;
 
@@ -22,6 +26,7 @@ export class StartOutgoingCallRequest extends jspb.Message {
 
 export namespace StartOutgoingCallRequest {
   export type AsObject = {
+    userId: number,
     provider: CallProviderMap[keyof CallProviderMap],
     target: string,
   }
@@ -56,6 +61,9 @@ export namespace StartOutgoingCallResponse {
 }
 
 export class SubscribeCallEventsRequest extends jspb.Message {
+  getUserId(): number;
+  setUserId(value: number): void;
+
   getCallId(): string;
   setCallId(value: string): void;
 
@@ -74,12 +82,16 @@ export class SubscribeCallEventsRequest extends jspb.Message {
 
 export namespace SubscribeCallEventsRequest {
   export type AsObject = {
+    userId: number,
     callId: string,
     afterSequence: number,
   }
 }
 
 export class HangupCallRequest extends jspb.Message {
+  getUserId(): number;
+  setUserId(value: number): void;
+
   getCallId(): string;
   setCallId(value: string): void;
 
@@ -98,6 +110,7 @@ export class HangupCallRequest extends jspb.Message {
 
 export namespace HangupCallRequest {
   export type AsObject = {
+    userId: number,
     callId: string,
     reason: string,
   }
@@ -140,8 +153,8 @@ export class CallEvent extends jspb.Message {
   getProvider(): CallProviderMap[keyof CallProviderMap];
   setProvider(value: CallProviderMap[keyof CallProviderMap]): void;
 
-  getType(): CallEventTypeMap[keyof CallEventTypeMap];
-  setType(value: CallEventTypeMap[keyof CallEventTypeMap]): void;
+  getType(): string;
+  setType(value: string): void;
 
   getDelta(): string;
   setDelta(value: string): void;
@@ -157,6 +170,27 @@ export class CallEvent extends jspb.Message {
 
   getError(): string;
   setError(value: string): void;
+
+  getRole(): string;
+  setRole(value: string): void;
+
+  getPhase(): string;
+  setPhase(value: string): void;
+
+  hasUsage(): boolean;
+  clearUsage(): void;
+  getUsage(): google_protobuf_struct_pb.Struct | undefined;
+  setUsage(value?: google_protobuf_struct_pb.Struct): void;
+
+  clearFilesList(): void;
+  getFilesList(): Array<CallFile>;
+  setFilesList(value: Array<CallFile>): void;
+  addFiles(value?: CallFile, index?: number): CallFile;
+
+  hasPayload(): boolean;
+  clearPayload(): void;
+  getPayload(): google_protobuf_struct_pb.Struct | undefined;
+  setPayload(value?: google_protobuf_struct_pb.Struct): void;
 
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): CallEvent.AsObject;
@@ -174,12 +208,49 @@ export namespace CallEvent {
     sequence: number,
     timestampUnixMs: number,
     provider: CallProviderMap[keyof CallProviderMap],
-    type: CallEventTypeMap[keyof CallEventTypeMap],
+    type: string,
     delta: string,
     text: string,
     responseId: string,
     reason: string,
     error: string,
+    role: string,
+    phase: string,
+    usage?: google_protobuf_struct_pb.Struct.AsObject,
+    filesList: Array<CallFile.AsObject>,
+    payload?: google_protobuf_struct_pb.Struct.AsObject,
+  }
+}
+
+export class CallFile extends jspb.Message {
+  getType(): string;
+  setType(value: string): void;
+
+  getUrl(): string;
+  setUrl(value: string): void;
+
+  getFileName(): string;
+  setFileName(value: string): void;
+
+  getCaption(): string;
+  setCaption(value: string): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): CallFile.AsObject;
+  static toObject(includeInstance: boolean, msg: CallFile): CallFile.AsObject;
+  static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+  static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+  static serializeBinaryToWriter(message: CallFile, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): CallFile;
+  static deserializeBinaryFromReader(message: CallFile, reader: jspb.BinaryReader): CallFile;
+}
+
+export namespace CallFile {
+  export type AsObject = {
+    type: string,
+    url: string,
+    fileName: string,
+    caption: string,
   }
 }
 
@@ -190,23 +261,4 @@ export interface CallProviderMap {
 }
 
 export const CallProvider: CallProviderMap;
-
-export interface CallEventTypeMap {
-  CALL_EVENT_TYPE_UNSPECIFIED: 0;
-  CALL_STARTED: 1;
-  REALTIME_STARTING: 2;
-  REALTIME_STARTED: 3;
-  REALTIME_SUBSCRIBED: 4;
-  AUDIO_BRIDGE_STARTED: 5;
-  CALL_CONNECTED: 6;
-  INPUT_TRANSCRIPT_DELTA: 7;
-  INPUT_TRANSCRIPT_DONE: 8;
-  RESPONSE_STARTED: 9;
-  RESPONSE_TEXT_DELTA: 10;
-  RESPONSE_DONE: 11;
-  ERROR: 12;
-  CALL_ENDED: 13;
-}
-
-export const CallEventType: CallEventTypeMap;
 

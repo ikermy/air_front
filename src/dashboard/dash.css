@@ -217,6 +217,65 @@
     padding: 12px !important;
 }
 
+/* Иконка-подсказка (хранилище) */
+.user-hint-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 8px;
+    background: rgba(107, 114, 128, 0.22);
+    flex-shrink: 0;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.user-hint-icon:hover {
+    transform: scale(1.08);
+    background: rgba(255, 255, 255, 0.2);
+}
+
+/* Статус подписки на аватаре */
+.avatar-wrap {
+    position: relative;
+    display: inline-flex;
+    flex-shrink: 0;
+    cursor: pointer;
+}
+
+.avatar-status-dot {
+    position: absolute;
+    bottom: 1px;
+    right: 1px;
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-sizing: content-box;
+}
+
+/* Бейдж канала в карточке пользователя — отдельный класс, чтобы не конфликтовать
+   с одноимённым .channel-icon из других CSS (Notifications/UserData/Channels) */
+.dashboard-channel-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border-radius: 7px;
+    border: 2px solid transparent;
+    box-sizing: border-box;
+    flex-shrink: 0;
+    margin: 0;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.dashboard-channel-icon:hover {
+    transform: translateY(-2px);
+}
+
 /* Темная тема для карточки */
 .dark .unified-user-card {
     background: linear-gradient(45deg, #385309, #87cc00);
