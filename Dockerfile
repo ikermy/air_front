@@ -7,7 +7,9 @@ ENV LAND_URL=${LAND_URL}
 ARG NEXT_PUBLIC_GRPC_HOST=https://localhost:50443
 ENV NEXT_PUBLIC_GRPC_HOST=${NEXT_PUBLIC_GRPC_HOST}
 
-COPY package*.json ./
+# .npmrc копируем до npm ci: в нём ретраи/таймауты для устойчивости к
+# транзиентным сетевым ошибкам в CI ("npm error network").
+COPY .npmrc package*.json ./
 RUN --mount=type=cache,target=/root/.npm \
     npm ci --legacy-peer-deps
 
