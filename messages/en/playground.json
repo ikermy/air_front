@@ -5,6 +5,24 @@
   "demoBadge": "Demo scenario",
   "disclaimer": "This is a pre-recorded scenario, not a live agent. A real run needs your own AI provider API keys, so it cannot happen on a landing page — that way we burn neither your tokens nor anyone else's.",
   "replay": "Replay",
+  "videos": {
+    "eyebrow": "Real recordings",
+    "title": "How the agent actually works",
+    "lead": "The tabs above are an interactive scenario simulation. Below are real recordings of the agent in a live conversation: voice cloning and an outbound call.",
+    "whyTitle": "Why a video and not a live agent?",
+    "whyBody": "A live call cannot happen on a landing page: a real run needs your own AI provider API keys, and every opened call would burn tokens — ours or yours. So this is a saved recording of a real run: you can replay it as many times as you want, and it sends no request to the model at all.",
+    "note": "Videos never start on their own — press ▶ to watch.",
+    "modelRealtime": {
+      "title": "Cloned voice",
+      "caption": "A real-time voice model: replies are spoken with a cloned voice. The recording contains the model's real cloned voice.",
+      "aria": "Video: real-time voice model with voice cloning, with real sound"
+    },
+    "voiceCall": {
+      "title": "Outbound call",
+      "caption": "The agent dials the contact itself and runs the conversation. The recording has no real agent voice — the caller is the only one who hears it. Replies from the agent and the caller's speech appear as live transcriptions.",
+      "aria": "Video: agent's outbound voice call, with transcription of the agent's and caller's voices"
+    }
+  },
   "tabsAria": "Choose a demo scenario",
   "feedAria": "Demo scenario conversation feed",
   "feedEmpty": "The scenario starts once the block is on screen",

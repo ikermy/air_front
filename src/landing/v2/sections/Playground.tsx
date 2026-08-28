@@ -4,6 +4,7 @@ import React from 'react';
 import dynamic from 'next/dynamic';
 import { useTranslations } from 'next-intl';
 import { Terminal } from 'lucide-react';
+import { VideoDemos } from '../playground/VideoDemos';
 import styles from './Playground.module.css';
 
 /**
@@ -53,6 +54,8 @@ export function Playground() {
         </header>
 
         <PlaygroundBody />
+
+        <VideoDemos />
       </div>
     </section>
   );

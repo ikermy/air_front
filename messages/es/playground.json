@@ -5,6 +5,24 @@
   "demoBadge": "Escenario de demostración",
   "disclaimer": "Es un escenario grabado de antemano, no un agente en vivo. Una ejecución real necesita sus propias claves de API del proveedor de IA, así que no es posible en una landing — de este modo no gastamos ni sus tokens ni los de nadie.",
   "replay": "Repetir",
+  "videos": {
+    "eyebrow": "Grabaciones reales",
+    "title": "Cómo trabaja el agente de verdad",
+    "lead": "Las pestañas de arriba son una simulación interactiva del escenario. Abajo hay una grabación real del agente en una conversación en vivo: voz con clonación y una llamada saliente.",
+    "whyTitle": "¿Por qué un vídeo y no un agente en vivo?",
+    "whyBody": "Una llamada en vivo no es posible en una landing: la ejecución real requiere sus propias claves de API del proveedor de IA, y cada llamada abierta gastaría tokens — los nuestros o los suyos. Por eso aquí hay una grabación guardada de una ejecución real: se puede ver cuantas veces quieras y no envía ni una sola petición al modelo.",
+    "note": "Los vídeos nunca se reproducen solos — pulse ▶ para verlos.",
+    "modelRealtime": {
+      "title": "Voz clonada",
+      "caption": "Un modelo de voz en tiempo real: las respuestas se pronuncian con una voz clonada. La grabación contiene la voz clonada real del modelo.",
+      "aria": "Vídeo: modelo de voz en tiempo real con clonación de voz, con sonido real"
+    },
+    "voiceCall": {
+      "title": "Llamada saliente",
+      "caption": "El agente marca al contacto por sí mismo y mantiene la conversación. En la grabación no hay voz real del agente — solo la oye el interlocutor. Las respuestas del agente y el habla del interlocutor se muestran como transcripciones en tiempo real.",
+      "aria": "Vídeo: llamada de voz saliente del agente, con transcripción de la voz del agente y del interlocutor"
+    }
+  },
   "tabsAria": "Elegir escenario de demostración",
   "feedAria": "Hilo de conversación del escenario",
   "feedEmpty": "El escenario empieza cuando el bloque aparece en pantalla",
