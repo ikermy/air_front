@@ -24,6 +24,7 @@ import {
     chAvailable,
     checkSubscription,
     deleteChannelData,
+    invalidateChannelDataCache,
     readChannelData,
     saveChannelData
 } from "./chUtils";
@@ -511,6 +512,33 @@ export const Channels = () => {
         fetchDataAsync();
     }, [fetchChannelData]);
 
+    // После авторизации канал создаётся на backend с небольшой задержкой,
+    // а readChannelData кэширует ответ на 5 секунд. Поэтому сбрасываем кэш
+    // и опрашиваем данные канала, пока он не появится.
+    const refreshChannelDataAfterAuth = useCallback(async (channelKey, attempts = 6, delayMs = 1500) => {
+        for (let attempt = 0; attempt < attempts; attempt += 1) {
+            invalidateChannelDataCache();
+            await fetchChannelData();
+
+            if (!channelKey) {
+                return;
+            }
+
+            try {
+                const channelsData = await readChannelData();
+                if (channelsData?.[channelKey] && hasChannelData(channelsData[channelKey].data)) {
+                    return;
+                }
+            } catch (error) {
+                console.error("Ошибка проверки данных канала после авторизации:", error);
+            }
+
+            if (attempt < attempts - 1) {
+                await new Promise((resolve) => setTimeout(resolve, delayMs));
+            }
+        }
+    }, [fetchChannelData]);
+
     if (loading) {
         return <div className="notifications-loading">
             <Spin size="large"/>
@@ -677,6 +705,9 @@ export const Channels = () => {
                     showNotification(t("channelQRCodeScanned") || "QR код", t("channelQRCodeScannedMessage") || "Отсканирован, завершение авторизации...");
                     setShowQRCode(false);
                     setIsGeneratingQRCode(false);
+                    // Backend создаёт канал после сканирования с задержкой,
+                    // поэтому обновляем данные, пока whatsbot не появится.
+                    await refreshChannelDataAfterAuth("whatsbot");
                 },
                 onSuccess: async () => {
                     showNotification(t("channelAuthSuccess") || "Успех", t("channelAuthCompleted") || "Авторизация успешно завершена");
@@ -684,7 +715,7 @@ export const Channels = () => {
                     setShowQRCode(false);
                     setIsGeneratingQRCode(false);
                     // Обновляем все данные каналов через централизованную функцию
-                    await fetchChannelData();
+                    await refreshChannelDataAfterAuth("whatsbot");
                 },
                 onUpdateToken: () => {
                     showWarningNotification(t("authError") || "Ошибка авторизации", t("tokenNotFound") || "Токен не найден");

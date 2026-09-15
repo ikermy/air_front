@@ -232,8 +232,8 @@
 }
 
 .events-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    display: flex;
+    flex-wrap: wrap;
     gap: 16px;
     margin-bottom: 24px;
 }
@@ -245,6 +245,8 @@
     border: 1px solid #f0f0f0;
     overflow: hidden;
     transition: all 0.3s ease;
+    flex: 1 1 calc(50% - 8px);
+    min-width: 250px;
 }
 
 .dark .event-card {
@@ -407,7 +409,11 @@
     }
 
     .events-grid {
-        grid-template-columns: 1fr;
+        flex-wrap: wrap;
+    }
+
+    .event-card {
+        flex: 1 1 calc(50% - 8px);
     }
 }
 
@@ -416,12 +422,15 @@
 /* Очень маленькие экраны (до 480px) */
 @media (max-width: 480px) {
     .events-grid {
-        grid-template-columns: 1fr;
+        flex-direction: row;
+        flex-wrap: wrap;
         gap: 12px;
         margin-bottom: 16px;
     }
 
     .event-card {
+        flex: 1 1 100%;
+        min-width: 100%;
         border-radius: 8px;
     }
 
@@ -475,12 +484,15 @@
 /* Мобильные устройства (481px - 767px) */
 @media (min-width: 481px) and (max-width: 767px) {
     .events-grid {
-        grid-template-columns: 1fr;
+        flex-direction: row;
+        flex-wrap: wrap;
         gap: 14px;
         margin-bottom: 20px;
     }
 
     .event-card {
+        flex: 1 1 calc(50% - 7px);
+        min-width: 200px;
         border-radius: 10px;
     }
 
@@ -531,12 +543,15 @@
 /* Планшеты (768px - 1439px) */
 @media (min-width: 768px) and (max-width: 1439px) {
     .events-grid {
-        grid-template-columns: 1fr;
+        flex-direction: row;
+        flex-wrap: wrap;
         gap: 16px;
         margin-bottom: 22px;
     }
 
     .event-card {
+        flex: 1 1 calc(50% - 8px);
+        min-width: 300px;
         border-radius: 12px;
     }
 
@@ -586,12 +601,15 @@
 /* Десктопы (1440px и выше) */
 @media (min-width: 1440px) {
     .events-grid {
-        grid-template-columns: repeat(3, 1fr);
+        flex-direction: row;
+        flex-wrap: wrap;
         gap: 18px;
         margin-bottom: 24px;
     }
 
     .event-card {
+        flex: 1 1 calc(33.333% - 12px);
+        min-width: 300px;
         border-radius: 12px;
     }
 

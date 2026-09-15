@@ -1,6 +1,6 @@
 import {GrServices} from "react-icons/gr";
 import React, {useState} from "react";
-import {Button, Dropdown, Typography, Empty, Popconfirm} from 'antd';
+import {Button, Dropdown, Popconfirm, Spin} from 'antd';
 import {PlusOutlined, DownOutlined, PhoneOutlined, DeleteOutlined} from '@ant-design/icons';
 import {useTranslation} from 'react-i18next';
 import {showNotification, showErrorNotification} from "../../hotification/showNotification";
@@ -47,6 +47,8 @@ export function CreateService() {
     const {t} = useTranslation();
     const [isServiceAdded, setIsServiceAdded] = useState(false);
     const [isVoiceCallAdded, setIsVoiceCallAdded] = useState(false);
+    const [isInitialLoading, setIsInitialLoading] = useState(true);
+    const [isAddingService, setIsAddingService] = useState(false);
     // Доступные сервисы для добавления
     const [availableServices, setAvailableServices] = useState([
         {
@@ -93,6 +95,8 @@ export function CreateService() {
                 // Оставляем возможность добавить вручную через кнопку
             } catch (error) {
                 // В случае ошибки оставляем список сервисов как есть
+            } finally {
+                setIsInitialLoading(false);
             }
         };
 
@@ -123,6 +127,7 @@ export function CreateService() {
     // Обработчик выбора сервиса из списка
     const handleServiceSelect = async (key) => {
         if (key === "leadhunter") {
+            setIsAddingService(true);
             try {
                 const isAvailable = await checkServiceAvailable();
                 if (!isAvailable) {
@@ -146,8 +151,11 @@ export function CreateService() {
                     t("error") || 'Ошибка',
                     t("serviceCheckError") || 'Ошибка при проверке сервиса'
                 );
+            } finally {
+                setIsAddingService(false);
             }
         } else if (key === "voice-call") {
+            setIsAddingService(true);
             try {
                 const addResp = await AddServiceAPI("voice-call");
                 if (addResp.ok) {
@@ -157,77 +165,83 @@ export function CreateService() {
                 }
             } catch (error) {
                 showErrorNotification(t("error") || "Ошибка", t("serviceCheckError") || "Ошибка при проверке сервиса");
+            } finally {
+                setIsAddingService(false);
             }
         }
     };
 
     return (
         <>
-            <div className="create-model-container">
-                {availableServices.length > 0 && (
-                    <>
-                        <div className="section-title">
-                            <GrServices />
-                            {t("devServices") || "Сервисы"}
-                        </div>
-                        <div className="section-description">
-                            {t("servicesDescription") || "Активируйте и управляйте различными сервисами для расширения функционала вашего агента."}
-                        </div>
-                        <div style={{marginBottom: 16}}>
-                            <AddServiceButton
-                                availableServices={availableServices}
-                                onServiceSelect={handleServiceSelect}
-                            />
-                        </div>
-                        <Typography.Title level={3} style={{ marginTop: 24 }}>
-                            {t("servicesConfigured") || "Настроенные сервисы"}
-                        </Typography.Title>
-                        <Typography.Text type="secondary">
-                            {t("servicesTotalSystems") || "Всего сервисов:"} 0
-                        </Typography.Text>
-                        <Empty
-                            description={t("servicesNoSystems") || "Нет настроенных сервисов"}
-                            style={{marginTop: '24px'}}
-                        />
-                    </>
-                )}
-
-                {isServiceAdded && (
-                    <div>
-                        <div className="section-title logs-header">
-                            <FaPersonCirclePlus  />
-                            {t("serviceTitle") || "Лидогенератор"}
-                        </div>
-                        <div className="section-description">
-                            {t("serviceDescription") || "Сервис поиска лидов через мессенджеры с помощью AI агента."}
-                        </div>
-
-                        <LeadHunterService onServiceDeleted={handleServiceDeleted}/>
-                    </div>
-                )}
-
-                {isVoiceCallAdded && (
-                    <div style={{ marginTop: 24, position: "relative" }}>
-                        <Popconfirm
-                            title={t("serviceDelete") || "Удалить сервис?"}
-                            description={t("serviceDeleteConfirmText") || "Вы уверены, что хотите удалить сервис?"}
-                            okText={t("yes") || "Да"}
-                            cancelText={t("cancel") || "Отмена"}
-                            onConfirm={() => deleteService("voice-call")}
-                        >
-                            <div
-                                title={t("serviceDelete") || "Удалить сервис"}
-                                style={{ position: "absolute", top: 0, right: 0, cursor: "pointer", fontSize: 20, color: "#ff4d4f", zIndex: 10, padding: 8, borderRadius: 4, transition: "all 0.3s" }}
-                                onMouseEnter={(event) => { event.currentTarget.style.backgroundColor = "#fff1f0"; event.currentTarget.style.transform = "scale(1.1)"; }}
-                                onMouseLeave={(event) => { event.currentTarget.style.backgroundColor = "transparent"; event.currentTarget.style.transform = "scale(1)"; }}
-                            >
-                                <DeleteOutlined />
+            <Spin spinning={isInitialLoading} size="large">
+                <div className="create-model-container">
+                    {availableServices.length > 0 && (
+                        <>
+                            <div className="section-title">
+                                <GrServices />
+                                {t("devServices") || "Сервисы"}
                             </div>
-                        </Popconfirm>
-                        <VoiceCallService />
-                    </div>
-                )}
-            </div>
+                            <div className="section-description">
+                                {t("servicesDescription") || "Активируйте и управляйте различными сервисами для расширения функционала вашего агента."}
+                            </div>
+                            <div style={{marginBottom: 16}}>
+                                <AddServiceButton
+                                    availableServices={availableServices}
+                                    onServiceSelect={handleServiceSelect}
+                                />
+                            </div>
+                        </>
+                    )}
+
+                    {isServiceAdded && !isAddingService && (
+                        <div>
+                            <div className="section-title logs-header">
+                                <FaPersonCirclePlus  />
+                                {t("serviceTitle") || "Лидогенератор"}
+                            </div>
+                            <div className="section-description">
+                                {t("serviceDescription") || "Сервис поиска лидов через мессенджеры с помощью AI агента."}
+                            </div>
+
+                            <LeadHunterService onServiceDeleted={handleServiceDeleted}/>
+                        </div>
+                    )}
+
+                    {isServiceAdded && isAddingService && (
+                        <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '200px' }}>
+                            <Spin spinning={true} size="large" />
+                        </div>
+                    )}
+
+                    {isVoiceCallAdded && (
+                        <div style={{ marginTop: 24, position: "relative" }}>
+                            <Popconfirm
+                                title={t("serviceDelete") || "Удалить сервис?"}
+                                description={t("serviceDeleteConfirmText") || "Вы уверены, что хотите удалить сервис?"}
+                                okText={t("Yes") || "Да"}
+                                cancelText={t("cancel") || "Отмена"}
+                                okButtonProps={{
+                                    style: {
+                                        color: "black",
+                                    },
+                                    className: 'no-hover-text',
+                                }}
+                                onConfirm={() => deleteService("voice-call")}
+                            >
+                                <div
+                                    title={t("serviceDelete") || "Удалить сервис"}
+                                    style={{ position: "absolute", top: 0, right: 0, cursor: "pointer", fontSize: 20, color: "#ff4d4f", zIndex: 10, padding: 8, borderRadius: 4, transition: "all 0.3s" }}
+                                    onMouseEnter={(event) => { event.currentTarget.style.backgroundColor = "#fff1f0"; event.currentTarget.style.transform = "scale(1.1)"; }}
+                                    onMouseLeave={(event) => { event.currentTarget.style.backgroundColor = "transparent"; event.currentTarget.style.transform = "scale(1)"; }}
+                                >
+                                    <DeleteOutlined />
+                                </div>
+                            </Popconfirm>
+                            <VoiceCallService />
+                        </div>
+                    )}
+                </div>
+            </Spin>
         </>
     );
 }
