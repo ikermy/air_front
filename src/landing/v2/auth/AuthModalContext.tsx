@@ -9,13 +9,27 @@ import React, {
   useState,
 } from 'react';
 import { useTranslations } from 'next-intl';
+import dynamic from 'next/dynamic';
 import { Sparkles } from 'lucide-react';
 import { AuthModal } from './AuthModal';
-import { LoginForm } from './LoginForm';
-import { RegisterForm } from './RegisterForm';
-import { RestoreForm } from './RestoreForm';
 import { TRIAL_DAYS } from '../config/site';
 import { PolicyModal } from '../../auth/PolicyModals';
+
+// Формы тянет antd Form/Input/Switch — заметный кусок JS, который не нужен
+// до первого открытия модалки. Provider рендерит их только при выбранном
+// режиме, поэтому чанк грузится строго по действию пользователя.
+const LoginForm = dynamic(
+  () => import('./LoginForm').then((m) => m.LoginForm),
+  { ssr: false }
+);
+const RegisterForm = dynamic(
+  () => import('./RegisterForm').then((m) => m.RegisterForm),
+  { ssr: false }
+);
+const RestoreForm = dynamic(
+  () => import('./RestoreForm').then((m) => m.RestoreForm),
+  { ssr: false }
+);
 
 export type AuthMode = 'login' | 'register' | 'restore';
 
