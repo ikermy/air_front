@@ -12,6 +12,7 @@ import {GoLog} from "react-icons/go";
 import {GrServices} from "react-icons/gr";
 import {SiCivicrm} from "react-icons/si";
 import {useTranslation} from "react-i18next";
+import showSimpleAuth from "../../utils/showSimpleAuth";
 
 const { Title, Paragraph, Text } = Typography;
 
@@ -19,7 +20,6 @@ const DashboardOverview = ({ userRole = null, onMenuChange = null }) => {
     const {t} = useTranslation();
     const isDeveloper = userRole === "Developer";
     const isService = userRole === "Service";
-    const showSimpleAuth = false;
 
     // Функция для обработки клика по карточке
     const handleCardClick = (sectionKey) => {

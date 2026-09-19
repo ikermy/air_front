@@ -11,8 +11,7 @@ import {Logs} from "./steps/Logs/Logs";
 import {UserData} from "./steps/User-data/UserData";
 import {CreateService} from "./steps/Services/CreateService";
 import {CreateCRM} from "./steps/CRM/CreateCRM";
-
-const showSimpleAuth = false;
+import showSimpleAuth from "../utils/showSimpleAuth";
 
 export const dashboardContent = (selectedMenu, refreshUserData, userRole = null, onMenuChange = null) => {
     // Возвращает контент в зависимости от выбранного меню

@@ -1,8 +1,9 @@
 import React from 'react';
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { hasLocale } from 'next-intl';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { routing } from '../../src/i18n/routing';
+import showSimpleAuth from '../../src/utils/showSimpleAuth';
 import { Header } from '../../src/landing/v2/sections/Header';
 import { Hero } from '../../src/landing/v2/sections/Hero';
 import { TrustBar } from '../../src/landing/v2/sections/TrustBar';
@@ -27,6 +28,10 @@ export default async function LandingPage({
 }) {
   const { locale } = await params;
   if (!hasLocale(routing.locales, locale)) notFound();
+
+  if (showSimpleAuth) {
+    redirect('/simple-auth');
+  }
 
   setRequestLocale(locale);
 

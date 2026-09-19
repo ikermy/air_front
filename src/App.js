@@ -9,6 +9,7 @@ import {message, Spin} from "antd";
 import {useNotificationInit} from "./dashboard/hotification/showNotification";
 import { useAppPreloader } from "./utils/useAppPreloader";
 import { goToLanding } from "./utils/goToLanding";
+import showSimpleAuth from "./utils/showSimpleAuth";
 
 // Lazy loading для маршрутов
 const Home = lazy(() => import("./Home"));
@@ -22,9 +23,6 @@ const GoogleOAuthSuccess = lazy(() => import("./dashboard/steps/OAuth/GoogleOAut
 const GoogleOAuthError = lazy(() => import("./dashboard/steps/OAuth/GoogleOAuthError"));
 const AvitoOAuthSuccess = lazy(() => import("./dashboard/steps/OAuth/AvitoOAuthSuccess"));
 const AvitoOAuthError = lazy(() => import("./dashboard/steps/OAuth/AvitoOAuthError"));
-
-// SaleMode
-const showSimpleAuth = false;
 
 // Компонент загрузки
 const LoadingFallback = () => (
@@ -86,7 +84,7 @@ function App() {
                         <Suspense fallback={<LoadingFallback />}>
                             <Routes>
                                 {showSimpleAuth && (
-                                    <Route path="/" element={<SimpleAuthForm />} />
+                                    <Route path="/simple-auth" element={<SimpleAuthForm />} />
                                 )}
 
                                 <Route path="/" element={<Home />} />

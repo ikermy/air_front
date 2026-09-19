@@ -24,6 +24,7 @@ import {GrServices} from "react-icons/gr";
 import {useInstantNotifications} from "../hooks/useInstantNotifications";
 import {SiCivicrm} from "react-icons/si";
 import AvitoIcon from "./steps/Channals/AvitoIcon";
+import showSimpleAuth from "../utils/showSimpleAuth";
 
 const {Sider, Content} = Layout;
 const {Text} = Typography;
@@ -86,7 +87,6 @@ export function Dashboard({handleError}) {
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
-    const showSimpleAuth = false;
 
     // Формируем menuItems с учётом роли пользователя
     // const userServiceItem = {key: "services", icon: <GrServices />, label: t('menuServices') || "Сервисы"};

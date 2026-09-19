@@ -39,6 +39,7 @@ import {GoogleOAuth} from "./GoogleOAuth";
 import {UploadFiles} from "./CreateModelFormElements/UploadFiles";
 import {TypesGPT} from "./CreateModelFormElements/TypesGPT";
 import S3storage from "./CreateModelFormElements/S3storage";
+import showSimpleAuth from "../../utils/showSimpleAuth";
 
 
 export const CreateModel = ({onMenuChange}) => {
@@ -51,7 +52,6 @@ export const CreateModel = ({onMenuChange}) => {
     const [tourVisible, setTourVisible] = useState(false);
     const [current, setCurrent] = useState(0);
     const [tourPanelVisible, setTourPanelVisible] = useState(getTourPanelState('createmodel')); // Состояние для видимости панели
-    const showSimpleAuth = false;
 
     // Новые state для мультимодельной архитектуры
     /** @type {[Record<string, any>, React.Dispatch<React.SetStateAction<Record<string, any>>>]} */
