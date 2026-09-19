@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useTranslations } from 'next-intl';
 import { Terminal } from 'lucide-react';
@@ -13,6 +13,11 @@ import styles from './Playground.module.css';
  * Тело вынесено в отдельный чанк и грузится лениво: оно тянет
  * @ant-design/x и x-markdown — самый тяжёлый JS на странице, при этом
  * секция находится далеко от первого экрана.
+ *
+ * Мало `dynamic()`: его чанк иначе скачивается сразу после гидратации,
+ * ещё до того, как секция приблизилась к экрану. Поэтому монтируем тело
+ * только когда до него остаётся ~600px — тогда @ant-design/x не попадает
+ * ни в первую загрузку, ни в main-thread на старте.
  *
  * ssr: false осознанно. Содержимое ленты анимировано и меняется во
  * времени, серверный HTML для него не имеет смысла, а SEO-нагрузку
@@ -30,6 +35,30 @@ const PlaygroundBody = dynamic(
 
 export function Playground() {
   const t = useTranslations('playground');
+  const bodyRef = useRef<HTMLDivElement>(null);
+  const [bodyInView, setBodyInView] = useState(false);
+
+  useEffect(() => {
+    const el = bodyRef.current;
+    if (!el) return;
+
+    if (typeof IntersectionObserver === 'undefined') {
+      setBodyInView(true);
+      return;
+    }
+
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setBodyInView(true);
+          io.disconnect();
+        }
+      },
+      { rootMargin: '600px 0px' }
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
 
   return (
     <section
@@ -53,7 +82,13 @@ export function Playground() {
           <p className={`air-lead ${styles.lead}`}>{t('lead')}</p>
         </header>
 
-        <PlaygroundBody />
+        <div ref={bodyRef}>
+          {bodyInView ? (
+            <PlaygroundBody />
+          ) : (
+            <div className={styles.skeleton} aria-hidden />
+          )}
+        </div>
 
         <VideoDemos />
       </div>

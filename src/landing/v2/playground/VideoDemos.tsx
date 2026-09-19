@@ -16,18 +16,24 @@ import styles from './VideoDemos.module.css';
  *  - проигрывание само по себе сжигало бы трафик посетителя;
  *  - звук «сам по себе» на лендинге пугает и выглядит как баг;
  *  - автоплей противоречит prefers-reduced-motion.
- * Поэтому только `controls`: видео стартует строго по нажатию пользователя,
- * а `preload="metadata"` не даёт браузеру скачивать файл целиком до play.
+ * Поэтому только `controls`: видео стартует строго по нажатию пользователя.
+ *
+ * `preload="none"` (а не "metadata"): в этих WebM длительность/cues не лежат
+ * в начале контейнера, поэтому даже метадата-предзагрузка заставляет Chrome
+ * тянуть файл целиком (1.2 МБ + 740 КБ) на каждом заходе. Вместо этого
+ * показываем лёгкий poster (кадр ~11 КБ), а видео грузится только по play.
  */
 const DEMOS = [
   {
     id: 'modelRealtime',
     src: '/video/model_realtime.webm',
+    poster: '/video/model_realtime-poster.webp',
     icon: Mic,
   },
   {
     id: 'voiceCall',
     src: '/video/voice_call.webm',
+    poster: '/video/voice_call-poster.webp',
     icon: PhoneOutgoing,
   },
 ] as const;
@@ -54,7 +60,8 @@ export function VideoDemos() {
                 className={styles.video}
                 controls
                 playsInline
-                preload="metadata"
+                preload="none"
+                poster={d.poster}
                 aria-label={t(`videos.${d.id}.aria`)}
               >
                 <source src={d.src} type="video/webm" />
