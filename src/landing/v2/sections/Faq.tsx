@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Collapse } from 'antd';
 import { HelpCircle, Minus, Plus, Send } from 'lucide-react';
@@ -20,6 +20,15 @@ import styles from './Faq.module.css';
 export function Faq() {
   const t = useTranslations('faq');
   const entries = buildFaqEntries(t);
+
+  // Одиночное раскрытие делаем контролируемым activeKey, а НЕ пропом
+  // `accordion`: в accordion-режиме antd вешает на корень role="tablist",
+  // а вложенный контент помечает role="tabpanel" прямо внутри tablist —
+  // это нарушает aria-required-children и ломает дерево доступности
+  // (аудит Lighthouse «Accessibility tree is not well-formed» для агентов).
+  const [activeKey, setActiveKey] = useState<string[]>(
+    entries[0]?.key ? [entries[0].key] : []
+  );
 
   return (
     <section className={`air-section ${styles.section}`} id="faq">
@@ -54,9 +63,9 @@ export function Faq() {
 
         <Reveal className={styles.list} delay={80}>
           <Collapse
-            accordion
             ghost
-            defaultActiveKey={entries[0]?.key}
+            activeKey={activeKey}
+            onChange={setActiveKey}
             expandIconPlacement="end"
             expandIcon={({ isActive }) => (
               <span className={styles.toggle} data-active={isActive} aria-hidden>

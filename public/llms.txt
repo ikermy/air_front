@@ -1,0 +1,42 @@
+# AiR / marusia_ai
+
+> AiR is an open-source (MIT) platform for building self-hosted AI assistants: connect AI models, sales channels and business services, and let agents handle dialogs, leads and voice calls. The marketing site is available in Russian (default), English and Spanish.
+
+## Landing pages
+
+- [AiR — main page (Russian)](https://kermy.org/): product overview, security model, architecture, pricing and FAQ.
+- [AiR — English](https://kermy.org/en): English version of the landing page.
+- [AiR — Spanish](https://kermy.org/es): Spanish version of the landing page.
+
+## Source code
+
+- [GitHub organization](https://github.com/ikermy): all `air_*` services are published here.
+- [air_orchestrator](https://github.com/ikermy/air_orchestrator): core backend — auth, models, channels, services, dialogs, billing; REST, WebSocket and gRPC-Web APIs.
+- [air_front](https://github.com/ikermy/air_front): this web app — landing, dashboard and embeddable chat widget.
+- [air_common](https://github.com/ikermy/air-common): shared libraries and contracts.
+- [air_tgbot](https://github.com/ikermy/air_tgbot) / [air_tguserbot](https://github.com/ikermy/air_tguserbot): Telegram channels.
+- [air_whatsbot](https://github.com/ikermy/air_whatsbot): WhatsApp channel.
+- [air_widget](https://github.com/ikermy/air_widget): embeddable website chat widget.
+- [air_avito](https://github.com/ikermy/air_avito): Avito channel.
+- [air_operator](https://github.com/ikermy/air_operator) / [air_lead-hunter](https://github.com/ikermy/air_lead-hunter): dialog operator and lead-hunting services.
+- [air_payment](https://github.com/ikermy/air_payment) / [marusia_crm](https://github.com/ikermy/marusia_crm): payments and CRM integration.
+- [air-logger](https://github.com/ikermy/air-logger): observability and logging.
+
+## Product facts
+
+- Supported AI providers: OpenAI, Mistral AI and Google Gemini, including realtime/voice models.
+- Supported channels: Telegram Bot and UserBot, WhatsApp UserBot, Avito and a web chat widget.
+- Security: user data is encrypted client-side with AES-GCM; the `MasterKey` is never sent to or stored on the server.
+- Pricing: monthly subscription starts at 1 USD; a 30-day free trial is available.
+- License: MIT.
+
+## Community and legal
+
+- [Telegram community chat](https://t.me/marusia_dev): support and discussions.
+- [License](https://kermy.org/license): MIT license text.
+- [Privacy policy](https://kermy.org/privacy-policy): how user data is handled.
+
+## Notes for AI agents
+
+- The dashboard, login, confirmation and password-reset pages are private applications behind authentication and are not meant for indexing.
+- Public content is served in Russian at `/`, English at `/en` and Spanish at `/es`; use those URL prefixes to fetch a specific locale.

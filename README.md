@@ -1,70 +1,134 @@
-# Getting Started with Create React App
+# AiR_Front
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+![air_front](logo.png)
 
-## Available Scripts
+[🇷🇺 Russian version](README.ru.md)
 
-In the project directory, you can run:
+![Node.js](https://img.shields.io/badge/Node.js-20-339933?logo=nodedotjs)
+![Next.js](https://img.shields.io/badge/Next.js-15-000000?logo=nextdotjs)
+![License](https://img.shields.io/badge/license-MIT-blue)
+[![Telegram](https://img.shields.io/badge/Telegram-Join%20Chat-blue?logo=telegram)](https://t.me/marusia_dev)
 
-### `npm start`
+`air_front` — frontend application of the AiR platform. It combines a marketing landing page, a dashboard for managing models, channels and services, as well as an embeddable chat widget; it interacts with the `air_orchestrator` backend service via HTTP/gRPC-Web/WebSocket contracts.
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+## Features
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+- authorization, sessions, JWT, refresh tokens, TOTP and account recovery;
+- managing AI models and providers (OpenAI, MistralAI, Google Gemini), including realtime;
+- configuring channels: Telegram Bot and UserBot, WhatsApp UserBot, Avito and WEB widget;
+- Lead Hunter and voice call services (gRPC-Web) with live transcription;
+- dialogs, instant notifications, CRM (amoCRM), Google OAuth/Calendar/Sheets;
+- testing models, response streaming and realtime voice;
+- billing, subscriptions and crypto payments with PDF receipt export;
+- real-time server log visualization;
+- embeddable chat widget with code generation and appearance customization;
+- localization of the interface and landing page: Russian, English, Spanish;
+- responsive dark and light themes, SEO markup and Open Graph.
 
-### `npm test`
+## User Data Protection
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+The access token is stored in a cookie, and it is renewed via a refresh token in an HttpOnly cookie inaccessible to JavaScript. The password is encrypted on the client (AES) before being sent to the server. The user's `MasterKey`, provider API keys and channel settings do not reach the frontend: they are stored and decrypted only on the `air_orchestrator` side after authorization. The widget authorizes using Ed25519 keys, and only public `NEXT_PUBLIC_*` environment variables are included in the client bundle — system secrets do not get into the build.
 
-### `npm run build`
+## Dependency Tree
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+```text
+air_front
+├── air_orchestrator (HTTP REST /v1/*)
+│   └── authorization, models, channels, services, dialogs, payments
+├── air_orchestrator (WebSocket /v1/ws/*)
+│   └── instant notifications, logs, model test, realtime and QR authorization
+├── air_orchestrator (gRPC-Web calls.v1.Calls)
+│   └── outgoing voice calls and event stream
+├── envoy
+│   └── HTTPS/gRPC-Web routing of the gateway and external traffic
+├── air_avito
+├── air_payment
+└── air_lead-hunter
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+landing (App Router)
+├── ru ── /
+├── en ── /en
+└── es ── /es
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+dashboard (Pages Router SPA)
+└── /dashboard, /login, /confirm, /reset, /simple-auth
 
-### `npm run eject`
+widget
+└── marusya-widget.js ── embeddable chat for external sites
+```
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+In the production build, REST requests to `air_orchestrator` are proxied through Nginx, gRPC-Web goes directly to `NEXT_PUBLIC_GRPC_HOST`, and the application runs in the Docker networks `air_shared` and `app_internal`.
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## Technologies
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+React 19, Next.js 15 (App Router and Pages Router), TypeScript, Ant Design 6, Ant Design X, next-intl, i18next, gRPC-Web, Protocol Buffers, WebSocket, SSE, axios, crypto-js, html2canvas, jsPDF, webpack, Docker, Nginx and Envoy.
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## Getting Started
 
-## Learn More
+Create a `.env` in the project root and specify the environment variables:
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+```bash
+PORT=3001
+REACT_APP_SHOW_SIMPLE_AUTH=true # Disables the login display, leaving only the authorization form in the dashboard
+REACT_APP_ACCESS_TOKEN_MAX_AGE=900
+```
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+For development:
 
-### Code Splitting
+```bash
+npm ci --legacy-peer-deps
+npm run dev
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+Building the application and widget:
 
-### Analyzing the Bundle Size
+```bash
+npm run build
+npm run build:widget
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+Or in containers:
 
-### Making a Progressive Web App
+```bash
+docker compose -f air-front-dev.yml up -d
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+For production, `air-front-prod.yml` is used. Environment variables (`LAND_URL`, `NEXT_PUBLIC_GRPC_HOST`, `BACKEND_INTERNAL_URL`) are loaded from `.env` and must not be committed to the repository.
 
-### Advanced Configuration
+## Monitoring
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+The "Logs" section in the dashboard connects to `/v1/ws/log` and shows server logs in real time with level highlighting. The landing page is static and cached on the CDN (`Cache-Control` in `next.config.js`), the widget is served with `no-store` in development and with a short `max-age` in production (`nginx.conf`). Infrastructure metrics and logs are collected by the `air_orchestrator` loop (VictoriaMetrics, VictoriaLogs, Vector, Perses).
 
-### Deployment
+## Documentation
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+- [Widget Integration](widget-integration-guide.html)
+- [Next.js Configuration](next.config.js)
+- [Landing locale schema](src/i18n/routing.ts)
+- [Nginx Configuration](nginx.conf)
 
-### `npm run build` fails to minify
+## marusia_ai Ecosystem
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+- [air-common](https://github.com/ikermy/air-common) — shared library for AI microservices
+- [air_orchestrator](https://github.com/ikermy/air_orchestrator) — main orchestrator service
+- [air_front](https://github.com/ikermy/air_front) — Frontend react next.js: landing, dashboard for managing models, interaction channels and services, embeddable widget
+- [air_tgbot](https://github.com/ikermy/air_tgbot) — Telegram Bot operating in polling/webhook mode with delta streaming support
+- [air_tguserbot](https://github.com/ikermy/air_tguserbot) — Telegram user bot with the ability to receive and make voice calls
+- [air_whatsbot](https://github.com/ikermy/air_whatsbot) — WhatsApp user bot without using GraphAPI with the ability to receive and make voice calls
+- [air_widget](https://github.com/ikermy/air_widget) — Widget chat widget for integration into any websites
+- [air_avito](https://github.com/ikermy/air_avito) — bot for replying in Avito chats
+- [air_operator](https://github.com/ikermy/air_operator) — Service for forwarding replies to/from the AI operator, works for all bot types
+- [air_lead-hunter](https://github.com/ikermy/air_lead-hunter) — Service for finding leads by bots in Telegram and WhatsApp, including with outgoing voice calls
+- [air_payment](https://github.com/ikermy/air_payment) — Service for accepting crypto payments from users via Bybit
+- [marusia_crm](https://github.com/ikermy/marusia_crm) — Service for integration with external CRM systems
+- [air-logger](https://github.com/ikermy/air-logger) — Auxiliary event logging service with multi-user mode support and loki log collector support
+
+
+## License
+
+The project is distributed under the [MIT](LICENSE) license. It permits free use, copying, modification and distribution of the software while retaining the license text and copyright notice.
+
+The full license text is available in the [`LICENSE`](LICENSE) file.
+
+## Contacts
+
+[![Telegram](https://img.shields.io/badge/Telegram-Contact-blue?logo=telegram)](https://t.me/ikermy)
