@@ -7,6 +7,7 @@ import { Menu, X } from 'lucide-react';
 import { ThemeToggle } from '../components/ThemeToggle';
 import { LocaleSwitcher } from '../components/LocaleSwitcher';
 import { useAuthModal } from '../auth/AuthModalContext';
+import { goToDashboard, restoreSession } from '../auth/authApi';
 import styles from './Header.module.css';
 
 const NAV = [
@@ -24,6 +25,16 @@ export function Header() {
   const { openAuth } = useAuthModal();
   const [scrolled, setScrolled] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
+
+  // «Запомнить меня»: если refresh-кука ещё жива, возвращаемся в панель без
+  // пароля. Иначе открываем обычную форму входа.
+  const handleSignIn = async () => {
+    if (await restoreSession()) {
+      goToDashboard();
+      return;
+    }
+    openAuth('login');
+  };
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -63,7 +74,7 @@ export function Header() {
             type="text"
             size="middle"
             className={styles.signIn}
-            onClick={() => openAuth('login')}
+            onClick={handleSignIn}
           >
             {tc('signIn')}
           </Button>
@@ -113,7 +124,7 @@ export function Header() {
             block
             onClick={() => {
               setDrawerOpen(false);
-              openAuth('login');
+              void handleSignIn();
             }}
           >
             {tc('signIn')}

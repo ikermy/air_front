@@ -10,7 +10,7 @@
  * Чистые утилиты (шифрование, userId, куки) переиспользуются как есть —
  * они не тянут React и одинаково работают в обоих роутерах.
  */
-import { encryptPassword, getKey } from '../../../utils/easyUtils';
+import { encryptPassword, getKey, refreshToken } from '../../../utils/easyUtils';
 import { setCookie } from '../../../utils/cookieUtils';
 
 /** Имя куки доступа. Должно совпадать с src/AuthContext.js. */
@@ -56,6 +56,27 @@ export function goToDashboard(warnings?: { warn2FA?: boolean; warnMasterKey?: bo
   if (warnings?.warn2FA) query.set('warn2FA', '1');
   if (warnings?.warnMasterKey) query.set('warnMasterKey', '1');
   window.location.assign(`/dashboard${query.toString() ? `?${query}` : ''}`);
+}
+
+/**
+ * Проверяет, есть ли активная сессия по refresh-токену («Запомнить меня»).
+ *
+ * Access token недолговечен и лежит в session-cookie, поэтому после закрытия
+ * браузера его нет. Долгоживущий refresh-токен хранится в HttpOnly-куке:
+ * обменяв его на новый access token, можно вернуть пользователя в панель
+ * без повторного ввода пароля.
+ *
+ * logoutOnFail: false — на публичной странице не шлём /v1/auth/logout, если
+ * сессии нет (иначе каждый анонимный клик «Войти» давал бы лишний запрос).
+ */
+export async function restoreSession(): Promise<boolean> {
+  try {
+    const token = await refreshToken({ logoutOnFail: false });
+    return Boolean(token);
+  } catch (error) {
+    console.error('[auth] restore session failed', error);
+    return false;
+  }
 }
 
 /** Шаг 1: пароль шифруется сессионным ключом, затем уходит на /v1/auth/login. */

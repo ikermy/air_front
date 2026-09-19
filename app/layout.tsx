@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from 'next';
-import { cookies } from 'next/headers';
 import { AntdRegistry } from '@ant-design/nextjs-registry';
-import { normalizeTheme, THEME_COOKIE } from '../src/landing/v2/theme/themeCookie';
+import { DEFAULT_THEME, THEME_COOKIE } from '../src/landing/v2/theme/themeCookie';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -27,18 +26,25 @@ export const viewport: Viewport = {
   ],
 };
 
-export default async function RootLayout({
+/**
+ * Тема применяется inline-скриптом до первой отрисовки: читаем cookie и
+ * выставляем data-theme/color-scheme. Так первый кадр уже покрашен, но при
+ * этом не нужен серверный `cookies()` — иначе страница становится
+ * динамической и её нельзя кешировать (Cache-Control: no-store).
+ */
+const THEME_INIT_SCRIPT = `(function(){try{var r=/(?:^|;\\s*)${THEME_COOKIE}=(dark|light)/;var m=document.cookie.match(r);var t=m?m[1]:'${DEFAULT_THEME}';var e=document.documentElement;e.setAttribute('data-theme',t);e.style.colorScheme=t;if(document.body){document.body.classList.remove('dark','light');document.body.classList.add(t);}}catch(e){}})();`;
+
+export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  // Тема читается на сервере => первый кадр приходит уже покрашенным.
-  const cookieStore = await cookies();
-  const mode = normalizeTheme(cookieStore.get(THEME_COOKIE)?.value);
-
   return (
-    <html data-theme={mode} suppressHydrationWarning>
-      <body className={mode}>
+    <html data-theme={DEFAULT_THEME} suppressHydrationWarning>
+      {/* suppressHydrationWarning: data-theme/class прокидывает скрипт выше,
+          они намеренно расходятся с серверной разметкой и это не ошибка. */}
+      <body className={DEFAULT_THEME} suppressHydrationWarning>
+        <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         {/* AntdRegistry собирает CSS-in-JS antd на сервере,
             иначе первый кадр приходит без стилей компонентов. */}
         <AntdRegistry>{children}</AntdRegistry>

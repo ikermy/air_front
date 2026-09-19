@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { message } from 'antd';
+import { message, Spin } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { AuthForm } from '../landing/auth/AuthForm';
 import { RegForm } from '../landing/auth/RegForm';
@@ -38,14 +38,14 @@ type Mode = 'login' | 'register' | 'restore';
 function LoginPage() {
   const [mode, setMode] = useState<Mode>('login');
   const [messageApi, contextHolder] = message.useMessage();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isAuthReady } = useAuth();
   const navigate = useNavigate();
 
   // Авторизованному тут делать нечего: и прямой заход на /login,
   // и возврат «назад» после логина должны вести в дашборд.
   useEffect(() => {
-    if (isAuthenticated) navigate('/dashboard', { replace: true });
-  }, [isAuthenticated, navigate]);
+    if (isAuthReady && isAuthenticated) navigate('/dashboard', { replace: true });
+  }, [isAuthReady, isAuthenticated, navigate]);
 
   // Модалки нет — форме нечего закрывать.
   const noopModal = () => {};
@@ -61,6 +61,16 @@ function LoginPage() {
     register: '30 дней бесплатно, без привязки карты.',
     restore: 'Укажите email — вышлем ссылку для смены пароля.',
   };
+
+  // Пока не завершилась попытка автологина по refresh-токену, не показываем
+  // форму — иначе «Запомнить меня» мигало бы требованием пароля.
+  if (!isAuthReady) {
+    return (
+      <div className="login-page">
+        <Spin size="large" description="Загрузка..." />
+      </div>
+    );
+  }
 
   return (
     <div className="login-page">

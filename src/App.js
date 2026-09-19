@@ -45,17 +45,24 @@ const AppRouter = ({children}) => {
 };
 
 const ProtectedRoute = ({ children }) => {
-    const { isAuthenticated } = useAuth();
+    const { isAuthenticated, isAuthReady } = useAuth();
     const navigate = useNavigate();
 
     useEffect(() => {
-        if (!isAuthenticated) {
+        // Ждём завершения попытки восстановить сессию по refresh-токену,
+        // иначе «Запомнить меня» не успеет сработать и пользователя выбросит
+        // на лендинг с требованием пароля.
+        if (isAuthReady && !isAuthenticated) {
             // Лендинг живёт в App Router — клиентская навигация react-router
             // туда не доведёт. Уходим полной загрузкой и просим лендинг
             // сразу открыть модалку входа.
             goToLanding('login');
         }
-    }, [isAuthenticated, navigate]);
+    }, [isAuthReady, isAuthenticated, navigate]);
+
+    if (!isAuthReady) {
+        return <LoadingFallback />;
+    }
 
     return isAuthenticated ? children : null;
 };

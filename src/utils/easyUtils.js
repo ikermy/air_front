@@ -118,7 +118,7 @@ export const apiLogout = async () => {
 // несколько одновременных запросов не должны использовать одну и ту же cookie.
 let refreshPromise = null;
 
-export const refreshToken = () => {
+export const refreshToken = ({ logoutOnFail = true } = {}) => {
     if (refreshPromise) {
         return refreshPromise;
     }
@@ -142,12 +142,18 @@ export const refreshToken = () => {
 
             console.warn('[Auth] refresh token failed', {status: response.status});
 
-            // Если рефреш не удался (например, 401) — чистим всё и выходим
-            await apiLogout();
+            // Если рефреш не удался (например, 401) — чистим всё и выходим.
+            // При проверке наличия сессии на публичной странице (logoutOnFail: false)
+            // не дёргаем /v1/auth/logout для анонимных посетителей.
+            if (logoutOnFail) {
+                await apiLogout();
+            }
             return null;
         } catch (error) {
             console.error("Ошибка при обновлении токена:", error);
-            await apiLogout();
+            if (logoutOnFail) {
+                await apiLogout();
+            }
             return null;
         } finally {
             // Сбрасываем только после завершения запроса, чтобы все ожидающие

@@ -16,6 +16,7 @@ help.txt
 # production
 /build
 /dist/
+/.next
 
 # misc
 Thumbs.db

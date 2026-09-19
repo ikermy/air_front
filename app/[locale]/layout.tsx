@@ -1,15 +1,11 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
-import { cookies } from 'next/headers';
 import { NextIntlClientProvider, hasLocale } from 'next-intl';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
 import { routing, hreflangMap, type Locale } from '../../src/i18n/routing';
 import { LandingThemeProvider } from '../../src/landing/v2/theme/LandingThemeProvider';
 import { AuthModalProvider } from '../../src/landing/v2/auth/AuthModalContext';
-import {
-  normalizeTheme,
-  THEME_COOKIE,
-} from '../../src/landing/v2/theme/themeCookie';
+import { DEFAULT_THEME } from '../../src/landing/v2/theme/themeCookie';
 import { SITE_URL } from '../../src/landing/v2/config/site';
 
 export function generateStaticParams() {
@@ -78,12 +74,12 @@ export default async function LocaleLayout({
   // Обязательно до любого обращения к переводам — включает статический рендер.
   setRequestLocale(locale);
 
-  const cookieStore = await cookies();
-  const mode = normalizeTheme(cookieStore.get(THEME_COOKIE)?.value);
-
+  // Тему на сервере не читаем: это сделал бы Layout динамическим. Первый кадр
+  // красит inline-скрипт в app/layout.tsx, а LandingThemeProvider досинхронит
+  // состояние из cookie после гидратации.
   return (
     <NextIntlClientProvider>
-      <LandingThemeProvider initialMode={mode}>
+      <LandingThemeProvider initialMode={DEFAULT_THEME}>
         {/* Внутри LandingThemeProvider: модалка использует antd App.useApp()
             для уведомлений и должна видеть токены текущей темы. */}
         <AuthModalProvider>{children}</AuthModalProvider>
