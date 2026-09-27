@@ -1,4 +1,5 @@
 import type { AppProps } from "next/app";
+import Script from "next/script";
 import "../src/index.css";
 import "../src/App.css";
 import "../src/LanguageSwitcher.css";
@@ -44,5 +45,20 @@ import "../src/widget/Widget.css";
 import "../src/widget/chat/ChatWidget.css";
 
 export default function NextApp({ Component, pageProps }: AppProps) {
-  return <Component {...pageProps} />;
+  return (
+    <>
+      {/* Google tag (gtag.js) */}
+      <Script
+        src="https://www.googletagmanager.com/gtag/js?id=G-NTZF8XECSQ"
+        strategy="afterInteractive"
+      />
+      <Script id="google-analytics" strategy="afterInteractive">
+        {`window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-NTZF8XECSQ');`}
+      </Script>
+      <Component {...pageProps} />
+    </>
+  );
 }
