@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import Script from 'next/script';
 import { notFound } from 'next/navigation';
 import { NextIntlClientProvider, hasLocale } from 'next-intl';
 import { getTranslations, setRequestLocale } from 'next-intl/server';
@@ -121,6 +122,17 @@ export default async function LocaleLayout({
   return (
     <html lang={locale} data-theme={DEFAULT_THEME} suppressHydrationWarning>
       <body className={DEFAULT_THEME} suppressHydrationWarning>
+        {/* Google tag (gtag.js) */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-NTZF8XECSQ"
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`window.dataLayer = window.dataLayer || [];
+function gtag(){dataLayer.push(arguments);}
+gtag('js', new Date());
+gtag('config', 'G-NTZF8XECSQ');`}
+        </Script>
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         {/* AntdRegistry собирает CSS-in-JS antd на сервере,
             иначе первый кадр приходит без стилей компонентов. */}
