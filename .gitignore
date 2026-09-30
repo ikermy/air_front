@@ -18,6 +18,9 @@ help.txt
 /dist/
 /.next
 
+# typescript
+*.tsbuildinfo
+
 # misc
 Thumbs.db
 .DS_Store

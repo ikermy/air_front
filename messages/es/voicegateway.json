@@ -1,0 +1,12 @@
+{
+  "eyebrow": "Pasarela de voz",
+  "title": "Voz y clonación para cualquier LLM",
+  "lead": "Conecta ElevenLabs como pasarela de voz para OpenAI, Mistral o Google para ampliar tus capacidades de voz.",
+  "points": {
+    "voices": "Voces adicionales del asistente y clonación de voz (IVC / PVC)",
+    "anyModel": "Funciona con cualquier modelo (OpenAI · Mistral · Google)",
+    "realtime": "Cascada en tiempo real: STT → LLM del proveedor → TTS de ElevenLabs",
+    "music": "Los agentes pueden generar música mediante MCP"
+  },
+  "docsCta": "Ver la documentación"
+}

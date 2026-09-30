@@ -1,0 +1,12 @@
+{
+  "eyebrow": "Voice gateway",
+  "title": "Voice and cloning for any LLM",
+  "lead": "Connect ElevenLabs as a voice gateway for OpenAI, Mistral or Google to extend your voice capabilities.",
+  "points": {
+    "voices": "Extra assistant voices and voice cloning (IVC / PVC)",
+    "anyModel": "Works with any model (OpenAI · Mistral · Google)",
+    "realtime": "Realtime cascade: STT → provider LLM → ElevenLabs TTS",
+    "music": "Agents can generate music via MCP"
+  },
+  "docsCta": "Read the documentation"
+}

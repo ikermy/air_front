@@ -1,0 +1,128 @@
+.section {
+  position: relative;
+  /* Блок — компактная вставка между двумя полноценными секциями:
+     уменьшаем вертикальный отступ, иначе между TrustBar и ValueProps
+     возникает двойной разрыв. */
+  padding-block: clamp(0px, 0.6vw, 10px);
+}
+
+/* --- Заголовок секции: как у features (ValueProps) --- */
+.head {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 14px;
+  max-width: 720px;
+  margin-bottom: clamp(24px, 3vw, 34px);
+}
+
+.lead {
+  margin: 0;
+}
+
+/* --- Акцентная карточка: одиночный блок, а не сетка.
+   Рамка и подложка — в тон группе AI-провайдеров из TrustBar. --- */
+.card {
+  position: relative;
+  overflow: hidden;
+  padding: clamp(22px, 2.8vw, 34px);
+  border: 1px solid color-mix(in srgb, var(--air-accent) 32%, var(--air-border));
+  border-radius: var(--air-radius-lg);
+  /* Мягкое свечение в правом верхнем углу поддерживает акцент, не мешая тексту. */
+  background:
+    radial-gradient(
+      120% 150% at 100% 0%,
+      color-mix(in srgb, var(--air-brand) 13%, transparent),
+      transparent 62%
+    ),
+    var(--air-surface);
+  transition: border-color 0.24s ease, box-shadow 0.24s ease;
+}
+
+.card:hover {
+  border-color: color-mix(in srgb, var(--air-accent) 52%, var(--air-border));
+  box-shadow: var(--air-glow);
+}
+
+/* Иконка провайдера + бейдж «опционально». */
+.cardTop {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.iconBox {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--air-brand) 15%, transparent);
+  border: 1px solid color-mix(in srgb, var(--air-accent) 34%, transparent);
+  color: var(--air-accent-text);
+}
+
+.provider {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--air-text);
+  white-space: nowrap;
+}
+
+/* --- Список возможностей: две колонки на широких экранах --- */
+.points {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px 24px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.point {
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--air-text-secondary);
+}
+
+.pointIcon {
+  flex-shrink: 0;
+  margin-top: 3px;
+  color: var(--air-accent-text);
+}
+
+/* --- Мягкий линк на документацию --- */
+.link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 18px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--air-accent-text);
+  text-decoration: none;
+}
+
+.link:hover {
+  text-decoration: underline;
+}
+
+.linkIcon {
+  transition: transform 0.2s ease;
+}
+
+.link:hover .linkIcon {
+  transform: translate(2px, -2px);
+}
+
+@media (min-width: 720px) {
+  .points {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
