@@ -66,9 +66,11 @@ export const ModelSelector = ({
         }
     };
 
+    const isVoiceOnly = (provider) => Boolean(provider.voiceOnly);
+
     const visibleProviders = availableProviders === null
-        ? PROVIDERS
-        : PROVIDERS.filter(p => availableProviders.includes(p.key));
+        ? PROVIDERS.filter(p => !isVoiceOnly(p))
+        : PROVIDERS.filter(p => !isVoiceOnly(p) && availableProviders.includes(p.key));
 
     const unavailableProviderObjects = PROVIDERS.filter(p => unavailableProviders.includes(p.key));
 

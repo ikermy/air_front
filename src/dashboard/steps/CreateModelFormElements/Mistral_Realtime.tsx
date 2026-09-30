@@ -3,20 +3,17 @@ import {Button, Col, Collapse, Form, Input, Row, Select, Space, Spin, Segmented,
 import type {UploadFile} from "antd";
 import {AudioOutlined, DeleteOutlined, InfoCircleOutlined, PlayCircleOutlined, UploadOutlined} from "@ant-design/icons";
 import {useTranslation} from "react-i18next";
-import {authFetch} from "../../../utils/easyUtils";
-import {getListModelNames, type GptTypeValue, type MistralRealtimeVAD} from "./modUtils";
-import {createMistralVoiceApi} from "../../../utils/mistral-realtime-voices";
+import {getListModelNames, type GptTypeValue, type MistralRealtimeVAD, type ModelData, type VoiceSelection} from "./modUtils";
+import {createVoiceApi, type Voice} from "../../../utils/mistral-realtime-voices";
+import {fetchProvidersAvailability} from "./providersUtils";
+import {VoiceSettings} from "./VoiceSettings";
+import {RealtimeGreeting} from "./RealtimeGreeting";
 import {Tooltip} from "antd";
-
-interface MistralVoice {
-    id: string;
-    name?: string;
-    languages?: string[];
-    description?: string;
-}
 
 interface MistralRealtimeProps {
     onChange?: (value: { realtime: boolean; realtime_vad: MistralRealtimeVAD | null }) => void;
+    /** Уведомляет родителя об изменении Voice (ElevenLabs-режим). */
+    onVoiceChange?: (changedValues: Record<string, unknown>) => void;
     toForm?: any;
     initialRealtime?: boolean;
     initialRealtimeVAD?: MistralRealtimeVAD | null;
@@ -28,7 +25,7 @@ const DEFAULTS: Required<Pick<MistralRealtimeVAD, "speech_format" | "stt_languag
     speech_format: "pcm", stt_language: "",
 };
 
-const mistralVoiceApi = createMistralVoiceApi();
+const mistralVoiceApi = createVoiceApi("mistral");
 
 const encodeWav = (samples: Float32Array, sampleRate: number): ArrayBuffer => {
     const buffer = new ArrayBuffer(44 + samples.length * 2);
@@ -49,6 +46,7 @@ const encodeWav = (samples: Float32Array, sampleRate: number): ArrayBuffer => {
 
 export const Mistral_Realtime: React.FC<MistralRealtimeProps> = ({
                                                                      onChange,
+                                                                     onVoiceChange,
                                                                      toForm,
                                                                      initialRealtime,
                                                                      initialRealtimeVAD,
@@ -57,14 +55,20 @@ export const Mistral_Realtime: React.FC<MistralRealtimeProps> = ({
                                                                  }) => {
     const {t} = useTranslation();
     const [enabled, setEnabled] = useState(Boolean(initialRealtime));
+    const [voiceBackend, setVoiceBackend] = useState<"base" | "elevenlabs">(
+        String((modelData as {Voice?: VoiceSelection} | undefined)?.Voice?.realtime_backend ?? "").toLowerCase() === "elevenlabs"
+            ? "elevenlabs"
+            : "base"
+    );
+    const [elevenLabsAvailable, setElevenLabsAvailable] = useState(false);
     const [config, setConfig] = useState<MistralRealtimeVAD>({...DEFAULTS, ...(initialRealtimeVAD || {})});
     const [initialGreeting, setInitialGreeting] = useState(initialRealtimeVAD?.initial_greeting ?? false);
     const [greetingCollapseOpen, setGreetingCollapseOpen] = useState(Boolean(initialRealtimeVAD?.initial_greeting));
     const [greeting, setGreeting] = useState(initialRealtimeVAD?.greeting ?? "");
     const [realtimeModels, setRealtimeModels] = useState<GptTypeValue[]>([]);
     const [ttsModels, setTtsModels] = useState<GptTypeValue[]>([]);
-    const [presetVoices, setPresetVoices] = useState<MistralVoice[]>([]);
-    const [customVoices, setCustomVoices] = useState<MistralVoice[]>([]);
+    const [presetVoices, setPresetVoices] = useState<Voice[]>([]);
+    const [customVoices, setCustomVoices] = useState<Voice[]>([]);
     const [playingVoice, setPlayingVoice] = useState<string | null>(null);
     const audioUrlRef = useRef<string | null>(null);
     const [voiceMode, setVoiceMode] = useState<"preset" | "custom">(initialRealtimeVAD?.voice_clone?.profile_id ? "custom" : "preset");
@@ -93,6 +97,29 @@ export const Mistral_Realtime: React.FC<MistralRealtimeProps> = ({
         onChange?.(value);
     }, [onChange, toForm]);
 
+    // Доступность ElevenLabs: показываем переключатель режима голоса.
+    useEffect(() => {
+        let cancelled = false;
+        void (async () => {
+            const result = await fetchProvidersAvailability();
+            if (!cancelled) {
+                setElevenLabsAvailable(Boolean(result.data?.available?.includes("elevenlabs")));
+            }
+        })();
+        return () => {
+            cancelled = true;
+        };
+    }, []);
+
+    const handleVoiceBackend = (next: "base" | "elevenlabs") => {
+        setVoiceBackend(next);
+        if (next === "base") {
+            // Базовый режим — ElevenLabs-конфигурация не нужна.
+            toForm?.setFieldsValue({Voice: null});
+            onVoiceChange?.({Voice: null});
+        }
+    };
+
     useEffect(() => {
         const next = {...DEFAULTS, ...(initialRealtimeVAD || {})};
         setEnabled(Boolean(initialRealtime));
@@ -112,23 +139,24 @@ export const Mistral_Realtime: React.FC<MistralRealtimeProps> = ({
         setLoading(true);
         try {
             const models = await getListModelNames(provider, "realtime");
-            const uniqueBy = (field: "stt" | "tts") => {
+            // Голосовые модели приходят с полем kind (tts|stt|music|sts); поля stt/tts
+            // у realtime-моделей больше не используются (см. план §4.2).
+            const uniqueByKind = (kind: string) => {
                 const seen = new Set<string>();
                 return models.filter((model) => {
-                    const value = model[field];
-                    if (!value || seen.has(value)) return false;
-                    seen.add(value);
+                    if (model.kind !== kind || !model.name || seen.has(model.name)) return false;
+                    seen.add(model.name);
                     return true;
-                }).map((model) => ({...model, name: model[field] as string}));
+                });
             };
-            const nextSttModels = uniqueBy("stt");
-            const nextTtsModels = uniqueBy("tts");
+            const nextSttModels = uniqueByKind("stt");
+            const nextTtsModels = uniqueByKind("tts");
             setRealtimeModels(nextSttModels);
             setTtsModels(nextTtsModels);
 
             const [presetResult, customResult] = await Promise.allSettled([
-                mistralVoiceApi.list({limit: 100, type: "preset"}),
-                mistralVoiceApi.list({limit: 100, type: "custom"}),
+                mistralVoiceApi.list({provider: "mistral", limit: 100, type: "preset"}),
+                mistralVoiceApi.list({provider: "mistral", limit: 100, type: "custom"}),
             ]);
             if (presetResult.status === "fulfilled") setPresetVoices(presetResult.value.items || []);
             if (customResult.status === "fulfilled") setCustomVoices(customResult.value.items || []);
@@ -163,9 +191,8 @@ export const Mistral_Realtime: React.FC<MistralRealtimeProps> = ({
     const playSample = async (voiceId: string) => {
         try {
             if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current);
-            const response = await authFetch(`/v1/model/voices/${encodeURIComponent(voiceId)}/sample`);
-            if (!response.ok) throw new Error(t("mistralSampleError") || "Не удалось получить sample");
-            const url = URL.createObjectURL(await response.blob());
+            const blob = await mistralVoiceApi.sample(voiceId, "mistral");
+            const url = URL.createObjectURL(blob);
             audioUrlRef.current = url;
             const audio = new Audio(url);
             audio.onended = () => {
@@ -183,8 +210,7 @@ export const Mistral_Realtime: React.FC<MistralRealtimeProps> = ({
 
     const deleteVoice = async (voiceId: string) => {
         try {
-            const response = await authFetch(`/v1/model/voices/${encodeURIComponent(voiceId)}`, {method: "DELETE"});
-            if (!response.ok) throw new Error((await response.json().catch(() => ({})))?.error || "Не удалось удалить голос");
+            await mistralVoiceApi.remove(voiceId, "mistral");
             if (config.voice_clone?.profile_id === voiceId) update({voice_clone: null});
             setCustomVoices((items) => items.filter((voice) => voice.id !== voiceId));
             message.success(t("mistralVoiceDeleted") || "Голос удалён");
@@ -197,17 +223,11 @@ export const Mistral_Realtime: React.FC<MistralRealtimeProps> = ({
         if (!editVoiceId) return;
         setEditLoading(true);
         try {
-            const response = await authFetch(`/v1/model/voices/${encodeURIComponent(editVoiceId)}`, {
-                method: "PATCH",
-                headers: {"Content-Type": "application/json"},
-                body: JSON.stringify({
-                    ...values,
-                    languages: values.languages ? values.languages.split(/[,;\n]/).map((value) => value.trim()).filter(Boolean) : undefined,
-                    tags: values.tags ? values.tags.split(/[,;\n]/).map((value) => value.trim()).filter(Boolean) : undefined,
-                }),
-            });
-            if (!response.ok) throw new Error((await response.json().catch(() => ({})))?.error || "Не удалось обновить голос");
-            const updated = await response.json() as MistralVoice;
+            const updated = await mistralVoiceApi.update(editVoiceId, {
+                ...values,
+                languages: values.languages ? values.languages.split(/[,;\n]/).map((value) => value.trim()).filter(Boolean) : undefined,
+                tags: values.tags ? values.tags.split(/[,;\n]/).map((value) => value.trim()).filter(Boolean) : undefined,
+            }, "mistral");
             setCustomVoices((items) => items.map((voice) => voice.id === updated.id ? updated : voice));
             setEditVoiceId(null);
             message.success(t("mistralVoiceUpdated") || "Данные голоса обновлены");
@@ -245,22 +265,7 @@ export const Mistral_Realtime: React.FC<MistralRealtimeProps> = ({
         }
         setCloneLoading(true);
         try {
-            const body = new FormData();
-            body.append("file", file, file.name || "voice-sample.wav");
-            body.set("provider", "mistral");
-            Object.entries(values).forEach(([key, value]) => {
-                if (value) body.set(key, value);
-            });
-
-            const response = await authFetch("/v1/model/voice/clone", {method: "POST", body});
-            const responseText = await response.text();
-            if (!response.ok) {
-                let errorMessage = responseText || `Ошибка сервера: ${response.status}`;
-                try { errorMessage = JSON.parse(responseText).error || errorMessage; } catch (_) { /* plain text */ }
-                throw new Error(errorMessage);
-            }
-            const result = JSON.parse(responseText) as {voice: MistralVoice};
-            const voice = result.voice;
+            const voice = await mistralVoiceApi.clone(values, [file as File], "mistral");
             setCustomVoices((current) => [voice, ...current.filter((item) => item.id !== voice.id)]);
             setVoiceMode("custom");
             setCloneFormOpen(false);
@@ -371,6 +376,19 @@ export const Mistral_Realtime: React.FC<MistralRealtimeProps> = ({
         </div>
         {enabled && <Space orientation="vertical" style={{width: "100%"}} size="middle">
             {loading ? <Spin/> : <>
+                {elevenLabsAvailable && (
+                    <Form.Item label={t("voiceModeLabel") || "Режим голоса"}>
+                        <Segmented
+                            value={voiceBackend}
+                            onChange={(val) => handleVoiceBackend(val as "base" | "elevenlabs")}
+                            options={[
+                                {label: <span style={{color: "black"}}>{t("voiceModeBase") || "Базовый"}</span>, value: "base"},
+                                {label: <span style={{color: "black"}}>{t("voiceModeElevenLabs") || "ElevenLabs"}</span>, value: "elevenlabs"},
+                            ]}
+                        />
+                    </Form.Item>
+                )}
+                {voiceBackend === "base" && <>
                 <Row gutter={[16, 0]}>
                     <Col xs={24} md={8}>
                         <Form.Item label={t("mistralSttModel") || "STT модель"}>
@@ -549,6 +567,35 @@ export const Mistral_Realtime: React.FC<MistralRealtimeProps> = ({
                                                                    void deleteVoice(config.voice_clone!.profile_id);
                                                                }}>{t("mistralDeleteSelectedVoice") || "Удалить выбранный клонированный голос"}</Button>}
                 </>}
+                </>}
+                {voiceBackend === "elevenlabs" && (
+                    <>
+                        <VoiceSettings
+                            embedded
+                            provider={provider}
+                            modelData={modelData as ModelData | null}
+                            initialVoice={(modelData as {Voice?: VoiceSelection} | undefined)?.Voice ?? null}
+                            toForm={toForm}
+                            onChange={onVoiceChange}
+                        />
+                        <div style={{marginTop: 12}}>
+                            <RealtimeGreeting
+                                initialGreeting={initialGreeting}
+                                greeting={greeting}
+                                disabled={!enabled}
+                                onInitialGreetingChange={(value) => {
+                                    setInitialGreeting(value);
+                                    setGreetingCollapseOpen(value);
+                                    updateGreeting({initial_greeting: value});
+                                }}
+                                onGreetingChange={(value) => {
+                                    setGreeting(value);
+                                    updateGreeting({greeting: value});
+                                }}
+                            />
+                        </div>
+                    </>
+                )}
             </>}
         </Space>}
     </>;

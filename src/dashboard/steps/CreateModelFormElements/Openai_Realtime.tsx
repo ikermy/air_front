@@ -1,9 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { Switch, Slider, InputNumber, Tooltip, Collapse, Input, Select, Form } from "antd";
+import { Switch, Slider, InputNumber, Tooltip, Collapse, Input, Select, Form, Segmented } from "antd";
 import type { CollapseProps } from "antd";
 import { AudioOutlined, SettingOutlined, InfoCircleOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import {TypesGPT} from "./TypesGPT";
+import {VoiceSettings} from "./VoiceSettings";
+import {RealtimeGreeting} from "./RealtimeGreeting";
+import {fetchProvidersAvailability} from "./providersUtils";
+import type {ModelData, VoiceSelection} from "./modUtils";
 
 export interface RealtimeVADValue {
     threshold?: number | null;
@@ -20,10 +24,13 @@ export interface RealtimeVADValue {
 
     interface OpenaiRealtimeProps {
     onChange?: (value: { realtime: boolean; realtime_vad: RealtimeVADValue | null }) => void;
+    /** Уведомляет родителя об изменении Voice (ElevenLabs-режим). */
+    onVoiceChange?: (changedValues: Record<string, unknown>) => void;
     toForm?: any;
     initialRealtime?: boolean;
     initialRealtimeVAD?: RealtimeVADValue | null;
     provider?: string | null;
+    modelData?: ModelData | null;
 }
 
 const DEFAULT_VAD: RealtimeVADValue = {
@@ -40,14 +47,22 @@ const DEFAULT_VAD: RealtimeVADValue = {
 
 export const Openai_Realtime: React.FC<OpenaiRealtimeProps> = ({
     onChange,
+    onVoiceChange,
     toForm,
     initialRealtime,
     initialRealtimeVAD,
     provider,
+    modelData,
 }) => {
     const { t } = useTranslation();
 
     const [realtimeEnabled, setRealtimeEnabled] = useState<boolean>(false);
+    const [voiceBackend, setVoiceBackend] = useState<"base" | "elevenlabs">(
+        String((modelData as {Voice?: VoiceSelection} | null)?.Voice?.realtime_backend ?? "").toLowerCase() === "elevenlabs"
+            ? "elevenlabs"
+            : "base"
+    );
+    const [elevenLabsAvailable, setElevenLabsAvailable] = useState(false);
     const [threshold, setThreshold] = useState<number>(DEFAULT_VAD.threshold!);
     const [prefixPaddingMs, setPrefixPaddingMs] = useState<number>(DEFAULT_VAD.prefix_padding_ms!);
     const [silenceDurationMs, setSilenceDurationMs] = useState<number>(DEFAULT_VAD.silence_duration_ms!);
@@ -105,6 +120,26 @@ export const Openai_Realtime: React.FC<OpenaiRealtimeProps> = ({
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [initialRealtime, initialRealtimeVAD]);
+
+    // Доступность ElevenLabs: показываем переключатель режима голоса.
+    useEffect(() => {
+        let cancelled = false;
+        void (async () => {
+            const result = await fetchProvidersAvailability();
+            if (!cancelled) setElevenLabsAvailable(Boolean(result.data?.available?.includes("elevenlabs")));
+        })();
+        return () => {
+            cancelled = true;
+        };
+    }, []);
+
+    const handleVoiceBackend = (next: "base" | "elevenlabs") => {
+        setVoiceBackend(next);
+        if (next === "base") {
+            toForm?.setFieldsValue({Voice: null});
+            onVoiceChange?.({Voice: null});
+        }
+    };
 
     interface BuildVADParams {
         thr: number; ppms: number; sdms: number; intResp: boolean;
@@ -477,10 +512,46 @@ export const Openai_Realtime: React.FC<OpenaiRealtimeProps> = ({
 
             {realtimeEnabled && (
                 <>
-                    <Form.Item name="realtime_gpttype" style={{marginBottom: 16}}>
-                        <TypesGPT provider={provider} modelType="realtime" />
-                    </Form.Item>
-                    <Collapse ghost defaultActiveKey={[]} style={{ marginTop: 8 }} items={collapseItems} />
+                    {elevenLabsAvailable && (
+                        <Form.Item label={t("voiceModeLabel") || "Режим голоса"} style={{marginBottom: 16}}>
+                            <Segmented
+                                value={voiceBackend}
+                                onChange={(val) => handleVoiceBackend(val as "base" | "elevenlabs")}
+                                options={[
+                                    {label: <span style={{color: "black"}}>{t("voiceModeBase") || "Базовый"}</span>, value: "base"},
+                                    {label: <span style={{color: "black"}}>{t("voiceModeElevenLabs") || "ElevenLabs"}</span>, value: "elevenlabs"},
+                                ]}
+                            />
+                        </Form.Item>
+                    )}
+                    {voiceBackend === "base" ? (
+                        <>
+                            <Form.Item name="realtime_gpttype" style={{marginBottom: 16}}>
+                                <TypesGPT provider={provider} modelType="realtime" />
+                            </Form.Item>
+                            <Collapse ghost defaultActiveKey={[]} style={{ marginTop: 8 }} items={collapseItems} />
+                        </>
+                    ) : (
+                        <>
+                            <VoiceSettings
+                                embedded
+                                provider={provider}
+                                modelData={modelData}
+                                initialVoice={modelData?.Voice ?? null}
+                                toForm={toForm}
+                                onChange={onVoiceChange}
+                            />
+                            <div style={{marginTop: 12}}>
+                                <RealtimeGreeting
+                                    initialGreeting={initialGreeting}
+                                    greeting={greeting}
+                                    disabled={!realtimeEnabled}
+                                    onInitialGreetingChange={handleInitialGreetingChange}
+                                    onGreetingChange={handleGreetingChange}
+                                />
+                            </div>
+                        </>
+                    )}
                 </>
             )}
         </>

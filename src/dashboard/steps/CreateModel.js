@@ -39,7 +39,27 @@ import {GoogleOAuth} from "./GoogleOAuth";
 import {UploadFiles} from "./CreateModelFormElements/UploadFiles";
 import {TypesGPT} from "./CreateModelFormElements/TypesGPT";
 import S3storage from "./CreateModelFormElements/S3storage";
+import {MusicGeneration} from "./CreateModelFormElements/MusicGeneration";
 import showSimpleAuth from "../../utils/showSimpleAuth";
+
+// Нормализация для сравнения голосовых настроек: убирает null/undefined и сортирует ключи,
+// чтобы порядок полей и отсутствующие значения не считались изменением.
+const normalizeForCompare = (value) => {
+    if (Array.isArray(value)) {
+        return value.map(normalizeForCompare);
+    }
+    if (value && typeof value === 'object') {
+        const result = {};
+        Object.keys(value).sort().forEach((key) => {
+            const normalized = normalizeForCompare(value[key]);
+            if (normalized !== null && normalized !== undefined) {
+                result[key] = normalized;
+            }
+        });
+        return result;
+    }
+    return value === undefined ? null : value;
+};
 
 
 export const CreateModel = ({onMenuChange}) => {
@@ -232,6 +252,8 @@ export const CreateModel = ({onMenuChange}) => {
                             },
                             gpttype: providerData.use_model_name?.gpttype || null,
                             realtime_gpttype: providerData.use_model_name?.realtime || null,
+                            Voice: providerData.Voice || null,
+                            CreateMusic: providerData.CreateMusic || false,
                         });
                     } else {
                         // Нет активного провайдера или данных - показываем предупреждение
@@ -358,6 +380,8 @@ export const CreateModel = ({onMenuChange}) => {
             },
             gpttype: normalizedGptType,
             realtime_gpttype: providerData.use_model_name?.realtime || null,
+            Voice: providerData.Voice || null,
+            CreateMusic: providerData.CreateMusic || false,
         });
 
         // Проверяем что значения действительно установились
@@ -438,7 +462,9 @@ export const CreateModel = ({onMenuChange}) => {
                     espero: {
                         wait: 2,
                         limit: 1024,
-                    }
+                    },
+                    Voice: null,
+                    CreateMusic: false,
                 });
                 setButtonDisabled(true);
             }
@@ -475,6 +501,9 @@ export const CreateModel = ({onMenuChange}) => {
 
     // Обработчик изменений формы
     const handleValuesChange = (changedValues, allValues) => {
+        // Voice/CreateMusic задаются вне Form.Item, поэтому antd не включает их в allValues —
+        // берём полный стор формы.
+        const fullValues = form.getFieldsValue(true);
         // Обновляем состояние S3 файлов для передачи в Mistral_Interpreter
         if (changedValues.s3files !== undefined) {
             setS3FilesEnabled(changedValues.s3files);
@@ -515,7 +544,10 @@ export const CreateModel = ({onMenuChange}) => {
                 (selectedProvider === 'openai' && (
                     allValues.realtime !== (modelData.realtime || false) ||
                     JSON.stringify(allValues.realtime_vad || null) !== JSON.stringify(modelData.realtime_vad || null)
-                ));
+                )) ||
+                // Голосовые настройки ElevenLabs и генерация музыки
+                JSON.stringify(normalizeForCompare(fullValues.Voice || null)) !== JSON.stringify(normalizeForCompare(modelData.Voice || null)) ||
+                Boolean(fullValues.CreateMusic) !== Boolean(modelData.CreateMusic);
 
             setButtonDisabled(!hasChanges);
         } else {
@@ -531,6 +563,9 @@ export const CreateModel = ({onMenuChange}) => {
         // Делаем кнопку неактивной перед отправкой данных
         setButtonDisabled(true);
 
+        // Voice/CreateMusic не зарегистрированы как Form.Item — добавляем их из полного стора.
+        const submitValues = {...form.getFieldsValue(true), ...values};
+
         // Проверяем, что провайдер выбран
         if (!selectedProvider) {
             showErrorNotification(t("createModelErrorProvider") || "Ошибка создания модели", t("createModelProviderNotSelected") || "Провайдер не выбран. Пожалуйста, выберите провайдера AI модели.");
@@ -542,7 +577,7 @@ export const CreateModel = ({onMenuChange}) => {
         const isCreatingNew = !modelData;
         // Вызываем универсальную функцию saveModelData с разными параметрами в зависимости от типа операции
         const response = await saveModelData({
-            values,
+            values: submitValues,
             isUpdate: !!modelData, // true если модель уже существует, false для создания новой
             provider: selectedProvider // Передаем выбранный провайдер
         });
@@ -770,6 +805,16 @@ export const CreateModel = ({onMenuChange}) => {
                                 </Form.Item>
                             </div>
 
+                            {/* Секция генерации музыки (доступна при подключённом ElevenLabs) */}
+                            {(selectedProvider === 'openai' || selectedProvider === 'google' || selectedProvider === 'mistral') && (
+                                <div className="form-section model-name-section">
+                                    <MusicGeneration
+                                        key={selectedProvider}
+                                        onChange={(changedValues) => handleValuesChange(changedValues, form.getFieldsValue())}
+                                    />
+                                </div>
+                            )}
+
                             {/* Секция Google OAuth Integration */}
                             {(selectedProvider === 'openai' || selectedProvider === 'mistral' || selectedProvider === 'anthropic' || selectedProvider === 'google') && (
                                 <div className="form-section model-name-section" ref={googleOAuthRef}>
@@ -877,6 +922,7 @@ export const CreateModel = ({onMenuChange}) => {
                                             modelData={modelData}
                                             initialRealtime={modelData?.realtime || false}
                                             initialRealtimeVAD={modelData?.realtime_vad || null}
+                                            onVoiceChange={(changedValues) => handleValuesChange(changedValues, form.getFieldsValue())}
                                         />
                                     </Form.Item>
                                     <Form.Item name="realtime" hidden>
@@ -892,12 +938,14 @@ export const CreateModel = ({onMenuChange}) => {
                                         <GoogleRealtime
                                             provider={selectedProvider}
                                             toForm={form}
+                                            modelData={modelData}
                                             initialRealtime={!!(modelData?.realtime_vad?.google)}
                                             initialRealtimeVAD={modelData?.realtime_vad?.google ? {
                                                 ...modelData.realtime_vad.google,
                                                 initial_greeting: modelData.realtime_vad.initial_greeting ?? true,
                                                 greeting: modelData.realtime_vad.greeting ?? null,
                                             } : null}
+                                            onVoiceChange={(changedValues) => handleValuesChange(changedValues, form.getFieldsValue())}
                                         />
                                     </Form.Item>
                                 </div>
@@ -916,6 +964,7 @@ export const CreateModel = ({onMenuChange}) => {
                                                 initial_greeting: modelData.realtime_vad.initial_greeting ?? true,
                                                 greeting: modelData.realtime_vad.greeting ?? null,
                                             } : null}
+                                            onVoiceChange={(changedValues) => handleValuesChange(changedValues, form.getFieldsValue())}
                                         />
                                     </Form.Item>
                                     <Form.Item name="realtime" hidden>

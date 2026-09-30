@@ -6,6 +6,7 @@ import {
   AvitoIcon,
   BybitIcon,
   CalendarIcon,
+  ElevenLabsIcon,
   GeminiIcon,
   MariaDbIcon,
   MinioIcon,
@@ -51,6 +52,7 @@ const PROVIDERS: Brand[] = [
   { name: 'OpenAI', Icon: OpenAiIcon },
   { name: 'Google Gemini', Icon: GeminiIcon },
   { name: 'Mistral', Icon: MistralIcon },
+  { name: 'ElevenLabs', Icon: ElevenLabsIcon },
 ];
 
 function BrandChip({

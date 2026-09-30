@@ -7,6 +7,7 @@ import showSimpleAuth from '../../src/utils/showSimpleAuth';
 import { Header } from '../../src/landing/v2/sections/Header';
 import { Hero } from '../../src/landing/v2/sections/Hero';
 import { TrustBar } from '../../src/landing/v2/sections/TrustBar';
+import { VoiceGateway } from '../../src/landing/v2/sections/VoiceGateway';
 import { ValueProps } from '../../src/landing/v2/sections/ValueProps';
 import { Security } from '../../src/landing/v2/sections/Security';
 import { Playground } from '../../src/landing/v2/sections/Playground';
@@ -70,6 +71,7 @@ export default async function LandingPage({
         <Hero />
         <TrustBar />
         <ValueProps />
+        <VoiceGateway />
         <Security />
         <Playground />
         <Architecture />

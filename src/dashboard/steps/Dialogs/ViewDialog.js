@@ -72,6 +72,7 @@ export function ViewDialog({ dialogId, target, trigger, onClose, onDialogDeleted
                 // Обрабатываем файлы по типам
                 const imageFiles = sendFiles.filter(file => file.type === 'photo' || file.type === 'image');
                 const videoFiles = sendFiles.filter(file => file.type === 'video');
+                const audioFiles = sendFiles.filter(file => file.type === 'audio');
                 const docFiles = sendFiles.filter(file => file.type === 'doc' || file.type === 'document');
 
                 // Обработка даты
@@ -89,6 +90,7 @@ export function ViewDialog({ dialogId, target, trigger, onClose, onDialogDeleted
                     files: {
                         images: imageFiles,
                         videos: videoFiles,
+                        audio: audioFiles,
                         documents: docFiles
                     }
                 };
@@ -303,6 +305,15 @@ export function ViewDialog({ dialogId, target, trigger, onClose, onDialogDeleted
                         return `<div class="file-info">🎥 Видео: ${link}${caption}</div>`;
                     }).join('');
                 }
+                if (msg.files.audio && msg.files.audio.length > 0) {
+                    filesInfo += msg.files.audio.map(audio => {
+                        const fileName = audio.file_name || 'audio';
+                        const url = audio.url ? `href="${audio.url}" target="_blank"` : '';
+                        const caption = audio.caption ? `<div class="file-caption">${escapeHtml(audio.caption)}</div>` : '';
+                        const link = url ? `<a ${url}>${fileName}</a>` : fileName;
+                        return `<div class="file-info">🎵 Аудио: ${link}${caption}</div>`;
+                    }).join('');
+                }
                 if (msg.files.documents && msg.files.documents.length > 0) {
                     filesInfo += msg.files.documents.map(doc => {
                         const fileName = doc.file_name || 'document';
@@ -443,6 +454,18 @@ export function ViewDialog({ dialogId, target, trigger, onClose, onDialogDeleted
                                                 className="chat-video"
                                             />
                                             {video.caption && <div className="file-caption">{video.caption}</div>}
+                                        </div>
+                                    ))}
+
+                                    {/* Отображение аудио (в т.ч. сгенерированная музыка) */}
+                                    {msg.files?.audio?.map((audio, audioIndex) => (
+                                        <div key={`audio-${audioIndex}`} className="message-audio-container">
+                                            <audio
+                                                src={audio.url}
+                                                controls
+                                                className="chat-audio"
+                                            />
+                                            {audio.caption && <div className="file-caption">{audio.caption}</div>}
                                         </div>
                                     ))}
 

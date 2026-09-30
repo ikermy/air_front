@@ -110,6 +110,25 @@ export const MistralIcon = ({ size, className }: BrandIconProps) => (
   <AntIcon Component={MistralFilled} size={size} className={className} />
 );
 
+/**
+ * ElevenLabs — официальной иконки в antd нет. Рисуем упрощённый знак (две полосы)
+ * монохромно (currentColor), чтобы попадать в общий ряд в обеих темах.
+ */
+export const ElevenLabsIcon = ({ size = 16, className }: BrandIconProps) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    className={className}
+    aria-hidden
+    focusable="false"
+  >
+    <rect x="5" y="3" width="5" height="18" rx="1.2" />
+    <rect x="14" y="3" width="5" height="18" rx="1.2" />
+  </svg>
+);
+
 /* --- Сервисы без официальных иконок в antd.
        Берём нейтральные символы из lucide: точный логотип здесь не нужен,
        важнее единый визуальный ряд и читаемость в обеих темах. --- */

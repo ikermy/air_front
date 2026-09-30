@@ -3,7 +3,7 @@ import {authFetch} from "../../../utils/easyUtils";
 export function providerToName(provider?: string | number | null): string | null {
     const name = String(provider ?? "").toLowerCase();
     if (name === "gemini") return "google";
-    return ["openai", "mistral", "google"].includes(name) ? name : null;
+    return ["openai", "mistral", "google", "elevenlabs"].includes(name) ? name : null;
 }
 
 
@@ -71,8 +71,108 @@ export interface RealtimeVAD {
 export interface GptTypeValue {
     name: string;
     id?: number | null;
-    stt?: string;
-    tts?: string;
+    /** Пусто/undefined — LLM-модель (general/realtime); tts|stt|music|sts — голосовая */
+    kind?: string | null;
+    is_default?: boolean | null;
+    display_name?: string | null;
+    languages?: string[] | null;
+}
+
+/** Ссылка на голосовую модель внутри comdom.VoiceConfig */
+export interface VoiceModelRef {
+    model?: string | null;
+    voice_id?: string | null;
+    [key: string]: unknown;
+}
+
+/**
+ * Выбор голосового провайдера (ElevenLabs) — соответствует comdom.VoiceConfig
+ * (json-поле `voice` у UniversalModelData). Backend'ы на верхнем уровне,
+ * voice_id/voice_name тоже на верхнем уровне, отдельного поля music нет
+ * (музыка управляется флагом create_music).
+ */
+export interface VoiceSelection {
+    tts?: VoiceModelRef | null;
+    stt?: VoiceModelRef | null;
+    sts?: VoiceModelRef | null;
+    music?: VoiceModelRef | null;
+    tts_backend?: string | number | null;
+    stt_backend?: string | number | null;
+    realtime_backend?: string | number | null;
+    music_backend?: string | number | null;
+    voice_id?: string | null;
+    voice_name?: string | null;
+    elevenlabs?: Record<string, unknown> | null;
+    [key: string]: unknown;
+}
+
+/** ProviderType -> строка (сервер отдаёт backend'ы числами). */
+const PROVIDER_ID_TO_NAME: Record<number, string> = {
+    1: "openai",
+    2: "mistral",
+    3: "google",
+    4: "elevenlabs",
+};
+
+export function normalizeVoiceBackend(value: unknown): string | null {
+    if (value === null || value === undefined || value === "") {
+        return null;
+    }
+    if (typeof value === "number") {
+        return PROVIDER_ID_TO_NAME[value] ?? String(value);
+    }
+    const normalized = String(value).trim().toLowerCase();
+    return normalized || null;
+}
+
+/** Приводит ответ сервера (json `voice`) к форме VoiceSelection. */
+export function normalizeVoiceConfig(raw: unknown): VoiceSelection | null {
+    if (!raw || typeof raw !== "object") {
+        return null;
+    }
+    const value = raw as Record<string, any>;
+    return {
+        // Сохраняем все прочие поля конфигурации (format, language, elevenlabs и т.п.).
+        ...value,
+        tts_backend: normalizeVoiceBackend(value.tts_backend),
+        stt_backend: normalizeVoiceBackend(value.stt_backend),
+        realtime_backend: normalizeVoiceBackend(value.realtime_backend),
+        music_backend: normalizeVoiceBackend(value.music_backend),
+        tts: value.tts && typeof value.tts === "object" ? {...value.tts} : null,
+        stt: value.stt && typeof value.stt === "object" ? {...value.stt} : null,
+        sts: value.sts && typeof value.sts === "object" ? {...value.sts} : null,
+        music: value.music && typeof value.music === "object" ? {...value.music} : null,
+        voice_id: value.voice_id ?? null,
+        voice_name: value.voice_name ?? null,
+    };
+}
+
+/** Формирует тело поля `voice` для /model/create и /model/update (backend'ы — строками). */
+export function buildVoicePayload(voice: VoiceSelection | null | undefined): Record<string, unknown> | null {
+    if (!voice) {
+        return null;
+    }
+    const backend = (value: string | number | null | undefined) =>
+        value === null || value === undefined || value === "" ? undefined : String(value);
+
+    const payload: Record<string, unknown> = {};
+    const ttsBackend = backend(voice.tts_backend);
+    const sttBackend = backend(voice.stt_backend);
+    const realtimeBackend = backend(voice.realtime_backend);
+    const musicBackend = backend(voice.music_backend);
+    if (ttsBackend) payload.tts_backend = ttsBackend;
+    if (sttBackend) payload.stt_backend = sttBackend;
+    if (realtimeBackend) payload.realtime_backend = realtimeBackend;
+    if (musicBackend) payload.music_backend = musicBackend;
+    if (voice.tts && Object.keys(voice.tts).length > 0) payload.tts = {...voice.tts};
+    if (voice.stt && Object.keys(voice.stt).length > 0) payload.stt = {...voice.stt};
+    if (voice.sts && Object.keys(voice.sts).length > 0) payload.sts = {...voice.sts};
+    if (voice.music && Object.keys(voice.music).length > 0) payload.music = {...voice.music};
+    if (voice.elevenlabs) payload.elevenlabs = {...voice.elevenlabs};
+    if (voice.voice_id) payload.voice_id = voice.voice_id;
+    if (voice.voice_name) payload.voice_name = voice.voice_name;
+
+    return Object.keys(payload).length > 0 ? payload : null;
 }
 
 export interface UseModelName {
@@ -116,6 +216,11 @@ export interface ModelFormValues {
     realtime?: boolean;
     realtime_vad?: RealtimeVAD | null;
     google_realtime?: boolean;
+    /** Выбор голосового провайдера (ElevenLabs) — UniversalModelData.Voice */
+    Voice?: VoiceSelection | null;
+    /** Генерация музыки (MCP-инструмент) */
+    CreateMusic?: boolean;
+
     /** Контейнер, который прокидывает компонент Google_Realtime через Form.Item */
     google_realtime_vad?: { google_realtime: boolean; google_realtime_vad: (GoogleRealtimeVAD & { initial_greeting?: boolean | null; greeting?: string | null }) | null } | null;
 }
@@ -150,8 +255,10 @@ export interface ListModelsResponse {
 export interface ProviderModel {
     Id?: string | number | null;
     Name?: string | null;
-    stt?: string;
-    tts?: string;
+    kind?: string | null;
+    is_default?: boolean | null;
+    display_name?: string | null;
+    languages?: string[] | null;
 }
 
 // ─── Типы для getModelData ────────────────────────────────────────────────────
@@ -187,6 +294,10 @@ export interface ModelData {
     realtime?: boolean;
     realtime_vad?: RealtimeVAD | null;
     google_realtime?: boolean;
+    /** Выбор голосового провайдера (ElevenLabs) */
+    Voice?: VoiceSelection | null;
+    /** Генерация музыки */
+    CreateMusic?: boolean;
     embedding_docs?: Document[];
     [key: string]: any;
 }
@@ -238,7 +349,14 @@ export async function getListModelNames(
 
                 const finalId = id !== undefined && Number.isFinite(id) ? id : 0;
                 return name
-                    ? {name, id: finalId, stt: item.stt, tts: item.tts}
+                    ? {
+                          name,
+                          id: finalId,
+                          kind: item.kind ?? null,
+                          is_default: item.is_default ?? null,
+                          display_name: item.display_name ?? null,
+                          languages: Array.isArray(item.languages) ? item.languages : null,
+                      }
                     : {name: "", id: 0};
             }
 
@@ -271,7 +389,18 @@ export async function getModelData(provider?: string | number | null): Promise<A
 }
 
 export function extractAllModels(data: AllModelsResponse | null): Record<string, ModelData> {
-    return data?.models ?? {};
+    const models = data?.models ?? {};
+    const result: Record<string, ModelData> = {};
+    for (const [key, model] of Object.entries(models)) {
+        const raw = model as ModelData & {voice?: unknown; create_music?: unknown};
+        result[key] = {
+            ...raw,
+            // Сервер отдаёт json-поля `voice` (backend'ы числами) и `create_music`.
+            Voice: normalizeVoiceConfig(raw.voice ?? raw.Voice),
+            CreateMusic: Boolean(raw.create_music ?? raw.CreateMusic),
+        };
+    }
+    return result;
 }
 
 export function getActiveProviderName(data: AllModelsResponse | null): string | null {
@@ -437,6 +566,10 @@ export const saveModelData = async ({
                 realtime: Boolean(values.realtime) || googleRtEnabled || Boolean(mistralVadResult),
             // Объединённый VAD (OpenAI-поля + общие поля + google-блок)
             realtime_vad: realtimeVadPayload,
+            // Выбор голосового провайдера (ElevenLabs): comdom.VoiceConfig.
+            voice: buildVoicePayload(values.Voice),
+            // MCP-инструмент генерации музыки.
+            create_music: Boolean(values.CreateMusic),
         };
 
         const response = await authFetch(`${endpoint}${providerParam}`, {

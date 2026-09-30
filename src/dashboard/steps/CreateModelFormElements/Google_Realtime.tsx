@@ -1,9 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { Switch, Slider, InputNumber, Tooltip, Collapse, Select, Input, Form } from "antd";
+import { Switch, Slider, InputNumber, Tooltip, Collapse, Select, Input, Form, Segmented } from "antd";
 import type { CollapseProps } from "antd";
 import { AudioOutlined, SettingOutlined, InfoCircleOutlined, TranslationOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
 import {TypesGPT} from "./TypesGPT";
+import {VoiceSettings} from "./VoiceSettings";
+import {RealtimeGreeting} from "./RealtimeGreeting";
+import {fetchProvidersAvailability} from "./providersUtils";
+import type {ModelData, VoiceSelection} from "./modUtils";
 
 export interface GoogleRealtimeVADValue {
     voice_name?: string | null;
@@ -19,10 +23,13 @@ export interface GoogleRealtimeVADValue {
 
 interface GoogleRealtimeProps {
     onChange?: (value: { google_realtime: boolean; google_realtime_vad: GoogleRealtimeVADValue | null }) => void;
+    /** Уведомляет родителя об изменении Voice (ElevenLabs-режим). */
+    onVoiceChange?: (changedValues: Record<string, unknown>) => void;
     toForm?: any;
     initialRealtime?: boolean;
     initialRealtimeVAD?: GoogleRealtimeVADValue | null;
     provider?: string | null;
+    modelData?: ModelData | null;
 }
 
 const DEFAULT_VAD: Required<GoogleRealtimeVADValue> = {
@@ -63,14 +70,22 @@ const buildVAD = ({ vn, lc, iat, oat, aad, bi, sdms, ig, gr }: BuildParams): Goo
 
 export const Google_Realtime: React.FC<GoogleRealtimeProps> = ({
     onChange,
+    onVoiceChange,
     toForm,
     initialRealtime,
     initialRealtimeVAD,
     provider,
+    modelData,
 }) => {
     const { t } = useTranslation();
 
     const [realtimeEnabled, setRealtimeEnabled] = useState<boolean>(false);
+    const [voiceBackend, setVoiceBackend] = useState<"base" | "elevenlabs">(
+        String((modelData as {Voice?: VoiceSelection} | null)?.Voice?.realtime_backend ?? "").toLowerCase() === "elevenlabs"
+            ? "elevenlabs"
+            : "base"
+    );
+    const [elevenLabsAvailable, setElevenLabsAvailable] = useState(false);
     const [voiceName, setVoiceName] = useState<string>(DEFAULT_VAD.voice_name);
     const [languageCode, setLanguageCode] = useState<string>(DEFAULT_VAD.language_code);
     const [inputAudioTranscription, setInputAudioTranscription] = useState<boolean>(DEFAULT_VAD.input_audio_transcription);
@@ -115,6 +130,26 @@ export const Google_Realtime: React.FC<GoogleRealtimeProps> = ({
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [initialRealtime, initialRealtimeVAD]);
+
+    // Доступность ElevenLabs: показываем переключатель режима голоса.
+    useEffect(() => {
+        let cancelled = false;
+        void (async () => {
+            const result = await fetchProvidersAvailability();
+            if (!cancelled) setElevenLabsAvailable(Boolean(result.data?.available?.includes("elevenlabs")));
+        })();
+        return () => {
+            cancelled = true;
+        };
+    }, []);
+
+    const handleVoiceBackend = (next: "base" | "elevenlabs") => {
+        setVoiceBackend(next);
+        if (next === "base") {
+            toForm?.setFieldsValue({Voice: null});
+            onVoiceChange?.({Voice: null});
+        }
+    };
 
     const currentParams = (): BuildParams => ({
         vn: voiceName,
@@ -501,10 +536,46 @@ export const Google_Realtime: React.FC<GoogleRealtimeProps> = ({
 
             {realtimeEnabled && (
                 <>
-                    <Form.Item name="realtime_gpttype" style={{marginBottom: 16}}>
-                        <TypesGPT provider={provider} modelType="realtime" />
-                    </Form.Item>
-                    <Collapse ghost defaultActiveKey={[]} style={{ marginTop: 8 }} items={collapseItems} />
+                    {elevenLabsAvailable && (
+                        <Form.Item label={t("voiceModeLabel") || "Режим голоса"} style={{marginBottom: 16}}>
+                            <Segmented
+                                value={voiceBackend}
+                                onChange={(val) => handleVoiceBackend(val as "base" | "elevenlabs")}
+                                options={[
+                                    {label: <span style={{color: "black"}}>{t("voiceModeBase") || "Базовый"}</span>, value: "base"},
+                                    {label: <span style={{color: "black"}}>{t("voiceModeElevenLabs") || "ElevenLabs"}</span>, value: "elevenlabs"},
+                                ]}
+                            />
+                        </Form.Item>
+                    )}
+                    {voiceBackend === "base" ? (
+                        <>
+                            <Form.Item name="realtime_gpttype" style={{marginBottom: 16}}>
+                                <TypesGPT provider={provider} modelType="realtime" />
+                            </Form.Item>
+                            <Collapse ghost defaultActiveKey={[]} style={{ marginTop: 8 }} items={collapseItems} />
+                        </>
+                    ) : (
+                        <>
+                            <VoiceSettings
+                                embedded
+                                provider={provider}
+                                modelData={modelData}
+                                initialVoice={modelData?.Voice ?? null}
+                                toForm={toForm}
+                                onChange={onVoiceChange}
+                            />
+                            <div style={{marginTop: 12}}>
+                                <RealtimeGreeting
+                                    initialGreeting={initialGreeting}
+                                    greeting={greeting}
+                                    disabled={!realtimeEnabled}
+                                    onInitialGreetingChange={handleInitialGreetingChange}
+                                    onGreetingChange={handleGreetingChange}
+                                />
+                            </div>
+                        </>
+                    )}
                 </>
             )}
         </>

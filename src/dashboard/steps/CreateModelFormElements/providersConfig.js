@@ -1,6 +1,7 @@
 import OpenAILogo from '../../../assets/img/openai-logo.svg';
 import MistralAILogo from '../../../assets/img/mistral-ai-logo.png';
 import GeminiLogo from '../../../assets/img/gemini-logo.png';
+import ElevenLabsLogo from '../../../assets/img/elevenlabs-logo.svg';
 
 // В зависимости от сборщика импорт SVG может быть URL-строкой или объектом
 // asset-модуля с полем `src`/`default`.
@@ -32,6 +33,15 @@ export const AI_PROVIDERS = [
         color: '#1092ff',
         description: 'Gemini 3 Pro, Nano Banana',
     },
+    {
+        key: 'elevenlabs',
+        name: 'ElevenLabs',
+        logo: assetUrl(ElevenLabsLogo),
+        color: '#000000',
+        description: 'TTS, STT, Voice Clone, Music',
+        // Голосовой провайдер: не создаёт LLM-модель, настраивается в разделе голоса.
+        voiceOnly: true,
+    },
 ];
 
 /**
@@ -42,7 +52,7 @@ export const AI_PROVIDERS = [
  */
 export const getProviderInfo = (providerName) => {
     const key = providerName?.toLowerCase().replace(/\s+/g, '');
-    const aliases = { openai: 'openai', mistralai: 'mistral', gemini: 'google' };
+    const aliases = { openai: 'openai', mistralai: 'mistral', gemini: 'google', elevenlabs: 'elevenlabs' };
     const resolved = aliases[key] || key;
     return AI_PROVIDERS.find(p => p.key === resolved) || {
         key: resolved || 'unknown',

@@ -14,6 +14,7 @@ import { routing } from './routing';
  */
 const SECTION_NAMESPACES = [
   'auth',
+  'voicegateway',
   'features',
   'security',
   'playground',

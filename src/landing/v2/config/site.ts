@@ -6,6 +6,9 @@ export const SITE_URL =
 export const GITHUB_ORG = 'https://github.com/ikermy';
 export const GITHUB_ORC = 'https://github.com/ikermy/air_orchestrator';
 
+/** Техническая документация по голосовому шлюзу ElevenLabs (README air-common). */
+export const ELEVENLABS_DOCS_URL = `${GITHUB_ORG}/air-common`;
+
 /** Чат сообщества в Telegram. */
 export const TELEGRAM_CHAT = 'https://t.me/marusia_dev';
 export const TELEGRAM_CHAT_HANDLE = '@marusia_dev';
