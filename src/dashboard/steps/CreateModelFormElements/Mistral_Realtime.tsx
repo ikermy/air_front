@@ -120,6 +120,10 @@ export const Mistral_Realtime: React.FC<MistralRealtimeProps> = ({
         }
     };
 
+    // Синхронизируемся только при фактической смене сохранённого VAD, а не при
+    // каждом ререндере родителя: значение по ссылке нестабильно и затирало бы
+    // ещё не сохранённые изменения пользователя (включённый realtime).
+    const initialVadKey = JSON.stringify(initialRealtimeVAD ?? null);
     useEffect(() => {
         const next = {...DEFAULTS, ...(initialRealtimeVAD || {})};
         setEnabled(Boolean(initialRealtime));
@@ -132,7 +136,8 @@ export const Mistral_Realtime: React.FC<MistralRealtimeProps> = ({
             realtime: Boolean(initialRealtime),
             realtime_vad: initialRealtime ? next : null
         });
-    }, [initialRealtime, initialRealtimeVAD, toForm]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [initialRealtime, initialVadKey, toForm]);
 
     const loadCatalogs = useCallback(async () => {
         if (!provider) return;

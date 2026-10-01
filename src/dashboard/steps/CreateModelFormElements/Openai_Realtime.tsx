@@ -75,7 +75,10 @@ export const Openai_Realtime: React.FC<OpenaiRealtimeProps> = ({
     const [greeting, setGreeting] = useState<string>("");
     const [voice, setVoice] = useState<string>("verse");
 
-    // Инициализация при загрузке
+    // Инициализация при загрузке. Зависим от строковой сигнатуры VAD, а не от
+    // ссылки: родитель может пересоздавать объект на каждом ререндере, и тогда
+    // эффект затирал бы ещё не сохранённый пользовательский выбор realtime.
+    const initialVadKey = JSON.stringify(initialRealtimeVAD ?? null);
     useEffect(() => {
         const rtEnabled = typeof initialRealtime === "boolean" ? initialRealtime : false;
         setRealtimeEnabled(rtEnabled);
@@ -119,7 +122,7 @@ export const Openai_Realtime: React.FC<OpenaiRealtimeProps> = ({
             });
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [initialRealtime, initialRealtimeVAD]);
+    }, [initialRealtime, initialVadKey]);
 
     // Доступность ElevenLabs: показываем переключатель режима голоса.
     useEffect(() => {

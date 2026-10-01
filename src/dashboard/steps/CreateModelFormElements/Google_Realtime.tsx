@@ -96,6 +96,10 @@ export const Google_Realtime: React.FC<GoogleRealtimeProps> = ({
     const [initialGreeting, setInitialGreeting] = useState<boolean>(DEFAULT_VAD.initial_greeting);
     const [greeting, setGreeting] = useState<string>("");
 
+    // Синхронизируемся только при фактической смене сохранённого VAD, а не при
+    // каждом ререндере родителя: значение по ссылке нестабильно и затирало бы
+    // ещё не сохранённые изменения пользователя (включённый realtime).
+    const initialVadKey = JSON.stringify(initialRealtimeVAD ?? null);
     useEffect(() => {
         const rtEnabled = typeof initialRealtime === "boolean" ? initialRealtime : false;
         setRealtimeEnabled(rtEnabled);
@@ -129,7 +133,7 @@ export const Google_Realtime: React.FC<GoogleRealtimeProps> = ({
             });
         }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [initialRealtime, initialRealtimeVAD]);
+    }, [initialRealtime, initialVadKey]);
 
     // Доступность ElevenLabs: показываем переключатель режима голоса.
     useEffect(() => {

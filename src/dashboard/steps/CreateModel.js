@@ -559,6 +559,18 @@ export const CreateModel = ({onMenuChange}) => {
         }
     };
 
+    const mistralInitialRealtimeVAD = modelData?.realtime_vad ? {
+        ...modelData.realtime_vad.mistral,
+        initial_greeting: modelData.realtime_vad.initial_greeting ?? true,
+        greeting: modelData.realtime_vad.greeting ?? null,
+    } : null;
+
+    const googleInitialRealtimeVAD = modelData?.realtime_vad?.google ? {
+        ...modelData.realtime_vad.google,
+        initial_greeting: modelData.realtime_vad.initial_greeting ?? true,
+        greeting: modelData.realtime_vad.greeting ?? null,
+    } : null;
+
     const onFinish = async (values) => {
         // Делаем кнопку неактивной перед отправкой данных
         setButtonDisabled(true);
@@ -940,11 +952,7 @@ export const CreateModel = ({onMenuChange}) => {
                                             toForm={form}
                                             modelData={modelData}
                                             initialRealtime={!!(modelData?.realtime_vad?.google)}
-                                            initialRealtimeVAD={modelData?.realtime_vad?.google ? {
-                                                ...modelData.realtime_vad.google,
-                                                initial_greeting: modelData.realtime_vad.initial_greeting ?? true,
-                                                greeting: modelData.realtime_vad.greeting ?? null,
-                                            } : null}
+                                            initialRealtimeVAD={googleInitialRealtimeVAD}
                                             onVoiceChange={(changedValues) => handleValuesChange(changedValues, form.getFieldsValue())}
                                         />
                                     </Form.Item>
@@ -959,11 +967,7 @@ export const CreateModel = ({onMenuChange}) => {
                                             toForm={form}
                                             modelData={modelData}
                                             initialRealtime={modelData?.realtime || false}
-                                            initialRealtimeVAD={modelData?.realtime_vad ? {
-                                                ...modelData.realtime_vad.mistral,
-                                                initial_greeting: modelData.realtime_vad.initial_greeting ?? true,
-                                                greeting: modelData.realtime_vad.greeting ?? null,
-                                            } : null}
+                                            initialRealtimeVAD={mistralInitialRealtimeVAD}
                                             onVoiceChange={(changedValues) => handleValuesChange(changedValues, form.getFieldsValue())}
                                         />
                                     </Form.Item>

@@ -440,7 +440,22 @@ export const VoiceSettings: React.FC<VoiceSettingsProps> = ({modelData, initialV
                                             onChange={(value) => setStsModel(value)}/>
                                 </Form.Item>
                             </Col>
-                            <Col xs={24} md={12}>
+                            {useRealtimeCascade && (
+                                <Col xs={24} md={8}>
+                                    <Form.Item label={t("voiceSttRealtimeModel") || "STT модель для realtime (звонки)"}>
+                                        <Select
+                                            allowClear
+                                            value={sttRealtimeModel}
+                                            options={modelsByKind.sttRealtime.length > 0
+                                                ? modelsByKind.sttRealtime
+                                                : [{label: "scribe_v2_realtime", value: "scribe_v2_realtime"}]}
+                                            placeholder="scribe_v2_realtime"
+                                            onChange={(value) => setSttRealtimeModel(value)}
+                                        />
+                                    </Form.Item>
+                                </Col>
+                            )}
+                            <Col xs={24}>
                                 <Form.Item label={t("voiceTtsVoice") || "Голос"}>
                                     <Space.Compact style={{width: "100%"}}>
                                         <Select
@@ -482,21 +497,6 @@ export const VoiceSettings: React.FC<VoiceSettingsProps> = ({modelData, initialV
                                                 title={t("voiceRealtimeCascadeTip") || "Без этого звонки идут нативным audio-to-audio активного провайдера"}
                                             />
                                         </Space>
-                                    </Form.Item>
-                                </Col>
-                            )}
-                            {useRealtimeCascade && (
-                                <Col xs={24} md={8}>
-                                    <Form.Item label={t("voiceSttRealtimeModel") || "STT модель для realtime (звонки)"}>
-                                        <Select
-                                            allowClear
-                                            value={sttRealtimeModel}
-                                            options={modelsByKind.sttRealtime.length > 0
-                                                ? modelsByKind.sttRealtime
-                                                : [{label: "scribe_v2_realtime", value: "scribe_v2_realtime"}]}
-                                            placeholder="scribe_v2_realtime"
-                                            onChange={(value) => setSttRealtimeModel(value)}
-                                        />
                                     </Form.Item>
                                 </Col>
                             )}
