@@ -5,7 +5,7 @@
   "points": {
     "voices": "Дополнительные голоса ассистента и клонирование (IVC / PVC)",
     "anyModel": "Работает с любой моделью (OpenAI · Mistral · Google)",
-    "realtime": "Realtime-каскад: STT → LLM провайдера → TTS ElevenLabs",
+    "realtime": "В TTS- и Realtime-режимах: STT → LLM → ElevenLabs TTS",
     "music": "Для агентов доступна генерация музыки через MCP"
   },
   "docsCta": "Подробнее в документации"

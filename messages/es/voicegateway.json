@@ -5,7 +5,7 @@
   "points": {
     "voices": "Voces adicionales del asistente y clonación de voz (IVC / PVC)",
     "anyModel": "Funciona con cualquier modelo (OpenAI · Mistral · Google)",
-    "realtime": "Cascada en tiempo real: STT → LLM del proveedor → TTS de ElevenLabs",
+    "realtime": "En modos TTS y Realtime: STT → LLM → ElevenLabs TTS",
     "music": "Los agentes pueden generar música mediante MCP"
   },
   "docsCta": "Ver la documentación"
